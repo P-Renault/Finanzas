@@ -1,79 +1,38 @@
-let db=null;
-const $=id=>document.getElementById(id);
+let db=null;const $=id=>document.getElementById(id);
 const CLP=n=>new Intl.NumberFormat("es-CL",{style:"currency",currency:"CLP",maximumFractionDigits:0}).format(Number(n)||0);
-const today=()=>new Date().toISOString().slice(0,10);
-$("movFecha").value=today(); $("futureFecha").value=today(); $("savingFecha").value=today();
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const msg=(id,v)=>$(id).textContent=v;
+function resetDates(){$("movFecha").value=today();$("futureFecha").value=today();$("savingFecha").value=today()}
+function configLoad(){$("supabaseUrl").value=localStorage.getItem("sf_url")||"";$("supabaseKey").value=localStorage.getItem("sf_key")||""}
+async function connect(){const url=$("supabaseUrl").value.trim(),key=$("supabaseKey").value.trim();if(!url||!key)return msg("configMsg","Completa ambos campos.");try{db=window.supabase.createClient(url,key);const{error}=await db.from("movimientos").select("id").limit(1);if(error)throw error;localStorage.setItem("sf_url",url);localStorage.setItem("sf_key",key);$("configPanel").classList.add("hidden");$("app").classList.remove("hidden");$("logoutBtn").classList.remove("hidden");await refresh()}catch(e){console.error(e);msg("configMsg","No se pudo conectar. Revisa URL, clave y SQL.")}}
+$("saveConfig").onclick=connect;$("logoutBtn").onclick=()=>{localStorage.removeItem("sf_url");localStorage.removeItem("sf_key");location.reload()};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));$(b.dataset.tab).classList.remove("hidden")});
 
-function setMsg(id,msg){$(id).textContent=msg}
-function configLoad(){ $("supabaseUrl").value=localStorage.getItem("sf_url")||""; $("supabaseKey").value=localStorage.getItem("sf_key")||""; }
-async function connect(){
-  const url=$("supabaseUrl").value.trim(), key=$("supabaseKey").value.trim();
-  if(!url||!key) return setMsg("configMsg","Completa ambos campos.");
-  try{
-    db=window.supabase.createClient(url,key);
-    const {error}=await db.from("movimientos").select("id").limit(1);
-    if(error) throw error;
-    localStorage.setItem("sf_url",url); localStorage.setItem("sf_key",key);
-    $("configPanel").classList.add("hidden"); $("app").classList.remove("hidden"); $("logoutBtn").classList.remove("hidden");
-    await refresh();
-  }catch(e){setMsg("configMsg","No se pudo conectar. Revisa la URL, la clave y que hayas ejecutado el SQL.");}
-}
-$("saveConfig").onclick=connect;
-$("logoutBtn").onclick=()=>{localStorage.removeItem("sf_url");localStorage.removeItem("sf_key");location.reload()};
+$("movForm").onsubmit=async e=>{e.preventDefault();msg("movMsg","Guardando...");const id=$("movId").value,p={tipo:$("movTipo").value,fecha:$("movFecha").value,monto:Number($("movMonto").value),categoria:$("movCategoria").value.trim(),descripcion:$("movDescripcion").value.trim()};const r=id?await db.from("movimientos").update(p).eq("id",id):await db.from("movimientos").insert(p);if(r.error)return msg("movMsg",r.error.message);msg("movMsg",id?"Movimiento actualizado.":"Movimiento guardado.");resetMov();await refresh()};
+$("movCancel").onclick=resetMov;
+function resetMov(){$("movForm").reset();$("movId").value="";$("movFormTitle").textContent="Registrar movimiento";$("movSubmit").textContent="Guardar movimiento";$("movCancel").classList.add("hidden");$("movFecha").value=today()}
+window.editMov=r=>{$("movId").value=r.id;$("movTipo").value=r.tipo;$("movFecha").value=r.fecha;$("movMonto").value=r.monto;$("movCategoria").value=r.categoria||"";$("movDescripcion").value=r.descripcion||"";$("movFormTitle").textContent="Editar movimiento";$("movSubmit").textContent="Guardar cambios";$("movCancel").classList.remove("hidden");document.querySelector('[data-tab="movimientos"]').click();scrollTo({top:0,behavior:"smooth"})};
+window.deleteMov=async id=>{if(!confirm("¿Eliminar este movimiento?"))return;const{error}=await db.from("movimientos").delete().eq("id",id);if(error)return alert(error.message);refresh()};
 
-document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active")); b.classList.add("active");
-  document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden")); $(b.dataset.tab).classList.remove("hidden");
-});
+$("futureForm").onsubmit=async e=>{e.preventDefault();msg("futureMsg","Guardando...");const id=$("futureId").value,p={concepto:$("futureConcepto").value.trim(),fecha_vencimiento:$("futureFecha").value,monto:Number($("futureMonto").value),categoria:$("futureCategoria").value.trim(),periodicidad:$("futureRecurrence").value,notas:$("futureNotas").value.trim()};const r=id?await db.from("compromisos").update(p).eq("id",id):await db.from("compromisos").insert({...p,estado:"pendiente"});if(r.error)return msg("futureMsg",r.error.message);msg("futureMsg",id?"Compromiso actualizado.":"Compromiso creado.");resetFuture();await refresh()};
+$("futureCancel").onclick=resetFuture;
+function resetFuture(){$("futureForm").reset();$("futureId").value="";$("futureFormTitle").textContent="Crear pago o compromiso futuro";$("futureSubmit").textContent="Crear compromiso";$("futureCancel").classList.add("hidden");$("futureFecha").value=today()}
+window.editFuture=r=>{$("futureId").value=r.id;$("futureConcepto").value=r.concepto;$("futureFecha").value=r.fecha_vencimiento;$("futureMonto").value=r.monto;$("futureCategoria").value=r.categoria||"";$("futureRecurrence").value=r.periodicidad||"unico";$("futureNotas").value=r.notas||"";$("futureFormTitle").textContent="Editar compromiso";$("futureSubmit").textContent="Guardar cambios";$("futureCancel").classList.remove("hidden");document.querySelector('[data-tab="futuros"]').click();scrollTo({top:0,behavior:"smooth"})};
+window.deleteFuture=async id=>{if(!confirm("¿Eliminar este compromiso?"))return;const{error}=await db.from("compromisos").delete().eq("id",id);if(error)return alert(error.message);refresh()};
+window.markPaid=async id=>{const{error}=await db.from("compromisos").update({estado:"pagado"}).eq("id",id);if(error)return alert(error.message);refresh()};
 
-$("movForm").onsubmit=async e=>{
- e.preventDefault(); setMsg("movMsg","Guardando...");
- const {error}=await db.from("movimientos").insert({tipo:$("movTipo").value,fecha:$("movFecha").value,monto:Number($("movMonto").value),categoria:$("movCategoria").value,descripcion:$("movDescripcion").value});
- setMsg("movMsg",error?error.message:"Movimiento guardado."); if(!error){e.target.reset();$("movFecha").value=today();await refresh();}
-};
+$("savingForm").onsubmit=async e=>{e.preventDefault();msg("savingMsg","Guardando...");const id=$("savingId").value,p={tipo:$("savingTipo").value,fecha:$("savingFecha").value,monto:Number($("savingMonto").value),descripcion:$("savingDescripcion").value.trim()};const r=id?await db.from("ahorro").update(p).eq("id",id):await db.from("ahorro").insert(p);if(r.error)return msg("savingMsg",r.error.message);msg("savingMsg",id?"Registro actualizado.":"Movimiento de ahorro guardado.");resetSaving();await refresh()};
+$("savingCancel").onclick=resetSaving;
+function resetSaving(){$("savingForm").reset();$("savingId").value="";$("savingFormTitle").textContent="Fondo de ahorro";$("savingSubmit").textContent="Registrar";$("savingCancel").classList.add("hidden");$("savingFecha").value=today()}
+window.editSaving=r=>{$("savingId").value=r.id;$("savingTipo").value=r.tipo;$("savingFecha").value=r.fecha;$("savingMonto").value=r.monto;$("savingDescripcion").value=r.descripcion||"";$("savingFormTitle").textContent="Editar ahorro";$("savingSubmit").textContent="Guardar cambios";$("savingCancel").classList.remove("hidden");document.querySelector('[data-tab="ahorro"]').click();scrollTo({top:0,behavior:"smooth"})};
+window.deleteSaving=async id=>{if(!confirm("¿Eliminar este registro de ahorro?"))return;const{error}=await db.from("ahorro").delete().eq("id",id);if(error)return alert(error.message);refresh()};
 
-$("futureForm").onsubmit=async e=>{
- e.preventDefault(); setMsg("futureMsg","Guardando...");
- const {error}=await db.from("compromisos").insert({concepto:$("futureConcepto").value,fecha_vencimiento:$("futureFecha").value,monto:Number($("futureMonto").value),categoria:$("futureCategoria").value,periodicidad:$("futureRecurrence").value,notas:$("futureNotas").value,estado:"pendiente"});
- setMsg("futureMsg",error?error.message:"Compromiso creado."); if(!error){e.target.reset();$("futureFecha").value=today();await refresh();}
-};
+async function refresh(){const[{data:mov,error:a},{data:fut,error:b},{data:sav,error:c}]=await Promise.all([db.from("movimientos").select("*").order("fecha",{ascending:false}).order("created_at",{ascending:false}),db.from("compromisos").select("*").order("fecha_vencimiento",{ascending:true}),db.from("ahorro").select("*").order("fecha",{ascending:false}).order("created_at",{ascending:false})]);if(a||b||c)return console.error(a||b||c);renderMov(mov||[]);renderFuture(fut||[]);renderSaving(sav||[]);renderDash(mov||[],fut||[],sav||[])}
 
-$("savingForm").onsubmit=async e=>{
- e.preventDefault(); setMsg("savingMsg","Guardando...");
- const {error}=await db.from("ahorro").insert({tipo:$("savingTipo").value,fecha:$("savingFecha").value,monto:Number($("savingMonto").value),descripcion:$("savingDescripcion").value});
- setMsg("savingMsg",error?error.message:"Movimiento de ahorro guardado."); if(!error){e.target.reset();$("savingFecha").value=today();await refresh();}
-};
+function renderMov(rows){const t=today();$("movimientosLista").innerHTML=rows.length?rows.map(r=>{const future=r.fecha>t,amt=r.tipo==="gasto"?-Number(r.monto):Number(r.monto);return `<div class="row"><div class="row-main"><b>${r.tipo==="ingreso"?"Ingreso":"Gasto"} · ${esc(r.categoria||"Sin categoría")}</b><div>${esc(r.descripcion||"")}</div><small>${r.fecha} ${future?'<span class="pill future">FUTURO</span>':""}</small></div><div class="row-right"><strong class="${amt<0?"negative":"positive"}">${amt<0?"-":"+"}${CLP(Math.abs(amt))}</strong><div class="actions"><button class="small" onclick='editMov(${JSON.stringify(r)})'>Editar</button><button class="small danger" onclick="deleteMov(${r.id})">Borrar</button></div></div></div>`}).join(""):"<p class='muted'>Sin movimientos.</p>"}
+function renderFuture(rows){const t=today();$("futurosLista").innerHTML=rows.length?rows.map(r=>{const overdue=r.estado==="pendiente"&&r.fecha_vencimiento<t;return `<div class="row"><div class="row-main"><b>${esc(r.concepto)}</b><div>${esc(r.categoria||"")} · ${esc(r.periodicidad||"")}</div><small>${r.fecha_vencimiento} ${overdue?'<span class="pill overdue">VENCIDO</span>':""}</small></div><div class="row-right"><strong>${CLP(r.monto)}</strong><div class="actions"><button class="small" onclick='editFuture(${JSON.stringify(r)})'>Editar</button><button class="small danger" onclick="deleteFuture(${r.id})">Borrar</button>${r.estado==="pendiente"?`<button class="small paid" onclick="markPaid(${r.id})">Pagado</button>`:`<span class="pill paid">Pagado</span>`}</div></div></div>`}).join(""):"<p class='muted'>No hay compromisos.</p>"}
+function renderSaving(rows){const total=rows.reduce((s,r)=>s+(r.tipo==="aporte"?Number(r.monto):-Number(r.monto)),0);$("savingBalance").textContent=CLP(total);$("ahorroLista").innerHTML=rows.length?rows.map(r=>`<div class="row"><div class="row-main"><b>${r.tipo==="aporte"?"Aporte":"Retiro"}</b><div>${esc(r.descripcion||"")}</div><small>${r.fecha}</small></div><div class="row-right"><strong>${r.tipo==="aporte"?"+":"-"}${CLP(r.monto)}</strong><div class="actions"><button class="small" onclick='editSaving(${JSON.stringify(r)})'>Editar</button><button class="small danger" onclick="deleteSaving(${r.id})">Borrar</button></div></div></div>`).join(""):"<p class='muted'>Sin registros de ahorro.</p>"}
 
-async function refresh(){
- const [{data:mov,error:merr},{data:future,error:ferr},{data:sav,error:serr}]=await Promise.all([
-  db.from("movimientos").select("*").order("fecha",{ascending:false}).order("created_at",{ascending:false}),
-  db.from("compromisos").select("*").order("fecha_vencimiento",{ascending:true}),
-  db.from("ahorro").select("*").order("fecha",{ascending:false})
- ]);
- if(merr||ferr||serr){console.error(merr||ferr||serr);return}
- renderMov(mov||[]); renderFuture(future||[]); renderSaving(sav||[]); renderDashboard(mov||[],future||[],sav||[]);
-}
-function renderMov(rows){$("movimientosLista").innerHTML=rows.length?rows.map(r=>`<div class="row"><div><b>${r.tipo==="ingreso"?"Ingreso":"Gasto"} · ${r.categoria||"Sin categoría"}</b><div>${r.descripcion||""}<br><small>${r.fecha}</small></div></div><strong>${r.tipo==="gasto"?"-":"+"}${CLP(r.monto)}</strong></div>`).join(""):"<p class='muted'>Sin movimientos.</p>"}
-function renderFuture(rows){
- const t=today(); $("futurosLista").innerHTML=rows.length?rows.map(r=>{
-  const overdue=r.estado==="pendiente"&&r.fecha_vencimiento<t;
-  return `<div class="row"><div><b>${r.concepto}</b><div>${r.categoria||""} · ${r.periodicidad}</div><small>${r.fecha_vencimiento} ${overdue?"· VENCIDO":""}</small></div><div><strong>${CLP(r.monto)}</strong><br><button onclick="markPaid('${r.id}')" class="${r.estado==='pagado'?'paid':''}">${r.estado==="pagado"?"Pagado":"Marcar pagado"}</button></div></div>`
- }).join(""):"<p class='muted'>No hay compromisos.</p>"
-}
-async function markPaid(id){const {error}=await db.from("compromisos").update({estado:"pagado"}).eq("id",id);if(!error)refresh();}
-function renderSaving(rows){let total=rows.reduce((s,r)=>s+(r.tipo==="aporte"?Number(r.monto):-Number(r.monto)),0);$("savingBalance").textContent=CLP(total)}
-function renderDashboard(mov,fut,sav){
- const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), prefix=`${y}-${m}`;
- const inc=mov.filter(r=>r.tipo==="ingreso"&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0);
- const exp=mov.filter(r=>r.tipo==="gasto"&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0);
- const allInc=mov.filter(r=>r.tipo==="ingreso").reduce((s,r)=>s+Number(r.monto),0);
- const allExp=mov.filter(r=>r.tipo==="gasto").reduce((s,r)=>s+Number(r.monto),0);
- const committed=fut.filter(r=>r.estado==="pendiente").reduce((s,r)=>s+Number(r.monto),0);
- const ahorro=sav.reduce((s,r)=>s+(r.tipo==="aporte"?Number(r.monto):-Number(r.monto)),0);
- $("saldo").textContent=CLP(allInc-allExp); $("ingresosMes").textContent=CLP(inc); $("gastosMes").textContent=CLP(exp);
- $("comprometido").textContent=CLP(committed); $("proyectado").textContent=CLP(allInc-allExp-committed); $("ahorroTotal").textContent=CLP(ahorro);
- const pending=fut.filter(r=>r.estado==="pendiente").slice(0,8);
- $("proximosPagos").innerHTML=pending.length?pending.map(r=>`<div class="row"><span>${r.concepto}<br><small>${r.fecha_vencimiento}</small></span><strong>${CLP(r.monto)}</strong></div>`).join(""):"<p class='muted'>No tienes pagos pendientes.</p>";
-}
-configLoad();
-if(localStorage.getItem("sf_url")&&localStorage.getItem("sf_key")) connect();
+function renderDash(mov,fut,sav){const t=today(),d=new Date(),prefix=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,actual=mov.filter(r=>r.fecha<=t),future=mov.filter(r=>r.fecha>t);const inc=actual.filter(r=>r.tipo==="ingreso"&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0),exp=actual.filter(r=>r.tipo==="gasto"&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0),ci=actual.filter(r=>r.tipo==="ingreso").reduce((s,r)=>s+Number(r.monto),0),ce=actual.filter(r=>r.tipo==="gasto").reduce((s,r)=>s+Number(r.monto),0),comm=fut.filter(r=>r.estado==="pendiente").reduce((s,r)=>s+Number(r.monto),0),fi=future.filter(r=>r.tipo==="ingreso").reduce((s,r)=>s+Number(r.monto),0),fe=future.filter(r=>r.tipo==="gasto").reduce((s,r)=>s+Number(r.monto),0),ah=sav.reduce((s,r)=>s+(r.tipo==="aporte"?Number(r.monto):-Number(r.monto)),0),saldo=ci-ce,proj=saldo+fi-fe-comm;$("saldo").textContent=CLP(saldo);$("ingresosMes").textContent=CLP(inc);$("gastosMes").textContent=CLP(exp);$("comprometido").textContent=CLP(comm);$("proyectado").textContent=CLP(proj);$("ahorroTotal").textContent=CLP(ah);$("ingresosFuturos").textContent=CLP(fi);$("gastosFuturos").textContent=CLP(fe);const p=fut.filter(r=>r.estado==="pendiente").slice(0,8);$("proximosPagos").innerHTML=p.length?p.map(r=>`<div class="row"><span>${esc(r.concepto)}<br><small>${r.fecha_vencimiento}</small></span><strong>${CLP(r.monto)}</strong></div>`).join(""):"<p class='muted'>No tienes pagos pendientes.</p>"}
+resetDates();configLoad();if(localStorage.getItem("sf_url")&&localStorage.getItem("sf_key"))connect();
