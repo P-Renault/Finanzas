@@ -117,7 +117,51 @@ async function refresh(){
 function renderMov(rows){const t=today();$('movimientosLista').innerHTML=rows.length?rows.map(r=>{const future=r.fecha>t,amt=r.tipo==='gasto'?-Number(r.monto):Number(r.monto),enc=encodeObj(r);return `<div class="row"><div class="row-main"><b>${r.tipo==='ingreso'?'Ingreso':'Gasto'} · ${esc(r.categoria||'Sin categoría')}</b><div>${esc(r.descripcion||'')}</div><small>${r.fecha} ${future?'<span class="pill future">FUTURO</span>':''}</small></div><div class="row-right"><strong class="${amt<0?'negative':'positive'}">${amt<0?'-':'+'}${CLP(Math.abs(amt))}</strong><div class="actions"><button class="small" onclick="editMovEncoded('${enc}')">Editar</button><button class="small danger" onclick="deleteMov(${r.id})">Borrar</button></div></div></div>`}).join(''):'<p class="muted">Sin movimientos.</p>'}
 function renderFuture(rows){const t=today();$('futurosLista').innerHTML=rows.length?rows.map(r=>{const overdue=r.estado==='pendiente'&&r.fecha_vencimiento<t,enc=encodeObj(r);return `<div class="row"><div class="row-main"><b>${esc(r.concepto)}</b><div>${esc(r.categoria||'')} · ${esc(r.periodicidad||'')}</div><small>${r.fecha_vencimiento} ${overdue?'<span class="pill overdue">VENCIDO</span>':''}</small></div><div class="row-right"><strong>${CLP(r.monto)}</strong><div class="actions"><button class="small" onclick="editFutureEncoded('${enc}')">Editar</button><button class="small danger" onclick="deleteFuture(${r.id})">Borrar</button>${r.estado==='pendiente'?`<button class="small paid" onclick="markPaid(${r.id})">Pagado</button>`:`<span class="pill paid">Pagado</span>`}</div></div></div>`}).join(''):'<p class="muted">No hay compromisos.</p>'}
 function renderSaving(rows){const total=rows.reduce((s,r)=>s+(r.tipo==='aporte'?Number(r.monto):-Number(r.monto)),0);$('savingBalance').textContent=CLP(total);$('ahorroLista').innerHTML=rows.length?rows.map(r=>{const enc=encodeObj(r);return `<div class="row"><div class="row-main"><b>${r.tipo==='aporte'?'Aporte':'Retiro'}</b><div>${esc(r.descripcion||'')}</div><small>${r.fecha}</small></div><div class="row-right"><strong>${r.tipo==='aporte'?'+':'-'}${CLP(r.monto)}</strong><div class="actions"><button class="small" onclick="editSavingEncoded('${enc}')">Editar</button><button class="small danger" onclick="deleteSaving(${r.id})">Borrar</button></div></div></div>`}).join(''):'<p class="muted">Sin registros de ahorro.</p>'}
-function renderDash(mov,fut,sav){const t=today(),d=parseDate(t),prefix=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,actual=mov.filter(r=>r.fecha<=t),future=mov.filter(r=>r.fecha>t);const inc=actual.filter(r=>r.tipo==='ingreso'&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0),exp=actual.filter(r=>r.tipo==='gasto'&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0),ci=actual.filter(r=>r.tipo==='ingreso').reduce((s,r)=>s+Number(r.monto),0),ce=actual.filter(r=>r.tipo==='gasto').reduce((s,r)=>s+Number(r.monto),0),comm=fut.filter(r=>r.estado==='pendiente').reduce((s,r)=>s+Number(r.monto),0),fi=future.filter(r=>r.tipo==='ingreso').reduce((s,r)=>s+Number(r.monto),0),fe=future.filter(r=>r.tipo==='gasto').reduce((s,r)=>s+Number(r.monto),0),ah=sav.reduce((s,r)=>s+(r.tipo==='aporte'?Number(r.monto):-Number(r.monto)),0),saldo=ci-ce,proj=saldo+fi-fe-comm;$('saldo').textContent=CLP(saldo);$('ingresosMes').textContent=CLP(inc);$('gastosMes').textContent=CLP(exp);$('comprometido').textContent=CLP(comm);$('proyectado').textContent=CLP(proj);$('ahorroTotal').textContent=CLP(ah);$('ingresosFuturos').textContent=CLP(fi);$('gastosFuturos').textContent=CLP(fe);const p=fut.filter(r=>r.estado==='pendiente').slice(0,8);$('proximosPagos').innerHTML=p.length?p.map(r=>`<div class="row"><span>${esc(r.concepto)}<br><small>${r.fecha_vencimiento}</small></span><strong>${CLP(r.monto)}</strong></div>`).join(''):'<p class="muted">No tienes pagos pendientes.</p>'}
+function calculateIncomePlan(mov,fut){
+  const t=today();
+  const actualMov=mov.filter(r=>r.fecha<=t);
+  const currentBalance=actualMov.reduce((s,r)=>s+signedMovement(r),0);
+  const pending=fut.filter(r=>r.estado==='pendiente' && r.fecha_vencimiento>=t).sort((a,b)=>a.fecha_vencimiento.localeCompare(b.fecha_vencimiento));
+  if(!pending.length) return {has:false,currentBalance, savingsSuggested: actualMov.filter(r=>r.tipo==='ingreso').reduce((s,r)=>s+Number(r.monto)*0.10,0)};
+
+  const targetDate=pending[0].fecha_vencimiento;
+  // Para no subestimar la necesidad real, se consideran TODAS las obligaciones
+  // pendientes que vencen en la primera fecha futura, no solo la primera fila.
+  const sameDay=pending.filter(r=>r.fecha_vencimiento===targetDate);
+  const paymentsTarget=sameDay.reduce((s,r)=>s+Number(r.monto),0);
+  const futureIncomesBefore=mov.filter(r=>r.tipo==='ingreso' && r.fecha>t && r.fecha<=targetDate).reduce((s,r)=>s+Number(r.monto),0);
+  const futureExpensesBefore=mov.filter(r=>r.tipo==='gasto' && r.fecha>t && r.fecha<=targetDate).reduce((s,r)=>s+Number(r.monto),0);
+  const otherPendingBefore=fut.filter(r=>r.estado==='pendiente' && r.fecha_vencimiento>t && r.fecha_vencimiento<targetDate).reduce((s,r)=>s+Number(r.monto),0);
+  const availableBefore=Math.max(0,currentBalance + futureIncomesBefore - futureExpensesBefore - otherPendingBefore);
+  const gap=Math.max(0,paymentsTarget-availableBefore);
+  // Si se reserva 10% de cada ingreso nuevo, solo 90% queda disponible para la obligación.
+  const grossNeeded=gap/0.90;
+  const days=Math.max(1,Math.ceil((parseDate(targetDate)-parseDate(t))/86400000));
+  const daily=Math.ceil(grossNeeded/days);
+  const dailySaving=Math.ceil(daily*0.10);
+  const actualIncome=actualMov.filter(r=>r.tipo==='ingreso').reduce((s,r)=>s+Number(r.monto),0);
+  const futureIncome=mov.filter(r=>r.tipo==='ingreso' && r.fecha>t).reduce((s,r)=>s+Number(r.monto),0);
+  return {has:true,currentBalance,targetDate,sameDayCount:sameDay.length,paymentsTarget,futureIncomesBefore,futureExpensesBefore,otherPendingBefore,availableBefore,gap,grossNeeded,days,daily,dailySaving,savingsSuggested:actualIncome*0.10,futureSavingsSuggested:futureIncome*0.10};
+}
+
+function renderIncomePlan(mov,fut){
+  const p=calculateIncomePlan(mov,fut), box=$('incomePlan');
+  if(!box)return;
+  if(!p.has){
+    box.innerHTML=`<div class="plan-ok"><strong>Sin obligaciones futuras pendientes.</strong><span>No necesitas una meta diaria adicional por pagos programados en este momento.</span></div><div class="plan-savings"><b>Ahorro sugerido acumulado (10% de ingresos registrados):</b> ${CLP(p.savingsSuggested)}</div>`;
+    return;
+  }
+  const dateLabel=parseDate(p.targetDate).toLocaleDateString('es-CL',{day:'numeric',month:'long'});
+  const paymentLabel=p.sameDayCount>1?`${p.sameDayCount} obligaciones`:'la próxima obligación';
+  const gapText=p.gap>0?`Faltan ${CLP(p.gap)} para cubrirlas.`:'El saldo disponible alcanza para cubrirlas.';
+  box.innerHTML=`<div class="plan-header"><div><span class="plan-kicker">Sugerencia de ingreso</span><h3>${paymentLabel} · ${dateLabel}</h3></div><span class="suggest-pill">NO es una obligación</span></div>
+  <div class="plan-main"><div><span>Ingreso estimado por día</span><strong>${CLP(p.daily)}</strong><small>Durante ${p.days} día(s), considerando reservar 10% para ahorro.</small></div><div class="plan-target"><span>Responsabilidades de esa fecha</span><strong>${CLP(p.paymentsTarget)}</strong><small>${gapText}</small></div></div>
+  <div class="plan-details"><span>Saldo disponible antes: <b>${CLP(p.availableBefore)}</b></span><span>Ingreso bruto adicional estimado: <b>${CLP(p.grossNeeded)}</b></span><span>Ahorro 10% diario sugerido: <b>${CLP(p.dailySaving)}</b></span></div>
+  <div class="plan-savings"><b>Ahorro sugerido acumulado:</b> ${CLP(p.savingsSuggested)} <span>· 10% de los ingresos ya registrados</span></div>
+  <p class="plan-note">Se calcula con tu saldo actual, ingresos y gastos futuros registrados y compromisos pendientes anteriores o de la misma fecha. Si cambias un monto o fecha, la sugerencia se actualiza.</p>`;
+}
+
+function renderDash(mov,fut,sav){const t=today(),d=parseDate(t),prefix=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,actual=mov.filter(r=>r.fecha<=t),future=mov.filter(r=>r.fecha>t);const inc=actual.filter(r=>r.tipo==='ingreso'&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0),exp=actual.filter(r=>r.tipo==='gasto'&&r.fecha.startsWith(prefix)).reduce((s,r)=>s+Number(r.monto),0),ci=actual.filter(r=>r.tipo==='ingreso').reduce((s,r)=>s+Number(r.monto),0),ce=actual.filter(r=>r.tipo==='gasto').reduce((s,r)=>s+Number(r.monto),0),comm=fut.filter(r=>r.estado==='pendiente').reduce((s,r)=>s+Number(r.monto),0),fi=future.filter(r=>r.tipo==='ingreso').reduce((s,r)=>s+Number(r.monto),0),fe=future.filter(r=>r.tipo==='gasto').reduce((s,r)=>s+Number(r.monto),0),ah=sav.reduce((s,r)=>s+(r.tipo==='aporte'?Number(r.monto):-Number(r.monto)),0),saldo=ci-ce,proj=saldo+fi-fe-comm;$('saldo').textContent=CLP(saldo);$('ingresosMes').textContent=CLP(inc);$('gastosMes').textContent=CLP(exp);$('comprometido').textContent=CLP(comm);$('proyectado').textContent=CLP(proj);$('ahorroTotal').textContent=CLP(ah);$('ingresosFuturos').textContent=CLP(fi);$('gastosFuturos').textContent=CLP(fe);renderIncomePlan(mov,fut);const p=fut.filter(r=>r.estado==='pendiente').slice(0,8);$('proximosPagos').innerHTML=p.length?p.map(r=>`<div class="row"><span>${esc(r.concepto)}<br><small>${r.fecha_vencimiento}</small></span><strong>${CLP(r.monto)}</strong></div>`).join(''):'<p class="muted">No tienes pagos pendientes.</p>'}
 
 resetDates();configLoad();
 if(localStorage.getItem('sf_url')&&localStorage.getItem('sf_key'))connect();
