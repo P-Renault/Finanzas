@@ -1,0 +1,10 @@
+{
+  "name": "Control Financiero V8",
+  "short_name": "Finanzas V8",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827",
+  "lang": "es",
+  "description": "Control financiero personal con resumen mensual, calendario, pagos futuros y plan sugerido de ingresos."
+}
