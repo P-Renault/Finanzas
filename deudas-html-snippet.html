@@ -1,0 +1,108 @@
+
+<!-- Añadir dentro de .tabs -->
+<button data-tab="deudas">Deudas</button>
+
+<!-- Añadir como nueva sección dentro de #app -->
+<section id="deudas" class="tab hidden">
+  <div class="card">
+    <div class="section-title">
+      <div>
+        <span class="muted">Arquitectura financiera</span>
+        <h2>Deudas</h2>
+      </div>
+    </div>
+
+    <div class="cards">
+      <article class="metric">
+        <span>Deuda original</span>
+        <strong id="deudaOriginalTotal">$0</strong>
+      </article>
+      <article class="metric">
+        <span>Saldo pendiente</span>
+        <strong id="deudaSaldoTotal">$0</strong>
+      </article>
+      <article class="metric">
+        <span>Cuotas pendientes</span>
+        <strong id="deudaCuotasTotal">$0</strong>
+      </article>
+      <article class="metric">
+        <span>Obligaciones vigentes</span>
+        <strong id="deudaVigenteTotal">$0</strong>
+      </article>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Agregar deuda</h2>
+    <form id="deudaForm" class="grid2">
+      <label>Tipo de acreedor
+        <select id="deudaTipo">
+          <option value="banco">Banco</option>
+          <option value="institucion">Institución financiera</option>
+          <option value="persona">Persona</option>
+          <option value="otro">Otro</option>
+        </select>
+      </label>
+
+      <label>Acreedor
+        <input id="deudaAcreedor" required placeholder="Banco Itaú">
+      </label>
+
+      <label>Concepto
+        <input id="deudaConcepto" placeholder="Crédito de consumo">
+      </label>
+
+      <label>Monto original
+        <input id="deudaMonto" type="number" min="0" step="1" required>
+      </label>
+
+      <label>Saldo actual
+        <input id="deudaSaldo" type="number" min="0" step="1" required>
+      </label>
+
+      <label>Tasa anual (%)
+        <input id="deudaTasa" type="number" min="0" step="0.01" placeholder="0">
+      </label>
+
+      <label>Número de cuotas
+        <input id="deudaCuotas" type="number" min="1" step="1">
+      </label>
+
+      <label>Cuota acordada
+        <input id="deudaCuota" type="number" min="0" step="1">
+      </label>
+
+      <label>Fecha de inicio
+        <input id="deudaInicio" type="date">
+      </label>
+
+      <label>Primera cuota
+        <input id="deudaPrimeraCuota" type="date">
+      </label>
+
+      <label>Frecuencia
+        <select id="deudaFrecuencia">
+          <option value="mensual">Mensual</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="semanal">Semanal</option>
+        </select>
+      </label>
+
+      <div class="form-actions full">
+        <button type="submit">Registrar deuda y generar plan</button>
+      </div>
+    </form>
+    <p id="deudasMsg" class="status"></p>
+  </div>
+
+  <div class="card">
+    <h2>Deudas registradas</h2>
+    <div id="deudasLista"></div>
+  </div>
+
+  <div class="card">
+    <div id="deudaDetalle"></div>
+  </div>
+</section>
+
+<script src="deudas-module.js?v=21"></script>

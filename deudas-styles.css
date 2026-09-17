@@ -1,0 +1,66 @@
+
+/* FINANZAS V2.1 — estilos del módulo Deudas */
+.debt-card {
+  border: 1px solid rgba(127,127,127,.18);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+}
+.debt-card-main h3 { margin: 4px 0; }
+.debt-card-main p { margin: 0; }
+.debt-type {
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  opacity: .7;
+}
+.debt-card-values {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+.debt-card-values strong { font-size: 1.35rem; }
+.debt-card-values small,
+.debt-card-meta span {
+  opacity: .7;
+  font-size: .85rem;
+}
+.debt-card-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.debt-plan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 20px;
+}
+.debt-plan span {
+  border: 1px solid rgba(127,127,127,.18);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: .85rem;
+}
+.quota-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(127,127,127,.12);
+}
+.quota-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.quota-row span {
+  opacity: .7;
+  font-size: .82rem;
+}
+@media (max-width: 650px) {
+  .quota-row { grid-template-columns: 1fr auto; }
+  .quota-row button { grid-column: 1 / -1; }
+}
