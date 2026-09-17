@@ -12,7 +12,7 @@ const db=()=>{if(client)return client;const u=localStorage.getItem('sf_url'),k=l
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function loadScript(src){return new Promise((resolve,reject)=>{const old=document.querySelector(`script[data-b219="${src}"]`);if(old){resolve();return}const s=document.createElement('script');s.src=src;s.dataset.b219=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('No se pudo cargar '+src));document.body.appendChild(s)})}
 async function loadLegacy(){
-  const files=['finanzas-v233.js?v=219','dashboard-deudas-v234.js?v=219','centro-deudas-navegacion-b235.js?v=219','b211-registro-pagos-mixtos.js?v=219','b216-planificacion-financiera.js?v=219'];
+  const files=['finanzas-v233.js?v=2520','dashboard-deudas-v234.js?v=2520','centro-deudas-navegacion-b235.js?v=2520','b216-planificacion-financiera.js?v=2520'];
   for(const f of files){try{await loadScript(f);await wait(80)}catch(e){console.error('B219 legacy',e)}}
 }
 function baseStyles(){if($('b219Styles'))return;const s=document.createElement('style');s.id='b219Styles';s.textContent=`
