@@ -1,4 +1,79 @@
 
+/* FINANZAS V2.1 — UI injection for the existing app */
+(() => {
+  function inject() {
+    const app = document.getElementById("app");
+    const tabs = document.querySelector(".tabs");
+    if (!app || !tabs) return false;
+    if (!document.querySelector('[data-tab="deudas"]')) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.tab = "deudas";
+      b.textContent = "Deudas";
+      tabs.appendChild(b);
+      b.addEventListener("click", () => {
+        document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        document.querySelectorAll(".tab").forEach(x => x.classList.add("hidden"));
+        const section = document.getElementById("deudas");
+        if (section) section.classList.remove("hidden");
+        if (window.cargarDeudas) window.cargarDeudas();
+      });
+    }
+    if (!document.getElementById("deudas")) {
+      const section = document.createElement("section");
+      section.id = "deudas";
+      section.className = "tab hidden";
+      section.innerHTML = `
+        <div class="card">
+          <div class="section-title">
+            <div><span class="muted">Arquitectura financiera</span><h2>Deudas</h2></div>
+          </div>
+          <div class="cards">
+            <article class="metric"><span>Deuda original</span><strong id="deudaOriginalTotal">$0</strong></article>
+            <article class="metric"><span>Saldo pendiente</span><strong id="deudaSaldoTotal">$0</strong></article>
+            <article class="metric"><span>Cuotas pendientes</span><strong id="deudaCuotasTotal">$0</strong></article>
+            <article class="metric"><span>Obligaciones vigentes</span><strong id="deudaVigenteTotal">$0</strong></article>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Agregar deuda</h2>
+          <form id="deudaForm" class="grid2">
+            <label>Tipo de acreedor<select id="deudaTipo">
+              <option value="banco">Banco</option>
+              <option value="institucion">Institución financiera</option>
+              <option value="persona">Persona</option>
+              <option value="otro">Otro</option>
+            </select></label>
+            <label>Acreedor<input id="deudaAcreedor" required placeholder="Banco Itaú"></label>
+            <label>Concepto<input id="deudaConcepto" placeholder="Crédito de consumo"></label>
+            <label>Monto original<input id="deudaMonto" type="number" min="0" step="1" required></label>
+            <label>Saldo actual<input id="deudaSaldo" type="number" min="0" step="1" required></label>
+            <label>Tasa anual (%)<input id="deudaTasa" type="number" min="0" step="0.01" placeholder="0"></label>
+            <label>Número de cuotas<input id="deudaCuotas" type="number" min="1" step="1"></label>
+            <label>Cuota acordada<input id="deudaCuota" type="number" min="0" step="1"></label>
+            <label>Fecha de inicio<input id="deudaInicio" type="date"></label>
+            <label>Primera cuota<input id="deudaPrimeraCuota" type="date"></label>
+            <label>Frecuencia<select id="deudaFrecuencia">
+              <option value="mensual">Mensual</option>
+              <option value="quincenal">Quincenal</option>
+              <option value="semanal">Semanal</option>
+            </select></label>
+            <div class="form-actions full"><button type="submit">Registrar deuda y generar plan</button></div>
+          </form>
+          <p id="deudasMsg" class="status"></p>
+        </div>
+        <div class="card"><h2>Deudas registradas</h2><div id="deudasLista"></div></div>
+        <div class="card"><div id="deudaDetalle"></div></div>`;
+      app.appendChild(section);
+    }
+    return true;
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
+  else inject();
+})();
+
+
 /* FINANZAS V2.1 — Módulo Deudas
    Requiere: Supabase JS v2 y una variable global `db`.
    Se integra sobre la app existente sin reemplazar sus módulos.
@@ -20,9 +95,19 @@
   };
 
   const state = { debts: [], plans: [], quotas: [], selectedDebt: null };
+  let financeDb = null;
+  async function getDb() {
+    if (financeDb) return financeDb;
+    const url = localStorage.getItem("sf_url");
+    const key = localStorage.getItem("sf_key");
+    if (!url || !key || !window.supabase) return null;
+    financeDb = window.supabase.createClient(url, key);
+    return financeDb;
+  }
 
   async function loadDebts() {
-    if (!window.db) return;
+    const db = await getDb();
+    if (!db) return;
     const { data, error } = await db
       .from("v_deudas_resumen")
       .select("*")
@@ -97,6 +182,8 @@
   }
 
   window.verDeuda = async id => {
+    const db = await getDb();
+    if (!db) return renderError("Conecta primero la base de datos.");
     const debt = state.debts.find(d => Number(d.id) === Number(id));
     if (!debt) return;
 
@@ -183,6 +270,8 @@
   }
 
   window.pagarCuota = async cuotaId => {
+    const db = await getDb();
+    if (!db) return alert("Conecta primero la base de datos.");
     const cuota = state.quotas.find(q => Number(q.id) === Number(cuotaId));
     if (!cuota) return;
 
@@ -265,6 +354,8 @@
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
+      const db = await getDb();
+      if (!db) return renderError("Conecta primero la base de datos.");
       const get = id => $d(id)?.value?.trim();
 
       const debt = {
@@ -378,5 +469,13 @@
   }
 
   window.cargarDeudas = loadDebts;
-  setupDebtForm();
+  function initDeudas() {
+    setupDebtForm();
+    if (localStorage.getItem("sf_url") && localStorage.getItem("sf_key")) loadDebts();
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDeudas);
+  } else {
+    initDeudas();
+  }
 })();

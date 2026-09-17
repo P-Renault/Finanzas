@@ -64,3 +64,7 @@
   .quota-row { grid-template-columns: 1fr auto; }
   .quota-row button { grid-column: 1 / -1; }
 }
+
+/* Integración V2.1 */
+.tabs { flex-wrap: wrap; }
+.debt-card { background: var(--card, #fff); }
