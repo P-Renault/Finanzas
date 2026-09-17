@@ -1,4 +1,4 @@
-/* FINANZAS B2.16 — Runtime estable / carga progresiva + planificación */
+/* FINANZAS B2.17 — Runtime estable / carga progresiva + generación de ingresos */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -25,7 +25,7 @@
       debtNavigation:'centro-deudas-navegacion-b235.js?v=216',
       operations:'b212-centro-operaciones.js?v=216',
       payments:'b211-registro-pagos-mixtos.js?v=216',
-      planning:'b216-planificacion-financiera.js?v=216'
+      planning:'b216-planificacion-financiera.js?v=217'
     };
     if(!map[name]) return;
     try { await addScript(map[name]); }
@@ -67,6 +67,7 @@
       await loadFeature('debtDashboard');
       await loadFeature('debtNavigation');
       await loadFeature('planning');
+      await loadFeature('incomeEngine');
       installLazyTabs();
       setTimeout(installLazyTabs,600);
     } finally { booting=false; }

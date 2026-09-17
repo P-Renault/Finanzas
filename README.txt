@@ -1,27 +1,8 @@
-FINANZAS B2.16 — DEPLOY
-=======================
-
-Objetivo
---------
-Añadir Planificación financiera sin sobrecargar el arranque de Android.
-
-Cambios
--------
-1. index.html: cache/version 216.
-2. finanzas-runtime-fix.js: carga progresiva y lazy-loading del módulo B2.16.
-3. b216-planificacion-financiera.js: nueva pestaña Planificación.
-
-La Planificación es SOLO LECTURA. No modifica Supabase.
-Usa: cierres_financieros, cuentas_bancarias, ingresos_futuros,
-gastos_planificados y cuotas_deuda.
-
-No ejecutar SQL.
-No borrar registros.
-No reemplazar otros módulos.
-
-URL esperada:
-https://p-renault.github.io/Finanzas/
-
-Después de subir los 3 archivos, abrir la URL y verificar:
-Resumen → Planificación → escenario de 30 días.
-Luego probar Deudas y Operaciones.
+FINANZAS B2.17 DEFINITIVO
+- No crear jornadas_financieras.
+- Ejecutar B217_DEFINITIVO.sql.
+- Subir index.html, finanzas-runtime-fix.js y b217-motor-ingresos.js.
+- Mantener Control de Jornada como fuente operacional de Uber/inDrive.
+- La nueva capa registra generación/cobro de servicios, emprendimientos, e-commerce y otros.
+- No modifica movimientos ni saldos automáticamente.
+- En este mismo despliegue se debe incorporar/cargar la corrección de Editar deuda y el Centro de Operaciones estable.
