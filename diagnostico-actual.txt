@@ -1,0 +1,20 @@
+DIAGNÓSTICO VERIFICADO DEL REPOSITORIO
+
+index.html actual:
+- app.js?v=8
+- deudas-module.js?v=21
+- deudas-centro.js?v=22
+- NO carga finanzas-v233.js
+- NO carga finanzas-v233.css
+
+finanzas-v233.js:
+- SÍ existe en main.
+- Contiene la implementación V2.3.3 de Cuentas, Liquidez y Deudas.
+
+deudas-centro.js:
+- Existe en main.
+- Su versión publicada actualmente sigue siendo el Centro de deuda V2.2.
+
+CONCLUSIÓN:
+El problema no es Supabase ni la migración de tablas en esta etapa.
+El frontend publicado sigue arrancando la arquitectura antigua.
