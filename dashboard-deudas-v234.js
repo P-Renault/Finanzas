@@ -30,7 +30,7 @@
       .fin234-debt h3{margin:0;font-size:15px}.fin234-debt p{margin:3px 0 0;color:#6b7280;font-size:12px}
       .fin234-balance{text-align:right}.fin234-balance strong{display:block;font-size:17px}.fin234-balance small{color:#6b7280}
       .fin234-meta{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;color:#4b5563;font-size:12px}
-      .fin234-actions{grid-column:1/-1}.fin234-actions button{border:0;border-radius:8px;padding:8px 11px;background:#111827;color:#fff;font-weight:700;cursor:pointer}
+      .fin234-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}.fin234-actions button{border:0;border-radius:8px;padding:8px 11px;background:#111827;color:#fff;font-weight:700;cursor:pointer}.fin234-actions .fin234-link{background:#eef2f7;color:#111827}
       .fin234-empty{color:#6b7280;font-size:13px;margin:0}.fin234-note{margin:13px 0 0;padding-top:10px;border-top:1px solid #f1f5f9;color:#6b7280;font-size:11px}
       @media(max-width:700px){.fin234-grid{grid-template-columns:repeat(2,1fr)}.fin234-head{align-items:flex-start}.fin234-debt{grid-template-columns:1fr}.fin234-balance{text-align:left}}
     `;
@@ -112,12 +112,13 @@
             <span>Cuotas pendientes: ${Number(d.numero_cuotas_pendientes||0)}</span>
             <span>Próximo vencimiento: ${esc(d.proximo_vencimiento||'—')}</span>
           </div>
-          <div class="fin234-actions"><button id="fin234Detail">Ver detalle</button></div>
+          <div class="fin234-actions"><button id="fin234Detail">Ver detalle</button><button id="fin234List" class="fin234-link">Ver lista de deudas</button></div>
         </div>` : '<p class="fin234-empty">No hay deudas estructuradas pendientes.</p>'}
       <p class="fin234-note">Las deudas estructuradas se mantienen separadas de los compromisos generales. El saldo cambia al registrar un pago real.</p>
     `;
 
     $('fin234Go').onclick=goDebts;
+    if($('fin234List')) $('fin234List').onclick=goDebts;
     if($('fin234Detail') && d){
       $('fin234Detail').onclick=()=>window.verDeuda23 ? window.verDeuda23(d.id) : goDebts();
     }

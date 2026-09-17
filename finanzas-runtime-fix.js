@@ -20,9 +20,11 @@
 
   async function loadFeature(name){
     const map={
-      core:'finanzas-v233.js?v=214',
-      operations:'b212-centro-operaciones.js?v=214',
-      payments:'b211-registro-pagos-mixtos.js?v=214'
+      core:'finanzas-v233.js?v=215',
+      debtDashboard:'dashboard-deudas-v234.js?v=215',
+      debtNavigation:'centro-deudas-navegacion-b235.js?v=215',
+      operations:'b212-centro-operaciones.js?v=215',
+      payments:'b211-registro-pagos-mixtos.js?v=215'
     };
     if(!map[name]) return;
     try { await addScript(map[name]); }
@@ -62,7 +64,11 @@
     booting=true;
     try{
       await loadFeature('core');
-      await sleep(150);
+      await sleep(250);
+      // Restauración controlada del Centro de Deudas en Resumen.
+      // Se carga una sola vez, después del núcleo, sin observers sobre document.body.
+      await loadFeature('debtDashboard');
+      await loadFeature('debtNavigation');
       installLazyTabs();
       setTimeout(installLazyTabs,600);
     } finally { booting=false; }

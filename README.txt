@@ -1,33 +1,26 @@
-FINANZAS — B2.3.3-R1 ESTABILIZACIÓN
+FINANZAS B2.15 — RESTAURACIÓN CONTROLADA DEL CENTRO DE DEUDAS
 
-OBJETIVO
-Recuperar el módulo Deudas sin ejecutar SQL y sin borrar datos.
+B2.14 estabilizó la carga del Android, pero dejó fuera del arranque el módulo que dibuja el Centro de deudas en Resumen. B2.15 restaura ese bloque sin volver a cargar observers globales.
 
-CAUSA CONFIRMADA
-El index.html actual carga deudas-module.js y deudas-centro.js, pero no carga
-finanzas-v233.js. Ese archivo V2.3.3 contiene la interfaz autocontenida de
-Deudas + Cuentas + Liquidez, por lo que nunca llega a montarse.
+Se restaura en Resumen:
+- Deuda original total
+- Saldo pendiente total
+- Cuotas pendientes
+- Próximos 30 días
+- Deuda destacada
+- Ver detalle
+- Ver lista de deudas
+- Gestionar deudas
 
-CAMBIO
-Reemplazar únicamente:
-  deudas-centro.js
+También se conserva la navegación al detalle y al listado Deudas mediante el módulo B2.3.5.
 
-por el archivo incluido aquí.
+No hay cambios SQL ni cambios destructivos en Supabase.
+NO se incorpora B2.3.6 porque usa MutationObserver sobre document.body y el objetivo es conservar la estabilidad lograda en Android.
 
-El nuevo deudas-centro.js funciona como bootstrap y carga:
-  finanzas-v233.css?v=233
-  finanzas-v233.js?v=233
+Reemplazar/agregar en la raíz del repo:
+- index.html
+- finanzas-runtime-fix.js
+- dashboard-deudas-v234.js
+- centro-deudas-navegacion-b235.js
 
-NO EJECUTAR NINGÚN SQL EN ESTA FASE.
-
-VALIDACIÓN VISUAL
-Después de publicar y recargar:
-  1. Debe aparecer la pestaña Deudas.
-  2. Debe aparecer la pestaña Cuentas.
-  3. Debe aparecer Liquidez inicial en Resumen.
-  4. Deudas debe mostrar Ver detalle, Editar y Eliminar.
-  5. El detalle debe permitir reconstrucción del plan.
-  6. No se debe crear ninguna deuda nueva automáticamente.
-
-DATOS
-No elimina movimientos, compromisos, deudas ni historial.
+URL esperada: https://p-renault.github.io/Finanzas/
