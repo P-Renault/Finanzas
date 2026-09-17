@@ -1,4 +1,4 @@
-/* FINANZAS B2.14 — Runtime estable / carga progresiva */
+/* FINANZAS B2.16 — Runtime estable / carga progresiva + planificación */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -20,11 +20,12 @@
 
   async function loadFeature(name){
     const map={
-      core:'finanzas-v233.js?v=215',
-      debtDashboard:'dashboard-deudas-v234.js?v=215',
-      debtNavigation:'centro-deudas-navegacion-b235.js?v=215',
-      operations:'b212-centro-operaciones.js?v=215',
-      payments:'b211-registro-pagos-mixtos.js?v=215'
+      core:'finanzas-v233.js?v=216',
+      debtDashboard:'dashboard-deudas-v234.js?v=216',
+      debtNavigation:'centro-deudas-navegacion-b235.js?v=216',
+      operations:'b212-centro-operaciones.js?v=216',
+      payments:'b211-registro-pagos-mixtos.js?v=216',
+      planning:'b216-planificacion-financiera.js?v=216'
     };
     if(!map[name]) return;
     try { await addScript(map[name]); }
@@ -34,7 +35,6 @@
   function installLazyTabs(){
     const tabs=document.querySelector('.tabs');
     if(!tabs) return;
-    // Operaciones se anuncia sin ejecutar su módulo durante el arranque.
     let op=tabs.querySelector('[data-tab="operaciones"]');
     if(!op){
       op=document.createElement('button');
@@ -51,7 +51,6 @@
         document.getElementById('operaciones')?.classList.remove('hidden');
       });
     }
-
     const debtButton=tabs.querySelector('[data-tab="deudas"]');
     if(debtButton && !debtButton.dataset.paymentHook){
       debtButton.dataset.paymentHook='1';
@@ -65,10 +64,9 @@
     try{
       await loadFeature('core');
       await sleep(250);
-      // Restauración controlada del Centro de Deudas en Resumen.
-      // Se carga una sola vez, después del núcleo, sin observers sobre document.body.
       await loadFeature('debtDashboard');
       await loadFeature('debtNavigation');
+      await loadFeature('planning');
       installLazyTabs();
       setTimeout(installLazyTabs,600);
     } finally { booting=false; }
@@ -79,11 +77,9 @@
     const key=$('supabaseKey')?.value.trim();
     if(!url||!key){setMsg('Completa URL y clave de Supabase.');return;}
     if(!window.supabase){setMsg('No se cargó Supabase. Recarga la página.');return;}
-
     const btn=$('saveConfig');
     if(btn){btn.disabled=true;btn.textContent='Conectando…';}
     setMsg('Probando conexión con Supabase…');
-
     try{
       const client=window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
       const probes=[
@@ -100,38 +96,21 @@
         }catch(e){error=e;}
       }
       if(!ok) throw error||new Error('Supabase no respondió.');
-
-      localStorage.setItem('sf_url',url);
-      localStorage.setItem('sf_key',key);
-      $('configPanel')?.classList.add('hidden');
-      $('app')?.classList.remove('hidden');
-      $('logoutBtn')?.classList.remove('hidden');
-
+      localStorage.setItem('sf_url',url); localStorage.setItem('sf_key',key);
+      $('configPanel')?.classList.add('hidden'); $('app')?.classList.remove('hidden'); $('logoutBtn')?.classList.remove('hidden');
       if(typeof window.refresh==='function'){
-        await Promise.race([
-          window.refresh(),
-          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Carga inicial agotó el tiempo')),12000))
-        ]).catch(e=>console.warn('refresh inicial:',e));
+        await Promise.race([window.refresh(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Carga inicial agotó el tiempo')),12000))]).catch(e=>console.warn('refresh inicial:',e));
       }
-
       setMsg('Conectado.');
       await startFeatures();
-    }catch(e){
-      console.error('FINANZAS B2.14',e);
-      setMsg('No se pudo conectar: '+(e?.message||e));
-    }finally{
-      if(btn){btn.disabled=false;btn.textContent='Conectar';}
-    }
+    }catch(e){console.error('FINANZAS B2.16',e);setMsg('No se pudo conectar: '+(e?.message||e));}
+    finally{if(btn){btn.disabled=false;btn.textContent='Conectar';}}
   }
 
   function watchAutoConnect(){
-    const app=$('app'),panel=$('configPanel');
-    if(!app||!panel)return;
+    const app=$('app'),panel=$('configPanel'); if(!app||!panel)return;
     const observer=new MutationObserver(()=>{
-      if(!app.classList.contains('hidden')){
-        observer.disconnect();
-        startFeatures();
-      }
+      if(!app.classList.contains('hidden')){observer.disconnect();startFeatures();}
     });
     observer.observe(app,{attributes:true,attributeFilter:['class']});
     observer.observe(panel,{attributes:true,attributeFilter:['class']});
@@ -139,15 +118,12 @@
   }
 
   function install(){
-    const btn=$('saveConfig');
-    if(btn) btn.onclick=connectFixed;
+    const btn=$('saveConfig'); if(btn) btn.onclick=connectFixed;
     watchAutoConnect();
-    const logout=$('logoutBtn');
-    if(logout) logout.onclick=()=>{localStorage.removeItem('sf_url');localStorage.removeItem('sf_key');location.reload();};
+    const logout=$('logoutBtn'); if(logout) logout.onclick=()=>{localStorage.removeItem('sf_url');localStorage.removeItem('sf_key');location.reload();};
     const u=localStorage.getItem('sf_url'),k=localStorage.getItem('sf_key');
-    if(u&&k){ if($('supabaseUrl'))$('supabaseUrl').value=u; if($('supabaseKey'))$('supabaseKey').value=k; }
+    if(u&&$('supabaseUrl'))$('supabaseUrl').value=u;
+    if(k&&$('supabaseKey'))$('supabaseKey').value=k;
   }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install,{once:true});
-  else install();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })();
