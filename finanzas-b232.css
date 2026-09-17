@@ -1,0 +1,8 @@
+.b232-opening{margin-top:1rem}
+.b232-open-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.b232-open-grid>div{border:1px solid rgba(127,127,127,.18);border-radius:12px;padding:1rem}
+.b232-open-grid span,.b232-open-grid small{display:block;font-size:.78rem;opacity:.72}
+.b232-open-grid strong{font-size:1.35rem;display:block;margin:.3rem 0}
+.b232-open-grid b{float:right}
+.b232-open-grid hr{border:0;border-top:1px solid rgba(127,127,127,.16)}
+@media(max-width:600px){.b232-open-grid{grid-template-columns:1fr}}
