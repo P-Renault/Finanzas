@@ -1,104 +1,147 @@
-/* FINANZAS RUNTIME FIX — conexión robusta + arranque consolidado */
+/* FINANZAS B2.14 — Runtime estable / carga progresiva */
 (() => {
+  'use strict';
   const $ = id => document.getElementById(id);
-  const setStatus = text => { const el = $('configMsg'); if (el) el.textContent = text; };
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const setMsg = text => { const el=$('configMsg'); if(el) el.textContent=text; };
+  const sleep = ms => new Promise(r=>setTimeout(r,ms));
+  const loaded = new Set();
+  let booting = false;
 
-  async function withTimeout(promise, ms = 12000) {
-    let timer;
-    try {
-      return await Promise.race([
-        promise,
-        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Tiempo de espera agotado al contactar Supabase.')), ms); })
-      ]);
-    } finally { clearTimeout(timer); }
+  function addScript(src){
+    return new Promise((resolve,reject)=>{
+      if(loaded.has(src) || document.querySelector(`script[data-fin-runtime="${src}"]`)){ loaded.add(src); resolve(); return; }
+      const s=document.createElement('script');
+      s.src=src; s.async=false; s.dataset.finRuntime=src;
+      s.onload=()=>{loaded.add(src);resolve();};
+      s.onerror=()=>reject(new Error(`No se pudo cargar ${src}`));
+      document.body.appendChild(s);
+    });
   }
 
-  async function connectFixed() {
-    const url = $('supabaseUrl')?.value.trim();
-    const key = $('supabaseKey')?.value.trim();
-    if (!url || !key) { setStatus('Completa URL y clave de Supabase.'); return; }
-    if (!window.supabase) { setStatus('No se cargó la biblioteca de Supabase. Recarga la página.'); return; }
+  async function loadFeature(name){
+    const map={
+      core:'finanzas-v233.js?v=214',
+      operations:'b212-centro-operaciones.js?v=214',
+      payments:'b211-registro-pagos-mixtos.js?v=214'
+    };
+    if(!map[name]) return;
+    try { await addScript(map[name]); }
+    catch(e){ console.error('Finanzas feature',name,e); setMsg('Módulo '+name+' no pudo cargarse: '+e.message); }
+  }
 
-    const btn = $('saveConfig');
-    if (btn) { btn.disabled = true; btn.textContent = 'Conectando…'; }
-    setStatus('Probando conexión con Supabase…');
-
-    try {
-      const client = window.supabase.createClient(url, key, {
-        auth: { persistSession: false, autoRefreshToken: false }
+  function installLazyTabs(){
+    const tabs=document.querySelector('.tabs');
+    if(!tabs) return;
+    // Operaciones se anuncia sin ejecutar su módulo durante el arranque.
+    let op=tabs.querySelector('[data-tab="operaciones"]');
+    if(!op){
+      op=document.createElement('button');
+      op.type='button'; op.dataset.tab='operaciones'; op.textContent='Operaciones';
+      tabs.appendChild(op);
+    }
+    if(!op.dataset.lazyHook){
+      op.dataset.lazyHook='1';
+      op.addEventListener('click',async ()=>{
+        await loadFeature('operations');
+        document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+        op.classList.add('active');
+        document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));
+        document.getElementById('operaciones')?.classList.remove('hidden');
       });
+    }
 
-      // La prueba principal usa una tabla que forma parte del núcleo histórico.
-      // Si falla, probamos tablas nuevas para entregar un diagnóstico más preciso.
-      const probes = [
-        ['movimientos', () => client.from('movimientos').select('id').limit(1)],
-        ['cierres_financieros', () => client.from('cierres_financieros').select('id').limit(1)],
-        ['deudas', () => client.from('deudas').select('id').limit(1)]
-      ];
-      let firstError = null;
-      let connected = false;
-      for (const [name, probe] of probes) {
-        try {
-          const r = await withTimeout(probe());
-          if (!r.error) { connected = true; break; }
-          firstError ||= r.error;
-        } catch (e) { firstError ||= e; }
-      }
-      if (!connected) {
-        throw new Error(firstError?.message || 'Supabase no respondió correctamente.');
-      }
-
-      localStorage.setItem('sf_url', url);
-      localStorage.setItem('sf_key', key);
-      window.__finClient = client;
-
-      // app.js declara `db` como binding global. Lo enlazamos al cliente ya validado
-      // para que refresh(), movimientos, compromisos y ahorro reutilicen la misma conexión.
-      try { window.eval('db = window.__finClient'); } catch (_) {}
-
-      $('configPanel')?.classList.add('hidden');
-      $('app')?.classList.remove('hidden');
-      $('logoutBtn')?.classList.remove('hidden');
-      setStatus('Conectado.');
-
-      if (typeof window.refresh === 'function') {
-        await withTimeout(window.refresh(), 15000).catch(e => {
-          console.error('Refresh financiero:', e);
-          setStatus('Conectado, pero algunos datos no pudieron cargarse: ' + e.message);
-        });
-      }
-
-      // Reintenta la carga de módulos que dependen de Supabase sin tocar datos.
-      await sleep(250);
-      if (typeof window.cargarDeudas === 'function') await window.cargarDeudas().catch(console.error);
-      if (typeof window.loadAccounts === 'function') await window.loadAccounts().catch(console.error);
-    } catch (e) {
-      console.error('FINANZAS RUNTIME FIX:', e);
-      setStatus('No se pudo conectar: ' + (e?.message || e));
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Conectar'; }
+    const debtButton=tabs.querySelector('[data-tab="deudas"]');
+    if(debtButton && !debtButton.dataset.paymentHook){
+      debtButton.dataset.paymentHook='1';
+      debtButton.addEventListener('click',()=>loadFeature('payments'),{once:true});
     }
   }
 
-  function install() {
-    const btn = $('saveConfig');
-    if (!btn) return false;
-    btn.onclick = connectFixed;
-    window.finanzasConnect = connectFixed;
-    return true;
+  async function startFeatures(){
+    if(booting) return;
+    booting=true;
+    try{
+      await loadFeature('core');
+      await sleep(150);
+      installLazyTabs();
+      setTimeout(installLazyTabs,600);
+    } finally { booting=false; }
   }
 
-  // Sobrescribe el botón después de que app.js y los módulos hayan cargado.
-  if (!install()) {
-    const observer = new MutationObserver(() => { if (install()) observer.disconnect(); });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+  async function connectFixed(){
+    const url=$('supabaseUrl')?.value.trim();
+    const key=$('supabaseKey')?.value.trim();
+    if(!url||!key){setMsg('Completa URL y clave de Supabase.');return;}
+    if(!window.supabase){setMsg('No se cargó Supabase. Recarga la página.');return;}
+
+    const btn=$('saveConfig');
+    if(btn){btn.disabled=true;btn.textContent='Conectando…';}
+    setMsg('Probando conexión con Supabase…');
+
+    try{
+      const client=window.supabase.createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+      const probes=[
+        ()=>client.from('movimientos').select('id').limit(1),
+        ()=>client.from('cierres_financieros').select('id').limit(1),
+        ()=>client.from('deudas').select('id').limit(1)
+      ];
+      let error=null,ok=false;
+      for(const fn of probes){
+        try{
+          const r=await Promise.race([fn(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Tiempo de espera de Supabase agotado')),10000))]);
+          if(!r.error){ok=true;break;}
+          error=r.error;
+        }catch(e){error=e;}
+      }
+      if(!ok) throw error||new Error('Supabase no respondió.');
+
+      localStorage.setItem('sf_url',url);
+      localStorage.setItem('sf_key',key);
+      $('configPanel')?.classList.add('hidden');
+      $('app')?.classList.remove('hidden');
+      $('logoutBtn')?.classList.remove('hidden');
+
+      if(typeof window.refresh==='function'){
+        await Promise.race([
+          window.refresh(),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('Carga inicial agotó el tiempo')),12000))
+        ]).catch(e=>console.warn('refresh inicial:',e));
+      }
+
+      setMsg('Conectado.');
+      await startFeatures();
+    }catch(e){
+      console.error('FINANZAS B2.14',e);
+      setMsg('No se pudo conectar: '+(e?.message||e));
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='Conectar';}
+    }
   }
 
-  // Si existen credenciales guardadas, intenta el arranque automático una sola vez.
-  // El usuario puede cancelar/reintentar desde el mismo botón.
-  setTimeout(() => {
-    const u = localStorage.getItem('sf_url'), k = localStorage.getItem('sf_key');
-    if (u && k && $('configPanel') && !$('configPanel').classList.contains('hidden')) connectFixed();
-  }, 700);
+  function watchAutoConnect(){
+    const app=$('app'),panel=$('configPanel');
+    if(!app||!panel)return;
+    const observer=new MutationObserver(()=>{
+      if(!app.classList.contains('hidden')){
+        observer.disconnect();
+        startFeatures();
+      }
+    });
+    observer.observe(app,{attributes:true,attributeFilter:['class']});
+    observer.observe(panel,{attributes:true,attributeFilter:['class']});
+    if(!app.classList.contains('hidden')){observer.disconnect();startFeatures();}
+  }
+
+  function install(){
+    const btn=$('saveConfig');
+    if(btn) btn.onclick=connectFixed;
+    watchAutoConnect();
+    const logout=$('logoutBtn');
+    if(logout) logout.onclick=()=>{localStorage.removeItem('sf_url');localStorage.removeItem('sf_key');location.reload();};
+    const u=localStorage.getItem('sf_url'),k=localStorage.getItem('sf_key');
+    if(u&&k){ if($('supabaseUrl'))$('supabaseUrl').value=u; if($('supabaseKey'))$('supabaseKey').value=k; }
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
 })();
