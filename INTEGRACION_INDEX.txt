@@ -1,0 +1,23 @@
+INTEGRACIÓN V2.3.3
+===================
+
+1) Ejecuta TODO el archivo finanzas-v233.sql en Supabase SQL Editor.
+
+2) En index.html, después de:
+   <script src="deudas-module.js?v=21"></script>
+   y después de los módulos existentes, agrega:
+
+   <link rel="stylesheet" href="finanzas-v233.css?v=233">
+   <script src="finanzas-v233.js?v=233"></script>
+
+3) Publica/actualiza los tres archivos en la raíz del repositorio.
+
+4) Recarga la PWA con caché actualizado.
+
+5) VALIDACIÓN:
+   - Deudas: Santiago debe aparecer exactamente una vez y con saldo $234.000.
+   - Ver detalle: debe mostrar Editar deuda, Reconstruir/Crear plan y Eliminar deuda.
+   - Liquidez inicial: debe mostrar Saldo de apertura $1.824.
+   - Con las dos cuentas conocidas cargadas por SQL: BancoEstado $1.500 + Santander $274; efectivo resultante $50.
+   - Pestaña Cuentas: permite agregar las demás cuentas bancarias, aunque tengan $0.
+   - NO se borran movimientos ni compromisos históricos.
