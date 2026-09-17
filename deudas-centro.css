@@ -1,0 +1,15 @@
+.debt-center-card{margin-top:1rem}
+.debt-center-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin:.8rem 0}
+.debt-center-metrics article{padding:.85rem;border:1px solid rgba(127,127,127,.2);border-radius:12px;background:rgba(127,127,127,.05)}
+.debt-center-metrics span{display:block;font-size:.78rem;opacity:.72}
+.debt-center-metrics strong{display:block;margin-top:.25rem;font-size:1.05rem}
+.debt-center-list{display:grid;gap:.5rem}
+.dc-row{width:100%;display:flex;justify-content:space-between;align-items:center;gap:1rem;text-align:left;border:1px solid rgba(127,127,127,.18);border-radius:10px;padding:.75rem;background:transparent}
+.dc-row span{display:grid;gap:.2rem}
+.dc-row small{opacity:.7}
+.debt-center-note{margin:.75rem 0 0;font-size:.78rem}
+@media(max-width:560px){
+  .debt-center-metrics{grid-template-columns:1fr}
+  .debt-center-metrics article{display:flex;justify-content:space-between;align-items:center}
+  .debt-center-metrics strong{margin:0}
+}
