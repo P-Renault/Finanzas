@@ -1,19 +1,16 @@
-FINANZAS B2.20 — MOTOR DE EJECUCIÓN FINANCIERA
+FINANZAS B2.20.2 — CORRECCION INTEGRAL
 
-Objetivo:
-Unificar deuda -> cuota -> pago real -> fuente -> movimiento -> liquidez -> saldo.
+Esta corrección revierte una regresión de despliegue en index.html.
 
-Incluye:
-- Pago de cuotas existentes con el RPC registrar_pago_deuda_v2.
-- Pago mixto: efectivo + una o más cuentas bancarias.
-- Deudas sin cuotas (pago único): genera una cuota/plan único para mantener trazabilidad y luego ejecuta el pago.
-- Botón contextual en cada deuda: Pagar próxima cuota o Registrar pago único.
-- Intercepta Registrar pago del detalle para abrir el flujo unificado.
+Conserva la barra horizontal existente:
+Resumen, Movimientos, Pagos futuros, Calendario, Ahorro, Deudas, Cuentas, Operaciones, Planificación.
 
-No crea jornadas_financieras.
-No elimina datos históricos.
-No modifica la estructura de navegación.
+Las nuevas funciones se cargan por B2.19 en el menú Más:
+- Motor Multifuente
+- Control de Jornada
 
-IMPORTANTE:
-Este módulo depende de la función Supabase registrar_pago_deuda_v2 ya instalada en B2.10.2.
-No ejecutar SQL adicional para esta versión si esa función ya existe y funciona.
+También carga B2.20 Motor de Ejecución Financiera.
+
+NO elimina los archivos legacy existentes del repositorio.
+NO crea jornadas_financieras.
+NO registra pagos reales automáticamente.
