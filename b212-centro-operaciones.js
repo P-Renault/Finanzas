@@ -44,6 +44,7 @@
     $("b212Cash").textContent=clp(cash);
     $("b212Banks").textContent=clp(bankTotal);
     $("b212FutureIncome").textContent=clp(futureIncome);
+    $("b212FutureIncomeFlow").textContent=clp(futureIncome);
     $("b212FutureExpense").textContent=clp(futureExpense);
     $("b212Debt").textContent=clp(debtTotal);
     $("b212Projected").textContent=clp(projected);
@@ -102,7 +103,7 @@
         <div class="card"><h3>Deudas estructuradas</h3><div class="b212-debt-total" id="b212Debt">$0</div><div id="b212DebtList"></div></div>
       </div>
       <div class="b212-grid">
-        <div class="card"><h3>Flujo futuro</h3><div class="b212-row"><span>Ingresos programados</span><strong id="b212FutureIncome">$0</strong></div><div class="b212-row"><span>Gastos programados</span><strong id="b212FutureExpense">$0</strong></div><div class="b212-row"><span>Ingresos del mes registrados</span><strong id="b212IncomeMonth">$0</strong></div><div class="b212-row"><span>Gastos del mes registrados</span><strong id="b212ExpenseMonth">$0</strong></div></div>
+        <div class="card"><h3>Flujo futuro</h3><div class="b212-row"><span>Ingresos programados</span><strong id="b212FutureIncomeFlow">$0</strong></div><div class="b212-row"><span>Gastos programados</span><strong id="b212FutureExpense">$0</strong></div><div class="b212-row"><span>Ingresos del mes registrados</span><strong id="b212IncomeMonth">$0</strong></div><div class="b212-row"><span>Gastos del mes registrados</span><strong id="b212ExpenseMonth">$0</strong></div></div>
         <div class="card"><h3>Próximos eventos</h3><div id="b212Events"></div></div>
       </div>
       <div class="card b212-logic"><strong>Regla de control:</strong> la liquidez disponible solo usa dinero real registrado. Los ingresos futuros se mantienen separados hasta que sean confirmados como recibidos.</div>

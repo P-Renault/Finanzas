@@ -74,8 +74,8 @@
 
   let state={debtId:null,quota:null,sources:[]};
 
-  function addSource(type='efectivo'){
-    state.sources.push({type,accountId:type==='cuenta_bancaria'?(accounts[0]?.id||''): '',amount:0});
+  function addSource(type='efectivo', amount=0){
+    state.sources.push({type,accountId:type==='cuenta_bancaria'?(accounts[0]?.id||''): '',amount:Number(amount)||0});
     renderSources();
   }
 
@@ -135,7 +135,7 @@
     $('b211Subtitle').textContent=`Cuota ${q.numero_cuota} · vencimiento ${q.fecha_vencimiento}`;
     $('b211Required').textContent=money(q.monto);
     $('b211Notes').value='';
-    addSource('efectivo');
+    addSource('efectivo', Number(q.monto));
     document.body.classList.add('b211-open');
   }
 
