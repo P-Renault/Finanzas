@@ -1,39 +1,33 @@
-FINANZAS — DESPLIEGUE CORRECTIVO B2.3.2
+FINANZAS — B2.3.3-R1 ESTABILIZACIÓN
 
-ORDEN DE INSTALACIÓN
+OBJETIVO
+Recuperar el módulo Deudas sin ejecutar SQL y sin borrar datos.
 
-1) Supabase:
-   Ejecuta finanzas-b23-correccion.sql.
-   Debe devolver:
-   cantidad_deudas_santiago = 1
-   saldo_santiago = 234000
-   saldo_inicial = 1824
+CAUSA CONFIRMADA
+El index.html actual carga deudas-module.js y deudas-centro.js, pero no carga
+finanzas-v233.js. Ese archivo V2.3.3 contiene la interfaz autocontenida de
+Deudas + Cuentas + Liquidez, por lo que nunca llega a montarse.
 
-2) GitHub:
-   REEMPLAZAR:
-   deudas-module.js
-   por el archivo de este paquete.
+CAMBIO
+Reemplazar únicamente:
+  deudas-centro.js
 
-   SUBIR:
-   finanzas-b232.js
-   finanzas-b232.css
+por el archivo incluido aquí.
 
-3) index.html:
-   Si todavía no carga B2.3.2, agregar después de app.js:
-   <link rel="stylesheet" href="finanzas-b232.css?v=232">
-   <script src="finanzas-b232.js?v=232"></script>
+El nuevo deudas-centro.js funciona como bootstrap y carga:
+  finanzas-v233.css?v=233
+  finanzas-v233.js?v=233
 
-   Y asegurar que deudas-module.js se cargue después de app.js.
+NO EJECUTAR NINGÚN SQL EN ESTA FASE.
 
-4) CAMBIO VISUAL:
-   - Deudas mostrará botón ELIMINAR en cada deuda.
-   - El Resumen tendrá el bloque CERO FINANCIERO / Liquidez inicial.
-   - Santiago deberá aparecer una sola vez.
-   - No se eliminan movimientos/compromisos históricos.
+VALIDACIÓN VISUAL
+Después de publicar y recargar:
+  1. Debe aparecer la pestaña Deudas.
+  2. Debe aparecer la pestaña Cuentas.
+  3. Debe aparecer Liquidez inicial en Resumen.
+  4. Deudas debe mostrar Ver detalle, Editar y Eliminar.
+  5. El detalle debe permitir reconstrucción del plan.
+  6. No se debe crear ninguna deuda nueva automáticamente.
 
-IMPORTANTE:
-No ejecutar otra carga maestra después de esta corrección.
-No registrar deuda de prueba.
-
-La eliminación de los registros antiguos no etiquetados NO se hace automáticamente:
-son datos históricos y primero deben clasificarse antes de decidir qué se conserva, archiva o transforma.
+DATOS
+No elimina movimientos, compromisos, deudas ni historial.
