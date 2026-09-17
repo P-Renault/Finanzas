@@ -59,6 +59,18 @@
   function detailPatch(){const d=$('deudaDetalle');if(!d)return;d.querySelectorAll('.quota-row').forEach(row=>{const b=row.querySelector('button[onclick*="pagarCuota23"]');if(!b)return;const oc=b.getAttribute('onclick')||'';const m=oc.match(/pagarCuota23\((\d+)\)/);if(!m)return;b.onclick=()=>{const id=Number(m[1]);const current=(window.__b220Quotas||[]).find(q=>Number(q.id)===id);if(current)openQuota(Number(window.__b220SelectedDebt||0),id);else{const title=d.querySelector('h2')?.textContent?.trim();if(title)openNextByName(title,id)}}})}
   async function openNextByName(name,quotaId){const c=await db();if(!c)return;const r=await c.from('deudas').select('id').eq('acreedor',name).limit(1).maybeSingle();if(r.data)openQuota(r.data.id,quotaId)}
 
-  function init(){ensureStyles();bindDetailDelegation();[500,1200,2200].forEach(ms=>setTimeout(injectButtons,ms));window.b220OpenQuota=openQuota;window.b220OpenSingle=openSingle;window.b220OpenNext=window.b220OpenNext||openNext}
+  function init(){
+    ensureStyles();
+    window.b220OpenQuota=openQuota;
+    window.b220OpenSingle=openSingle;
+    window.b220OpenNext=openNext;
+    const wire=()=>{injectButtons(); detailPatch()};
+    [300,800,1500,2500,4000].forEach(ms=>setTimeout(wire,ms));
+    const root=$('deudas');
+    if(root){
+      const obs=new MutationObserver(()=>wire());
+      obs.observe(root,{childList:true,subtree:true});
+    }
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,600));else setTimeout(init,600);
 })();
