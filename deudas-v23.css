@@ -1,0 +1,18 @@
+.debt-architecture{margin-top:1rem}
+.debt-architecture-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.debt-architecture-grid article{padding:.85rem;border:1px solid rgba(127,127,127,.2);border-radius:12px;background:rgba(127,127,127,.05)}
+.debt-architecture-grid span,.debt-architecture-grid small{display:block;font-size:.78rem;opacity:.72}
+.debt-architecture-grid strong{display:block;font-size:1.05rem;margin:.25rem 0}
+.debt-alert{margin-top:.75rem;padding:.7rem;border-radius:10px;background:rgba(127,127,127,.08);font-size:.82rem}
+.debt-calendar{margin-top:1rem}
+.dc-full-row{display:grid;grid-template-columns:1fr auto auto;gap:1rem;align-items:center;padding:.8rem 0;border-bottom:1px solid rgba(127,127,127,.16)}
+.dc-full-row:last-child{border-bottom:0}
+.dc-full-row div{display:grid;gap:.2rem}
+.dc-full-row span{font-size:.78rem;opacity:.7}
+.quota-status{text-transform:capitalize}
+.dc-full-row.overdue{font-weight:600}
+@media(max-width:650px){
+ .debt-architecture-grid{grid-template-columns:1fr 1fr}
+ .dc-full-row{grid-template-columns:1fr auto}
+ .quota-status{grid-column:1/-1}
+}
