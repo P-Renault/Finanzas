@@ -1,418 +1,363 @@
 /* ============================================================
-   B231 - MODELO DE MODALIDAD DE PAGO
-   Corrección estructural:
-   UNICO != 1 CUOTA
-   CUOTAS = existe acuerdo de pago en cuotas
+   B231.0 — ADAPTADOR DEUDAS V2
+   Control Financiero
+   Versión estable de referencia
    ============================================================ */
 
 (function () {
   'use strict';
 
-  const VERSION = '231.0-modalidad-v2';
+  const VERSION = '231.0';
 
-  function normalizarTexto(txt) {
-    return String(txt || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-  }
+  /* ------------------------------------------------------------
+     API GLOBAL
+     ------------------------------------------------------------ */
 
-  function encontrarFormularioDeudas() {
-    const forms = Array.from(document.querySelectorAll('form'));
+  const B231DeudasV2 = {
 
-    return forms.find(form => {
-      const texto = normalizarTexto(form.innerText);
-
-      return (
-        texto.includes('acreedor') &&
-        texto.includes('monto original') &&
-        texto.includes('saldo actual')
-      );
-    }) || null;
-  }
-
-  function encontrarCampoPorEtiqueta(form, textoBuscado) {
-    const buscado = normalizarTexto(textoBuscado);
-
-    const labels = Array.from(form.querySelectorAll('label'));
-
-    for (const label of labels) {
-      const texto = normalizarTexto(label.innerText);
-
-      if (texto.includes(buscado)) {
-        const campo = label.querySelector(
-          'input, select, textarea'
-        );
-
-        if (campo) return campo;
-      }
-    }
-
-    return null;
-  }
-
-  function encontrarCampoCuotas(form) {
-    return (
-      form.querySelector('#deudaCuotas') ||
-      form.querySelector('[name="cuotas"]') ||
-      form.querySelector('[name="numero_cuotas"]') ||
-      encontrarCampoPorEtiqueta(form, 'numero de cuotas')
-    );
-  }
-
-  function encontrarCampoCuota(form) {
-    return (
-      form.querySelector('#deudaCuota') ||
-      form.querySelector('[name="cuota"]') ||
-      form.querySelector('[name="monto_cuota"]') ||
-      encontrarCampoPorEtiqueta(form, 'cuota acordada')
-    );
-  }
-
-  function obtenerModalidad(form) {
-    const selector = form.querySelector(
-      '#deudaModalidadPago, [name="modalidad_pago"]'
-    );
-
-    return selector ? selector.value : 'UNICO';
-  }
-
-  function crearSelectorModalidad(form) {
-
-    if (
-      form.querySelector('#deudaModalidadPago') ||
-      form.querySelector('[name="modalidad_pago"]')
-    ) {
-      return;
-    }
-
-    const cuotas = encontrarCampoCuotas(form);
-
-    if (!cuotas) {
-      console.warn(
-        `[${VERSION}] No se encontró el campo Número de cuotas.`
-      );
-      return;
-    }
-
-    const label = document.createElement('label');
-
-    label.id = 'deudaModalidadPagoLabel';
-
-    label.innerHTML = `
-      Modalidad de pago
-      <select id="deudaModalidadPago" name="modalidad_pago">
-        <option value="UNICO">Pago único</option>
-        <option value="CUOTAS">En cuotas</option>
-      </select>
-    `;
-
-    cuotas.closest('label')?.before(label);
-
-    actualizarCamposModalidad(form);
-  }
-
-  function actualizarCamposModalidad(form) {
-
-    const selector = form.querySelector('#deudaModalidadPago');
-
-    if (!selector) return;
-
-    const modalidad = selector.value;
-
-    const cuotas = encontrarCampoCuotas(form);
-    const montoCuota = encontrarCampoCuota(form);
-
-    const labelCuotas = cuotas?.closest('label');
-    const labelMontoCuota = montoCuota?.closest('label');
-
-    if (modalidad === 'UNICO') {
-
-      if (labelCuotas) {
-        labelCuotas.style.display = 'none';
-      }
-
-      if (labelMontoCuota) {
-        labelMontoCuota.style.display = 'none';
-      }
-
-      if (cuotas) {
-        cuotas.required = false;
-        cuotas.removeAttribute('min');
-
-        /*
-         * No utilizamos 1 como representación
-         * de una deuda de pago único.
-         */
-        cuotas.value = '';
-        cuotas.dataset.modalidad = 'UNICO';
-      }
-
-      if (montoCuota) {
-        montoCuota.required = false;
-        montoCuota.value = '';
-        montoCuota.dataset.modalidad = 'UNICO';
-      }
-
-    } else {
-
-      if (labelCuotas) {
-        labelCuotas.style.display = '';
-      }
-
-      if (labelMontoCuota) {
-        labelMontoCuota.style.display = '';
-      }
-
-      if (cuotas) {
-        cuotas.required = true;
-
-        if (!cuotas.getAttribute('min')) {
-          cuotas.setAttribute('min', '1');
-        }
-
-        if (
-          !cuotas.value ||
-          Number(cuotas.value) < 1
-        ) {
-          cuotas.value = '1';
-        }
-
-        cuotas.dataset.modalidad = 'CUOTAS';
-      }
-
-      if (montoCuota) {
-        montoCuota.required = true;
-        montoCuota.dataset.modalidad = 'CUOTAS';
-      }
-    }
-
-    form.dataset.modalidadPago = modalidad;
-  }
-
-  function agregarEstadoVisual(form) {
-
-    if (form.querySelector('#b231ModalidadInfo')) {
-      return;
-    }
-
-    const box = document.createElement('div');
-
-    box.id = 'b231ModalidadInfo';
-
-    box.style.cssText = `
-      margin:10px 0;
-      padding:10px 12px;
-      border-radius:10px;
-      background:#f3f4f6;
-      font-size:13px;
-      line-height:1.4;
-    `;
-
-    box.innerHTML = `
-      <strong>B231 · Modelo de deuda</strong>
-      <div id="b231ModalidadTexto">
-        Selecciona la modalidad de pago.
-      </div>
-    `;
-
-    const selector = form.querySelector('#deudaModalidadPago');
-
-    selector?.closest('label')?.after(box);
-  }
-
-  function actualizarMensajeModalidad(form) {
-
-    const selector = form.querySelector('#deudaModalidadPago');
-
-    const texto = form.querySelector('#b231ModalidadTexto');
-
-    if (!selector || !texto) return;
-
-    if (selector.value === 'UNICO') {
-
-      texto.innerHTML = `
-        <strong>Pago único:</strong>
-        esta deuda no tendrá un plan de cuotas.
-        Si posteriormente necesitas pagar parcialmente,
-        podrá registrarse un abono o renegociarse.
-      `;
-
-    } else {
-
-      texto.innerHTML = `
-        <strong>En cuotas:</strong>
-        existe un acuerdo de pago.
-        La deuda tendrá número de cuotas, monto de cuota
-        y calendario asociado cuando corresponda.
-      `;
-    }
-  }
-
-  function instalar() {
-
-    const form = encontrarFormularioDeudas();
-
-    if (!form) {
-      return false;
-    }
-
-    crearSelectorModalidad(form);
-    agregarEstadoVisual(form);
-
-    const selector = form.querySelector('#deudaModalidadPago');
-
-    if (!selector) {
-      return false;
-    }
-
-    if (!selector.dataset.b231Bound) {
-
-      selector.dataset.b231Bound = '1';
-
-      selector.addEventListener('change', () => {
-
-        actualizarCamposModalidad(form);
-        actualizarMensajeModalidad(form);
-
-      });
-    }
-
-    actualizarCamposModalidad(form);
-    actualizarMensajeModalidad(form);
-
-    /*
-     * CAPTURE:
-     * se ejecuta antes de los handlers normales
-     * del formulario existente.
-     *
-     * Esto permite normalizar los datos antes
-     * de que el motor original los procese.
-     */
-    if (!form.dataset.b231SubmitBound) {
-
-      form.dataset.b231SubmitBound = '1';
-
-      form.addEventListener(
-        'submit',
-        () => {
-
-          const modalidad = selector.value;
-
-          form.dataset.modalidadPago = modalidad;
-
-          const cuotas = encontrarCampoCuotas(form);
-          const montoCuota = encontrarCampoCuota(form);
-
-          if (modalidad === 'UNICO') {
-
-            /*
-             * CRÍTICO:
-             * una deuda UNICO jamás se representa
-             * como una cuota.
-             */
-            if (cuotas) {
-              cuotas.value = '';
-              cuotas.required = false;
-              cuotas.dataset.modalidad = 'UNICO';
-            }
-
-            if (montoCuota) {
-              montoCuota.value = '';
-              montoCuota.required = false;
-              montoCuota.dataset.modalidad = 'UNICO';
-            }
-
-          } else {
-
-            if (
-              cuotas &&
-              (!cuotas.value || Number(cuotas.value) < 1)
-            ) {
-              cuotas.value = '1';
-            }
-
-            if (cuotas) {
-              cuotas.dataset.modalidad = 'CUOTAS';
-            }
-
-            if (montoCuota) {
-              montoCuota.dataset.modalidad = 'CUOTAS';
-            }
-          }
-
-        },
-        true
-      );
-    }
-
-    return true;
-  }
-
-  /*
-   * El módulo Deudas puede renderizarse después
-   * de la carga inicial.
-   */
-  const observer = new MutationObserver(() => {
-
-    const ok = instalar();
-
-    if (ok) {
-      window.clearTimeout(window.__b231Retry);
-    }
-
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-
-  /*
-   * Primer intento.
-   */
-  instalar();
-
-  /*
-   * Reintentos controlados.
-   */
-  let intentos = 0;
-
-  function reintentar() {
-
-    if (intentos >= 20) {
-      return;
-    }
-
-    intentos++;
-
-    if (!instalar()) {
-      window.__b231Retry = setTimeout(
-        reintentar,
-        500
-      );
-    }
-  }
-
-  reintentar();
-
-  window.B231ModalidadDeuda = {
     version: VERSION,
 
-    obtenerModalidad(form) {
-      return obtenerModalidad(
-        form || encontrarFormularioDeudas()
+    /* ----------------------------------------------------------
+       NORMALIZACIÓN DE UNA DEUDA
+       ---------------------------------------------------------- */
+
+    normalizarDeuda(deuda) {
+
+      if (!deuda || typeof deuda !== 'object') {
+        return null;
+      }
+
+      const resultado = { ...deuda };
+
+      resultado.id = deuda.id ?? null;
+
+      resultado.acreedor =
+        deuda.acreedor ??
+        deuda.nombre ??
+        deuda.concepto ??
+        '';
+
+      resultado.monto_original = Number(
+        deuda.monto_original ??
+        deuda.monto ??
+        0
       );
+
+      resultado.saldo_pendiente = Number(
+        deuda.saldo_pendiente ??
+        deuda.saldo_actual ??
+        deuda.saldo ??
+        resultado.monto_original
+      );
+
+      /*
+       * IMPORTANTE:
+       * NULL / vacío significa deuda SIN FECHA.
+       *
+       * No se inventa una fecha.
+       * No se asigna la fecha actual.
+       * No se envía al calendario.
+       */
+      if (
+        deuda.fecha_vencimiento === null ||
+        deuda.fecha_vencimiento === undefined ||
+        deuda.fecha_vencimiento === ''
+      ) {
+        resultado.fecha_vencimiento = null;
+        resultado.sin_fecha = true;
+      } else {
+        resultado.fecha_vencimiento = deuda.fecha_vencimiento;
+        resultado.sin_fecha = false;
+      }
+
+      resultado.estado =
+        deuda.estado ??
+        (resultado.saldo_pendiente <= 0
+          ? 'PAGADA'
+          : 'PENDIENTE');
+
+      resultado.prioridad =
+        deuda.prioridad ??
+        'NORMAL';
+
+      resultado.cuotas =
+        Number(deuda.cuotas ?? deuda.numero_cuotas ?? 0);
+
+      resultado.cuotas_pendientes =
+        Number(deuda.cuotas_pendientes ?? 0);
+
+      resultado.monto_cuota =
+        Number(deuda.monto_cuota ?? deuda.cuota_acordada ?? 0);
+
+      resultado.descripcion =
+        deuda.descripcion ??
+        deuda.notas ??
+        '';
+
+      return resultado;
     },
 
-    refrescar() {
-      instalar();
+
+    /* ----------------------------------------------------------
+       VALIDACIÓN
+       ---------------------------------------------------------- */
+
+    validarDeuda(deuda) {
+
+      const d = this.normalizarDeuda(deuda);
+
+      if (!d) {
+        return {
+          valido: false,
+          errores: ['La deuda no es válida.']
+        };
+      }
+
+      const errores = [];
+
+      if (!d.acreedor) {
+        errores.push('La deuda debe tener acreedor o concepto.');
+      }
+
+      if (d.monto_original < 0) {
+        errores.push('El monto original no puede ser negativo.');
+      }
+
+      if (d.saldo_pendiente < 0) {
+        errores.push('El saldo pendiente no puede ser negativo.');
+      }
+
+      /*
+       * La fecha de vencimiento es OPCIONAL.
+       */
+      if (d.fecha_vencimiento !== null) {
+
+        const fecha = new Date(d.fecha_vencimiento);
+
+        if (Number.isNaN(fecha.getTime())) {
+          errores.push('La fecha de vencimiento no es válida.');
+        }
+      }
+
+      return {
+        valido: errores.length === 0,
+        errores
+      };
+    },
+
+
+    /* ----------------------------------------------------------
+       PREPARACIÓN DE FECHA
+       ---------------------------------------------------------- */
+
+    prepararFecha(deuda) {
+
+      const d = this.normalizarDeuda(deuda);
+
+      if (!d) {
+        return null;
+      }
+
+      /*
+       * SIN FECHA:
+       * jamás generar una fecha artificial.
+       */
+      if (d.sin_fecha) {
+        return null;
+      }
+
+      return d.fecha_vencimiento;
+    },
+
+
+    /* ----------------------------------------------------------
+       DETERMINAR SI DEBE APARECER EN CALENDARIO
+       ---------------------------------------------------------- */
+
+    debeAparecerEnCalendario(deuda) {
+
+      const d = this.normalizarDeuda(deuda);
+
+      if (!d) {
+        return false;
+      }
+
+      /*
+       * Una deuda sin fecha existe financieramente,
+       * pero no pertenece a ningún día del calendario.
+       */
+      if (d.fecha_vencimiento === null) {
+        return false;
+      }
+
+      if (d.estado === 'PAGADA') {
+        return false;
+      }
+
+      return true;
+    },
+
+
+    /* ----------------------------------------------------------
+       ABONO PARCIAL — PREPARACIÓN
+       ---------------------------------------------------------- */
+
+    prepararAbono(deuda, monto) {
+
+      const d = this.normalizarDeuda(deuda);
+
+      if (!d) {
+        return {
+          valido: false,
+          error: 'Deuda inválida.'
+        };
+      }
+
+      const importe = Number(monto);
+
+      if (!Number.isFinite(importe) || importe <= 0) {
+        return {
+          valido: false,
+          error: 'El monto del abono debe ser mayor que cero.'
+        };
+      }
+
+      if (importe > d.saldo_pendiente) {
+        return {
+          valido: false,
+          error: 'El abono no puede superar el saldo pendiente.'
+        };
+      }
+
+      const nuevoSaldo =
+        d.saldo_pendiente - importe;
+
+      return {
+        valido: true,
+        deuda_id: d.id,
+        monto_abono: importe,
+        saldo_anterior: d.saldo_pendiente,
+        saldo_nuevo: nuevoSaldo,
+        estado_nuevo:
+          nuevoSaldo <= 0
+            ? 'PAGADA'
+            : 'PENDIENTE'
+      };
+    },
+
+
+    /* ----------------------------------------------------------
+       RESUMEN
+       ---------------------------------------------------------- */
+
+    resumenDeuda(deuda) {
+
+      const d = this.normalizarDeuda(deuda);
+
+      if (!d) {
+        return null;
+      }
+
+      return {
+        id: d.id,
+        acreedor: d.acreedor,
+        monto_original: d.monto_original,
+        saldo_pendiente: d.saldo_pendiente,
+        fecha_vencimiento: d.fecha_vencimiento,
+        sin_fecha: d.sin_fecha,
+        estado: d.estado,
+        cuotas: d.cuotas,
+        cuotas_pendientes: d.cuotas_pendientes,
+        monto_cuota: d.monto_cuota,
+        aparece_en_calendario:
+          this.debeAparecerEnCalendario(d)
+      };
+    },
+
+
+    /* ----------------------------------------------------------
+       PERSISTENCIA
+       ----------------------------------------------------------
+       Este adaptador NO reemplaza el motor de persistencia
+       existente. Solo prepara y normaliza los datos.
+       ---------------------------------------------------------- */
+
+    persistir(deuda) {
+
+      console.warn(
+        '[B231.0] Persistencia delegada al motor existente.'
+      );
+
+      return this.normalizarDeuda(deuda);
     }
   };
 
+
+  /* ------------------------------------------------------------
+     EXPOSICIÓN GLOBAL
+     ------------------------------------------------------------ */
+
+  window.B231DeudasV2 = B231DeudasV2;
+
+
+  /* ------------------------------------------------------------
+     INDICADOR VISUAL NO INTRUSIVO
+     ------------------------------------------------------------ */
+
+  function instalarIndicador() {
+
+    if (document.getElementById('b231-indicador-deudas')) {
+      return;
+    }
+
+    const indicador = document.createElement('div');
+
+    indicador.id = 'b231-indicador-deudas';
+
+    indicador.textContent =
+      'Deudas V2 · adaptador B231.0 activo · compatibilidad estable';
+
+    indicador.style.cssText = `
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 9999;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: rgba(20,20,20,.88);
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.2;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      pointer-events: none;
+    `;
+
+    document.body.appendChild(indicador);
+  }
+
+
+  /* ------------------------------------------------------------
+     INICIALIZACIÓN SEGURA
+     ------------------------------------------------------------ */
+
+  if (document.readyState === 'loading') {
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      instalarIndicador,
+      { once: true }
+    );
+
+  } else {
+
+    instalarIndicador();
+
+  }
+
+
   console.log(
-    `[${VERSION}] Modelo de modalidad de pago activo.`
+    '[B231.0] Adaptador Deudas V2 activo.'
   );
 
 })();
