@@ -1,282 +1,58 @@
-/* ============================================================
-   B232 — CALENDARIO V2
-   Calendario integrado: movimientos + compromisos + cuotas de deuda.
-   No modifica saldos ni registra operaciones.
-   Deudas sin fecha NO aparecen en el calendario.
-   ============================================================ */
-(() => {
-  'use strict';
 
-  const VERSION = '232.0';
-  if (window.B232Calendario?.version === VERSION) return;
-
-  const $ = id => document.getElementById(id);
-  const money = n => new Intl.NumberFormat('es-CL',{
-    style:'currency',currency:'CLP',maximumFractionDigits:0
-  }).format(Number(n)||0);
-  const today = () => {
-    const d = new Date();
-    return new Date(d.getTime()-d.getTimezoneOffset()*60000)
-      .toISOString().slice(0,10);
-  };
-  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-  }[c]));
-  const parseDate = s => new Date(`${s}T12:00:00`);
-  const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-
-  let client = null;
-  let month = new Date();
-  let selected = today();
-  let data = {mov:[], fut:[], quotas:[]};
-
-  async function db(){
-    if(client) return client;
-    const u=localStorage.getItem('sf_url'), k=localStorage.getItem('sf_key');
-    if(!u || !k || !window.supabase) return null;
-    client=window.supabase.createClient(u,k,{
-      auth:{persistSession:false,autoRefreshToken:false}
-    });
-    return client;
-  }
-
-  async function load(){
-    const c=await db();
-    if(!c) throw Error('Supabase no está conectado.');
-
-    const [mov,fut,quotas] = await Promise.all([
-      c.from('movimientos')
-        .select('*')
-        .order('fecha',{ascending:true}),
-      c.from('compromisos')
-        .select('*')
-        .order('fecha_vencimiento',{ascending:true}),
-      c.from('cuotas_deuda')
-        .select('id,deuda_id,numero_cuota,monto,fecha_vencimiento,estado')
-        .in('estado',['pendiente','vencida'])
-        .order('fecha_vencimiento',{ascending:true})
-    ]);
-
-    for(const r of [mov,fut,quotas]) if(r.error) throw r.error;
-
-    data={
-      mov:mov.data||[],
-      fut:fut.data||[],
-      quotas:quotas.data||[]
-    };
-    render();
-  }
-
-  function monthRows(){
-    const y=month.getFullYear(), m=month.getMonth();
-    const first=new Date(y,m,1), last=new Date(y,m+1,0);
-    const start=new Date(first); start.setDate(1-first.getDay());
-
-    const movementBy={}, futureBy={}, quotaBy={};
-    for(const x of data.mov)(movementBy[x.fecha]??=[]).push(x);
-    for(const x of data.fut.filter(x=>x.estado==='pendiente'))
-      (futureBy[x.fecha_vencimiento]??=[]).push(x);
-    for(const x of data.quotas)
-      if(x.fecha_vencimiento)(quotaBy[x.fecha_vencimiento]??=[]).push(x);
-
-    const rows=[];
-    let running=0;
-
-    const beforeMov=data.mov.filter(x=>x.fecha<dateKey(first));
-    const beforeFuture=data.fut.filter(x=>x.estado==='pendiente'&&x.fecha_vencimiento<dateKey(first));
-    const beforeQuota=data.quotas.filter(x=>x.fecha_vencimiento<dateKey(first));
-
-    for(const x of beforeMov)
-      running += x.tipo==='ingreso'?Number(x.monto): -Number(x.monto);
-    for(const x of beforeFuture) running -= Number(x.monto);
-    for(const x of beforeQuota) running -= Number(x.monto);
-
-    for(let day=1;day<=last.getDate();day++){
-      const key=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      const movements=movementBy[key]||[];
-      const commitments=futureBy[key]||[];
-      const debtQuotas=quotaBy[key]||[];
-
-      const income=movements.filter(x=>x.tipo==='ingreso')
-        .reduce((s,x)=>s+Number(x.monto||0),0);
-      const expense=movements.filter(x=>x.tipo==='gasto')
-        .reduce((s,x)=>s+Number(x.monto||0),0);
-      const scheduled=commitments.reduce((s,x)=>s+Number(x.monto||0),0);
-      const debt=debtQuotas.reduce((s,x)=>s+Number(x.monto||0),0);
-
-      running += income-expense-scheduled-debt;
-
-      rows.push({
-        key,day,income,expense,scheduled,debt,balance:running,
-        movements,commitments,debtQuotas
-      });
-    }
-
-    return {rows,movementBy,futureBy,quotaBy};
-  }
-
-  function injectStyle(){
-    if($('b232Style')) return;
-    const s=document.createElement('style');
-    s.id='b232Style';
-    s.textContent=`
-      .b232-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-      .b232-nav{display:flex;gap:8px}
-      .b232-nav button{min-width:44px}
-      .b232-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
-      .b232-metric{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff}
-      .b232-metric span,.b232-metric small{display:block;color:#64748b;font-size:.78rem}
-      .b232-metric strong{display:block;margin-top:4px}
-      .b232-legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;color:#475569;font-size:.8rem}
-      .b232-calendar{display:grid;grid-template-columns:repeat(7,minmax(90px,1fr));overflow:auto;border:1px solid #e5e7eb;border-radius:12px}
-      .b232-week{display:contents}
-      .b232-week>div{padding:8px;border-bottom:1px solid #e5e7eb;font-size:.72rem;font-weight:700;text-align:center}
-      .b232-day{min-height:120px;border:0;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;background:#fff;text-align:left;padding:7px;cursor:pointer}
-      .b232-day.outside{background:#f8fafc;color:#94a3b8}
-      .b232-day.selected{outline:2px solid #0f172a;outline-offset:-2px}
-      .b232-day-head{display:flex;justify-content:space-between;gap:4px;margin-bottom:5px}
-      .b232-event{display:block;font-size:.68rem;margin-top:3px;padding:3px 5px;border-radius:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-      .b232-income{background:#ecfdf5;color:#166534}
-      .b232-expense{background:#fef2f2;color:#991b1b}
-      .b232-commitment{background:#fff7ed;color:#9a3412}
-      .b232-debt{background:#eff6ff;color:#1d4ed8}
-      .b232-balance{margin-top:6px;font-size:.68rem;color:#475569}
-      .b232-detail{margin-top:14px}
-      .b232-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-      .b232-block{border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff}
-      .b232-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9}
-      .b232-row:last-child{border-bottom:0}
-      .b232-kind{font-size:.72rem;color:#64748b}
-      @media(max-width:760px){
-        .b232-metrics{grid-template-columns:1fr 1fr}
-        .b232-detail-grid{grid-template-columns:1fr}
-        .b232-calendar{grid-template-columns:repeat(7,92px)}
-      }
-    `;
-    document.head.appendChild(s);
-  }
-
-  function render(){
-    const host=$('calendario');
-    if(!host) return;
-    injectStyle();
-
-    const {rows}=monthRows();
-    const byKey=Object.fromEntries(rows.map(x=>[x.key,x]));
-    const y=month.getFullYear(), m=month.getMonth();
-    const first=new Date(y,m,1);
-    const gridStart=new Date(first);
-    gridStart.setDate(1-first.getDay());
-    const days=Array.from({length:42},(_,i)=>{
-      const d=new Date(gridStart);d.setDate(gridStart.getDate()+i);return d;
-    });
-
-    const inMonthRows=rows;
-    const totalIncome=inMonthRows.reduce((s,x)=>s+x.income,0);
-    const totalExpense=inMonthRows.reduce((s,x)=>s+x.expense,0);
-    const totalCommit=inMonthRows.reduce((s,x)=>s+x.scheduled,0);
-    const totalDebt=inMonthRows.reduce((s,x)=>s+x.debt,0);
-    const finalBalance=inMonthRows.at(-1)?.balance||0;
-
-    host.innerHTML=`
-      <div class="card">
-        <div class="b232-toolbar">
-          <div>
-            <span class="muted">B232 · CALENDARIO V2</span>
-            <h2 id="b232MonthTitle">${month.toLocaleDateString('es-CL',{month:'long',year:'numeric'})}</h2>
-          </div>
-          <div class="b232-nav">
-            <button type="button" class="secondary" id="b232Prev">‹</button>
-            <button type="button" class="secondary" id="b232Today">Hoy</button>
-            <button type="button" class="secondary" id="b232Next">›</button>
-          </div>
-        </div>
-
-        <div class="b232-metrics">
-          <div class="b232-metric"><span>Ingresos</span><strong>${money(totalIncome)}</strong></div>
-          <div class="b232-metric"><span>Gastos</span><strong>${money(totalExpense)}</strong></div>
-          <div class="b232-metric"><span>Compromisos</span><strong>${money(totalCommit)}</strong></div>
-          <div class="b232-metric"><span>Cuotas de deuda</span><strong>${money(totalDebt)}</strong></div>
-          <div class="b232-metric"><span>Saldo al cierre</span><strong>${money(finalBalance)}</strong></div>
-        </div>
-
-        <div class="b232-legend">
-          <span>↑ Ingreso</span><span>↓ Gasto</span>
-          <span>● Compromiso</span><span>◆ Cuota de deuda</span>
-        </div>
-
-        <div class="b232-calendar">
-          ${['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'].map(x=>`<div>${x}</div>`).join('')}
-          ${days.map(d=>{
-            const key=dateKey(d), r=byKey[key], inMonth=d.getMonth()===m;
-            const items=[];
-            for(const x of (r?.movements||[]))
-              items.push(`<span class="b232-event ${x.tipo==='ingreso'?'b232-income':'b232-expense'}">${x.tipo==='ingreso'?'↑':'↓'} ${money(x.monto)}</span>`);
-            for(const x of (r?.commitments||[]))
-              items.push(`<span class="b232-event b232-commitment">● ${money(x.monto)}</span>`);
-            for(const x of (r?.debtQuotas||[]))
-              items.push(`<span class="b232-event b232-debt">◆ ${money(x.monto)}</span>`);
-            return `<button type="button" class="b232-day ${inMonth?'':'outside'} ${key===selected?'selected':''}" data-date="${key}">
-              <div class="b232-day-head"><strong>${d.getDate()}</strong>${key===today()?'<small>HOY</small>':''}</div>
-              ${items.slice(0,4).join('')}
-              ${items.length>4?`<span class="b232-kind">+${items.length-4} más</span>`:''}
-              ${inMonth&&r?`<div class="b232-balance">Saldo ${money(r.balance)}</div>`:''}
-            </button>`;
-          }).join('')}
-        </div>
-
-        <div id="b232Detail" class="b232-detail"></div>
-        <p class="muted">Las deudas sin fecha no aparecen en el calendario. Se incorporan cuando existe una fecha de vencimiento o una cuota calendarizada. Las transferencias de fondos no se contabilizan como ingreso ni gasto.</p>
-      </div>
-    `;
-
-    $('b232Prev').onclick=async()=>{month.setMonth(month.getMonth()-1);selected=dateKey(new Date(month.getFullYear(),month.getMonth(),1));render()};
-    $('b232Next').onclick=async()=>{month.setMonth(month.getMonth()+1);selected=dateKey(new Date(month.getFullYear(),month.getMonth(),1));render()};
-    $('b232Today').onclick=async()=>{month=new Date();selected=today();render()};
-    host.querySelectorAll('.b232-day').forEach(b=>b.onclick=()=>{selected=b.dataset.date;render()});
-
-    const r=byKey[selected];
-    const selectedDate=parseDate(selected);
-    const label=selectedDate.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
-    const movements=r?.movements||[], commitments=r?.commitments||[], quotas=r?.debtQuotas||[];
-
-    $('b232Detail').innerHTML=`
-      <div class="b232-block">
-        <h3>Detalle del ${esc(label)}</h3>
-        <div class="b232-detail-grid">
-          <div class="b232-block">
-            <strong>Ingresos y gastos registrados</strong>
-            ${movements.length?movements.map(x=>`<div class="b232-row"><span>${esc(x.categoria||x.descripcion||'Movimiento')}</span><strong>${x.tipo==='ingreso'?'+':'-'}${money(x.monto)}</strong></div>`).join(''):'<p class="muted">Sin movimientos registrados.</p>'}
-          </div>
-          <div class="b232-block">
-            <strong>Obligaciones</strong>
-            ${commitments.map(x=>`<div class="b232-row"><span>${esc(x.concepto||'Compromiso')}</span><strong>${money(x.monto)}</strong></div>`).join('') || '<p class="muted">Sin compromisos programados.</p>'}
-            ${quotas.map(x=>`<div class="b232-row"><span>Cuota deuda #${esc(x.numero_cuota)} · ${esc(x.estado)}</span><strong>${money(x.monto)}</strong></div>`).join('')}
-          </div>
-        </div>
-        ${r?`<div class="b232-row"><span>Saldo acumulado al cierre</span><strong>${money(r.balance)}</strong></div>`:''}
-      </div>
-    `;
-  }
-
-  function mount(){
-    const tab=document.querySelector('[data-tab="calendario"]');
-    if(!tab || !document.getElementById('calendario')) return false;
-    if(!tab.dataset.b232Bound){
-      tab.addEventListener('click',()=>{
-        load().catch(e=>{
-          const host=$('calendario');
-          if(host) host.innerHTML=`<div class="card"><p class="status">${esc(e.message||e)}</p></div>`;
-        });
-      });
-      tab.dataset.b232Bound='1';
-    }
-    return true;
-  }
-
-  window.B232Calendario={version:VERSION,load,render};
-
-  const boot=()=>{mount(); if(document.querySelector('[data-tab="calendario"].active')) load().catch(()=>{})};
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
-  else setTimeout(boot,250);
-})();
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="Control financiero personal — Cero Financiero, liquidez, cuentas, deudas, operaciones y planificación.">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css?v=2520">
+<link rel="stylesheet" href="deudas-styles.css?v=2520">
+<link rel="stylesheet" href="deudas-centro.css?v=2520">
+<link rel="stylesheet" href="finanzas-v233.css?v=2520">
+<link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
+<title>Control Financiero · Finanzas</title>
+</head>
+<body>
+<header class="topbar">
+  <div><h1>Control Financiero</h1><p>Ingresos, gastos, compromisos, ahorro y calendario</p></div>
+  <button id="logoutBtn" class="ghost hidden">Salir</button>
+</header>
+<main class="container">
+<section id="configPanel" class="card">
+  <h2>Conectar base de datos</h2><p class="muted">Conecta esta app con tu proyecto gratuito de Supabase.</p>
+  <div class="grid2"><label>Supabase URL<input id="supabaseUrl" placeholder="https://xxxx.supabase.co"></label>
+  <label>Supabase Publishable Key<input id="supabaseKey" placeholder="sb_publishable_..."></label></div>
+  <button id="saveConfig">Conectar</button><p id="configMsg" class="status"></p>
+</section>
+<section id="app" class="hidden">
+<div class="tabs">
+<button data-tab="dashboard" class="active">Resumen</button><button data-tab="movimientos">Movimientos</button><button data-tab="futuros">Pagos futuros</button><button data-tab="calendario">Calendario</button><button data-tab="ahorro">Ahorro</button><button data-tab="deudas">Deudas</button><button data-tab="cuentas">Cuentas</button><button data-tab="operaciones">Operaciones</button><button data-tab="planificacion">Planificación</button>
+</div>
+<section id="dashboard" class="tab"> <div class="cards"><article class="metric"><span>Saldo actual</span><strong id="saldo">$0</strong></article><article class="metric"><span>Ingresos del mes</span><strong id="ingresosMes">$0</strong></article><article class="metric"><span>Gastos del mes</span><strong id="gastosMes">$0</strong></article><article class="metric"><span>Pagos pendientes</span><strong id="comprometido">$0</strong></article><article class="metric"><span>Disponible proyectado</span><strong id="proyectado">$0</strong></article><article class="metric"><span>Fondo de ahorro</span><strong id="ahorroTotal">$0</strong></article></div><div class="cards two"><article class="metric future-card"><span>Ingresos futuros registrados</span><strong id="ingresosFuturos">$0</strong></article><article class="metric future-card"><span>Gastos futuros registrados</span><strong id="gastosFuturos">$0</strong></article></div><div class="card monthly-summary-card"><div class="section-title"><div><h2>Resumen de pagos y gastos del mes</h2><span class="muted" id="monthlySummaryLabel">Mes en curso</span></div></div><div class="monthly-summary-grid"><article class="summary-box paid-box"><span>Total pagado hasta hoy</span><strong id="totalPagadoMes">$0</strong><small>Gastos registrados con fecha hasta hoy</small></article><article class="summary-box pending-box"><span>Total pendiente del mes</span><strong id="totalPendienteMes">$0</strong><small>Compromisos pendientes del mes</small></article><article class="summary-box total-box"><span>Total de gastos a pagar del mes</span><strong id="totalGastosPagarMes">$0</strong><small>Pagado hasta hoy + pagos pendientes</small></article></div><p class="monthly-summary-note">Este resumen no descuenta automáticamente dinero. Solo informa cuánto ya salió, cuánto sigue pendiente y cuánto representan ambas obligaciones durante el mes.</p></div><div class="card income-plan-card"><div class="section-title"><h2>Plan sugerido de ingresos</h2><span class="muted">Calculado con tus datos reales</span></div><div id="incomePlan"><p class="muted">Calculando sugerencia...</p></div></div><div class="card"><div class="section-title"><h2>Próximos pagos</h2><span class="muted">Mantiene tus pagos programados</span></div><div id="proximosPagos"></div></div></section>
+<section id="movimientos" class="tab hidden"><div class="card"><h2 id="movFormTitle">Registrar movimiento</h2><form id="movForm" class="grid2"><input type="hidden" id="movId"><label>Tipo<select id="movTipo"><option value="ingreso">Ingreso</option><option value="gasto">Gasto</option></select></label><label>Fecha<input id="movFecha" type="date" required></label><label>Monto<input id="movMonto" type="number" min="0" step="1" required></label><label>Categoría<input id="movCategoria" placeholder="Alimentación, combustible..."></label><label class="full">Descripción<input id="movDescripcion" placeholder="Detalle"></label><div class="form-actions full"><button type="submit" id="movSubmit">Guardar movimiento</button><button type="button" id="movCancel" class="secondary hidden">Cancelar edición</button></div></form><p id="movMsg" class="status"></p></div><div class="card"><h2>Historial de movimientos</h2><p class="muted">Los registros con fecha posterior a hoy son futuros y no afectan el saldo actual.</p><div id="movimientosLista"></div></div></section>
+<section id="futuros" class="tab hidden"><div class="card"><h2 id="futureFormTitle">Crear pago o compromiso futuro</h2><form id="futureForm" class="grid2"><input type="hidden" id="futureId"><label>Concepto<input id="futureConcepto" required placeholder="Internet, arriendo, cuota..."></label><label>Fecha de vencimiento<input id="futureFecha" type="date" required></label><label>Monto<input id="futureMonto" type="number" min="0" step="1" required></label><label>Categoría<input id="futureCategoria" placeholder="Deuda, servicios..."></label><label>Periodicidad<select id="futureRecurrence"><option value="unico">Único</option><option value="mensual">Mensual</option><option value="semanal">Semanal</option><option value="anual">Anual</option></select></label><label class="full">Notas<input id="futureNotas" placeholder="Información adicional"></label><div class="form-actions full"><button type="submit" id="futureSubmit">Crear compromiso</button><button type="button" id="futureCancel" class="secondary hidden">Cancelar edición</button></div></form><p id="futureMsg" class="status"></p></div><div class="card"><h2>Compromisos futuros</h2><div id="futurosLista"></div></div></section>
+<section id="calendario" class="tab hidden"><div class="card calendar-card"><div class="calendar-toolbar"><button id="calPrev" class="nav-month">‹</button><div class="calendar-heading"><h2 id="calendarMonth">Septiembre 2026</h2><span>Plan mensual de ingresos y pagos</span></div><button id="calNext" class="nav-month">›</button></div><button id="calToday" class="secondary today-btn">Ir a hoy</button><div class="calendar-metrics"><article><span>Ingresos registrados</span><strong id="calIncome">$0</strong></article><article><span>Gastos registrados</span><strong id="calExpenses">$0</strong></article><article><span>Pagos programados</span><strong id="calPayments">$0</strong></article><article><span>Saldo al cierre</span><strong id="calFinalBalance">$0</strong></article></div><div class="legend"><span><i class="dot income-dot"></i>Ingreso</span><span><i class="dot expense-dot"></i>Gasto</span><span><i class="dot payment-dot"></i>Pago programado</span><span><i class="dot balance-dot"></i>Saldo acumulado</span></div><div class="calendar-scroll"><div class="calendar-grid week-head"><div>DOM</div><div>LUN</div><div>MAR</div><div>MIÉ</div><div>JUE</div><div>VIE</div><div>SÁB</div></div><div id="calendarGrid" class="calendar-grid"></div></div><p id="calMonthNote" class="muted calendar-note"></p><div id="calendarDayDetails" class="calendar-day-details"><p class="muted">Selecciona un día del calendario para ver sus ingresos y gastos.</p></div><p class="calendar-help">Desliza horizontalmente si quieres ver el calendario completo en el teléfono.</p></div></section>
+<section id="ahorro" class="tab hidden"><div class="card"><h2 id="savingFormTitle">Fondo de ahorro</h2><form id="savingForm" class="grid2"><input type="hidden" id="savingId"><label>Tipo<select id="savingTipo"><option value="aporte">Aporte</option><option value="retiro">Retiro</option></select></label><label>Fecha<input id="savingFecha" type="date" required></label><label>Monto<input id="savingMonto" type="number" min="0" step="1" required></label><label class="full">Descripción<input id="savingDescripcion" placeholder="Ahorro del día..."></label><div class="form-actions full"><button type="submit" id="savingSubmit">Registrar</button><button type="button" id="savingCancel" class="secondary hidden">Cancelar edición</button></div></form><p class="big-number" id="savingBalance">$0</p><p id="savingMsg" class="status"></p></div><div class="card"><h2>Historial de ahorro</h2><div id="ahorroLista"></div></div></section>
+</section>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js?v=220.2"></script>
+<script src="b219-arquitectura-navegacion.js?v=220.2"></script>
+<script src="b220-motor-ejecucion-financiera.js?v=220.2"></script>
+<script src="b220.2-puente-ejecucion.js?v=220.2"></script>
+<script src="b221-movimientos-liquidez.js?v=221.0"></script>
+<script src="b222-centro-operaciones.js?v=222.0"></script>
+<script src="b223-centro-operaciones-planificacion-fix.js?v=223.0"></script>
+<script src="b224.1-planificacion-integrada.js?v=224.1"></script>
+<script src="b227-ia-financiera.js?v=227.1"></script>
+<script src="b229-movimientos-fondos.js?v=229.0"></script>
+<script src="finanzas-v233.js?v=231.1-R3"></script>
+<script src="b230-inspector-arquitectura.js?v=230.0"></script>
+<script src="b231.0-adaptador-deudas-v2.js?v=231.0"></script>
+<script src="b231.1-persistencia-deuda-sin-fecha.js?v=231.1"></script>
+<script src="b231.2-deudas-fecha.js?v=231.2.2"></script>
+<script src="b231.3-abonos-parciales.js?v=231.3.3"></script>
+</body>
+</html>
