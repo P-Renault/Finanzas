@@ -2,47 +2,40 @@
    B231.3 — ABONOS PARCIALES
    Control Financiero · Deudas V2
 
+   INTEGRACIÓN UI 231.3.1
+
    OBJETIVO
    ------------------------------------------------------------
-   Permitir registrar un ABONO PARCIAL sobre una deuda:
+   Incorporar "Registrar abono" a cada deuda con saldo
+   pendiente, sin reemplazar el renderizador existente.
 
-       Deuda original       $460.000
-              ↓
-       Abono                 $100.000
-              ↓
-       Saldo pendiente      $360.000
+   EJEMPLO:
 
-   REGLAS
-   ------------------------------------------------------------
-   - El abono nunca puede superar el saldo.
-   - El monto debe ser > 0.
-   - No modifica el monto original.
-   - Reduce solamente el saldo pendiente.
-   - No elimina la deuda.
-   - Un pago total lleva el saldo a 0.
-   - No genera doble contabilización.
-   - No modifica los botones existentes.
-   - No reemplaza "Pagar próxima cuota".
-   - No crea un segundo cliente Supabase.
-   - No crea tablas nuevas.
-   - No ejecuta escrituras automáticamente al cargar.
+   Erika
+   Saldo actual $460.000
 
-   INTEGRACIÓN
-   ------------------------------------------------------------
-   B231.3 expone un contrato:
+   [Ver detalle] [Editar] [Eliminar]
+   [Registrar abono] [Pagar próxima cuota]
 
-       window.B2313AbonosParciales
-
-   La persistencia definitiva debe conectarse al mecanismo
-   financiero existente antes de declarar B231.3 como QA OK.
-
+   REGLAS:
+   - Abono > 0
+   - Abono <= saldo pendiente
+   - No modifica monto original
+   - Reduce saldo
+   - Pago total => saldo 0
+   - No crea ingresos
+   - No crea transferencias
+   - No duplica movimientos
+   - No crea tablas
+   - No crea cliente Supabase
+   - No modifica botones existentes
    ============================================================ */
 
 (function () {
 
   'use strict';
 
-  const VERSION = '231.3.0';
+  const VERSION = '231.3.1';
 
   /*
    ------------------------------------------------------------
@@ -60,6 +53,7 @@
     );
 
     return;
+
   }
 
   /*
@@ -71,6 +65,10 @@
   let modal = null;
 
   let currentDebt = null;
+
+  let observer = null;
+
+  let rendering = false;
 
   /*
    ------------------------------------------------------------
@@ -86,7 +84,14 @@
 
   }
 
-  function normalizeMoney(value) {
+  function normalizedText(value) {
+
+    return cleanText(value)
+      .toLowerCase();
+
+  }
+
+  function money(value) {
 
     if (
       typeof value === 'number' &&
@@ -98,41 +103,528 @@
     }
 
     let text =
-      String(value || '')
+      String(value ?? '')
         .trim();
-
-    /*
-     * Formato chileno:
-     * $460.000
-     */
 
     text =
       text
         .replace(/\$/g, '')
         .replace(/\s/g, '')
         .replace(/\./g, '')
-        .replace(/,/g, '.');
+        .replace(',', '.');
 
-    const number =
+    const result =
       Number(text);
 
-    return Number.isFinite(number)
-      ? number
+    return Number.isFinite(result)
+      ? result
       : 0;
 
   }
 
   function formatMoney(value) {
 
-    const amount =
+    return (
+      '$' +
       Math.round(
-        Number(value) || 0
+        money(value)
+      ).toLocaleString(
+        'es-CL'
+      )
+    );
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   OBTENER SALDO DESDE UNA TARJETA
+   ------------------------------------------------------------
+  */
+
+  function extractBalance(card) {
+
+    if (!card) {
+      return 0;
+    }
+
+    /*
+     * Primero buscamos elementos que tengan
+     * expresamente "Saldo actual".
+     */
+
+    const elements =
+      Array.from(
+        card.querySelectorAll('*')
       );
 
-    return '$' +
-      amount.toLocaleString(
-        'es-CL'
+    for (
+      const element of elements
+    ) {
+
+      if (
+        element.children.length === 0 &&
+        normalizedText(
+          element.textContent
+        ) === 'saldo actual'
+      ) {
+
+        /*
+         * Buscar el valor inmediatamente próximo.
+         */
+
+        let parent =
+          element.parentElement;
+
+        for (
+          let level = 0;
+          level < 3 && parent;
+          level++
+        ) {
+
+          const text =
+            cleanText(
+              parent.textContent
+            );
+
+          const match =
+            text.match(
+              /\$\s*[\d.]+(?:,\d+)?/
+            );
+
+          if (match) {
+
+            return money(
+              match[0]
+            );
+
+          }
+
+          parent =
+            parent.parentElement;
+
+        }
+
+      }
+
+    }
+
+    /*
+     * Fallback:
+     * buscar todos los importes del card.
+     */
+
+    const text =
+      cleanText(
+        card.textContent
       );
+
+    const matches =
+      text.match(
+        /\$\s*[\d.]+(?:,\d+)?/g
+      );
+
+    if (
+      matches &&
+      matches.length
+    ) {
+
+      /*
+       * El primer importe suele corresponder
+       * al saldo actual en la tarjeta actual.
+       */
+
+      return money(
+        matches[0]
+      );
+
+    }
+
+    return 0;
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   OBTENER NOMBRE / ACREEDOR
+   ------------------------------------------------------------
+  */
+
+  function extractCreditor(card) {
+
+    if (!card) {
+      return 'Deuda';
+    }
+
+    const text =
+      cleanText(
+        card.textContent
+      );
+
+    /*
+     * Intentar localizar elementos de texto
+     * de tamaño relevante.
+     */
+
+    const candidates =
+      Array.from(
+        card.querySelectorAll(
+          'strong, b, h3, h4, [class*="nombre"], [class*="acreedor"]'
+        )
+      );
+
+    for (
+      const element of candidates
+    ) {
+
+      const value =
+        cleanText(
+          element.textContent
+        );
+
+      if (
+        value &&
+        value.length < 100 &&
+        !/ver detalle|editar|eliminar|pagar|registrar/i
+          .test(value)
+      ) {
+
+        return value;
+
+      }
+
+    }
+
+    /*
+     * Fallback por líneas de texto.
+     */
+
+    const lines =
+      text
+        .split(' ')
+        .filter(Boolean);
+
+    return (
+      lines.length
+        ? lines[0]
+        : 'Deuda'
+    );
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   LOCALIZAR TARJETAS DE DEUDA
+   ------------------------------------------------------------
+  */
+
+  function findDebtCards() {
+
+    const root =
+      document.getElementById(
+        'deudas'
+      );
+
+    if (!root) {
+      return [];
+    }
+
+    /*
+     * Las tarjetas actuales contienen botones
+     * "Ver detalle", "Editar" y "Eliminar".
+     */
+
+    const allElements =
+      Array.from(
+        root.querySelectorAll(
+          'div, article, li, section'
+        )
+      );
+
+    const candidates =
+      allElements.filter(
+        element => {
+
+          const text =
+            normalizedText(
+              element.textContent
+            );
+
+          const hasDetail =
+            text.includes(
+              'ver detalle'
+            );
+
+          const hasEdit =
+            text.includes(
+              'editar'
+            );
+
+          const hasDelete =
+            text.includes(
+              'eliminar'
+            );
+
+          return (
+            hasDetail &&
+            hasEdit &&
+            hasDelete
+          );
+
+        }
+      );
+
+    /*
+     * Nos quedamos con los contenedores más pequeños
+     * que todavía contienen los tres botones.
+     */
+
+    return candidates.filter(
+      element => {
+
+        return !Array.from(
+          element.children
+        ).some(
+          child => {
+
+            const childText =
+              normalizedText(
+                child.textContent
+              );
+
+            return (
+              childText.includes(
+                'ver detalle'
+              ) &&
+              childText.includes(
+                'editar'
+              ) &&
+              childText.includes(
+                'eliminar'
+              )
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   CREAR BOTÓN
+   ------------------------------------------------------------
+  */
+
+  function createButton(
+    card
+  ) {
+
+    if (
+      card.querySelector(
+        '[data-b2313-abono="true"]'
+      )
+    ) {
+
+      return;
+
+    }
+
+    const balance =
+      extractBalance(
+        card
+      );
+
+    /*
+     * No mostramos abono en deudas
+     * sin saldo pendiente.
+     */
+
+    if (
+      balance <= 0
+    ) {
+
+      return;
+
+    }
+
+    const buttons =
+      Array.from(
+        card.querySelectorAll(
+          'button'
+        )
+      );
+
+    /*
+     * Buscar el botón operativo existente
+     * para colocar nuestro botón junto a él.
+     */
+
+    const paymentButton =
+      buttons.find(
+        button => {
+
+          const text =
+            normalizedText(
+              button.textContent
+            );
+
+          return (
+            text.includes(
+              'pagar próxima cuota'
+            ) ||
+            text.includes(
+              'registrar pago único'
+            )
+          );
+
+        }
+      );
+
+    const button =
+      document.createElement(
+        'button'
+      );
+
+    button.type =
+      'button';
+
+    button.textContent =
+      'Registrar abono';
+
+    button.dataset.b2313Abono =
+      'true';
+
+    button.style.cssText = [
+      'background:#111827',
+      'color:#fff',
+      'border:0',
+      'border-radius:8px',
+      'padding:9px 12px',
+      'font-size:12px',
+      'font-weight:600',
+      'cursor:pointer',
+      'white-space:nowrap',
+      'margin:2px'
+    ].join(';');
+
+    button.addEventListener(
+      'click',
+      function (event) {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        const debt =
+          buildDebtFromCard(
+            card
+          );
+
+        openModal(
+          debt
+        );
+
+      }
+    );
+
+    /*
+     * Insertamos antes del botón de pago existente.
+     */
+
+    if (
+      paymentButton &&
+      paymentButton.parentNode
+    ) {
+
+      paymentButton.parentNode.insertBefore(
+        button,
+        paymentButton
+      );
+
+    } else {
+
+      /*
+       * Fallback: agregar al final del contenedor
+       * de botones.
+       */
+
+      const buttonContainer =
+        buttons.length
+          ? buttons[
+              buttons.length - 1
+            ].parentElement
+          : card;
+
+      buttonContainer.appendChild(
+        button
+      );
+
+    }
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   CONSTRUIR OBJETO DE DEUDA DESDE LA TARJETA
+   ------------------------------------------------------------
+  */
+
+  function buildDebtFromCard(
+    card
+  ) {
+
+    const balance =
+      extractBalance(
+        card
+      );
+
+    const creditor =
+      extractCreditor(
+        card
+      );
+
+    /*
+     * Intentar recuperar ID si el renderizador
+     * lo dejó en atributos DOM.
+     */
+
+    const debtId =
+      card.dataset?.id ||
+      card.dataset?.deudaId ||
+      card.getAttribute(
+        'data-id'
+      ) ||
+      card.getAttribute(
+        'data-deuda-id'
+      ) ||
+      null;
+
+    return {
+
+      id:
+        debtId,
+
+      deuda_id:
+        debtId,
+
+      acreedor:
+        creditor,
+
+      nombre:
+        creditor,
+
+      saldo_actual:
+        balance,
+
+      saldo_pendiente:
+        balance,
+
+      original_card:
+        card
+
+    };
 
   }
 
@@ -150,16 +642,21 @@
     if (!debt) {
 
       return {
+
         ok: false,
-        code: 'DEUDA_REQUERIDA',
+
+        code:
+          'DEUDA_REQUERIDA',
+
         message:
           'Debe seleccionarse una deuda.'
+
       };
 
     }
 
     const balance =
-      normalizeMoney(
+      money(
         debt.saldo_actual ??
         debt.saldo_pendiente ??
         debt.saldo ??
@@ -167,20 +664,27 @@
       );
 
     const payment =
-      normalizeMoney(
+      money(
         amount
       );
 
     if (
-      !Number.isFinite(payment) ||
+      !Number.isFinite(
+        payment
+      ) ||
       payment <= 0
     ) {
 
       return {
+
         ok: false,
-        code: 'MONTO_INVALIDO',
+
+        code:
+          'MONTO_INVALIDO',
+
         message:
           'El abono debe ser mayor que $0.'
+
       };
 
     }
@@ -190,10 +694,15 @@
     ) {
 
       return {
+
         ok: false,
-        code: 'DEUDA_SALDADA',
+
+        code:
+          'DEUDA_SALDADA',
+
         message:
-          'La deuda ya no tiene saldo pendiente.'
+          'La deuda no tiene saldo pendiente.'
+
       };
 
     }
@@ -203,18 +712,24 @@
     ) {
 
       return {
+
         ok: false,
-        code: 'ABONO_SUPERA_SALDO',
+
+        code:
+          'ABONO_SUPERA_SALDO',
+
         message:
           'El abono no puede superar el saldo pendiente de ' +
           formatMoney(balance) +
           '.'
+
       };
 
     }
 
     const newBalance =
-      balance - payment;
+      balance -
+      payment;
 
     return {
 
@@ -278,10 +793,6 @@
         debt.nombre ??
         '',
 
-      concepto:
-        debt.concepto ??
-        '',
-
       monto_abono:
         validation.monto_abono,
 
@@ -307,11 +818,6 @@
           .toISOString()
           .slice(0, 10),
 
-      /*
-       * Marca explícita para impedir que una capa
-       * posterior trate el abono como ingreso.
-       */
-
       financial_direction:
         'OUTFLOW',
 
@@ -333,11 +839,11 @@
 
   /*
    ------------------------------------------------------------
-   MODAL
+   CERRAR MODAL
    ------------------------------------------------------------
   */
 
-  function removeModal() {
+  function closeModal() {
 
     if (
       modal &&
@@ -358,11 +864,17 @@
 
   }
 
-  function createModal(
+  /*
+   ------------------------------------------------------------
+   MODAL
+   ------------------------------------------------------------
+  */
+
+  function openModal(
     debt
   ) {
 
-    removeModal();
+    closeModal();
 
     currentDebt =
       debt;
@@ -378,13 +890,13 @@
     overlay.style.cssText = [
       'position:fixed',
       'inset:0',
-      'z-index:99999',
+      'z-index:999999',
       'display:flex',
       'align-items:center',
       'justify-content:center',
-      'padding:20px',
+      'padding:18px',
       'box-sizing:border-box',
-      'background:rgba(0,0,0,.55)'
+      'background:rgba(0,0,0,.58)'
     ].join(';');
 
     const card =
@@ -393,13 +905,19 @@
       );
 
     card.style.cssText = [
-      'width:min(430px,100%)',
+      'width:min(440px,100%)',
+      'max-height:90vh',
+      'overflow:auto',
       'box-sizing:border-box',
       'background:#fff',
       'border-radius:14px',
       'padding:20px',
-      'box-shadow:0 20px 60px rgba(0,0,0,.25)'
+      'box-shadow:0 20px 70px rgba(0,0,0,.3)'
     ].join(';');
+
+    /*
+     * Título.
+     */
 
     const title =
       document.createElement(
@@ -410,10 +928,14 @@
       'Registrar abono';
 
     title.style.cssText = [
-      'margin:0 0 8px',
+      'margin:0 0 6px',
       'font-size:20px',
       'color:#111827'
     ].join(';');
+
+    /*
+     * Acreedor.
+     */
 
     const creditor =
       document.createElement(
@@ -422,22 +944,22 @@
 
     creditor.textContent =
       debt.acreedor ||
-      debt.nombre ||
-      debt.concepto ||
       'Deuda';
 
     creditor.style.cssText = [
-      'font-weight:600',
-      'margin-bottom:4px',
-      'color:#111827'
+      'font-size:15px',
+      'font-weight:700',
+      'color:#111827',
+      'margin-bottom:4px'
     ].join(';');
 
+    /*
+     * Saldo.
+     */
+
     const balance =
-      normalizeMoney(
-        debt.saldo_actual ??
-        debt.saldo_pendiente ??
-        debt.saldo ??
-        0
+      money(
+        debt.saldo_actual
       );
 
     const balanceText =
@@ -447,54 +969,65 @@
 
     balanceText.textContent =
       'Saldo pendiente: ' +
-      formatMoney(balance);
+      formatMoney(
+        balance
+      );
 
     balanceText.style.cssText = [
       'font-size:13px',
       'color:#6b7280',
-      'margin-bottom:16px'
+      'margin-bottom:18px'
     ].join(';');
 
-    const label =
+    /*
+     * Campo monto.
+     */
+
+    const amountLabel =
       document.createElement(
         'label'
       );
 
-    label.textContent =
+    amountLabel.textContent =
       'Monto del abono';
 
-    label.style.cssText = [
+    amountLabel.style.cssText = [
       'display:block',
       'font-size:13px',
       'font-weight:600',
-      'margin-bottom:6px',
-      'color:#111827'
+      'color:#111827',
+      'margin-bottom:6px'
     ].join(';');
 
-    const input =
+    const amount =
       document.createElement(
         'input'
       );
 
-    input.type =
+    amount.type =
       'number';
 
-    input.min =
+    amount.min =
       '1';
 
-    input.step =
+    amount.max =
+      String(
+        balance
+      );
+
+    amount.step =
       '1';
 
-    input.inputMode =
+    amount.inputMode =
       'numeric';
 
-    input.id =
-      'b2313-monto';
-
-    input.placeholder =
+    amount.placeholder =
       'Ej.: 100000';
 
-    input.style.cssText = [
+    amount.id =
+      'b2313-monto';
+
+    amount.style.cssText = [
       'display:block',
       'width:100%',
       'box-sizing:border-box',
@@ -502,23 +1035,29 @@
       'border:1px solid #d1d5db',
       'border-radius:8px',
       'font-size:16px',
-      'margin-bottom:8px'
+      'margin-bottom:6px'
     ].join(';');
 
-    const maxText =
+    const max =
       document.createElement(
         'div'
       );
 
-    maxText.textContent =
-      'Máximo permitido: ' +
-      formatMoney(balance);
+    max.textContent =
+      'Máximo: ' +
+      formatMoney(
+        balance
+      );
 
-    maxText.style.cssText = [
+    max.style.cssText = [
       'font-size:12px',
       'color:#6b7280',
       'margin-bottom:14px'
     ].join(';');
+
+    /*
+     * Descripción.
+     */
 
     const description =
       document.createElement(
@@ -528,14 +1067,11 @@
     description.type =
       'text';
 
-    description.placeholder =
-      'Descripción opcional';
-
-    description.id =
-      'b2313-descripcion';
-
     description.value =
       'Abono a deuda';
+
+    description.placeholder =
+      'Descripción';
 
     description.style.cssText = [
       'display:block',
@@ -545,27 +1081,28 @@
       'border:1px solid #d1d5db',
       'border-radius:8px',
       'font-size:14px',
-      'margin-bottom:16px'
+      'margin-bottom:14px'
     ].join(';');
+
+    /*
+     * Mensaje.
+     */
 
     const message =
       document.createElement(
         'div'
       );
 
-    message.id =
-      'b2313-message';
-
     message.style.cssText = [
       'display:none',
-      'padding:9px',
-      'margin-bottom:12px',
-      'border-radius:7px',
-      'font-size:12px'
+      'padding:10px',
+      'border-radius:8px',
+      'font-size:12px',
+      'margin-bottom:12px'
     ].join(';');
 
     /*
-     * Botones.
+     * Acciones.
      */
 
     const actions =
@@ -591,13 +1128,12 @@
       'Cancelar';
 
     cancel.style.cssText = [
-      'padding:10px 14px',
       'border:0',
       'border-radius:8px',
+      'padding:10px 14px',
       'background:#e5e7eb',
       'color:#111827',
-      'font-weight:600',
-      'cursor:pointer'
+      'font-weight:600'
     ].join(';');
 
     const confirm =
@@ -612,27 +1148,18 @@
       'Preparar abono';
 
     confirm.style.cssText = [
-      'padding:10px 14px',
       'border:0',
       'border-radius:8px',
+      'padding:10px 14px',
       'background:#111827',
       'color:#fff',
-      'font-weight:600',
-      'cursor:pointer'
+      'font-weight:600'
     ].join(';');
-
-    /*
-     * Cancelar.
-     */
 
     cancel.addEventListener(
       'click',
-      removeModal
+      closeModal
     );
-
-    /*
-     * Cerrar tocando fuera.
-     */
 
     overlay.addEventListener(
       'click',
@@ -643,30 +1170,21 @@
           overlay
         ) {
 
-          removeModal();
+          closeModal();
 
         }
 
       }
     );
 
-    /*
-     * Confirmar.
-     */
-
     confirm.addEventListener(
       'click',
       function () {
 
-        const amount =
-          Number(
-            input.value
-          );
-
         const result =
           validatePartialPayment(
             currentDebt,
-            amount
+            amount.value
           );
 
         if (!result.ok) {
@@ -674,14 +1192,14 @@
           message.style.display =
             'block';
 
-          message.textContent =
-            result.message;
-
           message.style.background =
             '#fee2e2';
 
           message.style.color =
             '#991b1b';
+
+          message.textContent =
+            result.message;
 
           return;
 
@@ -690,16 +1208,17 @@
         const operation =
           preparePartialPayment(
             currentDebt,
-            amount,
+            amount.value,
             null,
             description.value
           );
 
         /*
-         * Evento para la integración financiera.
+         * No persistimos todavía.
          *
-         * B231.3 NO ejecuta todavía una escritura
-         * desconocida en Supabase.
+         * Emitimos el contrato para que la siguiente
+         * integración conecte la operación con la
+         * persistencia financiera existente.
          */
 
         document.dispatchEvent(
@@ -712,10 +1231,6 @@
           )
         );
 
-        /*
-         * Resultado visual.
-         */
-
         message.style.display =
           'block';
 
@@ -727,10 +1242,7 @@
 
         message.textContent =
           operation.pago_total
-            ? (
-                'Pago total preparado. ' +
-                'Saldo resultante: $0.'
-              )
+            ? 'Pago total preparado. Saldo resultante: $0.'
             : (
                 'Abono preparado. Nuevo saldo: ' +
                 formatMoney(
@@ -738,12 +1250,6 @@
                 ) +
                 '.'
               );
-
-        /*
-         * No cerramos automáticamente.
-         * Esto permite inspeccionar el resultado antes
-         * de conectar la persistencia definitiva.
-         */
 
       }
     );
@@ -769,15 +1275,15 @@
     );
 
     card.appendChild(
-      label
+      amountLabel
     );
 
     card.appendChild(
-      input
+      amount
     );
 
     card.appendChild(
-      maxText
+      max
     );
 
     card.appendChild(
@@ -805,7 +1311,9 @@
 
     setTimeout(
       function () {
-        input.focus();
+
+        amount.focus();
+
       },
       50
     );
@@ -814,7 +1322,113 @@
 
   /*
    ------------------------------------------------------------
-   API PÚBLICA
+   INSTALAR BOTONES
+   ------------------------------------------------------------
+  */
+
+  function installButtons() {
+
+    if (rendering) {
+      return;
+    }
+
+    rendering =
+      true;
+
+    try {
+
+      const cards =
+        findDebtCards();
+
+      cards.forEach(
+        createButton
+      );
+
+      if (
+        cards.length
+      ) {
+
+        console.info(
+          '[B231.3] Botones Registrar abono:',
+          cards.length,
+          'tarjetas evaluadas.'
+        );
+
+      }
+
+    } finally {
+
+      rendering =
+        false;
+
+    }
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   OBSERVER
+   ------------------------------------------------------------
+  */
+
+  function startObserver() {
+
+    if (observer) {
+      return;
+    }
+
+    observer =
+      new MutationObserver(
+        function () {
+
+          /*
+           * Solo actuamos si todavía no existe el botón.
+           */
+
+          const root =
+            document.getElementById(
+              'deudas'
+            );
+
+          if (!root) {
+            return;
+          }
+
+          const missing =
+            root.querySelector(
+              'button[data-b2313-abono="true"]'
+            ) === null;
+
+          if (missing) {
+
+            /*
+             * Dar tiempo al renderizador existente
+             * para terminar de construir las tarjetas.
+             */
+
+            setTimeout(
+              installButtons,
+              50
+            );
+
+          }
+
+        }
+      );
+
+    observer.observe(
+      document.body,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   API
    ------------------------------------------------------------
   */
 
@@ -828,22 +1442,16 @@
     preparePartialPayment,
 
     open:
-      function (debt) {
-
-        createModal(
-          debt
-        );
-
-      },
+      openModal,
 
     close:
-      removeModal,
+      closeModal,
+
+    installButtons,
 
     getCurrentDebt:
       function () {
-
         return currentDebt;
-
       },
 
     rules:
@@ -885,8 +1493,61 @@
       api
     );
 
+  /*
+   ------------------------------------------------------------
+   ARRANQUE
+   ------------------------------------------------------------
+  */
+
+  function boot() {
+
+    /*
+     * Intentos iniciales.
+     */
+
+    installButtons();
+
+    setTimeout(
+      installButtons,
+      300
+    );
+
+    setTimeout(
+      installButtons,
+      1000
+    );
+
+    setTimeout(
+      installButtons,
+      2500
+    );
+
+    startObserver();
+
+  }
+
+  if (
+    document.readyState ===
+    'loading'
+  ) {
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      boot,
+      {
+        once: true
+      }
+    );
+
+  } else {
+
+    boot();
+
+  }
+
   console.info(
-    '[B231.3] Abonos parciales preparado.'
+    '[B231.3] Abonos parciales · UI integrada ·',
+    VERSION
   );
 
 })();
