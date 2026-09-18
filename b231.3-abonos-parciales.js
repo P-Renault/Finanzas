@@ -1,13 +1,13 @@
 /* ============================================================
-   B231.3 — ABONOS PARCIALES
-   VERSIÓN 231.3.3
+   B231.7 — CIERRE TÉCNICO DEL MOTOR DE DEUDAS
+   VERSIÓN 231.7.0
    Persistencia real: abono -> movimiento -> pago_deuda -> saldo
    No depende de un listener externo para guardar el abono.
    ============================================================ */
 (() => {
   'use strict';
 
-  const VERSION = '231.3.4';
+  const VERSION = '231.7.0';
   if (window.B2313AbonosParciales?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -427,7 +427,7 @@
 
   function startObserver() {
     if (observer) return;
-    observer = new MutationObserver(() => setTimeout(() => { install(); dedupePaymentButtons(); }, 30));
+    observer = new MutationObserver(() => setTimeout(() => { install(); dedupePaymentButtons(); dedupeAllPaymentButtons(); }, 30));
     const root = $('deudas');
     if (root) observer.observe(root, {childList:true, subtree:true});
   }
@@ -458,6 +458,23 @@
      Elimina botones de pago duplicados producidos por la doble
      carga de B220/B220.1. No elimina la acción de abono.
      ============================================================ */
+  function dedupeAllPaymentButtons() {
+    const candidates = Array.from(document.querySelectorAll('button')).filter(b => {
+      const t = lower(b.textContent);
+      return t === 'pagar próxima cuota' || t === 'registrar pago único';
+    });
+    const seenByDebt = new WeakMap();
+    candidates.forEach(b => {
+      const card = b.closest('.debt-card') || b.closest('[data-debt-id]') || b.parentElement;
+      if (!card) return;
+      if (!seenByDebt.has(card)) seenByDebt.set(card, new Set());
+      const seen = seenByDebt.get(card);
+      const key = lower(b.textContent);
+      if (seen.has(key)) b.remove();
+      else seen.add(key);
+    });
+  }
+
   function dedupePaymentButtons() {
     document.querySelectorAll('.debt-card').forEach(card => {
       const actions = card.querySelector('.form-actions') || card;
@@ -485,8 +502,9 @@
    * No se eliminan movimientos vinculados automáticamente. La razón
    * es preservar la trazabilidad financiera y evitar que el trigger
    * de conciliación B2.10 intente resolver un pago que ya fue borrado.
-   * El historial de movimiento queda intacto y la deuda, sus cuotas,
-   * planes y registros de pago dejan de existir.
+   * El historial de movimiento queda intacto. Si la base de datos rechaza
+   * la eliminación por una dependencia histórica, la operación se detiene
+   * sin borrar información adicional.
    */
   async function deleteDebtSafely(id) {
     if (!confirm(
@@ -573,7 +591,8 @@
   function boot() {
     install();
     dedupePaymentButtons();
-    [300,800,1500,2500].forEach(ms => setTimeout(() => { install(); dedupePaymentButtons(); }, ms));
+    dedupeAllPaymentButtons();
+    [300,800,1500,2500].forEach(ms => setTimeout(() => { install(); dedupePaymentButtons(); dedupeAllPaymentButtons(); }, ms));
     startObserver();
   }
 
@@ -583,5 +602,5 @@
     boot();
   }
 
-  console.info('[B231.7] Motor de deuda unificado — abonos persistentes, acciones sin duplicados y eliminación segura —', VERSION);
+  console.info('[B231.7] Cierre técnico Deudas — acciones únicas, abonos persistentes y eliminación segura —', VERSION);
 })();
