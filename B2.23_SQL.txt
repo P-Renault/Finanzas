@@ -1,0 +1,3 @@
+B2.23 no requiere SQL.
+El parche es de montaje/interfaz y lectura de las tablas existentes.
+No ejecutar SQL para esta corrección.

@@ -1,0 +1,8 @@
+Añadir ANTES de </body> en index.html:
+<script src="b223-centro-operaciones-planificacion-fix.js?v=223.0"></script>
+
+Importante:
+- No eliminar scripts actuales.
+- No reemplazar index.html.
+- Este archivo corrige montaje de Operaciones y Planificación.
+- No modifica ni elimina registros.
