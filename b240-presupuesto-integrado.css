@@ -1,0 +1,29 @@
+/* B2.40 — Presupuesto integrado. Selectores encapsulados bajo #presupuesto. */
+#presupuesto .b240-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+#presupuesto .b240-period{display:flex;align-items:center;gap:8px}
+#presupuesto .b240-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#presupuesto .b240-card{border:1px solid rgba(127,127,127,.18);border-radius:12px;padding:14px}
+#presupuesto .b240-card span{display:block;font-size:.82rem;opacity:.75}
+#presupuesto .b240-card strong{display:block;font-size:1.2rem;margin-top:4px}
+#presupuesto .b240-table{width:100%;border-collapse:collapse}
+#presupuesto .b240-table th,#presupuesto .b240-table td{padding:9px 7px;border-bottom:1px solid rgba(127,127,127,.16);vertical-align:middle}
+#presupuesto .b240-table th{font-size:.78rem;text-transform:uppercase}
+#presupuesto .b240-right{text-align:right;white-space:nowrap}
+#presupuesto .b240-progress{display:grid;grid-template-columns:minmax(70px,1fr) 45px;gap:8px;align-items:center}
+#presupuesto .b240-bar{height:7px;border-radius:99px;background:rgba(127,127,127,.16);overflow:hidden}
+#presupuesto .b240-bar i{display:block;height:100%;background:currentColor}
+#presupuesto .b240-ok{color:#15803d}.b240-warn{color:#b45309}.b240-danger{color:#b91c1c}
+#presupuesto .b240-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#presupuesto .b240-form .full{grid-column:1/-1}
+#presupuesto .b240-actions{display:flex;gap:8px;flex-wrap:wrap}
+#presupuesto .b240-note{font-size:.85rem;opacity:.72}
+#presupuesto .b240-alert{padding:10px 12px;margin:7px 0;border-left:4px solid currentColor;background:rgba(127,127,127,.07);border-radius:7px}
+#presupuesto .b240-empty{padding:16px;text-align:center;opacity:.7}
+#presupuesto .b240-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999}
+#presupuesto .b240-dialog{background:var(--card-bg,#fff);color:inherit;max-width:680px;width:100%;max-height:90vh;overflow:auto;border-radius:14px;padding:18px}
+@media(max-width:760px){
+  #presupuesto .b240-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #presupuesto .b240-form{grid-template-columns:1fr}
+  #presupuesto .b240-form .full{grid-column:auto}
+  #presupuesto .b240-table{font-size:.83rem}
+}
