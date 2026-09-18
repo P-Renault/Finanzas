@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -35,7 +36,7 @@
 <section id="calendario" class="tab hidden"><div class="card calendar-card"><div class="calendar-toolbar"><button id="calPrev" class="nav-month">‹</button><div class="calendar-heading"><h2 id="calendarMonth">Septiembre 2026</h2><span>Plan mensual de ingresos y pagos</span></div><button id="calNext" class="nav-month">›</button></div><button id="calToday" class="secondary today-btn">Ir a hoy</button><div class="calendar-metrics"><article><span>Ingresos registrados</span><strong id="calIncome">$0</strong></article><article><span>Gastos registrados</span><strong id="calExpenses">$0</strong></article><article><span>Pagos programados</span><strong id="calPayments">$0</strong></article><article><span>Saldo al cierre</span><strong id="calFinalBalance">$0</strong></article></div><div class="legend"><span><i class="dot income-dot"></i>Ingreso</span><span><i class="dot expense-dot"></i>Gasto</span><span><i class="dot payment-dot"></i>Pago programado</span><span><i class="dot balance-dot"></i>Saldo acumulado</span></div><div class="calendar-scroll"><div class="calendar-grid week-head"><div>DOM</div><div>LUN</div><div>MAR</div><div>MIÉ</div><div>JUE</div><div>VIE</div><div>SÁB</div></div><div id="calendarGrid" class="calendar-grid"></div></div><p id="calMonthNote" class="muted calendar-note"></p><div id="calendarDayDetails" class="calendar-day-details"><p class="muted">Selecciona un día del calendario para ver sus ingresos y gastos.</p></div><p class="calendar-help">Desliza horizontalmente si quieres ver el calendario completo en el teléfono.</p></div></section>
 <section id="ahorro" class="tab hidden"><div class="card"><h2 id="savingFormTitle">Fondo de ahorro</h2><form id="savingForm" class="grid2"><input type="hidden" id="savingId"><label>Tipo<select id="savingTipo"><option value="aporte">Aporte</option><option value="retiro">Retiro</option></select></label><label>Fecha<input id="savingFecha" type="date" required></label><label>Monto<input id="savingMonto" type="number" min="0" step="1" required></label><label class="full">Descripción<input id="savingDescripcion" placeholder="Ahorro del día..."></label><div class="form-actions full"><button type="submit" id="savingSubmit">Registrar</button><button type="button" id="savingCancel" class="secondary hidden">Cancelar edición</button></div></form><p class="big-number" id="savingBalance">$0</p><p id="savingMsg" class="status"></p></div><div class="card"><h2>Historial de ahorro</h2><div id="ahorroLista"></div></div></section>
 </section>
-</main>
+</section>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js?v=220.2"></script>
 <script src="b219-arquitectura-navegacion.js?v=220.2"></script>
@@ -53,5 +54,76 @@
 <script src="b231.1-persistencia-deuda-sin-fecha.js?v=231.1"></script>
 <script src="b231.2-deudas-fecha.js?v=231.2.2"></script>
 <script src="b231.3-abonos-parciales.js?v=231.3.3"></script>
+
+<!-- B231.7-R3 · RECUPERACIÓN EXCLUSIVA DEL PANEL DE CONEXIÓN -->
+<script>
+(function () {
+  'use strict';
+
+  function unlockConnectionPanel() {
+    var panel = document.getElementById('configPanel');
+    if (!panel) return;
+
+    /* Si quedó algún modal/overlay antiguo en memoria, no debe bloquear
+       la pantalla de conexión. Esto no toca Supabase ni datos. */
+    ['b230Overlay','b220Modal'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.remove();
+    });
+
+    panel.style.position = 'relative';
+    panel.style.zIndex = '2147483000';
+    panel.style.pointerEvents = 'auto';
+
+    ['supabaseUrl','supabaseKey'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.disabled = false;
+      el.readOnly = false;
+      el.removeAttribute('disabled');
+      el.removeAttribute('readonly');
+      el.style.position = 'relative';
+      el.style.zIndex = '2147483001';
+      el.style.pointerEvents = 'auto';
+      el.style.userSelect = 'text';
+      el.style.webkitUserSelect = 'text';
+      el.style.touchAction = 'manipulation';
+    });
+
+    var btn = document.getElementById('saveConfig');
+    if (btn) {
+      btn.disabled = false;
+      btn.removeAttribute('disabled');
+      btn.style.position = 'relative';
+      btn.style.zIndex = '2147483001';
+      btn.style.pointerEvents = 'auto';
+    }
+  }
+
+  function focusField(e) {
+    var t = e.target;
+    if (!t || !t.matches || !t.matches('#supabaseUrl,#supabaseKey')) return;
+    unlockConnectionPanel();
+    setTimeout(function () {
+      try { t.focus({preventScroll:true}); } catch (_) { t.focus(); }
+    }, 0);
+  }
+
+  function start() {
+    unlockConnectionPanel();
+    document.addEventListener('pointerdown', focusField, true);
+    document.addEventListener('touchstart', focusField, true);
+    document.addEventListener('click', focusField, true);
+    setInterval(unlockConnectionPanel, 1000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, {once:true});
+  } else {
+    start();
+  }
+})();
+</script>
+
 </body>
 </html>
