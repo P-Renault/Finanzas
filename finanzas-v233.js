@@ -638,6 +638,20 @@
       }
     }
 
+    /* B231.4: hechos operativos para calcular el estado real. */
+    if (debts.length) {
+      const ids = debts.map(d => d.id).filter(Boolean);
+      const [pr, qr] = await Promise.all([
+        c.from('renegociaciones_deuda').select('id,deuda_id,version,estado').in('deuda_id', ids),
+        c.from('cuotas_deuda').select('id,deuda_id,estado,fecha_vencimiento').in('deuda_id', ids)
+      ]);
+      const plansByDebt = new Map();
+      if (!pr.error) (pr.data || []).forEach(x => { const k=String(x.deuda_id); if(!plansByDebt.has(k)) plansByDebt.set(k,[]); plansByDebt.get(k).push(x); });
+      const quotasByDebt = new Map();
+      if (!qr.error) (qr.data || []).forEach(x => { const k=String(x.deuda_id); if(!quotasByDebt.has(k)) quotasByDebt.set(k,[]); quotasByDebt.get(k).push(x); });
+      debts = debts.map(d => ({...d, __planes:plansByDebt.get(String(d.id))||[], __cuotas:quotasByDebt.get(String(d.id))||[]}));
+    }
+
     renderDebtList();
     await renderDebtSummary();
   }
@@ -692,6 +706,63 @@
     );
   }
 
+  /* ============================================================
+     B231.4 — MOTOR DE ESTADO DE DEUDA
+     Estado operativo separado de saldo, cuotas y planificación.
+     Estados soportados: VIGENTE, ATRASADA, VENCIDA, SIN_PLAN,
+     RENEGOCIACION y PAGADA.
+     ============================================================ */
+
+  function normalizeDebtState(value) {
+    const v = String(value || '').trim().toUpperCase();
+    const aliases = {
+      VIGENTE: 'VIGENTE', VENCIDA: 'VENCIDA', ATRASADA: 'ATRASADA',
+      SIN_PLAN: 'SIN_PLAN', 'SIN PLAN': 'SIN_PLAN',
+      RENEGOCIACION: 'RENEGOCIACION', 'RENEGOCIACIÓN': 'RENEGOCIACION',
+      PAGADA: 'PAGADA', CANCELADA: 'PAGADA'
+    };
+    return aliases[v] || null;
+  }
+
+  function debtState(d) {
+    const stored = normalizeDebtState(d.estado);
+    const saldo = Number(d.saldo_actual || 0);
+    if (saldo <= 0) return 'PAGADA';
+    if (stored === 'RENEGOCIACION') return 'RENEGOCIACION';
+
+    const hasAgreement = Number(d.numero_cuotas || 0) > 0;
+    const hasPlan = Array.isArray(d.__planes)
+      ? d.__planes.some(p => String(p.estado || '').toLowerCase() === 'activo')
+      : !!d.__has_active_plan;
+
+    if (hasAgreement && !hasPlan) return 'SIN_PLAN';
+
+    if (Array.isArray(d.__cuotas)) {
+      const pending = d.__cuotas.filter(q => ['pendiente','vencida'].includes(String(q.estado || '').toLowerCase()));
+      const overdue = d.__cuotas.some(q => {
+        const st = String(q.estado || '').toLowerCase();
+        return st === 'vencida' || (st === 'pendiente' && q.fecha_vencimiento && q.fecha_vencimiento < today());
+      });
+      if (overdue) return 'ATRASADA';
+      if (pending.length) return 'VIGENTE';
+    }
+
+    if (!hasAgreement) {
+      const due = d.fecha_proximo_pago || d.fecha_primera_cuota || d.proximo_vencimiento;
+      if (due && due < today()) return 'VENCIDA';
+      return stored || 'VIGENTE';
+    }
+    return stored || 'VIGENTE';
+  }
+
+  function stateLabel(state) {
+    return ({VIGENTE:'Vigente', ATRASADA:'Atrasada', VENCIDA:'Vencida', SIN_PLAN:'Sin plan', RENEGOCIACION:'Renegociación', PAGADA:'Pagada'})[state] || 'Vigente';
+  }
+
+  function stateClass(state) {
+    return 'b2314-state b2314-' + String(state || 'VIGENTE').toLowerCase();
+  }
+
   function renderDebtList() {
     $('deudasLista').innerHTML = debts.length
       ? debts.map(d => `
@@ -699,6 +770,9 @@
             <div class="debt-card-main">
               <span class="debt-type">
                 ${esc(d.tipo_acreedor || 'Sin clasificar')}
+              </span>
+              <span class="${stateClass(debtState(d))}">
+                ${esc(stateLabel(debtState(d)))}
               </span>
               <h3>${esc(d.acreedor)}</h3>
               <p>${esc(d.concepto || '')}</p>
@@ -2050,8 +2124,17 @@
      INICIALIZACIÓN
      ============================================================ */
 
+  function ensureB2314Styles() {
+    if ($('b2314Styles')) return;
+    const s = document.createElement('style');
+    s.id = 'b2314Styles';
+    s.textContent = `.b2314-state{display:inline-block;margin:4px 0 6px;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;line-height:1.2;background:#eef2f7;color:#334155}.b2314-vigente{background:#ecfdf5;color:#166534}.b2314-atrasada,.b2314-vencida{background:#fff7ed;color:#9a3412}.b2314-sin_plan{background:#f1f5f9;color:#475569}.b2314-renegociacion{background:#eff6ff;color:#1d4ed8}.b2314-pagada{background:#f3f4f6;color:#6b7280}`;
+    document.head.appendChild(s);
+  }
+
   async function start() {
     try {
+      ensureB2314Styles();
       injectTabs();
       injectSections();
 
