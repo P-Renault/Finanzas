@@ -1,94 +1,39 @@
 /* ============================================================
    B231.3 — ABONOS PARCIALES
-   Control Financiero · Deudas V2
-
-   INTEGRACIÓN UI 231.3.1
-
-   OBJETIVO
-   ------------------------------------------------------------
-   Incorporar "Registrar abono" a cada deuda con saldo
-   pendiente, sin reemplazar el renderizador existente.
-
-   EJEMPLO:
-
-   Erika
-   Saldo actual $460.000
-
-   [Ver detalle] [Editar] [Eliminar]
-   [Registrar abono] [Pagar próxima cuota]
-
-   REGLAS:
-   - Abono > 0
-   - Abono <= saldo pendiente
-   - No modifica monto original
-   - Reduce saldo
-   - Pago total => saldo 0
-   - No crea ingresos
-   - No crea transferencias
-   - No duplica movimientos
-   - No crea tablas
-   - No crea cliente Supabase
-   - No modifica botones existentes
+   INTEGRACIÓN CON TARJETAS EXISTENTES DE DEUDAS
+   Versión 231.3.2
    ============================================================ */
 
 (function () {
 
   'use strict';
 
-  const VERSION = '231.3.1';
-
-  /*
-   ------------------------------------------------------------
-   PROTECCIÓN CONTRA DOBLE CARGA
-   ------------------------------------------------------------
-  */
+  const VERSION = '231.3.2';
 
   if (
     window.B2313AbonosParciales &&
     window.B2313AbonosParciales.version === VERSION
   ) {
-
-    console.info(
-      '[B231.3] Ya estaba cargado.'
-    );
-
     return;
-
   }
 
-  /*
-   ------------------------------------------------------------
-   ESTADO
-   ------------------------------------------------------------
-  */
-
   let modal = null;
-
   let currentDebt = null;
-
   let observer = null;
+  let installing = false;
 
-  let rendering = false;
+  /* ==========================================================
+     UTILIDADES
+     ========================================================== */
 
-  /*
-   ------------------------------------------------------------
-   UTILIDADES
-   ------------------------------------------------------------
-  */
-
-  function cleanText(value) {
-
+  function text(value) {
     return String(value || '')
       .replace(/\s+/g, ' ')
       .trim();
-
   }
 
-  function normalizedText(value) {
-
-    return cleanText(value)
-      .toLowerCase();
-
+  function lower(value) {
+    return text(value).toLowerCase();
   }
 
   function money(value) {
@@ -97,110 +42,77 @@
       typeof value === 'number' &&
       Number.isFinite(value)
     ) {
-
       return value;
-
     }
 
-    let text =
-      String(value ?? '')
-        .trim();
+    let v = String(value ?? '')
+      .replace(/\$/g, '')
+      .replace(/\s/g, '')
+      .trim();
 
-    text =
-      text
-        .replace(/\$/g, '')
-        .replace(/\s/g, '')
-        .replace(/\./g, '')
-        .replace(',', '.');
+    if (!v) return 0;
 
-    const result =
-      Number(text);
+    /*
+     * Formato habitual de la aplicación:
+     * $460.000
+     */
 
-    return Number.isFinite(result)
-      ? result
-      : 0;
+    v = v.replace(/\./g, '');
+    v = v.replace(',', '.');
 
+    const n = Number(v);
+
+    return Number.isFinite(n) ? n : 0;
   }
 
   function formatMoney(value) {
 
-    return (
-      '$' +
-      Math.round(
-        money(value)
-      ).toLocaleString(
-        'es-CL'
-      )
-    );
+    return '$' + Math.round(
+      money(value)
+    ).toLocaleString('es-CL');
 
   }
 
-  /*
-   ------------------------------------------------------------
-   OBTENER SALDO DESDE UNA TARJETA
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     BUSCAR SALDO DE UNA TARJETA
+     ========================================================== */
 
-  function extractBalance(card) {
+  function getBalance(card) {
 
-    if (!card) {
-      return 0;
-    }
+    if (!card) return 0;
 
     /*
-     * Primero buscamos elementos que tengan
-     * expresamente "Saldo actual".
+     * Buscar explícitamente "Saldo actual".
      */
 
-    const elements =
-      Array.from(
-        card.querySelectorAll('*')
-      );
+    const nodes = Array.from(
+      card.querySelectorAll('*')
+    );
 
-    for (
-      const element of elements
-    ) {
+    for (const node of nodes) {
 
       if (
-        element.children.length === 0 &&
-        normalizedText(
-          element.textContent
-        ) === 'saldo actual'
+        node.children.length === 0 &&
+        lower(node.textContent) === 'saldo actual'
       ) {
 
-        /*
-         * Buscar el valor inmediatamente próximo.
-         */
-
-        let parent =
-          element.parentElement;
+        let parent = node.parentElement;
 
         for (
-          let level = 0;
-          level < 3 && parent;
-          level++
+          let i = 0;
+          i < 4 && parent;
+          i++
         ) {
 
-          const text =
-            cleanText(
-              parent.textContent
-            );
-
           const match =
-            text.match(
-              /\$\s*[\d.]+(?:,\d+)?/
-            );
+            text(parent.textContent)
+              .match(/\$\s*[\d.]+(?:,\d+)?/);
 
           if (match) {
-
-            return money(
-              match[0]
-            );
-
+            return money(match[0]);
           }
 
-          parent =
-            parent.parentElement;
+          parent = parent.parentElement;
 
         }
 
@@ -209,77 +121,101 @@
     }
 
     /*
-     * Fallback:
-     * buscar todos los importes del card.
+     * Fallback: obtener los importes visibles.
      */
 
-    const text =
-      cleanText(
-        card.textContent
-      );
-
     const matches =
-      text.match(
-        /\$\s*[\d.]+(?:,\d+)?/g
-      );
+      text(card.textContent)
+        .match(/\$\s*[\d.]+(?:,\d+)?/g);
 
-    if (
-      matches &&
-      matches.length
-    ) {
-
-      /*
-       * El primer importe suele corresponder
-       * al saldo actual en la tarjeta actual.
-       */
-
-      return money(
-        matches[0]
-      );
-
+    if (!matches || !matches.length) {
+      return 0;
     }
 
-    return 0;
+    /*
+     * En las tarjetas actuales el primer importe
+     * corresponde al saldo actual.
+     */
+
+    return money(matches[0]);
 
   }
 
-  /*
-   ------------------------------------------------------------
-   OBTENER NOMBRE / ACREEDOR
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     ENCONTRAR TARJETA DESDE UN BOTÓN EXISTENTE
+     ========================================================== */
 
-  function extractCreditor(card) {
+  function findDebtCard(button) {
+
+    let element =
+      button?.parentElement || null;
+
+    for (
+      let level = 0;
+      level < 8 && element;
+      level++
+    ) {
+
+      const content =
+        lower(element.textContent);
+
+      const hasDetail =
+        content.includes('ver detalle');
+
+      const hasEdit =
+        content.includes('editar');
+
+      const hasDelete =
+        content.includes('eliminar');
+
+      const hasBalance =
+        content.includes('saldo actual');
+
+      if (
+        hasDetail &&
+        hasEdit &&
+        hasDelete &&
+        hasBalance
+      ) {
+
+        return element;
+
+      }
+
+      element =
+        element.parentElement;
+
+    }
+
+    return null;
+
+  }
+
+  /* ==========================================================
+     EXTRAER NOMBRE
+     ========================================================== */
+
+  function getCreditor(card) {
 
     if (!card) {
       return 'Deuda';
     }
 
-    const text =
-      cleanText(
-        card.textContent
-      );
-
     /*
-     * Intentar localizar elementos de texto
-     * de tamaño relevante.
+     * Buscar primero elementos destacados.
      */
 
     const candidates =
       Array.from(
         card.querySelectorAll(
-          'strong, b, h3, h4, [class*="nombre"], [class*="acreedor"]'
+          'strong,b,h3,h4'
         )
       );
 
-    for (
-      const element of candidates
-    ) {
+    for (const candidate of candidates) {
 
       const value =
-        cleanText(
-          element.textContent
-        );
+        text(candidate.textContent);
 
       if (
         value &&
@@ -295,325 +231,72 @@
     }
 
     /*
-     * Fallback por líneas de texto.
+     * Buscar después elementos con clases
+     * relacionadas con acreedor/nombre.
      */
 
-    const lines =
-      text
-        .split(' ')
-        .filter(Boolean);
-
-    return (
-      lines.length
-        ? lines[0]
-        : 'Deuda'
-    );
-
-  }
-
-  /*
-   ------------------------------------------------------------
-   LOCALIZAR TARJETAS DE DEUDA
-   ------------------------------------------------------------
-  */
-
-  function findDebtCards() {
-
-    const root =
-      document.getElementById(
-        'deudas'
-      );
-
-    if (!root) {
-      return [];
-    }
-
-    /*
-     * Las tarjetas actuales contienen botones
-     * "Ver detalle", "Editar" y "Eliminar".
-     */
-
-    const allElements =
-      Array.from(
-        root.querySelectorAll(
-          'div, article, li, section'
-        )
-      );
-
-    const candidates =
-      allElements.filter(
-        element => {
-
-          const text =
-            normalizedText(
-              element.textContent
-            );
-
-          const hasDetail =
-            text.includes(
-              'ver detalle'
-            );
-
-          const hasEdit =
-            text.includes(
-              'editar'
-            );
-
-          const hasDelete =
-            text.includes(
-              'eliminar'
-            );
-
-          return (
-            hasDetail &&
-            hasEdit &&
-            hasDelete
-          );
-
-        }
-      );
-
-    /*
-     * Nos quedamos con los contenedores más pequeños
-     * que todavía contienen los tres botones.
-     */
-
-    return candidates.filter(
-      element => {
-
-        return !Array.from(
-          element.children
-        ).some(
-          child => {
-
-            const childText =
-              normalizedText(
-                child.textContent
-              );
-
-            return (
-              childText.includes(
-                'ver detalle'
-              ) &&
-              childText.includes(
-                'editar'
-              ) &&
-              childText.includes(
-                'eliminar'
-              )
-            );
-
-          }
-        );
-
-      }
-    );
-
-  }
-
-  /*
-   ------------------------------------------------------------
-   CREAR BOTÓN
-   ------------------------------------------------------------
-  */
-
-  function createButton(
-    card
-  ) {
-
-    if (
-      card.querySelector(
-        '[data-b2313-abono="true"]'
-      )
-    ) {
-
-      return;
-
-    }
-
-    const balance =
-      extractBalance(
-        card
-      );
-
-    /*
-     * No mostramos abono en deudas
-     * sin saldo pendiente.
-     */
-
-    if (
-      balance <= 0
-    ) {
-
-      return;
-
-    }
-
-    const buttons =
+    const named =
       Array.from(
         card.querySelectorAll(
-          'button'
+          '[class*="acreedor"],' +
+          '[class*="nombre"],' +
+          '[class*="deuda"]'
         )
       );
 
-    /*
-     * Buscar el botón operativo existente
-     * para colocar nuestro botón junto a él.
-     */
+    for (const candidate of named) {
 
-    const paymentButton =
-      buttons.find(
-        button => {
+      const value =
+        text(candidate.textContent);
 
-          const text =
-            normalizedText(
-              button.textContent
-            );
+      if (
+        value &&
+        value.length < 100 &&
+        !/saldo|original|cuota|próximo/i
+          .test(value)
+      ) {
 
-          return (
-            text.includes(
-              'pagar próxima cuota'
-            ) ||
-            text.includes(
-              'registrar pago único'
-            )
-          );
-
-        }
-      );
-
-    const button =
-      document.createElement(
-        'button'
-      );
-
-    button.type =
-      'button';
-
-    button.textContent =
-      'Registrar abono';
-
-    button.dataset.b2313Abono =
-      'true';
-
-    button.style.cssText = [
-      'background:#111827',
-      'color:#fff',
-      'border:0',
-      'border-radius:8px',
-      'padding:9px 12px',
-      'font-size:12px',
-      'font-weight:600',
-      'cursor:pointer',
-      'white-space:nowrap',
-      'margin:2px'
-    ].join(';');
-
-    button.addEventListener(
-      'click',
-      function (event) {
-
-        event.preventDefault();
-
-        event.stopPropagation();
-
-        const debt =
-          buildDebtFromCard(
-            card
-          );
-
-        openModal(
-          debt
-        );
+        return value;
 
       }
-    );
-
-    /*
-     * Insertamos antes del botón de pago existente.
-     */
-
-    if (
-      paymentButton &&
-      paymentButton.parentNode
-    ) {
-
-      paymentButton.parentNode.insertBefore(
-        button,
-        paymentButton
-      );
-
-    } else {
-
-      /*
-       * Fallback: agregar al final del contenedor
-       * de botones.
-       */
-
-      const buttonContainer =
-        buttons.length
-          ? buttons[
-              buttons.length - 1
-            ].parentElement
-          : card;
-
-      buttonContainer.appendChild(
-        button
-      );
 
     }
 
+    return 'Deuda';
+
   }
 
-  /*
-   ------------------------------------------------------------
-   CONSTRUIR OBJETO DE DEUDA DESDE LA TARJETA
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     CONSTRUIR DEUDA
+     ========================================================== */
 
-  function buildDebtFromCard(
-    card
-  ) {
+  function buildDebt(button) {
+
+    const card =
+      findDebtCard(button);
+
+    if (!card) {
+      return null;
+    }
 
     const balance =
-      extractBalance(
-        card
-      );
+      getBalance(card);
 
-    const creditor =
-      extractCreditor(
-        card
-      );
-
-    /*
-     * Intentar recuperar ID si el renderizador
-     * lo dejó en atributos DOM.
-     */
-
-    const debtId =
-      card.dataset?.id ||
-      card.dataset?.deudaId ||
-      card.getAttribute(
-        'data-id'
-      ) ||
-      card.getAttribute(
-        'data-deuda-id'
-      ) ||
-      null;
+    if (balance <= 0) {
+      return null;
+    }
 
     return {
 
       id:
-        debtId,
-
-      deuda_id:
-        debtId,
+        card.dataset?.id ||
+        card.dataset?.deudaId ||
+        card.getAttribute('data-id') ||
+        card.getAttribute('data-deuda-id') ||
+        null,
 
       acreedor:
-        creditor,
-
-      nombre:
-        creditor,
+        getCreditor(card),
 
       saldo_actual:
         balance,
@@ -621,36 +304,25 @@
       saldo_pendiente:
         balance,
 
-      original_card:
+      card:
         card
 
     };
 
   }
 
-  /*
-   ------------------------------------------------------------
-   VALIDACIÓN
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     VALIDAR ABONO
+     ========================================================== */
 
-  function validatePartialPayment(
-    debt,
-    amount
-  ) {
+  function validate(debt, amount) {
 
     if (!debt) {
 
       return {
-
         ok: false,
-
-        code:
-          'DEUDA_REQUERIDA',
-
         message:
-          'Debe seleccionarse una deuda.'
-
+          'No se pudo identificar la deuda.'
       };
 
     }
@@ -658,51 +330,20 @@
     const balance =
       money(
         debt.saldo_actual ??
-        debt.saldo_pendiente ??
-        debt.saldo ??
-        0
+        debt.saldo_pendiente
       );
 
     const payment =
-      money(
-        amount
-      );
+      money(amount);
 
     if (
-      !Number.isFinite(
-        payment
-      ) ||
       payment <= 0
     ) {
 
       return {
-
         ok: false,
-
-        code:
-          'MONTO_INVALIDO',
-
         message:
-          'El abono debe ser mayor que $0.'
-
-      };
-
-    }
-
-    if (
-      balance <= 0
-    ) {
-
-      return {
-
-        ok: false,
-
-        code:
-          'DEUDA_SALDADA',
-
-        message:
-          'La deuda no tiene saldo pendiente.'
-
+          'El monto del abono debe ser mayor que $0.'
       };
 
     }
@@ -712,24 +353,17 @@
     ) {
 
       return {
-
         ok: false,
-
-        code:
-          'ABONO_SUPERA_SALDO',
-
         message:
-          'El abono no puede superar el saldo pendiente de ' +
+          'El abono no puede superar el saldo de ' +
           formatMoney(balance) +
           '.'
-
       };
 
     }
 
     const newBalance =
-      balance -
-      payment;
+      balance - payment;
 
     return {
 
@@ -751,31 +385,26 @@
 
   }
 
-  /*
-   ------------------------------------------------------------
-   PREPARAR OPERACIÓN
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     PREPARAR OPERACIÓN
+     ========================================================== */
 
-  function preparePartialPayment(
+  function prepare(
     debt,
     amount,
-    accountId,
     description
   ) {
 
-    const validation =
-      validatePartialPayment(
+    const result =
+      validate(
         debt,
         amount
       );
 
-    if (!validation.ok) {
-
+    if (!result.ok) {
       throw new Error(
-        validation.message
+        result.message
       );
-
     }
 
     return {
@@ -783,65 +412,52 @@
       type:
         'ABONO_DEUDA',
 
+      source:
+        'B231.3',
+
       debt_id:
-        debt.id ??
-        debt.deuda_id ??
-        null,
+        debt.id || null,
 
       acreedor:
-        debt.acreedor ??
-        debt.nombre ??
-        '',
+        debt.acreedor,
 
       monto_abono:
-        validation.monto_abono,
+        result.monto_abono,
 
       saldo_anterior:
-        validation.saldo_anterior,
+        result.saldo_anterior,
 
       saldo_nuevo:
-        validation.saldo_nuevo,
+        result.saldo_nuevo,
 
       pago_total:
-        validation.pago_total,
+        result.pago_total,
 
-      account_id:
-        accountId ??
-        null,
-
-      description:
+      descripcion:
         description ||
         'Abono a deuda',
 
-      fecha:
-        new Date()
-          .toISOString()
-          .slice(0, 10),
-
-      financial_direction:
-        'OUTFLOW',
-
-      is_transfer:
+      is_income:
         false,
 
-      is_income:
+      is_transfer:
         false,
 
       is_expense:
         true,
 
-      source:
-        'B231.3'
+      fecha:
+        new Date()
+          .toISOString()
+          .slice(0, 10)
 
     };
 
   }
 
-  /*
-   ------------------------------------------------------------
-   CERRAR MODAL
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     CERRAR MODAL
+     ========================================================== */
 
   function closeModal() {
 
@@ -856,213 +472,162 @@
 
     }
 
-    modal =
-      null;
-
-    currentDebt =
-      null;
+    modal = null;
+    currentDebt = null;
 
   }
 
-  /*
-   ------------------------------------------------------------
-   MODAL
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     ABRIR MODAL
+     ========================================================== */
 
-  function openModal(
-    debt
-  ) {
+  function open(debt) {
 
     closeModal();
+
+    if (!debt) {
+      return;
+    }
 
     currentDebt =
       debt;
 
     const overlay =
-      document.createElement(
-        'div'
-      );
+      document.createElement('div');
 
     overlay.id =
-      'b2313-modal';
+      'b2313-abono-modal';
 
-    overlay.style.cssText = [
-      'position:fixed',
-      'inset:0',
-      'z-index:999999',
-      'display:flex',
-      'align-items:center',
-      'justify-content:center',
-      'padding:18px',
-      'box-sizing:border-box',
-      'background:rgba(0,0,0,.58)'
-    ].join(';');
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+      background:rgba(0,0,0,.60);
+    `;
 
-    const card =
-      document.createElement(
-        'div'
-      );
+    const box =
+      document.createElement('div');
 
-    card.style.cssText = [
-      'width:min(440px,100%)',
-      'max-height:90vh',
-      'overflow:auto',
-      'box-sizing:border-box',
-      'background:#fff',
-      'border-radius:14px',
-      'padding:20px',
-      'box-shadow:0 20px 70px rgba(0,0,0,.3)'
-    ].join(';');
-
-    /*
-     * Título.
-     */
+    box.style.cssText = `
+      width:min(430px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:#fff;
+      border-radius:14px;
+      padding:20px;
+      box-sizing:border-box;
+      box-shadow:0 20px 70px rgba(0,0,0,.30);
+    `;
 
     const title =
-      document.createElement(
-        'h3'
-      );
+      document.createElement('h3');
 
     title.textContent =
       'Registrar abono';
 
-    title.style.cssText = [
-      'margin:0 0 6px',
-      'font-size:20px',
-      'color:#111827'
-    ].join(';');
-
-    /*
-     * Acreedor.
-     */
+    title.style.cssText = `
+      margin:0 0 8px;
+      color:#111827;
+      font-size:20px;
+    `;
 
     const creditor =
-      document.createElement(
-        'div'
-      );
+      document.createElement('div');
 
     creditor.textContent =
-      debt.acreedor ||
-      'Deuda';
+      debt.acreedor;
 
-    creditor.style.cssText = [
-      'font-size:15px',
-      'font-weight:700',
-      'color:#111827',
-      'margin-bottom:4px'
-    ].join(';');
-
-    /*
-     * Saldo.
-     */
+    creditor.style.cssText = `
+      font-weight:700;
+      font-size:15px;
+      color:#111827;
+      margin-bottom:4px;
+    `;
 
     const balance =
-      money(
+      document.createElement('div');
+
+    balance.textContent =
+      'Saldo pendiente: ' +
+      formatMoney(
         debt.saldo_actual
       );
 
-    const balanceText =
-      document.createElement(
-        'div'
-      );
+    balance.style.cssText = `
+      color:#6b7280;
+      font-size:13px;
+      margin-bottom:18px;
+    `;
 
-    balanceText.textContent =
-      'Saldo pendiente: ' +
-      formatMoney(
-        balance
-      );
+    const label =
+      document.createElement('label');
 
-    balanceText.style.cssText = [
-      'font-size:13px',
-      'color:#6b7280',
-      'margin-bottom:18px'
-    ].join(';');
-
-    /*
-     * Campo monto.
-     */
-
-    const amountLabel =
-      document.createElement(
-        'label'
-      );
-
-    amountLabel.textContent =
+    label.textContent =
       'Monto del abono';
 
-    amountLabel.style.cssText = [
-      'display:block',
-      'font-size:13px',
-      'font-weight:600',
-      'color:#111827',
-      'margin-bottom:6px'
-    ].join(';');
+    label.style.cssText = `
+      display:block;
+      color:#111827;
+      font-size:13px;
+      font-weight:600;
+      margin-bottom:6px;
+    `;
 
-    const amount =
-      document.createElement(
-        'input'
-      );
+    const input =
+      document.createElement('input');
 
-    amount.type =
+    input.type =
       'number';
 
-    amount.min =
+    input.min =
       '1';
 
-    amount.max =
+    input.max =
       String(
-        balance
+        debt.saldo_actual
       );
 
-    amount.step =
+    input.step =
       '1';
 
-    amount.inputMode =
+    input.inputMode =
       'numeric';
 
-    amount.placeholder =
+    input.placeholder =
       'Ej.: 100000';
 
-    amount.id =
-      'b2313-monto';
-
-    amount.style.cssText = [
-      'display:block',
-      'width:100%',
-      'box-sizing:border-box',
-      'padding:12px',
-      'border:1px solid #d1d5db',
-      'border-radius:8px',
-      'font-size:16px',
-      'margin-bottom:6px'
-    ].join(';');
+    input.style.cssText = `
+      width:100%;
+      box-sizing:border-box;
+      padding:12px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:16px;
+      margin-bottom:6px;
+    `;
 
     const max =
-      document.createElement(
-        'div'
-      );
+      document.createElement('div');
 
     max.textContent =
-      'Máximo: ' +
+      'Máximo permitido: ' +
       formatMoney(
-        balance
+        debt.saldo_actual
       );
 
-    max.style.cssText = [
-      'font-size:12px',
-      'color:#6b7280',
-      'margin-bottom:14px'
-    ].join(';');
-
-    /*
-     * Descripción.
-     */
+    max.style.cssText = `
+      color:#6b7280;
+      font-size:12px;
+      margin-bottom:14px;
+    `;
 
     const description =
-      document.createElement(
-        'input'
-      );
+      document.createElement('input');
 
     description.type =
       'text';
@@ -1073,53 +638,38 @@
     description.placeholder =
       'Descripción';
 
-    description.style.cssText = [
-      'display:block',
-      'width:100%',
-      'box-sizing:border-box',
-      'padding:11px',
-      'border:1px solid #d1d5db',
-      'border-radius:8px',
-      'font-size:14px',
-      'margin-bottom:14px'
-    ].join(';');
-
-    /*
-     * Mensaje.
-     */
+    description.style.cssText = `
+      width:100%;
+      box-sizing:border-box;
+      padding:11px;
+      border:1px solid #d1d5db;
+      border-radius:8px;
+      font-size:14px;
+      margin-bottom:14px;
+    `;
 
     const message =
-      document.createElement(
-        'div'
-      );
+      document.createElement('div');
 
-    message.style.cssText = [
-      'display:none',
-      'padding:10px',
-      'border-radius:8px',
-      'font-size:12px',
-      'margin-bottom:12px'
-    ].join(';');
-
-    /*
-     * Acciones.
-     */
+    message.style.cssText = `
+      display:none;
+      padding:10px;
+      border-radius:8px;
+      font-size:12px;
+      margin-bottom:12px;
+    `;
 
     const actions =
-      document.createElement(
-        'div'
-      );
+      document.createElement('div');
 
-    actions.style.cssText = [
-      'display:flex',
-      'gap:8px',
-      'justify-content:flex-end'
-    ].join(';');
+    actions.style.cssText = `
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+    `;
 
     const cancel =
-      document.createElement(
-        'button'
-      );
+      document.createElement('button');
 
     cancel.type =
       'button';
@@ -1127,19 +677,17 @@
     cancel.textContent =
       'Cancelar';
 
-    cancel.style.cssText = [
-      'border:0',
-      'border-radius:8px',
-      'padding:10px 14px',
-      'background:#e5e7eb',
-      'color:#111827',
-      'font-weight:600'
-    ].join(';');
+    cancel.style.cssText = `
+      border:0;
+      border-radius:8px;
+      padding:10px 14px;
+      background:#e5e7eb;
+      color:#111827;
+      font-weight:600;
+    `;
 
     const confirm =
-      document.createElement(
-        'button'
-      );
+      document.createElement('button');
 
     confirm.type =
       'button';
@@ -1147,47 +695,65 @@
     confirm.textContent =
       'Preparar abono';
 
-    confirm.style.cssText = [
-      'border:0',
-      'border-radius:8px',
-      'padding:10px 14px',
-      'background:#111827',
-      'color:#fff',
-      'font-weight:600'
-    ].join(';');
+    confirm.style.cssText = `
+      border:0;
+      border-radius:8px;
+      padding:10px 14px;
+      background:#111827;
+      color:#fff;
+      font-weight:600;
+    `;
 
-    cancel.addEventListener(
-      'click',
-      closeModal
-    );
+    cancel.onclick =
+      closeModal;
 
-    overlay.addEventListener(
-      'click',
-      function (event) {
-
-        if (
-          event.target ===
-          overlay
-        ) {
-
-          closeModal();
-
-        }
-
-      }
-    );
-
-    confirm.addEventListener(
-      'click',
+    confirm.onclick =
       function () {
 
-        const result =
-          validatePartialPayment(
-            currentDebt,
-            amount.value
+        try {
+
+          const operation =
+            prepare(
+              currentDebt,
+              input.value,
+              description.value
+            );
+
+          /*
+           * Emitir evento.
+           */
+
+          document.dispatchEvent(
+            new CustomEvent(
+              'b2313:partial-payment-prepared',
+              {
+                detail:
+                  operation
+              }
+            )
           );
 
-        if (!result.ok) {
+          message.style.display =
+            'block';
+
+          message.style.background =
+            '#ecfdf5';
+
+          message.style.color =
+            '#065f46';
+
+          message.textContent =
+            operation.pago_total
+              ? 'Pago total preparado. Saldo resultante: $0.'
+              : (
+                  'Abono preparado. Nuevo saldo: ' +
+                  formatMoney(
+                    operation.saldo_nuevo
+                  ) +
+                  '.'
+                );
+
+        } catch (error) {
 
           message.style.display =
             'block';
@@ -1199,108 +765,26 @@
             '#991b1b';
 
           message.textContent =
-            result.message;
-
-          return;
+            error.message;
 
         }
 
-        const operation =
-          preparePartialPayment(
-            currentDebt,
-            amount.value,
-            null,
-            description.value
-          );
+      };
 
-        /*
-         * No persistimos todavía.
-         *
-         * Emitimos el contrato para que la siguiente
-         * integración conecte la operación con la
-         * persistencia financiera existente.
-         */
+    actions.appendChild(cancel);
+    actions.appendChild(confirm);
 
-        document.dispatchEvent(
-          new CustomEvent(
-            'b2313:partial-payment-prepared',
-            {
-              detail:
-                operation
-            }
-          )
-        );
+    box.appendChild(title);
+    box.appendChild(creditor);
+    box.appendChild(balance);
+    box.appendChild(label);
+    box.appendChild(input);
+    box.appendChild(max);
+    box.appendChild(description);
+    box.appendChild(message);
+    box.appendChild(actions);
 
-        message.style.display =
-          'block';
-
-        message.style.background =
-          '#ecfdf5';
-
-        message.style.color =
-          '#065f46';
-
-        message.textContent =
-          operation.pago_total
-            ? 'Pago total preparado. Saldo resultante: $0.'
-            : (
-                'Abono preparado. Nuevo saldo: ' +
-                formatMoney(
-                  operation.saldo_nuevo
-                ) +
-                '.'
-              );
-
-      }
-    );
-
-    actions.appendChild(
-      cancel
-    );
-
-    actions.appendChild(
-      confirm
-    );
-
-    card.appendChild(
-      title
-    );
-
-    card.appendChild(
-      creditor
-    );
-
-    card.appendChild(
-      balanceText
-    );
-
-    card.appendChild(
-      amountLabel
-    );
-
-    card.appendChild(
-      amount
-    );
-
-    card.appendChild(
-      max
-    );
-
-    card.appendChild(
-      description
-    );
-
-    card.appendChild(
-      message
-    );
-
-    card.appendChild(
-      actions
-    );
-
-    overlay.appendChild(
-      card
-    );
+    overlay.appendChild(box);
 
     document.body.appendChild(
       overlay
@@ -1310,66 +794,208 @@
       overlay;
 
     setTimeout(
-      function () {
-
-        amount.focus();
-
-      },
+      () => input.focus(),
       50
     );
 
   }
 
-  /*
-   ------------------------------------------------------------
-   INSTALAR BOTONES
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     LOCALIZAR BOTONES EXISTENTES
+     ========================================================== */
 
-  function installButtons() {
+  function findExistingPaymentButtons() {
 
-    if (rendering) {
+    /*
+     * No dependemos de #deudas.
+     * Buscamos los botones que YA EXISTEN.
+     */
+
+    const buttons =
+      Array.from(
+        document.querySelectorAll(
+          'button'
+        )
+      );
+
+    return buttons.filter(
+      button => {
+
+        const value =
+          lower(
+            button.textContent
+          );
+
+        return (
+          value.includes(
+            'pagar próxima cuota'
+          ) ||
+          value.includes(
+            'registrar pago único'
+          )
+        );
+
+      }
+    );
+
+  }
+
+  /* ==========================================================
+     INSERTAR BOTÓN
+     ========================================================== */
+
+  function installOne(
+    paymentButton
+  ) {
+
+    if (!paymentButton) {
       return;
     }
 
-    rendering =
+    /*
+     * Evitar duplicado.
+     */
+
+    const parent =
+      paymentButton.parentElement;
+
+    if (!parent) {
+      return;
+    }
+
+    if (
+      parent.querySelector(
+        '[data-b2313-abono="true"]'
+      )
+    ) {
+
+      return;
+
+    }
+
+    /*
+     * Obtener tarjeta.
+     */
+
+    const debt =
+      buildDebt(
+        paymentButton
+      );
+
+    if (!debt) {
+
+      console.warn(
+        '[B231.3] No se pudo obtener la deuda del botón.',
+        paymentButton
+      );
+
+      return;
+
+    }
+
+    /*
+     * Crear botón.
+     */
+
+    const button =
+      document.createElement('button');
+
+    button.type =
+      'button';
+
+    button.textContent =
+      'Registrar abono';
+
+    button.dataset.b2313Abono =
+      'true';
+
+    button.style.cssText = `
+      background:#111827;
+      color:#fff;
+      border:0;
+      border-radius:8px;
+      padding:9px 12px;
+      font-size:12px;
+      font-weight:600;
+      cursor:pointer;
+      white-space:nowrap;
+      margin:2px;
+    `;
+
+    button.addEventListener(
+      'click',
+      function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        /*
+         * Volver a construir la deuda en el momento
+         * del clic para obtener el saldo actual.
+         */
+
+        const current =
+          buildDebt(
+            paymentButton
+          );
+
+        open(
+          current
+        );
+
+      }
+    );
+
+    /*
+     * Colocar antes del botón existente.
+     */
+
+    parent.insertBefore(
+      button,
+      paymentButton
+    );
+
+  }
+
+  /* ==========================================================
+     INSTALAR
+     ========================================================== */
+
+  function install() {
+
+    if (installing) {
+      return;
+    }
+
+    installing =
       true;
 
     try {
 
-      const cards =
-        findDebtCards();
+      const buttons =
+        findExistingPaymentButtons();
 
-      cards.forEach(
-        createButton
+      buttons.forEach(
+        installOne
       );
 
-      if (
-        cards.length
-      ) {
-
-        console.info(
-          '[B231.3] Botones Registrar abono:',
-          cards.length,
-          'tarjetas evaluadas.'
-        );
-
-      }
+      console.info(
+        '[B231.3] Botones de abono evaluados:',
+        buttons.length
+      );
 
     } finally {
 
-      rendering =
+      installing =
         false;
 
     }
 
   }
 
-  /*
-   ------------------------------------------------------------
-   OBSERVER
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     OBSERVER
+     ========================================================== */
 
   function startObserver() {
 
@@ -1382,36 +1008,13 @@
         function () {
 
           /*
-           * Solo actuamos si todavía no existe el botón.
+           * Esperar al renderizador de Deudas.
            */
 
-          const root =
-            document.getElementById(
-              'deudas'
-            );
-
-          if (!root) {
-            return;
-          }
-
-          const missing =
-            root.querySelector(
-              'button[data-b2313-abono="true"]'
-            ) === null;
-
-          if (missing) {
-
-            /*
-             * Dar tiempo al renderizador existente
-             * para terminar de construir las tarjetas.
-             */
-
-            setTimeout(
-              installButtons,
-              50
-            );
-
-          }
+          setTimeout(
+            install,
+            30
+          );
 
         }
       );
@@ -1419,40 +1022,35 @@
     observer.observe(
       document.body,
       {
-        childList: true,
-        subtree: true
+        childList:true,
+        subtree:true
       }
     );
 
   }
 
-  /*
-   ------------------------------------------------------------
-   API
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     API
+     ========================================================== */
 
   const api = {
 
     version:
       VERSION,
 
-    validatePartialPayment,
+    validate,
 
-    preparePartialPayment,
+    prepare,
 
-    open:
-      openModal,
+    open,
 
     close:
       closeModal,
 
-    installButtons,
+    install,
 
     getCurrentDebt:
-      function () {
-        return currentDebt;
-      },
+      () => currentDebt,
 
     rules:
       Object.freeze({
@@ -1493,32 +1091,26 @@
       api
     );
 
-  /*
-   ------------------------------------------------------------
-   ARRANQUE
-   ------------------------------------------------------------
-  */
+  /* ==========================================================
+     ARRANQUE
+     ========================================================== */
 
   function boot() {
 
-    /*
-     * Intentos iniciales.
-     */
-
-    installButtons();
+    install();
 
     setTimeout(
-      installButtons,
+      install,
       300
     );
 
     setTimeout(
-      installButtons,
+      install,
       1000
     );
 
     setTimeout(
-      installButtons,
+      install,
       2500
     );
 
@@ -1535,7 +1127,7 @@
       'DOMContentLoaded',
       boot,
       {
-        once: true
+        once:true
       }
     );
 
@@ -1546,7 +1138,7 @@
   }
 
   console.info(
-    '[B231.3] Abonos parciales · UI integrada ·',
+    '[B231.3] Abonos parciales UI integrada —',
     VERSION
   );
 
