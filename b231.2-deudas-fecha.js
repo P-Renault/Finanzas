@@ -2,28 +2,42 @@
    B231.2 — DEUDAS V2
    ASIGNACIÓN / EDICIÓN DE FECHA DE VENCIMIENTO
 
-   CORRECCIÓN UI 231.2.1
+   CORRECCIÓN UI
+   ============================================================
 
-   OBJETIVO
-   Permitir:
-     1. Crear una deuda SIN FECHA.
-     2. Asignar posteriormente una fecha.
-     3. Quitar una fecha y volver a SIN_FECHA.
+   OBJETIVO:
+   - Mantener un único archivo B231.2.
+   - Mostrar físicamente "Deuda sin fecha de vencimiento".
+   - Trabajar sobre el formulario Deudas existente.
+   - No crear tablas.
+   - No crear cliente Supabase.
+   - No modificar saldos.
+   - No crear movimientos.
+   - No modificar los botones existentes.
 
-   COMPATIBILIDAD
-   - No crea tablas.
-   - No crea cliente Supabase.
-   - No reemplaza el módulo Deudas.
-   - No elimina botones existentes.
-   - No modifica saldos.
-   - No genera movimientos financieros.
-   - Utiliza B231.0 y B231.1.
+   COMPORTAMIENTO:
+
+       Fecha de vencimiento
+              ↓
+       ┌──────────────────────────┐
+       │ 18/09/2026               │
+       └──────────────────────────┘
+       ☐ Deuda sin fecha de vencimiento
+
+       AL MARCAR:
+
+       ☑ Deuda sin fecha de vencimiento
+       → campo fecha vacío
+       → campo deshabilitado
+       → estado interno SIN_FECHA
+
    ============================================================ */
 
 (function () {
+
   'use strict';
 
-  const VERSION = '231.2.1';
+  const VERSION = '231.2.2';
 
   /*
    ------------------------------------------------------------
@@ -36,8 +50,9 @@
     window.B2312DeudasFecha.version === VERSION
   ) {
     console.info(
-      '[B231.2] Corrección UI ya cargada.'
+      '[B231.2] Ya estaba inicializado.'
     );
+
     return;
   }
 
@@ -48,204 +63,364 @@
   */
 
   const V2 =
-    window.B231DeudasV2;
+    window.B231DeudasV2 || null;
 
-  if (!V2) {
-    console.error(
-      '[B231.2] No se encontró B231DeudasV2.'
-    );
-    return;
-  }
+  /*
+   No detenemos completamente el módulo si B231.0
+   no está disponible.
 
-  let firstPaymentControl = null;
-  let undatedControl = null;
-  let statusElement = null;
-  let observer = null;
+   La interfaz puede seguir mostrando el control.
+   */
 
   /*
    ------------------------------------------------------------
-   UTILIDADES
+   VARIABLES
    ------------------------------------------------------------
   */
 
-  function clean(value) {
+  let rootDeudas = null;
+
+  let firstPaymentControl = null;
+
+  let undatedControl = null;
+
+  let wrapper = null;
+
+  let statusElement = null;
+
+  let observer = null;
+
+  let initializing = false;
+
+  /*
+   ------------------------------------------------------------
+   UTILIDAD DE TEXTO
+   ------------------------------------------------------------
+  */
+
+  function normalizeText(value) {
+
     return String(value || '')
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();
+
   }
 
   /*
    ------------------------------------------------------------
-   BUSCAR "PRIMERA CUOTA"
+   LOCALIZAR CONTENEDOR DE DEUDAS
    ------------------------------------------------------------
+  */
 
-   La interfaz actual no necesariamente utiliza <label>.
-   Por eso buscamos también div, span y otros elementos.
+  function findDeudasRoot() {
+
+    const candidates = [
+
+      document.getElementById(
+        'deudas'
+      ),
+
+      document.querySelector(
+        '[data-tab="deudas"]'
+      ),
+
+      document.querySelector(
+        '[data-section="deudas"]'
+      ),
+
+      document.querySelector(
+        '.deudas'
+      )
+
+    ];
+
+    for (
+      const candidate of candidates
+    ) {
+
+      if (candidate) {
+
+        return candidate;
+
+      }
+
+    }
+
+    return null;
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   BUSCAR TEXTO "PRIMERA CUOTA"
+   ------------------------------------------------------------
+  */
+
+  function findFirstPaymentTextNode() {
+
+    if (!rootDeudas) {
+      return null;
+    }
+
+    const elements =
+      Array.from(
+        rootDeudas.querySelectorAll(
+          '*'
+        )
+      );
+
+    /*
+     Primero buscamos coincidencia exacta.
+     */
+
+    for (
+      const element of elements
+    ) {
+
+      if (
+        element.children.length === 0 &&
+        normalizeText(
+          element.textContent
+        ) === 'primera cuota'
+      ) {
+
+        return element;
+
+      }
+
+    }
+
+    /*
+     Segunda búsqueda: texto que contenga
+     "Primera cuota".
+     */
+
+    for (
+      const element of elements
+    ) {
+
+      if (
+        element.children.length === 0 &&
+        normalizeText(
+          element.textContent
+        ).includes(
+          'primera cuota'
+        )
+      ) {
+
+        return element;
+
+      }
+
+    }
+
+    return null;
+
+  }
+
+  /*
+   ------------------------------------------------------------
+   BUSCAR CONTROL DE PRIMERA CUOTA
    ------------------------------------------------------------
   */
 
   function findFirstPaymentControl() {
 
-    /*
-     * Primera estrategia:
-     * labels HTML.
-     */
-
-    const labels =
-      Array.from(
-        document.querySelectorAll(
-          '#deudas label'
-        )
-      );
-
-    for (const label of labels) {
-
-      if (
-        clean(label.textContent)
-          .includes('primera cuota')
-      ) {
-
-        if (label.htmlFor) {
-
-          const control =
-            document.getElementById(
-              label.htmlFor
-            );
-
-          if (control) {
-            return control;
-          }
-        }
-
-        const nested =
-          label.querySelector(
-            'input, select, textarea'
-          );
-
-        if (nested) {
-          return nested;
-        }
-
-        const parent =
-          label.parentElement;
-
-        if (parent) {
-
-          const control =
-            parent.querySelector(
-              'input, select, textarea'
-            );
-
-          if (control) {
-            return control;
-          }
-        }
-      }
+    if (!rootDeudas) {
+      return null;
     }
 
     /*
-     * Segunda estrategia:
-     * cualquier elemento cuyo texto sea
-     * exactamente "Primera cuota".
+     * 1. Buscar por texto "Primera cuota".
      */
 
-    const candidates =
-      Array.from(
-        document.querySelectorAll(
-          '#deudas *'
-        )
-      );
+    const textNode =
+      findFirstPaymentTextNode();
 
-    for (const node of candidates) {
+    if (textNode) {
 
-      if (
-        node.children.length === 0 &&
-        clean(node.textContent) ===
-          'primera cuota'
-      ) {
+      /*
+       * Revisar hermanos.
+       */
 
-        let parent =
-          node.parentElement;
+      let sibling =
+        textNode.nextElementSibling;
 
-        /*
-         * Subimos algunos niveles buscando
-         * el control asociado.
-         */
+      if (sibling) {
 
-        for (
-          let level = 0;
-          level < 5 && parent;
-          level++,
-          parent = parent.parentElement
-        ) {
-
-          const controls =
-            parent.querySelectorAll(
-              'input, select, textarea'
-            );
-
-          if (
-            controls.length === 1
-          ) {
-            return controls[0];
-          }
-
-          /*
-           * Si existen varios controles,
-           * preferimos input/select de fecha.
-           */
-
-          for (
-            const control of controls
-          ) {
-
-            const type =
-              clean(
-                control.type
+        const directControl =
+          sibling.matches(
+            'input, select, textarea'
+          )
+            ? sibling
+            : sibling.querySelector(
+                'input, select, textarea'
               );
 
-            if (
-              type === 'date' ||
-              control.tagName === 'SELECT'
-            ) {
-              return control;
-            }
-          }
+        if (directControl) {
+
+          return directControl;
+
         }
+
       }
+
+      /*
+       * Revisar el padre.
+       */
+
+      let parent =
+        textNode.parentElement;
+
+      for (
+        let level = 0;
+        level < 5 && parent;
+        level++
+      ) {
+
+        const controls =
+          Array.from(
+            parent.querySelectorAll(
+              'input, select, textarea'
+            )
+          );
+
+        /*
+         * Si hay un único control,
+         * es muy probablemente el correspondiente.
+         */
+
+        if (
+          controls.length === 1
+        ) {
+
+          return controls[0];
+
+        }
+
+        /*
+         * Priorizar controles de fecha.
+         */
+
+        const dateControl =
+          controls.find(
+            control => {
+
+              const type =
+                normalizeText(
+                  control.type
+                );
+
+              return (
+                type === 'date' ||
+                control.tagName ===
+                  'SELECT'
+              );
+
+            }
+          );
+
+        if (dateControl) {
+
+          return dateControl;
+
+        }
+
+        parent =
+          parent.parentElement;
+
+      }
+
     }
 
     /*
-     * Tercera estrategia:
-     * buscar controles de fecha dentro del módulo
-     * y utilizar el segundo campo cuando la estructura
-     * corresponde a Fecha de inicio / Primera cuota.
+     * 2. Buscar todos los controles de fecha.
+     *
+     * En la estructura actual aparecen:
+     *
+     * Fecha de inicio
+     * Primera cuota
+     *
+     * Por eso el segundo control de fecha
+     * corresponde a Primera cuota.
      */
 
     const dateInputs =
       Array.from(
-        document.querySelectorAll(
-          '#deudas input[type="date"]'
+        rootDeudas.querySelectorAll(
+          'input[type="date"]'
         )
       );
 
     if (
       dateInputs.length >= 2
     ) {
+
       return dateInputs[1];
+
+    }
+
+    /*
+     * 3. Selects que podrían representar
+     * las fechas en la implementación actual.
+     */
+
+    const selects =
+      Array.from(
+        rootDeudas.querySelectorAll(
+          'select'
+        )
+      );
+
+    /*
+     * No utilizamos cualquier select
+     * automáticamente porque existen otros
+     * campos como tipo de acreedor y frecuencia.
+     */
+
+    const possibleDateSelect =
+      selects.find(
+        select => {
+
+          const options =
+            Array.from(
+              select.options || []
+            );
+
+          return options.some(
+            option =>
+              /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(
+                String(
+                  option.textContent ||
+                  option.value ||
+                  ''
+                ).trim()
+              )
+          );
+
+        }
+      );
+
+    if (
+      possibleDateSelect
+    ) {
+
+      return possibleDateSelect;
+
     }
 
     return null;
+
   }
 
   /*
    ------------------------------------------------------------
-   CONTENEDOR DEL CAMPO
+   ENCONTRAR LUGAR DE INSERCIÓN
    ------------------------------------------------------------
   */
 
-  function findFieldContainer(
+  function findInsertionPoint(
     control
   ) {
 
@@ -253,77 +428,59 @@
       return null;
     }
 
-    let current =
-      control.parentElement;
+    /*
+     * Preferimos insertar inmediatamente después
+     * del propio control.
+     */
 
-    for (
-      let i = 0;
-      i < 5 && current;
-      i++
-    ) {
+    return control;
 
-      const text =
-        clean(
-          current.textContent
-        );
-
-      if (
-        text.includes(
-          'primera cuota'
-        ) &&
-        current.querySelector(
-          'input, select, textarea'
-        )
-      ) {
-
-        return current;
-      }
-
-      current =
-        current.parentElement;
-    }
-
-    return (
-      control.parentElement ||
-      null
-    );
   }
 
   /*
    ------------------------------------------------------------
-   CREAR CONTROL "SIN FECHA"
+   CREAR INTERFAZ
    ------------------------------------------------------------
   */
 
-  function createUndatedControl() {
+  function createUI() {
+
+    /*
+     * Evitar duplicados.
+     */
 
     const existing =
       document.getElementById(
-        'b2312-sin-fecha'
+        'b2312-fecha-wrapper'
       );
 
     if (existing) {
-      return existing;
+
+      wrapper =
+        existing;
+
+      undatedControl =
+        document.getElementById(
+          'b2312-sin-fecha'
+        );
+
+      return true;
+
     }
 
-    if (!firstPaymentControl) {
-      return null;
-    }
+    if (
+      !firstPaymentControl
+    ) {
 
-    const container =
-      findFieldContainer(
-        firstPaymentControl
-      );
+      return false;
 
-    if (!container) {
-      return null;
     }
 
     /*
-     * Contenedor visual.
+     * Contenedor.
      */
 
-    const wrapper =
+    wrapper =
       document.createElement(
         'div'
       );
@@ -331,19 +488,32 @@
     wrapper.id =
       'b2312-fecha-wrapper';
 
-    wrapper.dataset.b2312 =
-      VERSION;
+    wrapper.setAttribute(
+      'data-b2312',
+      VERSION
+    );
+
+    /*
+     * CSS deliberadamente explícito
+     * para evitar que estilos existentes
+     * oculten el componente.
+     */
 
     wrapper.style.cssText = [
-      'display:flex',
-      'align-items:center',
+      'display:block',
+      'visibility:visible',
+      'opacity:1',
+      'position:relative',
       'width:100%',
       'box-sizing:border-box',
-      'margin-top:8px',
-      'padding:9px 10px',
-      'border:1px solid rgba(128,128,128,.28)',
+      'clear:both',
+      'float:none',
+      'margin:8px 0 0 0',
+      'padding:10px 12px',
+      'border:1px solid #d5d9e0',
       'border-radius:8px',
-      'background:rgba(128,128,128,.05)'
+      'background:#f7f8fa',
+      'z-index:2'
     ].join(';');
 
     /*
@@ -355,36 +525,62 @@
         'label'
       );
 
+    label.setAttribute(
+      'for',
+      'b2312-sin-fecha'
+    );
+
     label.style.cssText = [
       'display:flex',
+      'visibility:visible',
+      'opacity:1',
       'align-items:center',
-      'gap:8px',
+      'gap:9px',
       'width:100%',
+      'min-height:24px',
+      'box-sizing:border-box',
       'cursor:pointer',
-      'font-size:12px',
-      'line-height:1.3'
+      'font-size:13px',
+      'font-weight:500',
+      'color:#20252d',
+      'margin:0',
+      'padding:0'
     ].join(';');
 
     /*
      * Checkbox.
      */
 
-    const checkbox =
+    undatedControl =
       document.createElement(
         'input'
       );
 
-    checkbox.type =
+    undatedControl.type =
       'checkbox';
 
-    checkbox.id =
+    undatedControl.id =
       'b2312-sin-fecha';
 
-    checkbox.name =
+    undatedControl.name =
       'b2312_sin_fecha';
 
-    checkbox.style.cssText =
-      'width:18px;height:18px;flex:0 0 auto;';
+    undatedControl.value =
+      'true';
+
+    undatedControl.style.cssText = [
+      'display:block',
+      'visibility:visible',
+      'opacity:1',
+      'width:18px',
+      'height:18px',
+      'min-width:18px',
+      'min-height:18px',
+      'margin:0',
+      'padding:0',
+      'cursor:pointer',
+      'accent-color:#111827'
+    ].join(';');
 
     /*
      * Texto.
@@ -398,581 +594,9 @@
     text.textContent =
       'Deuda sin fecha de vencimiento';
 
-    label.appendChild(
-      checkbox
-    );
-
-    label.appendChild(
-      text
-    );
-
-    wrapper.appendChild(
-      label
-    );
-
-    /*
-     * Insertar inmediatamente después
-     * del contenedor Primera cuota.
-     */
-
-    if (
-      container.nextSibling
-    ) {
-
-      container.parentNode.insertBefore(
-        wrapper,
-        container.nextSibling
-      );
-
-    } else {
-
-      container.parentNode.appendChild(
-        wrapper
-      );
-
-    }
-
-    checkbox.addEventListener(
-      'change',
-      applyDateMode
-    );
-
-    return checkbox;
-  }
-
-  /*
-   ------------------------------------------------------------
-   INDICADOR DE ESTADO
-   ------------------------------------------------------------
-  */
-
-  function createStatus() {
-
-    const existing =
-      document.getElementById(
-        'b2312-fecha-status'
-      );
-
-    if (existing) {
-      return existing;
-    }
-
-    const root =
-      document.querySelector(
-        '#deudas'
-      );
-
-    if (!root) {
-      return null;
-    }
-
-    const el =
-      document.createElement(
-        'div'
-      );
-
-    el.id =
-      'b2312-fecha-status';
-
-    el.dataset.b2312 =
-      VERSION;
-
-    el.style.cssText = [
+    text.style.cssText = [
       'display:block',
-      'margin:4px 0 8px',
-      'padding:6px 9px',
-      'border-radius:7px',
-      'font-size:11px',
-      'opacity:.78'
-    ].join(';');
-
-    el.textContent =
-      'B231.2 · Fecha de vencimiento activa';
-
-    root.prepend(
-      el
-    );
-
-    return el;
-  }
-
-  /*
-   ------------------------------------------------------------
-   CAMBIAR MODO DE FECHA
-   ------------------------------------------------------------
-  */
-
-  function applyDateMode() {
-
-    if (
-      !firstPaymentControl ||
-      !undatedControl
-    ) {
-      return;
-    }
-
-    if (
-      undatedControl.checked
-    ) {
-
-      /*
-       * Guardamos el valor anterior.
-       */
-
-      if (
-        firstPaymentControl.dataset
-          .b2312PreviousValue ===
-          undefined
-      ) {
-
-        firstPaymentControl.dataset
-          .b2312PreviousValue =
-            firstPaymentControl.value ||
-            '';
-      }
-
-      /*
-       * SIN FECHA
-       */
-
-      firstPaymentControl.value =
-        '';
-
-      firstPaymentControl.disabled =
-        true;
-
-      firstPaymentControl.dataset
-        .b2312Temporalidad =
-          'SIN_FECHA';
-
-      firstPaymentControl.dataset
-        .b2312Fecha =
-          '';
-
-      if (statusElement) {
-
-        statusElement.textContent =
-          'B231.2 · SIN FECHA · no se asignará ningún día al calendario';
-
-      }
-
-    } else {
-
-      /*
-       * FECHA ACTIVA
-       */
-
-      firstPaymentControl.disabled =
-        false;
-
-      firstPaymentControl.dataset
-        .b2312Temporalidad =
-          'FECHADA';
-
-      const previous =
-        firstPaymentControl.dataset
-          .b2312PreviousValue;
-
-      if (
-        previous &&
-        !firstPaymentControl.value
-      ) {
-
-        firstPaymentControl.value =
-          previous;
-      }
-
-      firstPaymentControl.dataset
-        .b2312Fecha =
-          firstPaymentControl.value ||
-          '';
-
-      if (statusElement) {
-
-        statusElement.textContent =
-          'B231.2 · Fecha de vencimiento activa';
-
-      }
-    }
-
-    /*
-     * Evento interno.
-     *
-     * Permite que la lógica posterior utilice
-     * el estado sin crear otra fuente de datos.
-     */
-
-    document.dispatchEvent(
-      new CustomEvent(
-        'b2312:fecha-mode-change',
-        {
-          detail: {
-
-            sinFecha:
-              undatedControl.checked,
-
-            fecha:
-              undatedControl.checked
-                ? null
-                : (
-                    firstPaymentControl
-                      .value ||
-                    null
-                  )
-
-          }
-        }
-      )
-    );
-  }
-
-  /*
-   ------------------------------------------------------------
-   PREPARAR ASIGNACIÓN DE FECHA
-   ------------------------------------------------------------
-  */
-
-  function prepareAssignDate(
-    debt,
-    date
-  ) {
-
-    if (
-      !V2.prepareAssignDate
-    ) {
-
-      throw new Error(
-        '[B231.2] B231.0 no expone prepareAssignDate.'
-      );
-
-    }
-
-    return V2.prepareAssignDate(
-      debt,
-      date === ''
-        ? null
-        : date
-    );
-  }
-
-  /*
-   ------------------------------------------------------------
-   CLASIFICACIÓN
-   ------------------------------------------------------------
-  */
-
-  function classifyDebt(
-    debt
-  ) {
-
-    const normalized =
-      V2.normalize(
-        debt
-      );
-
-    if (!normalized) {
-
-      return {
-        ok: false,
-        temporalidad: 'INVALIDA'
-      };
-
-    }
-
-    return {
-
-      ok: true,
-
-      temporalidad:
-        normalized.fecha_vencimiento ===
-        null
-          ? 'SIN_FECHA'
-          : 'FECHADA',
-
-      fecha_vencimiento:
-        normalized.fecha_vencimiento
-
-    };
-  }
-
-  /*
-   ------------------------------------------------------------
-   GUARDADO EXPLÍCITO
-   ------------------------------------------------------------
-
-   Esta función no se ejecuta automáticamente.
-   ------------------------------------------------------------
-  */
-
-  async function saveDate(
-    debt,
-    date
-  ) {
-
-    const PERSIST =
-      window.B2311DeudasPersistencia;
-
-    if (
-      !PERSIST ||
-      typeof PERSIST.persistDate !==
-        'function'
-    ) {
-
-      throw new Error(
-        '[B231.2] B231.1 no está disponible.'
-      );
-
-    }
-
-    return PERSIST.persistDate(
-      debt,
-      date === ''
-        ? null
-        : date
-    );
-  }
-
-  /*
-   ------------------------------------------------------------
-   INICIALIZACIÓN
-   ------------------------------------------------------------
-  */
-
-  function initialize() {
-
-    const root =
-      document.querySelector(
-        '#deudas'
-      );
-
-    if (!root) {
-      return false;
-    }
-
-    /*
-     * Si ya existe el checkbox,
-     * simplemente recuperamos sus referencias.
-     */
-
-    const existingCheckbox =
-      document.getElementById(
-        'b2312-sin-fecha'
-      );
-
-    if (
-      existingCheckbox
-    ) {
-
-      firstPaymentControl =
-        findFirstPaymentControl();
-
-      undatedControl =
-        existingCheckbox;
-
-      statusElement =
-        createStatus();
-
-      applyDateMode();
-
-      return true;
-    }
-
-    /*
-     * Buscar campo Primera cuota.
-     */
-
-    const control =
-      findFirstPaymentControl();
-
-    if (!control) {
-
-      console.warn(
-        '[B231.2] No se encontró el control "Primera cuota".'
-      );
-
-      return false;
-    }
-
-    firstPaymentControl =
-      control;
-
-    /*
-     * Crear checkbox.
-     */
-
-    undatedControl =
-      createUndatedControl();
-
-    /*
-     * Crear indicador.
-     */
-
-    statusElement =
-      createStatus();
-
-    /*
-     * Aplicar estado inicial.
-     */
-
-    if (
-      undatedControl
-    ) {
-      applyDateMode();
-    }
-
-    console.info(
-      '[B231.2] Formulario Deudas preparado.',
-      'Control fecha:',
-      firstPaymentControl
-    );
-
-    return true;
-  }
-
-  /*
-   ------------------------------------------------------------
-   OBSERVER
-   ------------------------------------------------------------
-   La interfaz existente puede reconstruir el DOM
-   después de cargar las deudas o cambiar de pestaña.
-   ------------------------------------------------------------
-  */
-
-  function startObserver() {
-
-    if (observer) {
-      return;
-    }
-
-    observer =
-      new MutationObserver(
-        function () {
-
-          if (
-            !document.getElementById(
-              'b2312-sin-fecha'
-            )
-          ) {
-
-            initialize();
-
-          }
-
-        }
-      );
-
-    observer.observe(
-      document.body,
-      {
-        childList: true,
-        subtree: true
-      }
-    );
-
-    /*
-     * El observer solo permanece activo durante
-     * el periodo de montaje de la interfaz.
-     */
-
-    setTimeout(
-      function () {
-
-        if (observer) {
-
-          observer.disconnect();
-
-          observer =
-            null;
-
-        }
-
-      },
-      15000
-    );
-  }
-
-  /*
-   ------------------------------------------------------------
-   API PÚBLICA
-   ------------------------------------------------------------
-  */
-
-  const api = {
-
-    version:
-      VERSION,
-
-    prepareAssignDate,
-
-    classifyDebt,
-
-    saveDate,
-
-    initialize,
-
-    getCurrentDateControl:
-      function () {
-        return firstPaymentControl;
-      },
-
-    isUndated:
-      function () {
-        return !!(
-          undatedControl &&
-          undatedControl.checked
-        );
-      },
-
-    rules: Object.freeze({
-
-      emptyDateMeansNull:
-        true,
-
-      nullMeansUndated:
-        true,
-
-      undatedDebtNotCalendarized:
-        true,
-
-      assigningDateDoesNotChangeBalance:
-        true,
-
-      assigningDateDoesNotCreateMovement:
-        true,
-
-      removingDateReturnsToUndated:
-        true,
-
-      noSyntheticDate:
-        true,
-
-      noAutomaticPersistenceOnLoad:
-        true
-
-    })
-
-  };
-
-  /*
-   ------------------------------------------------------------
-   REGISTRO GLOBAL
-   ------------------------------------------------------------
-  */
-
-  window.B2312DeudasFecha =
-    Object.freeze(
-      api
-    );
-
-  /*
-   ------------------------------------------------------------
-   INICIO
-   ------------------------------------------------------------
-  */
-
-  if (
-    document.readyState ===
-    'loading'
-  ) {
-
-    document.add
+      'visibility:visible',
+      'opacity:1',
+      'color:#20252d',
+      'font
