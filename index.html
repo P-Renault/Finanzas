@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111827">
-<meta name="description" content="Control financiero personal — Cero Financiero, liquidez, cuentas, deudas, operaciones y planificación.">
+<meta name="description" content="Control financiero personal — Cero Financiero, liquidez, cuentas, deudas, operaciones, planificación y presupuesto integrado.">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="styles.css?v=2520">
 <link rel="stylesheet" href="deudas-styles.css?v=2520">
@@ -494,29 +494,83 @@
   }[c]));
 
   function client(){
-    if(window.supabaseClient && typeof window.supabaseClient.from==="function")
-      return window.supabaseClient;
+    const candidates = [
+      window.supabaseClient,
+      window.__supabase,
+      window.supabaseDb,
+      window.db,
+      window.client,
+      window.sb,
+      window.supabaseInstance,
+      window.__SUPABASE_CLIENT__
+    ];
 
-    if(window.__supabase && typeof window.__supabase.from==="function")
-      return window.__supabase;
+    for(const c of candidates){
+      if(c && typeof c.from==="function") return c;
+    }
 
-    const cfgUrl = localStorage.getItem("supabaseUrl") || localStorage.getItem("supabase_url");
-    const cfgKey = localStorage.getItem("supabaseKey") || localStorage.getItem("supabase_key");
+    // Discover an already-created Supabase client exposed by the existing system.
+    try{
+      for(const key of Object.keys(window)){
+        if(key==="supabase") continue;
+        const v=window[key];
+        if(v && typeof v==="object" &&
+           typeof v.from==="function" &&
+           v.auth && typeof v.auth.getUser==="function"){
+          return v;
+        }
+      }
+    }catch(e){}
+
+    // Last-resort: use the same configuration stored by the existing app.
+    const keysUrl=[
+      "supabaseUrl","supabase_url","SUPABASE_URL","supabaseURL"
+    ];
+    const keysKey=[
+      "supabaseKey","supabase_key","SUPABASE_KEY","supabaseAnonKey","supabase_anon_key"
+    ];
+    let cfgUrl=null, cfgKey=null;
+
+    for(const k of keysUrl){
+      const v=localStorage.getItem(k);
+      if(v){cfgUrl=v;break}
+    }
+    for(const k of keysKey){
+      const v=localStorage.getItem(k);
+      if(v){cfgKey=v;break}
+    }
+
+    // Also read the existing configuration inputs when they are populated.
+    if(!cfgUrl) cfgUrl=document.getElementById("supabaseUrl")?.value?.trim()||null;
+    if(!cfgKey) cfgKey=document.getElementById("supabaseKey")?.value?.trim()||null;
 
     if(window.supabase && typeof window.supabase.createClient==="function" && cfgUrl && cfgKey){
       try{
-        window.__B242_CLIENT__ ||= window.supabase.createClient(cfgUrl,cfgKey);
-        return window.__B242_CLIENT__;
-      }catch(e){ console.error("[B242] createClient",e); }
+        if(!window.__B243_CLIENT__)
+          window.__B243_CLIENT__=window.supabase.createClient(cfgUrl,cfgKey);
+        return window.__B243_CLIENT__;
+      }catch(e){ console.error("[B243] createClient",e); }
     }
     return null;
   }
 
   async function userId(){
     const c=client();
-    if(!c) return null;
-    const r=await c.auth.getUser();
-    return r.data?.user?.id || null;
+    if(!c || !c.auth) return null;
+
+    try{
+      const s=await c.auth.getSession();
+      const uid=s.data?.session?.user?.id;
+      if(uid) return uid;
+    }catch(e){}
+
+    try{
+      const r=await c.auth.getUser();
+      return r.data?.user?.id || null;
+    }catch(e){
+      console.warn("[B243] getUser",e);
+      return null;
+    }
   }
 
   function sourceArrays(){
@@ -830,14 +884,58 @@
     });
   }
 
+  async function activate(){
+    if(!S.initialized){
+      S.initialized=true;
+      bind();
+    }
+    await reload();
+  }
+
+  function installSystemBridge(){
+    // The main app connects after the user presses "Conectar".
+    // B243 must refresh at that exact moment instead of assuming a client exists at DOMContentLoaded.
+    const save=$("saveConfig");
+    if(save){
+      save.addEventListener("click",()=>setTimeout(()=>activate(),900));
+    }
+
+    // Refresh when the user actually enters Presupuesto.
+    document.querySelectorAll('[data-tab="presupuesto"]').forEach(btn=>{
+      btn.addEventListener("click",()=>setTimeout(()=>activate(),50));
+    });
+
+    // If the core exposes an auth client, listen for login/session changes.
+    const c=client();
+    if(c?.auth?.onAuthStateChange){
+      try{
+        c.auth.onAuthStateChange(()=>setTimeout(()=>activate(),100));
+      }catch(e){}
+    }
+
+    // Small bounded retry for clients initialized asynchronously by the core.
+    let tries=0;
+    const timer=setInterval(async()=>{
+      tries++;
+      if(client()){
+        clearInterval(timer);
+        await activate();
+      }else if(tries>=20){
+        clearInterval(timer);
+      }
+    },500);
+  }
+
   function init(){
     if(S.initialized)return;
     S.initialized=true;
     bind();
+    installSystemBridge();
     reload();
   }
 
-  window.B242Presupuesto={init,reload,state:S};
+  window.B242Presupuesto={init,reload,activate,state:S};
+  window.B243Presupuesto=window.B242Presupuesto;
 
   document.addEventListener("DOMContentLoaded",init);
 })();
