@@ -1,0 +1,8 @@
+CAMBIO MÍNIMO EN index.html
+Añadir antes de </body>:
+
+<script src="b222-centro-operaciones.js?v=222.0"></script>
+
+No reemplazar index.html completo.
+No eliminar los scripts existentes.
+Después de guardar/publicar, hacer recarga forzada del sitio.
