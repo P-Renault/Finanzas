@@ -1,8 +1,63 @@
-/* FINANZAS V2.3.3 */
-.liquidity-card{border:1px solid #dbe3ef}
-.liquidity-total{display:flex;justify-content:space-between;align-items:center;padding:18px 0;border-bottom:1px solid #e5e7eb;margin-bottom:14px}
-.liquidity-total span{color:#64748b}.liquidity-total strong{font-size:1.65rem}
-.liquidity-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.liquidity-breakdown article,.account-row{border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#fff}.liquidity-breakdown span{display:block;color:#64748b;font-size:.9rem}.liquidity-breakdown strong{display:block;font-size:1.2rem;margin-top:6px}
-.account-row{display:grid;grid-template-columns:1.5fr .8fr auto;gap:16px;align-items:center;margin-top:10px}.account-row h3{margin:3px 0}.account-row p{margin:0;color:#64748b}.account-row small{display:block;color:#64748b;margin-top:4px}.account-row .form-actions{justify-content:flex-end}
-.debt-card{border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-top:10px;display:grid;grid-template-columns:1.3fr .8fr .8fr auto;gap:16px;align-items:center;background:#fff}.debt-card h3{margin:4px 0}.debt-card p{margin:0;color:#64748b}.debt-type{font-size:.8rem;color:#64748b}.debt-card-values span,.debt-card-values small{display:block;color:#64748b}.debt-card-values strong{font-size:1.15rem}.debt-card-meta{display:flex;flex-direction:column;gap:5px;color:#475569;font-size:.9rem}.debt-card .form-actions{justify-content:flex-end;flex-wrap:wrap}.detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.debt-plan{display:flex;gap:10px;flex-wrap:wrap;padding:14px;border:1px solid #e5e7eb;border-radius:14px}.debt-plan span{padding:7px 10px;background:#f8fafc;border-radius:10px}.debt-quota-list{display:flex;flex-direction:column;gap:8px}.quota-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;border:1px solid #e5e7eb;border-radius:12px;padding:12px}.quota-row span{display:block;color:#64748b;font-size:.88rem}.quota-row button{white-space:nowrap}
-@media(max-width:760px){.liquidity-breakdown,.account-row,.debt-card{grid-template-columns:1fr}.account-row .form-actions,.debt-card .form-actions{justify-content:flex-start}.quota-row{grid-template-columns:1fr}.quota-row button{width:100%}}
+
+
+/* ============================================================
+   B231.4-R1 — ESTADO VISUAL DE DEUDA
+   Solo presentación. No altera lógica ni datos.
+   ============================================================ */
+.b2314-state{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  padding:4px 9px;
+  margin-top:5px;
+  border:1px solid #dbe3ef;
+  border-radius:999px;
+  background:#f8fafc;
+  color:#334155;
+  font-size:.74rem;
+  font-weight:700;
+  line-height:1.1;
+}
+
+.b2314-vigente{
+  background:#f0fdf4;
+  color:#166534;
+  border-color:#bbf7d0;
+}
+
+.b2314-atrasada{
+  background:#fff7ed;
+  color:#9a3412;
+  border-color:#fed7aa;
+}
+
+.b2314-vencida{
+  background:#fef2f2;
+  color:#991b1b;
+  border-color:#fecaca;
+}
+
+.b2314-sin_plan{
+  background:#f8fafc;
+  color:#475569;
+  border-color:#cbd5e1;
+}
+
+.b2314-renegociacion{
+  background:#eff6ff;
+  color:#1d4ed8;
+  border-color:#bfdbfe;
+}
+
+.b2314-pagada{
+  background:#f1f5f9;
+  color:#64748b;
+  border-color:#cbd5e1;
+}
+
+@media(max-width:760px){
+  .b2314-state{
+    font-size:.7rem;
+    padding:4px 8px;
+  }
+}
