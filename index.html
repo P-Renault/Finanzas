@@ -588,29 +588,24 @@
 
     if(window.supabase && typeof window.supabase.createClient==="function" && cfgUrl && cfgKey){
       try{
-        if(!window.__B243_CLIENT__)
-          window.__B243_CLIENT__=window.supabase.createClient(cfgUrl,cfgKey);
-        return window.__B243_CLIENT__;
-      }catch(e){ console.error("[B243] createClient",e); }
+        if(!window.__B245_CLIENT__)
+          window.__B245_CLIENT__=window.supabase.createClient(cfgUrl,cfgKey);
+        return window.__B245_CLIENT__;
+      }catch(e){ console.error("[B245] createClient",e); }
     }
     return null;
   }
 
   async function userId(){
+    // El sistema financiero existente funciona como aplicación personal
+    // mediante la clave publishable/anon; no requiere Supabase Auth.
     const c=client();
     if(!c || !c.auth) return null;
 
     try{
       const s=await c.auth.getSession();
-      const uid=s.data?.session?.user?.id;
-      if(uid) return uid;
-    }catch(e){}
-
-    try{
-      const r=await c.auth.getUser();
-      return r.data?.user?.id || null;
+      return s.data?.session?.user?.id || null;
     }catch(e){
-      console.warn("[B243] getUser",e);
       return null;
     }
   }
@@ -651,28 +646,41 @@
 
   async function ensureBudget(){
     const c=client();
-    const uid=await userId();
 
-    if(!c || !uid){
-      throw new Error("No hay una sesión Supabase disponible.");
+    if(!c){
+      throw new Error("No hay conexión con el cliente Supabase del sistema.");
     }
 
+    const uid=await userId();
+
+    // Contrato principal: aplicación personal sin autenticación.
     let q=await c.from("presupuestos")
       .select("*")
-      .eq("user_id",uid)
       .eq("periodo",monthKey())
       .maybeSingle();
+
+    // Compatibilidad si el esquema instalado está autenticado.
+    if(q.error && uid){
+      q=await c.from("presupuestos")
+        .select("*")
+        .eq("user_id",uid)
+        .eq("periodo",monthKey())
+        .maybeSingle();
+    }
 
     if(q.error) throw q.error;
 
     if(!q.data){
+      const payload={
+        periodo:monthKey(),
+        nombre:`Presupuesto ${monthLabel()}`,
+        estado:"activo"
+      };
+
+      if(uid) payload.user_id=uid;
+
       q=await c.from("presupuestos")
-        .insert({
-          user_id:uid,
-          periodo:monthKey(),
-          nombre:`Presupuesto ${monthLabel()}`,
-          estado:"activo"
-        })
+        .insert(payload)
         .select()
         .single();
 
@@ -845,7 +853,7 @@
       $("b242Items").innerHTML=`<div class="b242-empty">No se pudo cargar el presupuesto: ${esc(msg)}</div>`;
       $("b242Msg").textContent=/session|auth|user/i.test(msg)
         ? "La sesión financiera todavía no está disponible. Vuelve a entrar al módulo después de conectar la aplicación."
-        : "La conexión existe, pero debes verificar las tablas y políticas RLS del presupuesto en Supabase.";
+        : "La conexión Supabase está disponible. Si la carga falla, verifica las tablas y políticas RLS del presupuesto.";
     }
   }
 
@@ -855,8 +863,8 @@
     const c=client();
     const uid=await userId();
 
-    if(!c||!uid||!S.presupuesto){
-      $("b242Msg").textContent="El presupuesto todavía no está conectado a Supabase.";
+    if(!c||!S.presupuesto){
+      $("b242Msg").textContent="El presupuesto todavía no está conectado al cliente Supabase del sistema.";
       return;
     }
 
@@ -868,7 +876,6 @@
 
     const payload={
       presupuesto_id:S.presupuesto.id,
-      user_id:uid,
       tipo:$("b242Tipo").value,
       categoria:$("b242Categoria").value,
       prioridad:$("b242Prioridad").value,
@@ -876,6 +883,8 @@
       descripcion:$("b242Descripcion").value.trim(),
       monto_planificado:amount
     };
+
+    if(uid) payload.user_id=uid;
 
     const q=await c.from("presupuesto_partidas").insert(payload);
 
@@ -939,7 +948,7 @@
 
   function installSystemBridge(){
     // The main app connects after the user presses "Conectar".
-    // B243 must refresh at that exact moment instead of assuming a client exists at DOMContentLoaded.
+    // B245 must refresh at that exact moment instead of assuming a client exists at DOMContentLoaded.
     const save=$("saveConfig");
     if(save){
       save.addEventListener("click",()=>setTimeout(()=>activate(),900));
@@ -984,7 +993,7 @@
   }
 
   window.B244Presupuesto={init,reload,activate,state:S};
-  window.B243Presupuesto=window.B244Presupuesto;
+  window.B245Presupuesto=window.B244Presupuesto;
 
   document.addEventListener("DOMContentLoaded",init);
 })();
