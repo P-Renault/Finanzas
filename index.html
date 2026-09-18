@@ -39,91 +39,90 @@
 </section>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js?v=220.2"></script>
-<script src="b219-arquitectura-navegacion.js?v=220.2"></script>
-<script src="b220-motor-ejecucion-financiera.js?v=220.2"></script>
-<script src="b220.2-puente-ejecucion.js?v=220.2"></script>
-<script src="b221-movimientos-liquidez.js?v=221.0"></script>
-<script src="b222-centro-operaciones.js?v=222.0"></script>
-<script src="b223-centro-operaciones-planificacion-fix.js?v=223.0"></script>
-<script src="b224.1-planificacion-integrada.js?v=224.1"></script>
-<script src="b227-ia-financiera.js?v=227.1"></script>
-<script src="b229-movimientos-fondos.js?v=229.0"></script>
-<script src="finanzas-v233.js?v=231.1-R3"></script>
-<script src="b230-inspector-arquitectura.js?v=230.0"></script>
-<script src="b231.0-adaptador-deudas-v2.js?v=231.0"></script>
-<script src="b231.1-persistencia-deuda-sin-fecha.js?v=231.1"></script>
-<script src="b231.2-deudas-fecha.js?v=231.2.2"></script>
-<script src="b231.3-abonos-parciales.js?v=231.3.3"></script>
 
-<!-- B231.7-R3 · RECUPERACIÓN EXCLUSIVA DEL PANEL DE CONEXIÓN -->
+<!-- B231.7-R4 · PUERTA DE ARRANQUE SEGURA
+     Solo app.js se ejecuta antes de conectar Supabase.
+     Los motores secundarios se cargan después de que la conexión
+     haya sido aceptada, evitando que un overlay/módulo secundario
+     bloquee los campos de conexión. -->
 <script>
 (function () {
   'use strict';
 
-  function unlockConnectionPanel() {
+  var loaded = false;
+
+  var modules = [
+    'b219-arquitectura-navegacion.js?v=231.7-R4',
+    'b220-motor-ejecucion-financiera.js?v=231.7-R4',
+    'b220.2-puente-ejecucion.js?v=231.7-R4',
+    'b221-movimientos-liquidez.js?v=231.7-R4',
+    'b222-centro-operaciones.js?v=231.7-R4',
+    'b223-centro-operaciones-planificacion-fix.js?v=231.7-R4',
+    'b224.1-planificacion-integrada.js?v=231.7-R4',
+    'b227-ia-financiera.js?v=231.7-R4',
+    'b229-movimientos-fondos.js?v=231.7-R4',
+    'finanzas-v233.js?v=231.7-R4',
+    'b231.0-adaptador-deudas-v2.js?v=231.7-R4',
+    'b231.1-persistencia-deuda-sin-fecha.js?v=231.7-R4',
+    'b231.2-deudas-fecha.js?v=231.7-R4',
+    'b231.3-abonos-parciales.js?v=231.7-R4'
+  ];
+
+  function loadOne(src) {
+    return new Promise(function (resolve) {
+      if (document.querySelector('script[data-r4="' + src + '"]')) {
+        resolve();
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.dataset.r4 = src;
+      s.onload = resolve;
+      s.onerror = function () {
+        console.error('[B231.7-R4] No se pudo cargar:', src);
+        resolve();
+      };
+      document.body.appendChild(s);
+    });
+  }
+
+  async function loadModules() {
+    if (loaded) return;
+    var app = document.getElementById('app');
     var panel = document.getElementById('configPanel');
-    if (!panel) return;
 
-    /* Si quedó algún modal/overlay antiguo en memoria, no debe bloquear
-       la pantalla de conexión. Esto no toca Supabase ni datos. */
-    ['b230Overlay','b220Modal'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) el.remove();
-    });
+    if (!app || app.classList.contains('hidden')) return;
+    if (panel && !panel.classList.contains('hidden')) return;
 
-    panel.style.position = 'relative';
-    panel.style.zIndex = '2147483000';
-    panel.style.pointerEvents = 'auto';
+    loaded = true;
 
-    ['supabaseUrl','supabaseKey'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      el.disabled = false;
-      el.readOnly = false;
-      el.removeAttribute('disabled');
-      el.removeAttribute('readonly');
-      el.style.position = 'relative';
-      el.style.zIndex = '2147483001';
-      el.style.pointerEvents = 'auto';
-      el.style.userSelect = 'text';
-      el.style.webkitUserSelect = 'text';
-      el.style.touchAction = 'manipulation';
-    });
-
-    var btn = document.getElementById('saveConfig');
-    if (btn) {
-      btn.disabled = false;
-      btn.removeAttribute('disabled');
-      btn.style.position = 'relative';
-      btn.style.zIndex = '2147483001';
-      btn.style.pointerEvents = 'auto';
+    for (var i = 0; i < modules.length; i++) {
+      await loadOne(modules[i]);
     }
   }
 
-  function focusField(e) {
-    var t = e.target;
-    if (!t || !t.matches || !t.matches('#supabaseUrl,#supabaseKey')) return;
-    unlockConnectionPanel();
-    setTimeout(function () {
-      try { t.focus({preventScroll:true}); } catch (_) { t.focus(); }
-    }, 0);
-  }
+  function watch() {
+    var app = document.getElementById('app');
+    if (!app) return;
 
-  function start() {
-    unlockConnectionPanel();
-    document.addEventListener('pointerdown', focusField, true);
-    document.addEventListener('touchstart', focusField, true);
-    document.addEventListener('click', focusField, true);
-    setInterval(unlockConnectionPanel, 1000);
+    if (app.classList.contains('hidden')) {
+      var observer = new MutationObserver(loadModules);
+      observer.observe(app, {attributes:true, attributeFilter:['class']});
+    } else {
+      loadModules();
+    }
+
+    setTimeout(loadModules, 500);
+    setTimeout(loadModules, 1500);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, {once:true});
+    document.addEventListener('DOMContentLoaded', watch, {once:true});
   } else {
-    start();
+    watch();
   }
 })();
 </script>
-
 </body>
 </html>
