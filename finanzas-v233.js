@@ -1,4 +1,4 @@
-/* FINANZAS V2.3.3 — B231.1
+/* FINANZAS V2.3.3 — B231.6
    Cero Financiero + Liquidez + Cuentas + Deudas
    Corrección crítica: persistencia de modalidad CUOTAS.
 */
@@ -1718,28 +1718,127 @@
   window.eliminarDeuda23 = async id => {
     if (
       !confirm(
-        '¿Eliminar esta deuda y sus planes/cuotas?'
+        '¿Eliminar esta deuda y todo su historial de planes, cuotas y pagos asociados?'
       )
     ) return;
 
     const c = await db();
     if (!c) return;
 
-    const r = await c
-      .from('deudas')
-      .delete()
-      .eq('id', id);
+    try {
+      /*
+       * B231.6 — ELIMINACIÓN CONSISTENTE DE DEUDA
+       *
+       * Una deuda con abonos/pagos no puede eliminarse directamente porque
+       * existen registros dependientes en pagos_deuda y cuotas_deuda.
+       * Además, los pagos pueden haber creado movimientos reales.
+       *
+       * Orden de limpieza:
+       *   pagos_deuda -> cuotas_deuda -> renegociaciones_deuda -> deudas
+       *   y finalmente los movimientos asociados a esos pagos.
+       *
+       * No se toca ningún movimiento que no esté vinculado explícitamente
+       * desde pagos_deuda.movimiento_id.
+       */
 
-    if (r.error)
-      return alert(r.error.message);
+      const qr = await c
+        .from('cuotas_deuda')
+        .select('id')
+        .eq('deuda_id', id);
 
-    selected = null;
+      if (qr.error) throw qr.error;
 
-    await loadDebts();
+      const quotaIds = (qr.data || [])
+        .map(q => q.id)
+        .filter(v => v !== null && v !== undefined);
 
-    $('deudaDetalle').innerHTML = `
-      <p class="muted">Deuda eliminada.</p>
-    `;
+      let paymentRows = [];
+
+      if (quotaIds.length) {
+        const pr = await c
+          .from('pagos_deuda')
+          .select('id,cuota_id,movimiento_id')
+          .in('cuota_id', quotaIds);
+
+        if (pr.error) throw pr.error;
+        paymentRows = pr.data || [];
+      }
+
+      const movementIds = paymentRows
+        .map(p => p.movimiento_id)
+        .filter(v => v !== null && v !== undefined);
+
+      /* 1. Eliminar pagos asociados a las cuotas. */
+      if (quotaIds.length) {
+        const r = await c
+          .from('pagos_deuda')
+          .delete()
+          .in('cuota_id', quotaIds);
+
+        if (r.error) throw r.error;
+      }
+
+      /* 2. Eliminar cuotas de la deuda. */
+      const qd = await c
+        .from('cuotas_deuda')
+        .delete()
+        .eq('deuda_id', id);
+
+      if (qd.error) throw qd.error;
+
+      /* 3. Eliminar planes/renegociaciones asociados. */
+      const rd = await c
+        .from('renegociaciones_deuda')
+        .delete()
+        .eq('deuda_id', id);
+
+      if (rd.error) throw rd.error;
+
+      /* 4. Eliminar la deuda principal. */
+      const d = await c
+        .from('deudas')
+        .delete()
+        .eq('id', id);
+
+      if (d.error) throw d.error;
+
+      /*
+       * 5. Los movimientos de pago ya no tienen una deuda que representar.
+       * Se eliminan únicamente los movimientos que fueron registrados como
+       * parte de pagos_deuda de esta deuda.
+       */
+      if (movementIds.length) {
+        const md = await c
+          .from('movimientos')
+          .delete()
+          .in('id', movementIds);
+
+        if (md.error) {
+          console.warn(
+            'B231.6: la deuda fue eliminada, pero no se pudieron limpiar todos los movimientos asociados:',
+            md.error
+          );
+        }
+      }
+
+      selected = null;
+      plans = [];
+      quotas = [];
+
+      await loadDebts();
+
+      $('deudaDetalle').innerHTML = `
+        <p class="muted">Deuda eliminada correctamente junto con sus planes, cuotas y pagos asociados.</p>
+      `;
+
+    } catch (error) {
+      console.error('B231.6 eliminar deuda:', error);
+      alert(
+        'No se pudo eliminar la deuda de forma consistente. No se continuará eliminando información adicional.\n\n' +
+        (error?.message || String(error))
+      );
+      await loadDebts();
+    }
   };
 
   /* ============================================================
@@ -1936,17 +2035,8 @@
                         </span>
                       </div>
 
-                      ${
-                        ['pendiente', 'vencida'].includes(q.estado)
-                          ? `
-                            <button
-                              onclick="window.pagarCuota23(${q.id})"
-                            >
-                              Registrar pago
-                            </button>
-                          `
-                          : ''
-                      }
+                      <!-- El pago de cuota es proporcionado por el motor de ejecución financiera (B220).
+                           B231 mantiene aquí la visualización de la cuota sin duplicar la acción. -->
                     </div>
                   `).join('')
                   : `
@@ -2178,7 +2268,7 @@
       }
 
       console.info(
-        'FINANZAS V2.3.3 B231.1 cargado.'
+        'FINANZAS V2.3.3 B231.6 cargado.'
       );
 
     } catch (e) {
