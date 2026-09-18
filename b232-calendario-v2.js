@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '232.0';
+  const VERSION = '232.1';
   if (window.B232Calendario?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -28,7 +28,7 @@
   let client = null;
   let month = new Date();
   let selected = today();
-  let data = {mov:[], fut:[], quotas:[]};
+  let data = {mov:[], fut:[], quotas:[], debts:[]};
 
   async function db(){
     if(client) return client;
@@ -44,7 +44,7 @@
     const c=await db();
     if(!c) throw Error('Supabase no está conectado.');
 
-    const [mov,fut,quotas] = await Promise.all([
+    const [mov,fut,quotas,debtRows] = await Promise.all([
       c.from('movimientos')
         .select('*')
         .order('fecha',{ascending:true}),
@@ -54,17 +54,61 @@
       c.from('cuotas_deuda')
         .select('id,deuda_id,numero_cuota,monto,fecha_vencimiento,estado')
         .in('estado',['pendiente','vencida'])
-        .order('fecha_vencimiento',{ascending:true})
+        .order('fecha_vencimiento',{ascending:true}),
+      c.from('deudas')
+        .select('*')
     ]);
 
-    for(const r of [mov,fut,quotas]) if(r.error) throw r.error;
+    for(const r of [mov,fut,quotas,debtRows]) if(r.error) throw r.error;
 
     data={
       mov:mov.data||[],
       fut:fut.data||[],
-      quotas:quotas.data||[]
+      quotas:quotas.data||[],
+      debts:debtRows.data||[]
     };
     render();
+  }
+
+  function movementLabel(x){
+    const cat=String(x.categoria||'').trim();
+    const desc=String(x.descripcion||'').trim();
+    if(cat && desc) return `${cat} · ${desc}`;
+    return cat || desc || 'Movimiento';
+  }
+
+  function debtLabel(q){
+    const d=data.debts.find(x=>String(x.id)===String(q.deuda_id));
+    const base=d?.acreedor || d?.concepto || d?.nombre || d?.descripcion || 'Deuda';
+    return `${base} · Cuota #${q.numero_cuota}`;
+  }
+
+  function commitmentLabel(x){
+    const concepto=String(x.concepto||'Compromiso').trim();
+    const cat=String(x.categoria||'').trim();
+    return cat ? `${concepto} · ${cat}` : concepto;
+  }
+
+  function selectedDaySummary(r){
+    const movements=r?.movements||[];
+    const commitments=r?.commitments||[];
+    const quotas=r?.debtQuotas||[];
+    const incomes=movements.filter(x=>String(x.tipo).toLowerCase()==='ingreso');
+    const expenses=movements.filter(x=>String(x.tipo).toLowerCase()==='gasto');
+    const scheduled=[
+      ...commitments.map(x=>({source:'Pago futuro',label:commitmentLabel(x),amount:Number(x.monto||0),record:x})),
+      ...quotas.map(x=>({source:'Cuota de deuda',label:debtLabel(x),amount:Number(x.monto||0),record:x}))
+    ];
+    return {
+      incomes,
+      expenses,
+      scheduled,
+      incomeTotal:incomes.reduce((s,x)=>s+Number(x.monto||0),0),
+      expenseTotal:expenses.reduce((s,x)=>s+Number(x.monto||0),0),
+      scheduledTotal:scheduled.reduce((s,x)=>s+x.amount,0),
+      outflowTotal:expenses.reduce((s,x)=>s+Number(x.monto||0),0)+scheduled.reduce((s,x)=>s+x.amount,0),
+      net:incomes.reduce((s,x)=>s+Number(x.monto||0),0)-expenses.reduce((s,x)=>s+Number(x.monto||0),0)-scheduled.reduce((s,x)=>s+x.amount,0)
+    };
   }
 
   function monthRows(){
@@ -123,7 +167,10 @@
       .b232-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
       .b232-nav{display:flex;gap:8px}
       .b232-nav button{min-width:44px}
-      .b232-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+      .b232-selected-summary{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff;margin:12px 0}
+      .b232-selected-summary-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+      .b232-selected-summary-head>div{display:flex;flex-direction:column;gap:2px}
+      .b232-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 0}
       .b232-metric{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff}
       .b232-metric span,.b232-metric small{display:block;color:#64748b;font-size:.78rem}
       .b232-metric strong{display:block;margin-top:4px}
@@ -142,6 +189,22 @@
       .b232-debt{background:#eff6ff;color:#1d4ed8}
       .b232-balance{margin-top:6px;font-size:.68rem;color:#475569}
       .b232-detail{margin-top:14px}
+      .b232-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}
+      .b232-detail-head h3{margin:3px 0 0}
+      .b232-date-badge{background:#e0f2fe;color:#075985;border-radius:999px;padding:5px 9px;font-size:.72rem;font-weight:700}
+      .b232-day-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+      .b232-day-income{background:#ecfdf5}
+      .b232-day-expense{background:#fff7ed}
+      .b232-day-payment{background:#fef3c7}
+      .b232-day-balance{background:#eff6ff}
+      .b232-metric small{margin-top:3px;color:#64748b;font-size:.7rem}
+      .b232-panel-title{display:flex;justify-content:space-between;gap:8px;align-items:center;padding-bottom:8px;border-bottom:1px solid #e5e7eb}
+      .b232-income-panel{background:#f8fffb}
+      .b232-outflow-panel{background:#fffaf5}
+      .b232-positive{color:#15803d}
+      .b232-negative{color:#b91c1c}
+      .b232-day-total{margin-top:10px;background:#f8fafc;border-radius:10px;padding:10px}
+      .b232-row span{display:flex;flex-direction:column;min-width:0}
       .b232-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
       .b232-block{border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff}
       .b232-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9}
@@ -149,6 +212,7 @@
       .b232-kind{font-size:.72rem;color:#64748b}
       @media(max-width:760px){
         .b232-metrics{grid-template-columns:1fr 1fr}
+        .b232-day-metrics{grid-template-columns:1fr 1fr}
         .b232-detail-grid{grid-template-columns:1fr}
         .b232-calendar{grid-template-columns:repeat(7,92px)}
       }
@@ -171,12 +235,9 @@
       const d=new Date(gridStart);d.setDate(gridStart.getDate()+i);return d;
     });
 
-    const inMonthRows=rows;
-    const totalIncome=inMonthRows.reduce((s,x)=>s+x.income,0);
-    const totalExpense=inMonthRows.reduce((s,x)=>s+x.expense,0);
-    const totalCommit=inMonthRows.reduce((s,x)=>s+x.scheduled,0);
-    const totalDebt=inMonthRows.reduce((s,x)=>s+x.debt,0);
-    const finalBalance=inMonthRows.at(-1)?.balance||0;
+    const selectedRow=byKey[selected];
+    const daySummary=selectedDaySummary(selectedRow);
+    const dayLabel=parseDate(selected).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
 
     host.innerHTML=`
       <div class="card">
@@ -192,12 +253,17 @@
           </div>
         </div>
 
-        <div class="b232-metrics">
-          <div class="b232-metric"><span>Ingresos</span><strong>${money(totalIncome)}</strong></div>
-          <div class="b232-metric"><span>Gastos</span><strong>${money(totalExpense)}</strong></div>
-          <div class="b232-metric"><span>Compromisos</span><strong>${money(totalCommit)}</strong></div>
-          <div class="b232-metric"><span>Cuotas de deuda</span><strong>${money(totalDebt)}</strong></div>
-          <div class="b232-metric"><span>Saldo al cierre</span><strong>${money(finalBalance)}</strong></div>
+        <div class="b232-selected-summary">
+          <div class="b232-selected-summary-head">
+            <div><span class="muted">RESUMEN DEL DÍA SELECCIONADO</span><strong>${esc(dayLabel)}</strong></div>
+            <span class="b232-date-badge">${esc(selected)}</span>
+          </div>
+          <div class="b232-metrics">
+            <div class="b232-metric b232-day-income"><span>Ingresos registrados</span><strong>${money(daySummary.incomeTotal)}</strong></div>
+            <div class="b232-metric b232-day-expense"><span>Gastos registrados</span><strong>${money(daySummary.expenseTotal)}</strong></div>
+            <div class="b232-metric b232-day-payment"><span>Pagos programados</span><strong>${money(daySummary.scheduledTotal)}</strong></div>
+            <div class="b232-metric b232-day-balance"><span>Saldo al cierre</span><strong>${money(selectedRow?.balance||0)}</strong></div>
+          </div>
         </div>
 
         <div class="b232-legend">
@@ -238,21 +304,47 @@
     const r=byKey[selected];
     const selectedDate=parseDate(selected);
     const label=selectedDate.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
-    const movements=r?.movements||[], commitments=r?.commitments||[], quotas=r?.debtQuotas||[];
+    const summary=selectedDaySummary(r);
 
     $('b232Detail').innerHTML=`
       <div class="b232-block">
-        <h3>Detalle del ${esc(label)}</h3>
+        <div class="b232-detail-head">
+          <div>
+            <span class="muted">DETALLE ECONÓMICO DEL DÍA</span>
+            <h3>${esc(label)}</h3>
+          </div>
+          <span class="b232-date-badge">${esc(selected)}</span>
+        </div>
+
         <div class="b232-detail-grid">
-          <div class="b232-block">
-            <strong>Ingresos y gastos registrados</strong>
-            ${movements.length?movements.map(x=>`<div class="b232-row"><span>${esc(x.categoria||x.descripcion||'Movimiento')}</span><strong>${x.tipo==='ingreso'?'+':'-'}${money(x.monto)}</strong></div>`).join(''):'<p class="muted">Sin movimientos registrados.</p>'}
+          <div class="b232-block b232-income-panel">
+            <div class="b232-panel-title"><strong>Ingresos del día</strong><span>${money(summary.incomeTotal)}</span></div>
+            ${summary.incomes.length ? summary.incomes.map(x=>`
+              <div class="b232-row">
+                <span><strong>${esc(movementLabel(x))}</strong><small class="b232-kind">Ingreso registrado</small></span>
+                <strong class="b232-positive">+${money(x.monto)}</strong>
+              </div>`).join('') : '<p class="muted">No hay ingresos registrados para este día.</p>'}
           </div>
-          <div class="b232-block">
-            <strong>Obligaciones</strong>
-            ${commitments.map(x=>`<div class="b232-row"><span>${esc(x.concepto||'Compromiso')}</span><strong>${money(x.monto)}</strong></div>`).join('') || '<p class="muted">Sin compromisos programados.</p>'}
-            ${quotas.map(x=>`<div class="b232-row"><span>Cuota deuda #${esc(x.numero_cuota)} · ${esc(x.estado)}</span><strong>${money(x.monto)}</strong></div>`).join('')}
+
+          <div class="b232-block b232-outflow-panel">
+            <div class="b232-panel-title"><strong>Egresos del día</strong><span>${money(summary.outflowTotal)}</span></div>
+            ${summary.expenses.map(x=>`
+              <div class="b232-row">
+                <span><strong>${esc(movementLabel(x))}</strong><small class="b232-kind">Gasto registrado</small></span>
+                <strong class="b232-negative">-${money(x.monto)}</strong>
+              </div>`).join('')}
+            ${summary.scheduled.map(x=>`
+              <div class="b232-row">
+                <span><strong>${esc(x.label)}</strong><small class="b232-kind">${esc(x.source)} · pendiente</small></span>
+                <strong class="b232-negative">-${money(x.amount)}</strong>
+              </div>`).join('')}
+            ${summary.outflowTotal===0 ? '<p class="muted">No hay egresos registrados ni programados para este día.</p>' : ''}
           </div>
+        </div>
+
+        <div class="b232-row b232-day-total">
+          <span><strong>Flujo neto del día</strong><small class="b232-kind">Ingresos − egresos registrados − pagos programados</small></span>
+          <strong class="${summary.net>=0?'b232-positive':'b232-negative'}">${summary.net>=0?'+':'-'}${money(Math.abs(summary.net))}</strong>
         </div>
         ${r?`<div class="b232-row"><span>Saldo acumulado al cierre</span><strong>${money(r.balance)}</strong></div>`:''}
       </div>
@@ -280,4 +372,3 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
   else setTimeout(boot,250);
 })();
-
