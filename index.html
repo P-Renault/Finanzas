@@ -12,8 +12,227 @@
 <link rel="stylesheet" href="deudas-centro.css?v=2520">
 <link rel="stylesheet" href="finanzas-v233.css?v=2520">
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
-<link rel="stylesheet" href="b241-presupuesto-integrado.css?v=241.0">
 <title>Control Financiero · Finanzas</title>
+
+<style id="b242-presupuesto-arquitectura">
+/* =========================================================
+   B2.42 — Presupuesto integrado / capa visual arquitectónica
+   Reutiliza la gramática visual del sistema existente.
+   ========================================================= */
+
+#presupuesto .b242-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+#presupuesto .b242-period{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+#presupuesto .b242-period strong{
+  min-width:126px;
+  text-align:center;
+  text-transform:capitalize;
+}
+
+#presupuesto .b242-summary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin:12px 0;
+}
+
+#presupuesto .b242-summary .metric{
+  min-width:0;
+}
+
+#presupuesto .b242-section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+#presupuesto .b242-section-title h2{
+  margin-bottom:4px;
+}
+
+#presupuesto .b242-section-title p{
+  margin-top:0;
+}
+
+#presupuesto .b242-form{
+  margin-top:12px;
+}
+
+#presupuesto .b242-form .full{
+  grid-column:1/-1;
+}
+
+#presupuesto .b242-help{
+  margin:.7rem 0 0;
+  font-size:.82rem;
+  line-height:1.4;
+}
+
+#presupuesto .b242-table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+#presupuesto .b242-table{
+  width:100%;
+  min-width:720px;
+  border-collapse:collapse;
+}
+
+#presupuesto .b242-table th,
+#presupuesto .b242-table td{
+  padding:9px 7px;
+  border-bottom:1px solid rgba(127,127,127,.16);
+  vertical-align:middle;
+  text-align:left;
+}
+
+#presupuesto .b242-table th{
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+  opacity:.72;
+}
+
+#presupuesto .b242-table .num{
+  text-align:right;
+  white-space:nowrap;
+}
+
+#presupuesto .b242-tag{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:3px 7px;
+  background:rgba(127,127,127,.11);
+  font-size:.72rem;
+  white-space:nowrap;
+}
+
+#presupuesto .b242-bar{
+  height:7px;
+  min-width:80px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(127,127,127,.13);
+}
+
+#presupuesto .b242-bar i{
+  display:block;
+  height:100%;
+  background:currentColor;
+}
+
+#presupuesto .b242-ok{color:#15803d}
+#presupuesto .b242-warn{color:#a16207}
+#presupuesto .b242-danger{color:#b91c1c}
+
+#presupuesto .b242-result-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+#presupuesto .b242-result{
+  padding:12px;
+  border:1px solid rgba(127,127,127,.16);
+  border-radius:10px;
+}
+
+#presupuesto .b242-result span{
+  display:block;
+  font-size:.78rem;
+  opacity:.72;
+}
+
+#presupuesto .b242-result strong{
+  display:block;
+  margin-top:4px;
+  font-size:1.08rem;
+}
+
+#presupuesto .b242-empty{
+  padding:16px 4px;
+  text-align:center;
+  opacity:.7;
+}
+
+#presupuesto .b242-alert{
+  padding:10px 12px;
+  margin:7px 0;
+  border-radius:9px;
+  background:rgba(127,127,127,.09);
+  font-size:.86rem;
+}
+
+#presupuesto .b242-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+#presupuesto .b242-source{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+#presupuesto .b242-source article{
+  border:1px solid rgba(127,127,127,.16);
+  border-radius:10px;
+  padding:11px;
+}
+
+#presupuesto .b242-source span{
+  display:block;
+  font-size:.77rem;
+  opacity:.72;
+}
+
+#presupuesto .b242-source strong{
+  display:block;
+  margin-top:3px;
+}
+
+@media(max-width:760px){
+  #presupuesto .b242-summary{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  #presupuesto .b242-result-grid{
+    grid-template-columns:1fr;
+  }
+  #presupuesto .b242-source{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:520px){
+  #presupuesto .b242-summary{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  #presupuesto .b242-source{
+    grid-template-columns:1fr;
+  }
+  #presupuesto .b242-period strong{
+    min-width:105px;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="topbar">
@@ -41,71 +260,75 @@
 <button data-tab="planificacion">Planificación</button>
 </div>
 <section id="dashboard" class="tab"> <div class="cards"><article class="metric"><span>Saldo actual</span><strong id="saldo">$0</strong></article><article class="metric"><span>Ingresos del mes</span><strong id="ingresosMes">$0</strong></article><article class="metric"><span>Gastos del mes</span><strong id="gastosMes">$0</strong></article><article class="metric"><span>Pagos pendientes</span><strong id="comprometido">$0</strong></article><article class="metric"><span>Disponible proyectado</span><strong id="proyectado">$0</strong></article><article class="metric"><span>Fondo de ahorro</span><strong id="ahorroTotal">$0</strong></article></div><div class="cards two"><article class="metric future-card"><span>Ingresos futuros registrados</span><strong id="ingresosFuturos">$0</strong></article><article class="metric future-card"><span>Gastos futuros registrados</span><strong id="gastosFuturos">$0</strong></article></div><div class="card monthly-summary-card"><div class="section-title"><div><h2>Resumen de pagos y gastos del mes</h2><span class="muted" id="monthlySummaryLabel">Mes en curso</span></div></div><div class="monthly-summary-grid"><article class="summary-box paid-box"><span>Total pagado hasta hoy</span><strong id="totalPagadoMes">$0</strong><small>Gastos registrados con fecha hasta hoy</small></article><article class="summary-box pending-box"><span>Total pendiente del mes</span><strong id="totalPendienteMes">$0</strong><small>Compromisos pendientes del mes</small></article><article class="summary-box total-box"><span>Total de gastos a pagar del mes</span><strong id="totalGastosPagarMes">$0</strong><small>Pagado hasta hoy + pagos pendientes</small></article></div><p class="monthly-summary-note">Este resumen no descuenta automáticamente dinero. Solo informa cuánto ya salió, cuánto sigue pendiente y cuánto representan ambas obligaciones durante el mes.</p></div><div class="card income-plan-card"><div class="section-title"><h2>Plan sugerido de ingresos</h2><span class="muted">Calculado con tus datos reales</span></div><div id="incomePlan"><p class="muted">Calculando sugerencia...</p></div></div><div class="card"><div class="section-title"><h2>Próximos pagos</h2><span class="muted">Mantiene tus pagos programados</span></div><div id="proximosPagos"></div></div></section>
+
 <section id="presupuesto" class="tab hidden">
 
   <div class="card">
-    <div class="b241-header">
+    <div class="b242-head">
       <div>
         <h2>Presupuesto mensual</h2>
-        <p class="muted">Define y controla los recursos destinados a los gastos del diario vivir.</p>
+        <p class="muted">Construye el presupuesto del diario vivir y compáralo con la ejecución real del sistema.</p>
       </div>
-      <div class="b241-period">
-        <button id="b241Prev" class="secondary" type="button">‹</button>
-        <strong id="b241Month">Mes</strong>
-        <button id="b241Next" class="secondary" type="button">›</button>
+
+      <div class="b242-period">
+        <button id="b242Prev" class="secondary" type="button" aria-label="Mes anterior">‹</button>
+        <strong id="b242Month">Mes</strong>
+        <button id="b242Next" class="secondary" type="button" aria-label="Mes siguiente">›</button>
       </div>
     </div>
   </div>
 
-  <div class="b241-grid">
-    <article class="b241-metric">
+  <div class="b242-summary">
+    <article class="metric">
       <span>Ingresos planificados</span>
-      <strong id="b241PlanIncome">$0</strong>
+      <strong id="b242PlanIncome">$0</strong>
     </article>
-    <article class="b241-metric">
+    <article class="metric">
       <span>Gastos planificados</span>
-      <strong id="b241PlanExpense">$0</strong>
+      <strong id="b242PlanExpense">$0</strong>
     </article>
-    <article class="b241-metric">
+    <article class="metric">
       <span>Ahorro planificado</span>
-      <strong id="b241PlanSaving">$0</strong>
+      <strong id="b242PlanSaving">$0</strong>
     </article>
-    <article class="b241-metric">
+    <article class="metric">
       <span>Disponible planificado</span>
-      <strong id="b241PlanFree">$0</strong>
+      <strong id="b242PlanFree">$0</strong>
     </article>
   </div>
 
-  <div class="b241-grid">
-    <article class="b241-metric">
+  <div class="b242-summary">
+    <article class="metric">
       <span>Ingresos ejecutados</span>
-      <strong id="b241RealIncome">$0</strong>
+      <strong id="b242RealIncome">$0</strong>
     </article>
-    <article class="b241-metric">
+    <article class="metric">
       <span>Gastos ejecutados</span>
-      <strong id="b241RealExpense">$0</strong>
+      <strong id="b242RealExpense">$0</strong>
     </article>
-    <article class="b241-metric">
+    <article class="metric">
       <span>Ahorro ejecutado</span>
-      <strong id="b241RealSaving">$0</strong>
+      <strong id="b242RealSaving">$0</strong>
     </article>
-    <article class="b241-metric">
+    <article class="metric">
       <span>Disponible real</span>
-      <strong id="b241RealFree">$0</strong>
+      <strong id="b242RealFree">$0</strong>
     </article>
   </div>
 
   <div class="card">
-    <div class="b241-section-title">
+    <div class="b242-section-title">
       <div>
-        <h2>Crear partida presupuestaria</h2>
-        <p class="muted">Planifica ingresos, gastos fijos, gastos variables, deudas y ahorro.</p>
+        <h2>Construir presupuesto</h2>
+        <p class="muted">Cada registro representa una partida mensual. No reemplaza los movimientos reales.</p>
       </div>
     </div>
 
-    <form id="b241QuickForm" class="b241-form">
-      <label>Tipo
-        <select id="b241QuickTipo" required>
+    <form id="b242Form" class="grid2 b242-form">
+
+      <label>
+        Tipo
+        <select id="b242Tipo" required>
           <option value="ingreso">Ingreso</option>
           <option value="fijo">Gasto fijo</option>
           <option value="variable" selected>Gasto variable</option>
@@ -114,8 +337,9 @@
         </select>
       </label>
 
-      <label>Categoría
-        <select id="b241QuickCategoria" required>
+      <label>
+        Categoría
+        <select id="b242Categoria" required>
           <option>Vivienda</option>
           <option>Servicios básicos</option>
           <option>Alimentación</option>
@@ -138,8 +362,9 @@
         </select>
       </label>
 
-      <label>Prioridad
-        <select id="b241QuickPrioridad">
+      <label>
+        Prioridad
+        <select id="b242Prioridad">
           <option value="esencial">Esencial</option>
           <option value="necesario">Necesario</option>
           <option value="discrecional" selected>Discrecional</option>
@@ -147,12 +372,14 @@
         </select>
       </label>
 
-      <label>Monto mensual planificado (CLP)
-        <input id="b241QuickMonto" type="number" min="0" step="1" required placeholder="0">
+      <label>
+        Monto mensual planificado (CLP)
+        <input id="b242Monto" type="number" min="0" step="1" required placeholder="0">
       </label>
 
-      <label>Periodicidad
-        <select id="b241QuickFrecuencia">
+      <label>
+        Periodicidad
+        <select id="b242Frecuencia">
           <option value="mensual" selected>Mensual</option>
           <option value="semanal">Semanal</option>
           <option value="anual">Anual</option>
@@ -160,50 +387,59 @@
         </select>
       </label>
 
-      <label>Descripción
-        <input id="b241QuickDescripcion" maxlength="160" placeholder="Ej.: arriendo, supermercado, plan móvil...">
+      <label>
+        Descripción
+        <input id="b242Descripcion" maxlength="160" placeholder="Ej.: arriendo, supermercado, plan móvil...">
       </label>
 
-      <div class="full b241-actions">
-        <button type="submit">Agregar al presupuesto</button>
-        <button id="b241ResetForm" type="button" class="secondary">Limpiar</button>
+      <div class="full b242-actions">
+        <button type="submit">Agregar partida</button>
+        <button id="b242Clear" class="secondary" type="button">Limpiar</button>
       </div>
+
     </form>
 
-    <p class="b241-help">
-      Categorías base del diario vivir: vivienda, servicios, alimentación, transporte,
-      aseo e higiene, salud, datos móviles, herramientas y tecnología, vestimenta,
-      educación, recreación y otros.
+    <p class="muted b242-help">
+      El catálogo contempla los principales gastos del diario vivir y permite separar
+      gastos fijos, variables, obligaciones y ahorro.
     </p>
+
+    <p id="b242Msg" class="status"></p>
   </div>
 
   <div class="card">
-    <div class="b241-section-title">
+    <div class="b242-section-title">
       <div>
         <h2>Partidas del presupuesto</h2>
-        <span class="muted">Planificado frente a ejecución real.</span>
+        <p class="muted">Planificado frente a lo ejecutado en Movimientos y Ahorro.</p>
       </div>
     </div>
-    <div id="b241Items"></div>
+
+    <div id="b242Items"></div>
+  </div>
+
+  <div class="card">
+    <h2>Resultado presupuestario</h2>
+    <div id="b242Result"></div>
   </div>
 
   <div class="card">
     <h2>Proyección del período</h2>
-    <div id="b241Projection"></div>
+    <div id="b242Projection"></div>
   </div>
 
   <div class="card">
-    <h2>Alertas de presupuesto</h2>
-    <div id="b241Alerts"></div>
+    <h2>Alertas de control</h2>
+    <div id="b242Alerts"></div>
   </div>
 
   <div class="card">
-    <h2>Integración financiera</h2>
-    <div id="b241Sources"></div>
-    <p class="b241-help">
-      Presupuesto es una capa de planificación. Los movimientos reales continúan
-      registrándose en Movimientos, los compromisos en Pagos futuros, el ahorro
-      en Ahorro y las operaciones en sus módulos correspondientes.
+    <h2>Integración con el sistema principal</h2>
+    <div id="b242Sources"></div>
+    <p class="muted b242-help">
+      El presupuesto es una capa de planificación. Movimientos, Pagos futuros,
+      Ahorro, Deudas, Cuentas, Operaciones y Planificación conservan sus propios
+      registros y procesos.
     </p>
   </div>
 
@@ -226,6 +462,386 @@
 <script src="b224.1-planificacion-integrada.js?v=224.1"></script>
 <script src="b227-ia-financiera.js?v=227.1"></script>
 <script src="b229-movimientos-fondos.js?v=229.0"></script>
-<script src="b241-presupuesto-integrado-loader.js?v=241.0"></script>
+
+<script id="b242-presupuesto-engine">
+(function(){
+  "use strict";
+
+  if(window.__B242_PRESUPUESTO__) return;
+  window.__B242_PRESUPUESTO__ = true;
+
+  const S = {
+    y:new Date().getFullYear(),
+    m:new Date().getMonth(),
+    presupuesto:null,
+    partidas:[],
+    initialized:false
+  };
+
+  const $ = id => document.getElementById(id);
+  const money = n => new Intl.NumberFormat("es-CL",{
+    style:"currency",currency:"CLP",maximumFractionDigits:0
+  }).format(Math.round(Number(n)||0));
+
+  const monthKey = () => `${S.y}-${String(S.m+1).padStart(2,"0")}`;
+
+  const monthLabel = () =>
+    new Intl.DateTimeFormat("es-CL",{month:"long",year:"numeric"})
+      .format(new Date(S.y,S.m,1));
+
+  const esc = value => String(value ?? "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+
+  function client(){
+    if(window.supabaseClient && typeof window.supabaseClient.from==="function")
+      return window.supabaseClient;
+
+    if(window.__supabase && typeof window.__supabase.from==="function")
+      return window.__supabase;
+
+    const cfgUrl = localStorage.getItem("supabaseUrl") || localStorage.getItem("supabase_url");
+    const cfgKey = localStorage.getItem("supabaseKey") || localStorage.getItem("supabase_key");
+
+    if(window.supabase && typeof window.supabase.createClient==="function" && cfgUrl && cfgKey){
+      try{
+        window.__B242_CLIENT__ ||= window.supabase.createClient(cfgUrl,cfgKey);
+        return window.__B242_CLIENT__;
+      }catch(e){ console.error("[B242] createClient",e); }
+    }
+    return null;
+  }
+
+  async function userId(){
+    const c=client();
+    if(!c) return null;
+    const r=await c.auth.getUser();
+    return r.data?.user?.id || null;
+  }
+
+  function sourceArrays(){
+    const names=[
+      "movimientos","movements","ahorro","ahorros","savings",
+      "compromisos","pagosFuturos","futuros"
+    ];
+    const result=[];
+    for(const n of names){
+      if(Array.isArray(window[n])) result.push(...window[n]);
+    }
+    return result;
+  }
+
+  function normalize(r){
+    return {
+      date:r.fecha||r.date||r.fecha_pago||r.vencimiento||String(r.created_at||"").slice(0,10),
+      type:String(r.tipo||r.type||"").toLowerCase(),
+      amount:Number(r.monto??r.amount??r.valor??r.importe??0)||0,
+      category:r.categoria||r.category||r.concepto||r.nombre||"Otros"
+    };
+  }
+
+  function realData(){
+    const rows=sourceArrays().map(normalize).filter(x=>x.date.startsWith(monthKey()));
+    let income=0,expense=0,saving=0;
+
+    for(const x of rows){
+      if(["ingreso","income"].includes(x.type)) income+=x.amount;
+      else if(["gasto","expense"].includes(x.type)) expense+=x.amount;
+      else if(["aporte","deposito","deposit","saving"].includes(x.type)) saving+=x.amount;
+    }
+
+    return {income,expense,saving,rows};
+  }
+
+  async function ensureBudget(){
+    const c=client();
+    const uid=await userId();
+
+    if(!c || !uid){
+      throw new Error("No hay una sesión Supabase disponible.");
+    }
+
+    let q=await c.from("presupuestos")
+      .select("*")
+      .eq("user_id",uid)
+      .eq("periodo",monthKey())
+      .maybeSingle();
+
+    if(q.error) throw q.error;
+
+    if(!q.data){
+      q=await c.from("presupuestos")
+        .insert({
+          user_id:uid,
+          periodo:monthKey(),
+          nombre:`Presupuesto ${monthLabel()}`,
+          estado:"activo"
+        })
+        .select()
+        .single();
+
+      if(q.error) throw q.error;
+    }
+
+    S.presupuesto=q.data;
+
+    const p=await c.from("presupuesto_partidas")
+      .select("*")
+      .eq("presupuesto_id",S.presupuesto.id)
+      .order("tipo")
+      .order("categoria");
+
+    if(p.error) throw p.error;
+    S.partidas=p.data||[];
+  }
+
+  function planned(){
+    let income=0,expense=0,saving=0;
+
+    for(const p of S.partidas){
+      const v=Number(p.monto_planificado)||0;
+      if(p.tipo==="ingreso") income+=v;
+      else if(p.tipo==="ahorro") saving+=v;
+      else expense+=v;
+    }
+
+    return {income,expense,saving,free:income-expense-saving};
+  }
+
+  function categoryReal(){
+    const map={};
+    for(const x of realData().rows){
+      const k=x.category||"Otros";
+      map[k] ||= {income:0,expense:0,saving:0};
+      if(["ingreso","income"].includes(x.type)) map[k].income+=x.amount;
+      else if(["gasto","expense"].includes(x.type)) map[k].expense+=x.amount;
+      else if(["aporte","deposito","deposit","saving"].includes(x.type)) map[k].saving+=x.amount;
+    }
+    return map;
+  }
+
+  function render(){
+    $("b242Month").textContent=monthLabel();
+
+    const p=planned();
+    const r=realData();
+
+    $("b242PlanIncome").textContent=money(p.income);
+    $("b242PlanExpense").textContent=money(p.expense);
+    $("b242PlanSaving").textContent=money(p.saving);
+    $("b242PlanFree").textContent=money(p.free);
+
+    $("b242RealIncome").textContent=money(r.income);
+    $("b242RealExpense").textContent=money(r.expense);
+    $("b242RealSaving").textContent=money(r.saving);
+    $("b242RealFree").textContent=money(r.income-r.expense-r.saving);
+
+    const cr=categoryReal();
+
+    if(!S.partidas.length){
+      $("b242Items").innerHTML=
+        '<div class="b242-empty">No hay partidas para este mes. Comienza usando el formulario de arriba.</div>';
+    }else{
+      $("b242Items").innerHTML=`
+        <div class="b242-table-wrap">
+          <table class="b242-table">
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Tipo</th>
+                <th>Prioridad</th>
+                <th class="num">Plan</th>
+                <th class="num">Real</th>
+                <th class="num">Saldo</th>
+                <th>Uso</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${S.partidas.map(p=>{
+                const plan=Number(p.monto_planificado)||0;
+                const x=cr[p.categoria]||{income:0,expense:0,saving:0};
+                const real=p.tipo==="ingreso"?x.income:p.tipo==="ahorro"?x.saving:x.expense;
+                const saldo=p.tipo==="ingreso"?real-plan:plan-real;
+                const pct=plan?Math.min(100,Math.abs(real/plan)*100):0;
+                const over=p.tipo==="ingreso"?real<plan:real>plan;
+                const cls=over?"b242-danger":pct>=85?"b242-warn":"b242-ok";
+                return `
+                <tr>
+                  <td><strong>${esc(p.categoria)}</strong>${p.descripcion?`<br><small>${esc(p.descripcion)}</small>`:""}</td>
+                  <td><span class="b242-tag">${esc(p.tipo)}</span></td>
+                  <td>${esc(p.prioridad||"discrecional")}</td>
+                  <td class="num">${money(plan)}</td>
+                  <td class="num">${money(real)}</td>
+                  <td class="num">${money(saldo)}</td>
+                  <td>
+                    <div class="b242-bar ${cls}">
+                      <i style="width:${pct}%"></i>
+                    </div>
+                    <small>${pct.toFixed(0)}%</small>
+                  </td>
+                  <td>
+                    <button class="secondary" type="button" data-b242-del="${esc(p.id)}">Eliminar</button>
+                  </td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    $("b242Result").innerHTML=`
+      <div class="b242-result-grid">
+        <div class="b242-result">
+          <span>Margen planificado</span>
+          <strong>${money(p.free)}</strong>
+        </div>
+        <div class="b242-result">
+          <span>Resultado ejecutado</span>
+          <strong>${money(r.income-r.expense-r.saving)}</strong>
+        </div>
+        <div class="b242-result">
+          <span>Desviación</span>
+          <strong>${money((r.income-r.expense-r.saving)-p.free)}</strong>
+        </div>
+      </div>`;
+
+    const now=new Date();
+    const days=new Date(S.y,S.m+1,0).getDate();
+    const elapsed=(S.y===now.getFullYear()&&S.m===now.getMonth())?now.getDate():days;
+    const remaining=Math.max(0,days-elapsed);
+    const daily=elapsed? r.expense/elapsed : 0;
+    const projectedExpense=r.expense+daily*remaining;
+    const projected=r.income-projectedExpense-r.saving;
+
+    $("b242Projection").innerHTML=`
+      <div class="b242-result-grid">
+        <div class="b242-result"><span>Gasto diario observado</span><strong>${money(daily)}</strong></div>
+        <div class="b242-result"><span>Gasto proyectado</span><strong>${money(projectedExpense)}</strong></div>
+        <div class="b242-result"><span>Disponible proyectado</span><strong>${money(projected)}</strong></div>
+      </div>`;
+
+    const alerts=[];
+    if(p.free<0) alerts.push(["b242-danger","El presupuesto planificado supera los ingresos planificados."]);
+    if(p.expense>0 && r.expense>=p.expense) alerts.push(["b242-danger","Los gastos ejecutados alcanzaron o superaron el gasto planificado."]);
+    else if(p.expense>0 && r.expense>=p.expense*.85) alerts.push(["b242-warn","Los gastos ejecutados alcanzaron el 85% del presupuesto de gastos."]);
+    if(projected<0) alerts.push(["b242-danger","La proyección del período queda bajo cero con el ritmo actual de gasto."]);
+    if(!alerts.length) alerts.push(["b242-ok","Sin alertas críticas con los datos disponibles."]);
+
+    $("b242Alerts").innerHTML=alerts.map(a=>`<div class="b242-alert ${a[0]}">${esc(a[1])}</div>`).join("");
+
+    $("b242Sources").innerHTML=`
+      <div class="b242-source">
+        <article><span>Partidas presupuestarias</span><strong>${S.partidas.length}</strong></article>
+        <article><span>Registros reales del período</span><strong>${r.rows.length}</strong></article>
+        <article><span>Período controlado</span><strong>${esc(monthKey())}</strong></article>
+      </div>`;
+  }
+
+  async function reload(){
+    try{
+      await ensureBudget();
+      render();
+      $("b242Msg").textContent="";
+    }catch(e){
+      console.error("[B242]",e);
+      $("b242Items").innerHTML=`<div class="b242-empty">No se pudo cargar el presupuesto: ${esc(e.message||e)}</div>`;
+      $("b242Msg").textContent="Verifica que la sesión esté conectada y que la tabla de presupuesto exista en Supabase.";
+    }
+  }
+
+  async function add(e){
+    e.preventDefault();
+
+    const c=client();
+    const uid=await userId();
+
+    if(!c||!uid||!S.presupuesto){
+      $("b242Msg").textContent="El presupuesto todavía no está conectado a Supabase.";
+      return;
+    }
+
+    const amount=Math.round(Number($("b242Monto").value)||0);
+    if(amount<=0){
+      $("b242Msg").textContent="Ingresa un monto mayor que cero.";
+      return;
+    }
+
+    const payload={
+      presupuesto_id:S.presupuesto.id,
+      user_id:uid,
+      tipo:$("b242Tipo").value,
+      categoria:$("b242Categoria").value,
+      prioridad:$("b242Prioridad").value,
+      frecuencia:$("b242Frecuencia").value,
+      descripcion:$("b242Descripcion").value.trim(),
+      monto_planificado:amount
+    };
+
+    const q=await c.from("presupuesto_partidas").insert(payload);
+
+    if(q.error){
+      $("b242Msg").textContent=q.error.message;
+      return;
+    }
+
+    $("b242Form").reset();
+    $("b242Tipo").value="variable";
+    $("b242Prioridad").value="discrecional";
+    $("b242Frecuencia").value="mensual";
+    $("b242Msg").textContent="Partida agregada correctamente.";
+    await reload();
+  }
+
+  async function remove(id){
+    if(!confirm("¿Eliminar esta partida del presupuesto?")) return;
+    const c=client();
+    const q=await c.from("presupuesto_partidas").delete().eq("id",id);
+    if(q.error){alert(q.error.message);return}
+    await reload();
+  }
+
+  function bind(){
+    $("b242Prev")?.addEventListener("click",async()=>{
+      S.m--;
+      if(S.m<0){S.m=11;S.y--}
+      await reload();
+    });
+
+    $("b242Next")?.addEventListener("click",async()=>{
+      S.m++;
+      if(S.m>11){S.m=0;S.y++}
+      await reload();
+    });
+
+    $("b242Form")?.addEventListener("submit",add);
+
+    $("b242Clear")?.addEventListener("click",()=>{
+      $("b242Form").reset();
+      $("b242Tipo").value="variable";
+      $("b242Prioridad").value="discrecional";
+      $("b242Frecuencia").value="mensual";
+      $("b242Msg").textContent="";
+    });
+
+    $("b242Items")?.addEventListener("click",e=>{
+      const b=e.target.closest("[data-b242-del]");
+      if(b) remove(b.dataset.b242Del);
+    });
+  }
+
+  function init(){
+    if(S.initialized)return;
+    S.initialized=true;
+    bind();
+    reload();
+  }
+
+  window.B242Presupuesto={init,reload,state:S};
+
+  document.addEventListener("DOMContentLoaded",init);
+})();
+</script>
+
 </body>
 </html>
