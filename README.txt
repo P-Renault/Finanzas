@@ -1,16 +1,16 @@
-FINANZAS B2.20.2 — CORRECCION INTEGRAL
+FINANZAS B2.21
+Motor de Movimientos + Liquidez + separación de gastos/pagos de deuda.
 
-Esta corrección revierte una regresión de despliegue en index.html.
+Archivos:
+- b221-movimientos-liquidez.js
+- B2.21_MOVIMIENTOS_LIQUIDEZ.sql
 
-Conserva la barra horizontal existente:
-Resumen, Movimientos, Pagos futuros, Calendario, Ahorro, Deudas, Cuentas, Operaciones, Planificación.
+Integración:
+1. Ejecutar el SQL completo en Supabase.
+2. Agregar antes de </body>:
+<script src="b221-movimientos-liquidez.js?v=221"></script>
+3. Recargar con caché limpia.
 
-Las nuevas funciones se cargan por B2.19 en el menú Más:
-- Motor Multifuente
-- Control de Jornada
-
-También carga B2.20 Motor de Ejecución Financiera.
-
-NO elimina los archivos legacy existentes del repositorio.
-NO crea jornadas_financieras.
-NO registra pagos reales automáticamente.
+No elimina datos históricos.
+Los movimientos futuros no afectan la liquidez actual.
+Los pagos de deuda se identifican por pagos_deuda.movimiento_id y se excluyen de Gastos del mes.
