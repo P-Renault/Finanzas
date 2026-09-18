@@ -1,0 +1,9 @@
+PATCH B2.31.4 — RESTAURACIÓN DEL SHELL FUNCIONAL
+
+1. No eliminar archivos.
+2. Reemplazar solamente index.html por el incluido.
+3. Commit sugerido: B2.31.4 — Restaurar shell funcional
+4. GitHub Pages: esperar el despliegue.
+5. En Android: cerrar la pestaña o usar recarga forzada/limpiar caché del sitio si sigue apareciendo la versión anterior.
+
+El cambio corrige la capa de entrada/navegación; no toca la base de datos.
