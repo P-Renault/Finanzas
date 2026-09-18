@@ -1,0 +1,10 @@
+# CAMBIO ÚNICO REQUERIDO EN index.html
+
+Agregar este script después de b224.1 y antes de b227:
+
+<script src="b228-integracion-final.js?v=228.0"></script>
+
+Resultado visual esperado:
+Resumen | Movimientos | Pagos futuros | Calendario | Ahorro | Deudas | Cuentas | Operaciones | Planificación | Motor Multifuente | Control de Jornada | IA Financiera
+
+No eliminar B219. B219 sigue siendo el responsable de crear las secciones y lógica de Motor Multifuente y Control de Jornada.
