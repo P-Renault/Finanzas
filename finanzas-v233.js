@@ -1,4 +1,4 @@
-/* FINANZAS V2.3.3 — B231.5 FINAL
+/* FINANZAS V2.3.3 — B231.1
    Cero Financiero + Liquidez + Cuentas + Deudas
    Corrección crítica: persistencia de modalidad CUOTAS.
 */
@@ -289,6 +289,15 @@
             <label>
               Primera cuota
               <input id="deudaPrimeraCuota" type="date" value="${today()}">
+            </label>
+
+            <label class="full" style="display:flex;align-items:center;gap:8px">
+              <input
+                id="b2312-sin-fecha"
+                type="checkbox"
+                style="width:auto"
+              >
+              <span>Sin fecha de pago definida todavía</span>
             </label>
 
             <label>
@@ -765,6 +774,36 @@
   }
 
   /* ============================================================
+     B231.1 — FECHA OPCIONAL
+     ============================================================ */
+
+  function syncDebtDateState() {
+    const check = $('b2312-sin-fecha');
+    const date = $('deudaPrimeraCuota');
+
+    if (!check || !date) return;
+
+    const cuotas =
+      currentDebtModality() === 'CUOTAS';
+
+    check.disabled = !cuotas;
+
+    if (!cuotas) {
+      check.checked = false;
+      date.disabled = false;
+      date.required = false;
+      return;
+    }
+
+    date.disabled = check.checked;
+    date.required = !check.checked;
+
+    if (check.checked) {
+      date.value = '';
+    }
+  }
+
+  /* ============================================================
      CARGA / EDICIÓN
      ============================================================ */
 
@@ -792,10 +831,13 @@
 
     $('deudaInicio').value = d.fecha_inicio || today();
 
-    $('deudaPrimeraCuota').value =
+    const fechaGuardada =
       d.fecha_primera_cuota ||
       d.fecha_proximo_pago ||
-      today();
+      '';
+
+    $('deudaPrimeraCuota').value =
+      fechaGuardada;
 
     $('deudaFrecuencia').value =
       d.frecuencia || 'mensual';
@@ -807,12 +849,8 @@
     const sinFecha = $('b2312-sin-fecha');
 
     if (sinFecha) {
-      sinFecha.checked =
-        !(d.fecha_primera_cuota || d.fecha_proximo_pago);
-
-      sinFecha.dispatchEvent(
-        new Event('change', { bubbles: true })
-      );
+      sinFecha.checked = !fechaGuardada;
+      syncDebtDateState();
     }
 
     $('deudaSubmit').textContent = 'Guardar cambios';
@@ -851,10 +889,9 @@
 
     if (sinFecha) {
       sinFecha.checked = false;
-      sinFecha.dispatchEvent(
-        new Event('change', { bubbles: true })
-      );
     }
+
+    syncDebtDateState();
   }
 
   /* ============================================================
@@ -1170,11 +1207,9 @@
         return;
       }
 
-      if (!fechaPrimera) {
-        $('deudasMsg').textContent =
-          'Una deuda en cuotas necesita una primera fecha de pago. Si no existe fecha, debe registrarse como pago único.';
-        return;
-      }
+      /* B231.1: una deuda en cuotas puede existir sin fecha.
+         En ese caso se persiste la deuda, pero NO se genera
+         todavía un calendario de cuotas. */
     }
 
     const p = {
@@ -1393,7 +1428,18 @@
       return;
     }
 
-    /* CUOTAS: crear y verificar exactamente N cuotas. */
+    /* B231.1: CUOTAS sin fecha se conservan como deuda
+       pendiente, sin generar todavía cuotas calendarizadas. */
+    if (modalidad === 'CUOTAS' && !fechaPrimera) {
+      $('deudasMsg').textContent =
+        `Deuda registrada correctamente con ${cuotas} cuotas acordadas, pero sin fecha. El plan se podrá calendarizar posteriormente.`;
+
+      resetDebt();
+      await loadDebts();
+      return;
+    }
+
+    /* CUOTAS con fecha: crear y verificar exactamente N cuotas. */
     try {
       const result = await createPlan(
         c,
@@ -1870,7 +1916,17 @@
 
     modalidad?.addEventListener(
       'change',
-      () => setDebtModality(modalidad.value)
+      () => {
+        setDebtModality(modalidad.value);
+        syncDebtDateState();
+      }
+    );
+
+    const sinFecha = $('b2312-sin-fecha');
+
+    sinFecha?.addEventListener(
+      'change',
+      syncDebtDateState
     );
 
     const r = $('deudaTasa');
@@ -1910,6 +1966,7 @@
     );
 
     setDebtModality('UNICO');
+    syncDebtDateState();
   }
 
   /* ============================================================
@@ -1961,7 +2018,7 @@
       }
 
       console.info(
-        'FINANZAS V2.3.3 B231.5 FINAL cargado.'
+        'FINANZAS V2.3.3 B231.1 cargado.'
       );
 
     } catch (e) {
