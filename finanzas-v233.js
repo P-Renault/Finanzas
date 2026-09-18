@@ -607,6 +607,37 @@
     }
 
     debts = r.data || [];
+
+    /* B231.1-R3: la vista v_deudas_resumen puede no exponer
+       numero_cuotas/cuota_acordada para deudas sin plan.
+       Recuperamos esos campos desde la tabla fuente para que
+       la interfaz distinga "cuotas acordadas" de "cuotas pendientes". */
+    if (debts.length) {
+      const ids = debts
+        .map(d => d.id)
+        .filter(id => id !== null && id !== undefined);
+
+      if (ids.length) {
+        const detail = await c
+          .from('deudas')
+          .select(
+            'id,numero_cuotas,cuota_acordada,frecuencia,fecha_primera_cuota,fecha_proximo_pago'
+          )
+          .in('id', ids);
+
+        if (!detail.error) {
+          const byId = new Map(
+            (detail.data || []).map(d => [String(d.id), d])
+          );
+
+          debts = debts.map(d => ({
+            ...d,
+            ...(byId.get(String(d.id)) || {})
+          }));
+        }
+      }
+    }
+
     renderDebtList();
     await renderDebtSummary();
   }
