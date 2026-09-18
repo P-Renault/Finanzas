@@ -681,8 +681,17 @@
 
             <div class="debt-card-meta">
               <span>
-                ${Number(d.numero_cuotas_pendientes || 0)}
-                cuotas pendientes
+                ${
+                  Number(d.numero_cuotas_pendientes || 0) > 0
+                    ? `${Number(d.numero_cuotas_pendientes)} cuotas pendientes`
+                    : (
+                        Number(d.numero_cuotas || 0) > 0 &&
+                        !d.fecha_primera_cuota &&
+                        !d.fecha_proximo_pago
+                      )
+                        ? `${Number(d.numero_cuotas)} cuotas acordadas`
+                        : '0 cuotas pendientes'
+                }
               </span>
               <span>
                 Próximo: ${esc(d.proximo_vencimiento || '—')}
