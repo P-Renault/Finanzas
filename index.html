@@ -6,13 +6,12 @@
 <meta name="theme-color" content="#111827">
 <meta name="description" content="Control financiero personal — Cero Financiero, liquidez, cuentas, deudas, operaciones y planificación.">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=2532">
-<link rel="stylesheet" href="deudas-styles.css?v=2532">
-<link rel="stylesheet" href="deudas-centro.css?v=2532">
-<link rel="stylesheet" href="finanzas-v233.css?v=2532">
-<link rel="stylesheet" href="b221-movimientos-liquidez.css?v=2532">
+<link rel="stylesheet" href="styles.css?v=2531">
+<link rel="stylesheet" href="deudas-styles.css?v=2531">
+<link rel="stylesheet" href="deudas-centro.css?v=2531">
+<link rel="stylesheet" href="finanzas-v233.css?v=2531">
+<link rel="stylesheet" href="b221-movimientos-liquidez.css?v=2531">
 <title>Control Financiero · Finanzas</title>
-<script src="b312-hardening-movil.js?v=312.0"></script>
 </head>
 <body>
 <header class="topbar">
@@ -28,7 +27,7 @@
 </section>
 <section id="app" class="hidden">
 <div class="tabs">
-<button data-tab="dashboard" class="active">Resumen</button><button data-tab="movimientos">Movimientos</button><button data-tab="futuros">Pagos futuros</button><button data-tab="calendario">Calendario</button><button data-tab="ahorro">Ahorro</button>
+<button data-tab="dashboard" class="active">Resumen</button><button data-tab="movimientos">Movimientos</button><button data-tab="futuros">Pagos futuros</button><button data-tab="calendario">Calendario</button><button data-tab="ahorro">Ahorro</button><button data-tab="deudas">Deudas</button><button data-tab="cuentas">Cuentas</button><button data-tab="operaciones">Operaciones</button><button data-tab="planificacion">Planificación</button>
 </div>
 <section id="dashboard" class="tab"> <div class="cards"><article class="metric"><span>Saldo actual</span><strong id="saldo">$0</strong></article><article class="metric"><span>Ingresos del mes</span><strong id="ingresosMes">$0</strong></article><article class="metric"><span>Gastos del mes</span><strong id="gastosMes">$0</strong></article><article class="metric"><span>Pagos pendientes</span><strong id="comprometido">$0</strong></article><article class="metric"><span>Disponible proyectado</span><strong id="proyectado">$0</strong></article><article class="metric"><span>Fondo de ahorro</span><strong id="ahorroTotal">$0</strong></article></div><div class="cards two"><article class="metric future-card"><span>Ingresos futuros registrados</span><strong id="ingresosFuturos">$0</strong></article><article class="metric future-card"><span>Gastos futuros registrados</span><strong id="gastosFuturos">$0</strong></article></div><div class="card monthly-summary-card"><div class="section-title"><div><h2>Resumen de pagos y gastos del mes</h2><span class="muted" id="monthlySummaryLabel">Mes en curso</span></div></div><div class="monthly-summary-grid"><article class="summary-box paid-box"><span>Total pagado hasta hoy</span><strong id="totalPagadoMes">$0</strong><small>Gastos registrados con fecha hasta hoy</small></article><article class="summary-box pending-box"><span>Total pendiente del mes</span><strong id="totalPendienteMes">$0</strong><small>Compromisos pendientes del mes</small></article><article class="summary-box total-box"><span>Total de gastos a pagar del mes</span><strong id="totalGastosPagarMes">$0</strong><small>Pagado hasta hoy + pagos pendientes</small></article></div><p class="monthly-summary-note">Este resumen no descuenta automáticamente dinero. Solo informa cuánto ya salió, cuánto sigue pendiente y cuánto representan ambas obligaciones durante el mes.</p></div><div class="card income-plan-card"><div class="section-title"><h2>Plan sugerido de ingresos</h2><span class="muted">Calculado con tus datos reales</span></div><div id="incomePlan"><p class="muted">Calculando sugerencia...</p></div></div><div class="card"><div class="section-title"><h2>Próximos pagos</h2><span class="muted">Mantiene tus pagos programados</span></div><div id="proximosPagos"></div></div></section>
 <section id="movimientos" class="tab hidden"><div class="card"><h2 id="movFormTitle">Registrar movimiento</h2><form id="movForm" class="grid2"><input type="hidden" id="movId"><label>Tipo<select id="movTipo"><option value="ingreso">Ingreso</option><option value="gasto">Gasto</option></select></label><label>Fecha<input id="movFecha" type="date" required></label><label>Monto<input id="movMonto" type="number" min="0" step="1" required></label><label>Categoría<input id="movCategoria" placeholder="Alimentación, combustible..."></label><label class="full">Descripción<input id="movDescripcion" placeholder="Detalle"></label><div class="form-actions full"><button type="submit" id="movSubmit">Guardar movimiento</button><button type="button" id="movCancel" class="secondary hidden">Cancelar edición</button></div></form><p id="movMsg" class="status"></p></div><div class="card"><h2>Historial de movimientos</h2><p class="muted">Los registros con fecha posterior a hoy son futuros y no afectan el saldo actual.</p><div id="movimientosLista"></div></div></section>
@@ -38,14 +37,108 @@
 </section>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=231.2"></script>
-<script src="b219-arquitectura-navegacion.js?v=2532"></script>
-<script src="b227-ia-financiera.js?v=231.2"></script>
-<script src="b229-movimientos-fondos.js?v=231.2"></script>
-<script src="b230-deuda-flexible.js?v=231.2"></script>
-<script src="b229-dashboard-integral.js?v=231.2"></script>
-<script src="b230-proximos-vencimientos.js?v=231.2"></script>
-<script src="b225-motor-multifuente.js?v=225.1"></script>
-<script src="b312-menu-restructure.js?v=312.1"></script>
+<script src="app.js?v=231.3"></script>
+<script src="b219-arquitectura-navegacion.js?v=231.3"></script>
+<script src="b220.2-puente-ejecucion.js?v=231.1"></script>
+<script src="b221-movimientos-liquidez.js?v=231.1"></script>
+<script src="b222-centro-operaciones.js?v=231.1"></script>
+<script src="b223-centro-operaciones-planificacion-fix.js?v=231.1"></script>
+<script src="b224.1-planificacion-integrada.js?v=231.1"></script>
+<script src="b227-ia-financiera.js?v=231.1"></script>
+<script src="b229-movimientos-fondos.js?v=231.1"></script>
+<script src="b230-deuda-flexible.js?v=231.1"></script>
+<script src="b229-dashboard-integral.js?v=231.1"></script>
+<script src="b230-proximos-vencimientos.js?v=231.1"></script>
+
+<script>
+/* B2.31.3 — NAVEGACIÓN MÓVIL GARANTIZADA
+   Ejecuta sobre la navegación ya creada por B2.19. No depende de orden de carga.
+   Preserva todos los módulos y solo cambia su presentación. */
+(function(){
+  'use strict';
+  var PRIMARY=['dashboard','movimientos','futuros','calendario','ahorro'];
+  var SECONDARY=[
+    ['deudas','Deudas','Deudas, cuotas y renegociación'],
+    ['cuentas','Cuentas','Cuentas bancarias y saldos'],
+    ['operaciones','Operaciones','Centro operativo y liquidez'],
+    ['planificacion','Planificación','Plan financiero proyectado'],
+    ['ia-financiera','IA Financiera','Análisis financiero con IA'],
+    ['ingresos','Motor Multifuente','Generación y cobro'],
+    ['jornadas','Control de Jornada','Integración financiera']
+  ];
+  function css(){
+    if(document.getElementById('b313Style')) return;
+    var s=document.createElement('style');s.id='b313Style';
+    s.textContent=[
+      'html,body{max-width:100%;overflow-x:hidden}',
+      '#b313Nav{display:flex;align-items:center;gap:7px;max-width:100%;margin-bottom:16px;position:relative;z-index:100}',
+      '#b313Tabs{display:flex;gap:7px;overflow-x:auto;min-width:0;flex:1;padding:2px 0 7px;scrollbar-width:none}',
+      '#b313Tabs::-webkit-scrollbar{display:none}',
+      '#b313Tabs>button{flex:0 0 auto;white-space:nowrap}',
+      '#b313MoreWrap{position:relative;flex:0 0 auto}',
+      '#b313More{border:0;border-radius:10px;padding:10px 12px;background:#e5e7eb;color:#111827;font-weight:800;white-space:nowrap}',
+      '#b313More.open{background:#111827;color:#fff}',
+      '#b313Menu{display:none;position:absolute;right:0;top:calc(100% + 7px);width:255px;max-width:calc(100vw - 24px);padding:7px;background:#fff;border:1px solid #dbe2ea;border-radius:14px;box-shadow:0 16px 40px rgba(15,23,42,.18);box-sizing:border-box}',
+      '#b313Menu.open{display:block}',
+      '.b313Item{display:block;width:100%;text-align:left;border:0;background:#fff;border-radius:9px;padding:10px 11px;color:#111827;font-weight:800}',
+      '.b313Item small{display:block;color:#64748b;font-weight:500;margin-top:2px}',
+      '.b313Title{padding:6px 10px 7px;color:#64748b;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}',
+      '.b313Sep{height:1px;background:#e5e7eb;margin:5px 4px}',
+      '@media(max-width:520px){#b313More{padding:10px 11px}#b313Menu{width:245px}}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+  function show(id){
+    var app=document.getElementById('app'); if(!app)return;
+    app.querySelectorAll('.tab').forEach(function(s){s.classList.toggle('hidden',s.id!==id)});
+    document.querySelectorAll('#b313Tabs button[data-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.tab===id)});
+    document.querySelectorAll('.b313Item').forEach(function(b){b.classList.toggle('active',b.dataset.tab===id)});
+    if(id==='operaciones' && typeof window.loadOps==='function') window.loadOps();
+    if(id==='planificacion' && typeof window.fin216Plan==='function') window.fin216Plan();
+    if(id==='ingresos' && typeof window.loadIncome==='function') window.loadIncome();
+    if(id==='jornadas' && typeof window.loadJornadas==='function') window.loadJornadas();
+  }
+  function install(){
+    var old=document.querySelector('#b219NavShell');
+    var tabs=old && old.querySelector('.tabs');
+    if(!tabs)return false;
+    if(document.getElementById('b313Nav'))return true;
+    css();
+    var nav=document.createElement('div');nav.id='b313Nav';
+    var primary=document.createElement('div');primary.id='b313Tabs';
+    var all=Array.from(tabs.querySelectorAll('button[data-tab]'));
+    PRIMARY.forEach(function(id){
+      var b=all.find(function(q){return q.dataset.tab===id});
+      if(b)primary.appendChild(b);
+    });
+    var more=document.createElement('div');more.id='b313MoreWrap';
+    var btn=document.createElement('button');btn.type='button';btn.id='b313More';btn.textContent='Más ▾';
+    var menu=document.createElement('div');menu.id='b313Menu';
+    var title=document.createElement('div');title.className='b313Title';title.textContent='Módulos del sistema';
+    menu.appendChild(title);
+    SECONDARY.forEach(function(item,i){
+      if(i===5){var sep=document.createElement('div');sep.className='b313Sep';menu.appendChild(sep)}
+      var b=document.createElement('button');b.type='button';b.className='b313Item';b.dataset.tab=item[0];
+      b.innerHTML=item[1]+'<small>'+item[2]+'</small>';menu.appendChild(b);
+    });
+    more.appendChild(btn);more.appendChild(menu);nav.appendChild(primary);nav.appendChild(more);
+    old.replaceWith(nav);
+    primary.addEventListener('click',function(e){var b=e.target.closest('button[data-tab]');if(b)show(b.dataset.tab)});
+    btn.addEventListener('click',function(e){e.stopPropagation();menu.classList.toggle('open');btn.classList.toggle('open')});
+    menu.addEventListener('click',function(e){var b=e.target.closest('.b313Item');if(!b)return;e.preventDefault();e.stopPropagation();show(b.dataset.tab);menu.classList.remove('open');btn.classList.remove('open')});
+    document.addEventListener('click',function(){menu.classList.remove('open');btn.classList.remove('open')});
+    // Preserve existing active screen.
+    var active=all.find(function(b){return b.classList.contains('active')})||all[0];
+    if(active)show(active.dataset.tab);
+    return true;
+  }
+  var attempts=0;
+  function boot(){
+    if(install())return;
+    if(++attempts<40)setTimeout(boot,250);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
 </body>
 </html>
