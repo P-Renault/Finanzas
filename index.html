@@ -6,12 +6,13 @@
 <meta name="theme-color" content="#111827">
 <meta name="description" content="Control financiero personal — Cero Financiero, liquidez, cuentas, deudas, operaciones y planificación.">
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css?v=2531">
-<link rel="stylesheet" href="deudas-styles.css?v=2531">
-<link rel="stylesheet" href="deudas-centro.css?v=2531">
-<link rel="stylesheet" href="finanzas-v233.css?v=2531">
-<link rel="stylesheet" href="b221-movimientos-liquidez.css?v=2531">
+<link rel="stylesheet" href="styles.css?v=2532">
+<link rel="stylesheet" href="deudas-styles.css?v=2532">
+<link rel="stylesheet" href="deudas-centro.css?v=2532">
+<link rel="stylesheet" href="finanzas-v233.css?v=2532">
+<link rel="stylesheet" href="b221-movimientos-liquidez.css?v=2532">
 <title>Control Financiero · Finanzas</title>
+<script src="b312-hardening-movil.js?v=312.0"></script>
 </head>
 <body>
 <header class="topbar">
@@ -27,7 +28,7 @@
 </section>
 <section id="app" class="hidden">
 <div class="tabs">
-<button data-tab="dashboard" class="active">Resumen</button><button data-tab="movimientos">Movimientos</button><button data-tab="futuros">Pagos futuros</button><button data-tab="calendario">Calendario</button><button data-tab="ahorro">Ahorro</button><button data-tab="deudas">Deudas</button><button data-tab="cuentas">Cuentas</button><button data-tab="operaciones">Operaciones</button><button data-tab="planificacion">Planificación</button>
+<button data-tab="dashboard" class="active">Resumen</button><button data-tab="movimientos">Movimientos</button><button data-tab="futuros">Pagos futuros</button><button data-tab="calendario">Calendario</button><button data-tab="ahorro">Ahorro</button>
 </div>
 <section id="dashboard" class="tab"> <div class="cards"><article class="metric"><span>Saldo actual</span><strong id="saldo">$0</strong></article><article class="metric"><span>Ingresos del mes</span><strong id="ingresosMes">$0</strong></article><article class="metric"><span>Gastos del mes</span><strong id="gastosMes">$0</strong></article><article class="metric"><span>Pagos pendientes</span><strong id="comprometido">$0</strong></article><article class="metric"><span>Disponible proyectado</span><strong id="proyectado">$0</strong></article><article class="metric"><span>Fondo de ahorro</span><strong id="ahorroTotal">$0</strong></article></div><div class="cards two"><article class="metric future-card"><span>Ingresos futuros registrados</span><strong id="ingresosFuturos">$0</strong></article><article class="metric future-card"><span>Gastos futuros registrados</span><strong id="gastosFuturos">$0</strong></article></div><div class="card monthly-summary-card"><div class="section-title"><div><h2>Resumen de pagos y gastos del mes</h2><span class="muted" id="monthlySummaryLabel">Mes en curso</span></div></div><div class="monthly-summary-grid"><article class="summary-box paid-box"><span>Total pagado hasta hoy</span><strong id="totalPagadoMes">$0</strong><small>Gastos registrados con fecha hasta hoy</small></article><article class="summary-box pending-box"><span>Total pendiente del mes</span><strong id="totalPendienteMes">$0</strong><small>Compromisos pendientes del mes</small></article><article class="summary-box total-box"><span>Total de gastos a pagar del mes</span><strong id="totalGastosPagarMes">$0</strong><small>Pagado hasta hoy + pagos pendientes</small></article></div><p class="monthly-summary-note">Este resumen no descuenta automáticamente dinero. Solo informa cuánto ya salió, cuánto sigue pendiente y cuánto representan ambas obligaciones durante el mes.</p></div><div class="card income-plan-card"><div class="section-title"><h2>Plan sugerido de ingresos</h2><span class="muted">Calculado con tus datos reales</span></div><div id="incomePlan"><p class="muted">Calculando sugerencia...</p></div></div><div class="card"><div class="section-title"><h2>Próximos pagos</h2><span class="muted">Mantiene tus pagos programados</span></div><div id="proximosPagos"></div></div></section>
 <section id="movimientos" class="tab hidden"><div class="card"><h2 id="movFormTitle">Registrar movimiento</h2><form id="movForm" class="grid2"><input type="hidden" id="movId"><label>Tipo<select id="movTipo"><option value="ingreso">Ingreso</option><option value="gasto">Gasto</option></select></label><label>Fecha<input id="movFecha" type="date" required></label><label>Monto<input id="movMonto" type="number" min="0" step="1" required></label><label>Categoría<input id="movCategoria" placeholder="Alimentación, combustible..."></label><label class="full">Descripción<input id="movDescripcion" placeholder="Detalle"></label><div class="form-actions full"><button type="submit" id="movSubmit">Guardar movimiento</button><button type="button" id="movCancel" class="secondary hidden">Cancelar edición</button></div></form><p id="movMsg" class="status"></p></div><div class="card"><h2>Historial de movimientos</h2><p class="muted">Los registros con fecha posterior a hoy son futuros y no afectan el saldo actual.</p><div id="movimientosLista"></div></div></section>
@@ -37,17 +38,14 @@
 </section>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=231.1"></script>
-<script src="b219-arquitectura-navegacion.js?v=231.1"></script>
-<script src="b220.2-puente-ejecucion.js?v=231.1"></script>
-<script src="b221-movimientos-liquidez.js?v=231.1"></script>
-<script src="b222-centro-operaciones.js?v=231.1"></script>
-<script src="b223-centro-operaciones-planificacion-fix.js?v=231.1"></script>
-<script src="b224.1-planificacion-integrada.js?v=231.1"></script>
-<script src="b227-ia-financiera.js?v=231.1"></script>
-<script src="b229-movimientos-fondos.js?v=231.1"></script>
-<script src="b230-deuda-flexible.js?v=231.1"></script>
-<script src="b229-dashboard-integral.js?v=231.1"></script>
-<script src="b230-proximos-vencimientos.js?v=231.1"></script>
+<script src="app.js?v=231.2"></script>
+<script src="b219-arquitectura-navegacion.js?v=2532"></script>
+<script src="b227-ia-financiera.js?v=231.2"></script>
+<script src="b229-movimientos-fondos.js?v=231.2"></script>
+<script src="b230-deuda-flexible.js?v=231.2"></script>
+<script src="b229-dashboard-integral.js?v=231.2"></script>
+<script src="b230-proximos-vencimientos.js?v=231.2"></script>
+<script src="b225-motor-multifuente.js?v=225.1"></script>
+<script src="b312-menu-restructure.js?v=312.1"></script>
 </body>
 </html>
