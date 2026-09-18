@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '231.3.3';
+  const VERSION = '231.3.4';
   if (window.B2313AbonosParciales?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -427,7 +427,7 @@
 
   function startObserver() {
     if (observer) return;
-    observer = new MutationObserver(() => setTimeout(install, 30));
+    observer = new MutationObserver(() => setTimeout(() => { install(); dedupePaymentButtons(); }, 30));
     const root = $('deudas');
     if (root) observer.observe(root, {childList:true, subtree:true});
   }
@@ -453,9 +453,127 @@
 
   window.B2313AbonosParciales = api;
 
+  /* ============================================================
+     B231.7 — UNIFICACIÓN DE ACCIONES DE DEUDA
+     Elimina botones de pago duplicados producidos por la doble
+     carga de B220/B220.1. No elimina la acción de abono.
+     ============================================================ */
+  function dedupePaymentButtons() {
+    document.querySelectorAll('.debt-card').forEach(card => {
+      const actions = card.querySelector('.form-actions') || card;
+      const buttons = Array.from(actions.querySelectorAll('button')).filter(b => {
+        const t = lower(b.textContent);
+        return t === 'pagar próxima cuota' ||
+               t === 'registrar pago único';
+      });
+
+      const seen = new Set();
+      buttons.forEach(b => {
+        const key = lower(b.textContent);
+        if (seen.has(key)) {
+          b.remove();
+          return;
+        }
+        seen.add(key);
+      });
+    });
+  }
+
+  /*
+   * B231.7 — eliminación segura de deuda con historial.
+   *
+   * No se eliminan movimientos vinculados automáticamente. La razón
+   * es preservar la trazabilidad financiera y evitar que el trigger
+   * de conciliación B2.10 intente resolver un pago que ya fue borrado.
+   * El historial de movimiento queda intacto y la deuda, sus cuotas,
+   * planes y registros de pago dejan de existir.
+   */
+  async function deleteDebtSafely(id) {
+    if (!confirm(
+      '¿Eliminar esta deuda, sus planes, cuotas y pagos asociados?\n\n' +
+      'Los movimientos financieros ya registrados se conservarán para no romper la trazabilidad.'
+    )) return;
+
+    const u = localStorage.getItem('sf_url');
+    const k = localStorage.getItem('sf_key');
+    if (!u || !k || !window.supabase) {
+      alert('No hay conexión con Supabase.');
+      return;
+    }
+
+    const c = window.supabase.createClient(u, k, {
+      auth: { persistSession:false, autoRefreshToken:false }
+    });
+
+    try {
+      const qr = await c.from('cuotas_deuda').select('id').eq('deuda_id', id);
+      if (qr.error) throw qr.error;
+      const quotaIds = (qr.data || []).map(x => x.id).filter(Boolean);
+
+      /* Desvincular el movimiento antes de eliminar el pago. */
+      if (quotaIds.length) {
+        const pr = await c.from('pagos_deuda')
+          .select('id,cuota_id,movimiento_id')
+          .in('cuota_id', quotaIds);
+        if (pr.error) throw pr.error;
+
+        const payments = pr.data || [];
+        const paymentIds = payments.map(x => x.id).filter(Boolean);
+
+        /*
+         * Primero anulamos la referencia al movimiento. Esto evita que
+         * la eliminación del pago deje una referencia inconsistente.
+         */
+        if (paymentIds.length) {
+          const un = await c.from('pagos_deuda')
+            .update({ movimiento_id:null })
+            .in('id', paymentIds);
+          if (un.error) throw un.error;
+
+          const pd = await c.from('pagos_deuda')
+            .delete()
+            .in('id', paymentIds);
+          if (pd.error) throw pd.error;
+        }
+      }
+
+      const qd = await c.from('cuotas_deuda').delete().eq('deuda_id', id);
+      if (qd.error) throw qd.error;
+
+      const rd = await c.from('renegociaciones_deuda').delete().eq('deuda_id', id);
+      if (rd.error) throw rd.error;
+
+      const dd = await c.from('deudas').delete().eq('id', id);
+      if (dd.error) throw dd.error;
+
+      if (typeof window.loadDeudas === 'function') {
+        await window.loadDeudas();
+      } else {
+        document.querySelector('.tabs button[data-tab="deudas"]')?.click();
+      }
+
+      const detail = $('deudaDetalle');
+      if (detail) detail.innerHTML = '<p class="muted">Deuda eliminada correctamente. Los movimientos históricos se conservaron.</p>';
+
+      alert('Deuda eliminada correctamente. Se conservaron los movimientos financieros históricos.');
+    } catch (error) {
+      console.error('[B231.7] Eliminación segura:', error);
+      alert(
+        'No se pudo eliminar la deuda. No se continuará con pasos adicionales.\n\n' +
+        (error?.message || String(error))
+      );
+      try {
+        if (typeof window.loadDeudas === 'function') await window.loadDeudas();
+      } catch (_) {}
+    }
+  }
+
+  window.eliminarDeuda23 = deleteDebtSafely;
+
   function boot() {
     install();
-    [300,800,1500,2500].forEach(ms => setTimeout(install, ms));
+    dedupePaymentButtons();
+    [300,800,1500,2500].forEach(ms => setTimeout(() => { install(); dedupePaymentButtons(); }, ms));
     startObserver();
   }
 
@@ -465,5 +583,5 @@
     boot();
   }
 
-  console.info('[B231.3] Abonos parciales persistentes —', VERSION);
+  console.info('[B231.7] Motor de deuda unificado — abonos persistentes, acciones sin duplicados y eliminación segura —', VERSION);
 })();
