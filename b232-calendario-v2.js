@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '232.1';
+  const VERSION = '232.2';
   if (window.B232Calendario?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -23,6 +23,17 @@
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
   }[c]));
   const parseDate = s => new Date(`${s}T12:00:00`);
+  const norm = v => String(v ?? '').trim().toLowerCase();
+  const isPendingQuota = q => {
+    const st = norm(q.estado);
+    return !['pagada','pagado','cancelada','cancelado','anulada','anulado'].includes(st);
+  };
+  const isPendingFuture = x => {
+    const st = norm(x.estado);
+    return !st || ['pendiente','vencido','vencida','programado','programada','activo','activa'].includes(st);
+  };
+  const movementType = x => norm(x.tipo);
+
   const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   let client = null;
@@ -51,9 +62,11 @@
       c.from('compromisos')
         .select('*')
         .order('fecha_vencimiento',{ascending:true}),
+      /* B232.2: no filtrar por texto exacto en Supabase.
+         Las instalaciones existentes pueden usar mayúsculas/minúsculas
+         o estados equivalentes. Se filtra localmente para no perder cuotas. */
       c.from('cuotas_deuda')
-        .select('id,deuda_id,numero_cuota,monto,fecha_vencimiento,estado')
-        .in('estado',['pendiente','vencida'])
+        .select('*')
         .order('fecha_vencimiento',{ascending:true}),
       c.from('deudas')
         .select('*')
@@ -64,7 +77,7 @@
     data={
       mov:mov.data||[],
       fut:fut.data||[],
-      quotas:quotas.data||[],
+      quotas:(quotas.data||[]).filter(q => q.fecha_vencimiento && isPendingQuota(q)),
       debts:debtRows.data||[]
     };
     render();
@@ -93,11 +106,11 @@
     const movements=r?.movements||[];
     const commitments=r?.commitments||[];
     const quotas=r?.debtQuotas||[];
-    const incomes=movements.filter(x=>String(x.tipo).toLowerCase()==='ingreso');
-    const expenses=movements.filter(x=>String(x.tipo).toLowerCase()==='gasto');
+    const incomes=movements.filter(x=>movementType(x)==='ingreso');
+    const expenses=movements.filter(x=>movementType(x)==='gasto');
     const scheduled=[
-      ...commitments.map(x=>({source:'Pago futuro',label:commitmentLabel(x),amount:Number(x.monto||0),record:x})),
-      ...quotas.map(x=>({source:'Cuota de deuda',label:debtLabel(x),amount:Number(x.monto||0),record:x}))
+      ...commitments.filter(isPendingFuture).map(x=>({source:'Pago futuro',label:commitmentLabel(x),amount:Number(x.monto||0),record:x})),
+      ...quotas.filter(q=>q.fecha_vencimiento && isPendingQuota(q)).map(x=>({source:'Deuda',label:debtLabel(x),amount:Number(x.monto||0),record:x}))
     ];
     return {
       incomes,
@@ -118,22 +131,22 @@
 
     const movementBy={}, futureBy={}, quotaBy={};
     for(const x of data.mov)(movementBy[x.fecha]??=[]).push(x);
-    for(const x of data.fut.filter(x=>x.estado==='pendiente'))
-      (futureBy[x.fecha_vencimiento]??=[]).push(x);
+    for(const x of data.fut.filter(isPendingFuture))
+      if(x.fecha_vencimiento)(futureBy[x.fecha_vencimiento]??=[]).push(x);
     for(const x of data.quotas)
-      if(x.fecha_vencimiento)(quotaBy[x.fecha_vencimiento]??=[]).push(x);
+      if(x.fecha_vencimiento && isPendingQuota(x))(quotaBy[x.fecha_vencimiento]??=[]).push(x);
 
     const rows=[];
     let running=0;
 
     const beforeMov=data.mov.filter(x=>x.fecha<dateKey(first));
-    const beforeFuture=data.fut.filter(x=>x.estado==='pendiente'&&x.fecha_vencimiento<dateKey(first));
+    const beforeFuture=data.fut.filter(x=>isPendingFuture(x)&&x.fecha_vencimiento<dateKey(first));
     const beforeQuota=data.quotas.filter(x=>x.fecha_vencimiento<dateKey(first));
 
     for(const x of beforeMov)
       running += x.tipo==='ingreso'?Number(x.monto): -Number(x.monto);
     for(const x of beforeFuture) running -= Number(x.monto);
-    for(const x of beforeQuota) running -= Number(x.monto);
+    for(const x of beforeQuota.filter(isPendingQuota)) running -= Number(x.monto);
 
     for(let day=1;day<=last.getDate();day++){
       const key=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
@@ -141,9 +154,9 @@
       const commitments=futureBy[key]||[];
       const debtQuotas=quotaBy[key]||[];
 
-      const income=movements.filter(x=>x.tipo==='ingreso')
+      const income=movements.filter(x=>movementType(x)==='ingreso')
         .reduce((s,x)=>s+Number(x.monto||0),0);
-      const expense=movements.filter(x=>x.tipo==='gasto')
+      const expense=movements.filter(x=>movementType(x)==='gasto')
         .reduce((s,x)=>s+Number(x.monto||0),0);
       const scheduled=commitments.reduce((s,x)=>s+Number(x.monto||0),0);
       const debt=debtQuotas.reduce((s,x)=>s+Number(x.monto||0),0);
@@ -268,7 +281,7 @@
 
         <div class="b232-legend">
           <span>↑ Ingreso</span><span>↓ Gasto</span>
-          <span>● Compromiso</span><span>◆ Cuota de deuda</span>
+          <span>● Pago futuro</span><span>◆ Deuda / cuota</span>
         </div>
 
         <div class="b232-calendar">
@@ -276,8 +289,10 @@
           ${days.map(d=>{
             const key=dateKey(d), r=byKey[key], inMonth=d.getMonth()===m;
             const items=[];
-            for(const x of (r?.movements||[]))
-              items.push(`<span class="b232-event ${x.tipo==='ingreso'?'b232-income':'b232-expense'}">${x.tipo==='ingreso'?'↑':'↓'} ${money(x.monto)}</span>`);
+            for(const x of (r?.movements||[])){
+              const isIncome=movementType(x)==='ingreso';
+              if(isIncome || movementType(x)==='gasto') items.push(`<span class="b232-event ${isIncome?'b232-income':'b232-expense'}">${isIncome?'↑':'↓'} ${money(x.monto)}</span>`);
+            }
             for(const x of (r?.commitments||[]))
               items.push(`<span class="b232-event b232-commitment">● ${money(x.monto)}</span>`);
             for(const x of (r?.debtQuotas||[]))
@@ -335,7 +350,7 @@
               </div>`).join('')}
             ${summary.scheduled.map(x=>`
               <div class="b232-row">
-                <span><strong>${esc(x.label)}</strong><small class="b232-kind">${esc(x.source)} · pendiente</small></span>
+                <span><strong>${esc(x.label)}</strong><small class="b232-kind">${esc(x.source)} · egreso programado / pendiente</small></span>
                 <strong class="b232-negative">-${money(x.amount)}</strong>
               </div>`).join('')}
             ${summary.outflowTotal===0 ? '<p class="muted">No hay egresos registrados ni programados para este día.</p>' : ''}
@@ -343,7 +358,7 @@
         </div>
 
         <div class="b232-row b232-day-total">
-          <span><strong>Flujo neto del día</strong><small class="b232-kind">Ingresos − egresos registrados − pagos programados</small></span>
+          <span><strong>Flujo neto del día</strong><small class="b232-kind">Ingresos − gastos registrados − egresos programados</small></span>
           <strong class="${summary.net>=0?'b232-positive':'b232-negative'}">${summary.net>=0?'+':'-'}${money(Math.abs(summary.net))}</strong>
         </div>
         ${r?`<div class="b232-row"><span>Saldo acumulado al cierre</span><strong>${money(r.balance)}</strong></div>`:''}
