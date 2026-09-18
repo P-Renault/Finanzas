@@ -1,34 +1,10 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prueba Finanzas</title>
-</head>
-
-<body>
-
-<h1>Prueba de Finanzas</h1>
-
-<p>Si puedes escribir aquí, la pantalla táctil funciona correctamente:</p>
-
-<input
-  type="text"
-  placeholder="Escribe aquí"
-  style="font-size:20px;padding:15px;width:90%;">
-
-<br><br>
-
-<input
-  type="text"
-  placeholder="Segundo campo"
-  style="font-size:20px;padding:15px;width:90%;">
-
-<br><br>
-
-<button type="button">
-Botón de prueba
-</button>
-
-</body>
-</html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111827"><meta name="description" content="Control financiero personal — núcleo estable."><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css?v=core-recovery-1"><title>Control Financiero · Finanzas</title></head><body>
+<header class="topbar"><div><h1>Control Financiero</h1><p>Ingresos, gastos, compromisos, ahorro y calendario</p></div><button id="logoutBtn" class="ghost hidden">Salir</button></header>
+<main class="container"><section id="configPanel" class="card"><h2>Conectar base de datos</h2><p class="muted">Conecta esta app con tu proyecto gratuito de Supabase.</p><div class="grid2"><label>Supabase URL<input id="supabaseUrl" type="url" autocomplete="off" placeholder="https://xxxx.supabase.co"></label><label>Supabase Publishable Key<input id="supabaseKey" type="text" autocomplete="off" placeholder="sb_publishable_..."></label></div><button id="saveConfig" type="button">Conectar</button><p id="configMsg" class="status"></p></section>
+<section id="app" class="hidden"><div class="tabs"><button data-tab="dashboard" class="active">Resumen</button><button data-tab="movimientos">Movimientos</button><button data-tab="futuros">Pagos futuros</button><button data-tab="calendario">Calendario</button><button data-tab="ahorro">Ahorro</button></div>
+<section id="dashboard" class="tab"><div class="cards"><article class="metric"><span>Saldo actual</span><strong id="saldo">$0</strong></article><article class="metric"><span>Ingresos del mes</span><strong id="ingresosMes">$0</strong></article><article class="metric"><span>Gastos del mes</span><strong id="gastosMes">$0</strong></article><article class="metric"><span>Pagos pendientes</span><strong id="comprometido">$0</strong></article><article class="metric"><span>Disponible proyectado</span><strong id="proyectado">$0</strong></article><article class="metric"><span>Fondo de ahorro</span><strong id="ahorroTotal">$0</strong></article></div><div class="cards two"><article class="metric"><span>Ingresos futuros registrados</span><strong id="ingresosFuturos">$0</strong></article><article class="metric"><span>Gastos futuros registrados</span><strong id="gastosFuturos">$0</strong></article></div><div class="card"><h2>Resumen de pagos y gastos del mes</h2><span class="muted" id="monthlySummaryLabel">Mes en curso</span><div class="monthly-summary-grid"><article class="summary-box"><span>Total pagado hasta hoy</span><strong id="totalPagadoMes">$0</strong></article><article class="summary-box"><span>Total pendiente del mes</span><strong id="totalPendienteMes">$0</strong></article><article class="summary-box"><span>Total de gastos a pagar del mes</span><strong id="totalGastosPagarMes">$0</strong></article></div></div><div class="card"><h2>Plan sugerido de ingresos</h2><div id="incomePlan"><p class="muted">Calculando sugerencia...</p></div></div><div class="card"><h2>Próximos pagos</h2><div id="proximosPagos"></div></div><p id="appStatus" class="status"></p></section>
+<section id="movimientos" class="tab hidden"><div class="card"><h2 id="movFormTitle">Registrar movimiento</h2><form id="movForm" class="grid2"><input type="hidden" id="movId"><label>Tipo<select id="movTipo"><option value="ingreso">Ingreso</option><option value="gasto">Gasto</option></select></label><label>Fecha<input id="movFecha" type="date" required></label><label>Monto<input id="movMonto" type="number" min="0" step="1" required></label><label>Categoría<input id="movCategoria"></label><label class="full">Descripción<input id="movDescripcion"></label><div class="form-actions full"><button type="submit" id="movSubmit">Guardar movimiento</button><button type="button" id="movCancel" class="secondary hidden">Cancelar edición</button></div></form><p id="movMsg" class="status"></p></div><div class="card"><h2>Historial de movimientos</h2><div id="movimientosLista"></div></div></section>
+<section id="futuros" class="tab hidden"><div class="card"><h2 id="futureFormTitle">Crear pago o compromiso futuro</h2><form id="futureForm" class="grid2"><input type="hidden" id="futureId"><label>Concepto<input id="futureConcepto" required></label><label>Fecha de vencimiento<input id="futureFecha" type="date" required></label><label>Monto<input id="futureMonto" type="number" min="0" step="1" required></label><label>Categoría<input id="futureCategoria"></label><label>Periodicidad<select id="futureRecurrence"><option value="unico">Único</option><option value="mensual">Mensual</option><option value="semanal">Semanal</option><option value="anual">Anual</option></select></label><label class="full">Notas<input id="futureNotas"></label><div class="form-actions full"><button type="submit" id="futureSubmit">Crear compromiso</button><button type="button" id="futureCancel" class="secondary hidden">Cancelar edición</button></div></form><p id="futureMsg" class="status"></p></div><div class="card"><h2>Compromisos futuros</h2><div id="futurosLista"></div></div></section>
+<section id="calendario" class="tab hidden"><div class="card"><div class="calendar-toolbar"><button id="calPrev" class="nav-month">‹</button><div class="calendar-heading"><h2 id="calendarMonth">Septiembre 2026</h2><span>Plan mensual de ingresos y pagos</span></div><button id="calNext" class="nav-month">›</button></div><button id="calToday" class="secondary today-btn">Ir a hoy</button><div class="calendar-metrics"><article><span>Ingresos registrados</span><strong id="calIncome">$0</strong></article><article><span>Gastos registrados</span><strong id="calExpenses">$0</strong></article><article><span>Pagos programados</span><strong id="calPayments">$0</strong></article><article><span>Saldo al cierre</span><strong id="calFinalBalance">$0</strong></article></div><div class="calendar-scroll"><div class="calendar-grid week-head"><div>DOM</div><div>LUN</div><div>MAR</div><div>MIÉ</div><div>JUE</div><div>VIE</div><div>SÁB</div></div><div id="calendarGrid" class="calendar-grid"></div></div><p id="calMonthNote" class="muted calendar-note"></p><div id="calendarDayDetails" class="calendar-day-details"><p class="muted">Selecciona un día.</p></div></div></section>
+<section id="ahorro" class="tab hidden"><div class="card"><h2 id="savingFormTitle">Fondo de ahorro</h2><form id="savingForm" class="grid2"><input type="hidden" id="savingId"><label>Tipo<select id="savingTipo"><option value="aporte">Aporte</option><option value="retiro">Retiro</option></select></label><label>Fecha<input id="savingFecha" type="date" required></label><label>Monto<input id="savingMonto" type="number" min="0" step="1" required></label><label class="full">Descripción<input id="savingDescripcion"></label><div class="form-actions full"><button type="submit" id="savingSubmit">Registrar</button><button type="button" id="savingCancel" class="secondary hidden">Cancelar edición</button></div></form><p class="big-number" id="savingBalance">$0</p><p id="savingMsg" class="status"></p></div><div class="card"><h2>Historial de ahorro</h2><div id="ahorroLista"></div></div></section></section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="app.js?v=core-recovery-1"></script></body></html>
