@@ -1431,8 +1431,40 @@
     /* B231.1: CUOTAS sin fecha se conservan como deuda
        pendiente, sin generar todavía cuotas calendarizadas. */
     if (modalidad === 'CUOTAS' && !fechaPrimera) {
+      /* Verificación específica B231.1: la deuda debe quedar sin fecha
+         tanto en fecha_primera_cuota como en fecha_proximo_pago. */
+      const undatedCheck = await c
+        .from('deudas')
+        .select('id,numero_cuotas,cuota_acordada,fecha_primera_cuota,fecha_proximo_pago')
+        .eq('id', debtId)
+        .single();
+
+      if (undatedCheck.error) {
+        await c.from('deudas').delete().eq('id', debtId);
+        $('deudasMsg').textContent =
+          'La deuda se registró, pero no se pudo verificar la persistencia B231.1: ' +
+          undatedCheck.error.message;
+        await loadDebts();
+        return;
+      }
+
+      const savedUndated = undatedCheck.data;
+
+      if (
+        Number(savedUndated.numero_cuotas || 0) !== cuotas ||
+        Number(savedUndated.cuota_acordada || 0) !== cuota ||
+        savedUndated.fecha_primera_cuota !== null ||
+        savedUndated.fecha_proximo_pago !== null
+      ) {
+        await c.from('deudas').delete().eq('id', debtId);
+        $('deudasMsg').textContent =
+          'ERROR DE PERSISTENCIA B231.1: la deuda sin fecha no quedó almacenada con los valores esperados.';
+        await loadDebts();
+        return;
+      }
+
       $('deudasMsg').textContent =
-        `Deuda registrada correctamente con ${cuotas} cuotas acordadas, pero sin fecha. El plan se podrá calendarizar posteriormente.`;
+        `Deuda registrada correctamente con ${cuotas} cuotas acordadas, sin fecha de pago.`;
 
       resetDebt();
       await loadDebts();
@@ -1909,6 +1941,11 @@
     if (!$('deudaForm')) return;
 
     $('deudaCancel').onclick = resetDebt;
+
+    /* B231.1-R1: sincronizar el estado antes de registrar el
+       controlador. Evita que el HTML5 required conserve un estado
+       antiguo al cambiar entre CUOTAS/UNICO/SIN_FECHA. */
+    syncDebtDateState();
 
     $('deudaForm').onsubmit = saveDebt;
 
