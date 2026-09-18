@@ -1,72 +1,72 @@
 /* FINANZAS V2.3.3 — Cero Financiero + Liquidez + Cuentas + edición/reconstrucción de deudas */
 (() => {
 
-  const $=id=>document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
-  const money=n=>
-    new Intl.NumberFormat('es-CL',{
-      style:'currency',
-      currency:'CLP',
-      maximumFractionDigits:0
-    }).format(Number(n)||0);
+  const money = n =>
+    new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0
+    }).format(Number(n) || 0);
 
-  const today=()=>{
-    const d=new Date();
+  const today = () => {
+    const d = new Date();
 
     return new Date(
-      d.getTime()-d.getTimezoneOffset()*60000
-    ).toISOString().slice(0,10)
+      d.getTime() - d.getTimezoneOffset() * 60000
+    ).toISOString().slice(0, 10);
   };
 
-  const esc=v=>
-    String(v??'').replace(
+  const esc = v =>
+    String(v ?? '').replace(
       /[&<>"']/g,
-      c=>({
-        '&':'&amp;',
-        '<':'&lt;',
-        '>':'&gt;',
-        '"':'&quot;',
-        "'":'&#039;'
+      c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
       }[c])
     );
 
-  let client=null,
-      accounts=[],
-      debts=[],
-      selected=null,
-      plans=[],
-      quotas=[];
+  let client = null;
+  let accounts = [];
+  let debts = [];
+  let selected = null;
+  let plans = [];
+  let quotas = [];
 
 
   /* ============================================================
      CONEXIÓN SUPABASE
      ============================================================ */
 
-  async function db(){
+  async function db() {
 
-    if(client)
+    if (client)
       return client;
 
-    const u=
+    const u =
       localStorage.getItem('sf_url');
 
-    const k=
+    const k =
       localStorage.getItem('sf_key');
 
-    if(
-      !u||
-      !k||
+    if (
+      !u ||
+      !k ||
       !window.supabase
     )
       return null;
 
-    client=
+    client =
       window.supabase.createClient(
         u,
         k
       );
 
-    return client
+    return client;
   }
 
 
@@ -74,60 +74,60 @@
      NAVEGACIÓN
      ============================================================ */
 
-  function tab(id){
+  function tab(id) {
 
     document
       .querySelectorAll('.tabs button')
-      .forEach(b=>
+      .forEach(b =>
         b.classList.toggle(
           'active',
-          b.dataset.tab===id
+          b.dataset.tab === id
         )
       );
 
     document
       .querySelectorAll('.tab')
-      .forEach(s=>
+      .forEach(s =>
         s.classList.add('hidden')
       );
 
-    $(id)?.classList.remove('hidden')
+    $(id)?.classList.remove('hidden');
   }
 
 
-  function injectTabs(){
+  function injectTabs() {
 
-    const t=
+    const t =
       document.querySelector('.tabs');
 
-    if(!t)
+    if (!t)
       return;
 
     [
-      ['deudas','Deudas'],
-      ['cuentas','Cuentas']
-    ].forEach(([id,label])=>{
+      ['deudas', 'Deudas'],
+      ['cuentas', 'Cuentas']
+    ].forEach(([id, label]) => {
 
-      if(
+      if (
         !t.querySelector(
           `[data-tab="${id}"]`
         )
-      ){
+      ) {
 
-        const b=
+        const b =
           document.createElement('button');
 
-        b.type='button';
+        b.type = 'button';
 
-        b.dataset.tab=id;
+        b.dataset.tab = id;
 
-        b.textContent=label;
+        b.textContent = label;
 
-        b.onclick=()=>tab(id);
+        b.onclick = () => tab(id);
 
-        t.appendChild(b)
+        t.appendChild(b);
       }
-    })
+    });
   }
 
 
@@ -135,11 +135,11 @@
      SECCIONES
      ============================================================ */
 
-  function injectSections(){
+  function injectSections() {
 
-    const app=$('app');
+    const app = $('app');
 
-    if(!app)
+    if (!app)
       return;
 
 
@@ -147,16 +147,16 @@
        CUENTAS
        ========================================================== */
 
-    if(!$('cuentas')){
+    if (!$('cuentas')) {
 
-      const s=
+      const s =
         document.createElement('section');
 
-      s.id='cuentas';
+      s.id = 'cuentas';
 
-      s.className='tab hidden';
+      s.className = 'tab hidden';
 
-      s.innerHTML=`
+      s.innerHTML = `
 
         <div class="card">
 
@@ -345,7 +345,7 @@
         </div>
       `;
 
-      app.appendChild(s)
+      app.appendChild(s);
     }
 
 
@@ -353,16 +353,16 @@
        DEUDAS
        ========================================================== */
 
-    if(!$('deudas')){
+    if (!$('deudas')) {
 
-      const s=
+      const s =
         document.createElement('section');
 
-      s.id='deudas';
+      s.id = 'deudas';
 
-      s.className='tab hidden';
+      s.className = 'tab hidden';
 
-      s.innerHTML=`
+      s.innerHTML = `
 
         <div class="card">
 
@@ -726,7 +726,7 @@
 
       `;
 
-      app.appendChild(s)
+      app.appendChild(s);
     }
   }
 
@@ -735,77 +735,77 @@
      CUENTAS
      ============================================================ */
 
-  async function loadAccounts(){
+  async function loadAccounts() {
 
-    const c=await db();
+    const c = await db();
 
-    if(
-      !c||
+    if (
+      !c ||
       !$('cuentasLista')
     )
       return;
 
-    const r=
+    const r =
       await c
         .from('cuentas_bancarias')
         .select('*')
         .order(
           'activa',
-          {ascending:false}
+          { ascending: false }
         )
         .order(
           'nombre_banco'
         );
 
-    if(r.error){
+    if (r.error) {
 
-      $('cuentaMsg').textContent=
+      $('cuentaMsg').textContent =
         r.error.message;
 
-      return
+      return;
     }
 
-    accounts=
-      r.data||[];
+    accounts =
+      r.data || [];
 
-    renderAccounts()
+    renderAccounts();
   }
 
 
-  function renderAccounts(){
+  function renderAccounts() {
 
-    const active=
+    const active =
       accounts.filter(
-        a=>a.activa!==false
+        a => a.activa !== false
       );
 
-    const total=
+    const total =
       active.reduce(
-        (s,a)=>
-          s+
+        (s, a) =>
+          s +
           Number(
-            a.saldo_actual??
-            a.saldo_apertura??
+            a.saldo_actual ??
+            a.saldo_apertura ??
             0
           ),
         0
       );
 
-    if(
+    if (
       $('liquidezCuentasTotal')
-    ){
+    ) {
 
       $('liquidezCuentasTotal')
-        .textContent=
-          money(total)
+        .textContent =
+        money(total);
     }
 
 
-    $('cuentasLista').innerHTML=
+    $('cuentasLista').innerHTML =
       accounts.length
         ?
-          accounts
-            .map(a=>`
+        accounts
+          .map(a => `
 
               <article class="account-row">
 
@@ -814,9 +814,9 @@
                   <span class="muted">
 
                     ${esc(
-                      a.tipo_cuenta||
-                      'Cuenta'
-                    )}
+            a.tipo_cuenta ||
+            'Cuenta'
+          )}
 
                   </span>
 
@@ -824,8 +824,8 @@
                   <h3>
 
                     ${esc(
-                      a.nombre_banco
-                    )}
+            a.nombre_banco
+          )}
 
                   </h3>
 
@@ -833,18 +833,18 @@
                   <p>
 
                     ${esc(
-                      a.nombre_cuenta
-                    )}
+            a.nombre_cuenta
+          )}
 
                     ${
-                      a.identificador
-                        ?
-                          ` · ${esc(
-                            a.identificador
-                          )}`
-                        :
-                          ''
-                    }
+            a.identificador
+              ?
+              ` · ${esc(
+                a.identificador
+              )}`
+              :
+              ''
+          }
 
                   </p>
 
@@ -856,8 +856,8 @@
                   <strong>
 
                     ${money(
-                      a.saldo_actual
-                    )}
+            a.saldo_actual
+          )}
 
                   </strong>
 
@@ -866,8 +866,8 @@
 
                     Apertura
                     ${money(
-                      a.saldo_apertura
-                    )}
+            a.saldo_apertura
+          )}
 
                   </small>
 
@@ -901,9 +901,9 @@
               </article>
 
             `)
-            .join('')
+          .join('')
         :
-          `
+        `
 
             <p class="muted">
 
@@ -913,72 +913,72 @@
 
             </p>
 
-          `
+          `;
   }
 
 
-  function resetAccount(){
+  function resetAccount() {
 
-    const f=
+    const f =
       $('cuentaForm');
 
-    if(f)
+    if (f)
       f.reset();
 
-    $('cuentaId').value='';
+    $('cuentaId').value = '';
 
-    $('cuentaFecha').value=
+    $('cuentaFecha').value =
       today();
 
-    $('cuentaSubmit').textContent=
+    $('cuentaSubmit').textContent =
       'Registrar cuenta';
 
     $('cuentaCancel')
       .classList
-      .add('hidden')
+      .add('hidden');
   }
 
 
-  window.editarCuenta23=
-    id=>{
+  window.editarCuenta23 =
+    id => {
 
-      const a=
+      const a =
         accounts.find(
-          x=>
-            Number(x.id)===
+          x =>
+            Number(x.id) ===
             Number(id)
         );
 
-      if(!a)
+      if (!a)
         return;
 
 
-      $('cuentaId').value=
+      $('cuentaId').value =
         a.id;
 
-      $('cuentaBanco').value=
-        a.nombre_banco||'';
+      $('cuentaBanco').value =
+        a.nombre_banco || '';
 
-      $('cuentaNombre').value=
-        a.nombre_cuenta||'';
+      $('cuentaNombre').value =
+        a.nombre_cuenta || '';
 
-      $('cuentaTipo').value=
-        a.tipo_cuenta||'Otro';
+      $('cuentaTipo').value =
+        a.tipo_cuenta || 'Otro';
 
-      $('cuentaIdentificador').value=
-        a.identificador||'';
+      $('cuentaIdentificador').value =
+        a.identificador || '';
 
-      $('cuentaApertura').value=
-        a.saldo_apertura||0;
+      $('cuentaApertura').value =
+        a.saldo_apertura || 0;
 
-      $('cuentaFecha').value=
-        a.fecha_corte||
+      $('cuentaFecha').value =
+        a.fecha_corte ||
         today();
 
-      $('cuentaNotas').value=
-        a.notas||'';
+      $('cuentaNotas').value =
+        a.notas || '';
 
-      $('cuentaSubmit').textContent=
+      $('cuentaSubmit').textContent =
         'Guardar cambios';
 
       $('cuentaCancel')
@@ -988,30 +988,30 @@
       tab('cuentas');
 
       scrollTo({
-        top:0,
-        behavior:'smooth'
-      })
+        top: 0,
+        behavior: 'smooth'
+      });
     };
 
 
-  window.eliminarCuenta23=
-    async id=>{
+  window.eliminarCuenta23 =
+    async id => {
 
-      if(
+      if (
         !confirm(
           '¿Eliminar esta cuenta del catálogo?'
         )
       )
         return;
 
-      const c=
+      const c =
         await db();
 
-      if(!c)
+      if (!c)
         return;
 
 
-      const r=
+      const r =
         await c
           .from('cuentas_bancarias')
           .delete()
@@ -1020,39 +1020,39 @@
             id
           );
 
-      if(r.error)
+      if (r.error)
         return alert(
           r.error.message
         );
 
       await loadAccounts();
 
-      await renderLiquidity()
+      await renderLiquidity();
     };
 
 
-  function setupAccountForm(){
+  function setupAccountForm() {
 
-    $('cuentaCancel').onclick=
+    $('cuentaCancel').onclick =
       resetAccount;
 
 
-    $('cuentaForm').onsubmit=
-      async e=>{
+    $('cuentaForm').onsubmit =
+      async e => {
 
         e.preventDefault();
 
-        const c=
+        const c =
           await db();
 
-        if(!c)
+        if (!c)
           return;
 
-        const id=
+        const id =
           $('cuentaId').value;
 
 
-        const p={
+        const p = {
 
           nombre_banco:
             $('cuentaBanco')
@@ -1071,19 +1071,19 @@
           identificador:
             $('cuentaIdentificador')
               .value
-              .trim()||
+              .trim() ||
             null,
 
           saldo_apertura:
             Number(
               $('cuentaApertura')
-                .value||0
+                .value || 0
             ),
 
           saldo_actual:
             Number(
               $('cuentaApertura')
-                .value||0
+                .value || 0
             ),
 
           fecha_corte:
@@ -1093,59 +1093,59 @@
           notas:
             $('cuentaNotas')
               .value
-              .trim()||
+              .trim() ||
             null,
 
-          activa:true
+          activa: true
 
         };
 
 
-        const r=
+        const r =
           id
             ?
-              await c
-                .from(
-                  'cuentas_bancarias'
-                )
-                .update(p)
-                .eq(
-                  'id',
-                  id
-                )
+            await c
+              .from(
+                'cuentas_bancarias'
+              )
+              .update(p)
+              .eq(
+                'id',
+                id
+              )
             :
-              await c
-                .from(
-                  'cuentas_bancarias'
-                )
-                .insert(p);
+            await c
+              .from(
+                'cuentas_bancarias'
+              )
+              .insert(p);
 
 
-        if(r.error){
+        if (r.error) {
 
           $('cuentaMsg')
-            .textContent=
-              r.error.message;
+            .textContent =
+            r.error.message;
 
-          return
+          return;
         }
 
 
         $('cuentaMsg')
-          .textContent=
-            id
-              ?
-                'Cuenta actualizada.'
-              :
-                'Cuenta registrada.';
+          .textContent =
+          id
+            ?
+            'Cuenta actualizada.'
+            :
+            'Cuenta registrada.';
 
 
         resetAccount();
 
         await loadAccounts();
 
-        await renderLiquidity()
-      }
+        await renderLiquidity();
+      };
   }
 
 
@@ -1153,59 +1153,59 @@
      LIQUIDEZ
      ============================================================ */
 
-  async function renderLiquidity(){
+  async function renderLiquidity() {
 
-    const d=
+    const d =
       $('dashboard');
 
-    if(!d)
+    if (!d)
       return;
 
 
-    let box=
+    let box =
       $('fin23Liquidity');
 
 
-    if(!box){
+    if (!box) {
 
-      box=
+      box =
         document.createElement('div');
 
-      box.id=
+      box.id =
         'fin23Liquidity';
 
-      box.className=
+      box.className =
         'card liquidity-card';
 
 
-      const a=
+      const a =
         d.querySelector(
           '.cards'
         );
 
 
-      if(a){
+      if (a) {
 
         a.insertAdjacentElement(
           'beforebegin',
           box
-        )
+        );
 
-      }else{
+      } else {
 
-        d.prepend(box)
+        d.prepend(box);
       }
     }
 
 
-    const c=
+    const c =
       await db();
 
-    if(!c)
+    if (!c)
       return;
 
 
-    const cr=
+    const cr =
       await c
         .from(
           'cierres_financieros'
@@ -1218,18 +1218,18 @@
         .order(
           'fecha_corte',
           {
-            ascending:false
+            ascending: false
           }
         )
         .limit(1)
         .maybeSingle();
 
 
-    if(cr.error)
+    if (cr.error)
       return;
 
 
-    const ac=
+    const ac =
       await c
         .from(
           'cuentas_bancarias'
@@ -1241,32 +1241,32 @@
         );
 
 
-    const opening=
+    const opening =
       Number(
-        cr.data?.saldo_inicial||0
+        cr.data?.saldo_inicial || 0
       );
 
 
-    const accountTotal=
-      (ac.data||[])
+    const accountTotal =
+      (ac.data || [])
         .reduce(
-          (s,a)=>
-            s+
+          (s, a) =>
+            s +
             Number(
-              a.saldo_actual||0
+              a.saldo_actual || 0
             ),
           0
         );
 
 
-    const cash=
+    const cash =
       Math.max(
         0,
-        opening-accountTotal
+        opening - accountTotal
       );
 
 
-    box.innerHTML=`
+    box.innerHTML = `
 
       <div class="section-title">
 
@@ -1277,9 +1277,9 @@
             CERO FINANCIERO ·
 
             ${esc(
-              cr.data?.fecha_corte||
-              '2026-09-17'
-            )}
+      cr.data?.fecha_corte ||
+      today()
+    )}
 
           </span>
 
@@ -1354,31 +1354,31 @@
         catálogo y se agregan a la liquidez controlada.
 
       </p>
-    `
+    `;
   }
 
 
-  window.fin23GoAccounts=
-    ()=>tab('cuentas');
+  window.fin23GoAccounts =
+    () => tab('cuentas');
 
 
   /* ============================================================
      DEUDAS — CARGA
      ============================================================ */
 
-  async function loadDebts(){
+  async function loadDebts() {
 
-    const c=
+    const c =
       await db();
 
-    if(
-      !c||
+    if (
+      !c ||
       !$('deudasLista')
     )
       return;
 
 
-    const r=
+    const r =
       await c
         .from(
           'v_deudas_resumen'
@@ -1389,23 +1389,23 @@
         );
 
 
-    if(r.error){
+    if (r.error) {
 
       $('deudasMsg')
-        .textContent=
-          r.error.message;
+        .textContent =
+        r.error.message;
 
-      return
+      return;
     }
 
 
-    debts=
-      r.data||[];
+    debts =
+      r.data || [];
 
 
     renderDebtList();
 
-    await renderDebtSummary()
+    await renderDebtSummary();
   }
 
 
@@ -1413,87 +1413,87 @@
      RESUMEN DE DEUDAS
      ============================================================ */
 
-  async function renderDebtSummary(){
+  async function renderDebtSummary() {
 
-    const a=
+    const a =
       debts.filter(
-        d=>
+        d =>
           ![
             'pagada',
             'cancelada'
           ].includes(
             String(
-              d.estado||''
+              d.estado || ''
             ).toLowerCase()
           )
       );
 
 
     $('deudaOriginalTotal')
-      .textContent=
-        money(
-          a.reduce(
-            (s,d)=>
-              s+
-              Number(
-                d.monto_original||0
-              ),
-            0
-          )
-        );
+      .textContent =
+      money(
+        a.reduce(
+          (s, d) =>
+            s +
+            Number(
+              d.monto_original || 0
+            ),
+          0
+        )
+      );
 
 
     $('deudaSaldoTotal')
-      .textContent=
-        money(
-          a.reduce(
-            (s,d)=>
-              s+
-              Number(
-                d.saldo_actual||0
-              ),
-            0
-          )
-        );
+      .textContent =
+      money(
+        a.reduce(
+          (s, d) =>
+            s +
+            Number(
+              d.saldo_actual || 0
+            ),
+          0
+        )
+      );
 
 
     $('deudaCuotasTotal')
-      .textContent=
-        String(
-          a.reduce(
-            (s,d)=>
-              s+
-              Number(
-                d.numero_cuotas_pendientes||0
-              ),
-            0
-          )
-        );
+      .textContent =
+      String(
+        a.reduce(
+          (s, d) =>
+            s +
+            Number(
+              d.numero_cuotas_pendientes || 0
+            ),
+          0
+        )
+      );
 
 
-    const c=
+    const c =
       await db();
 
-    if(!c)
+    if (!c)
       return;
 
 
-    const t=
+    const t =
       today();
 
 
-    const e=
+    const e =
       new Date(
-        t+'T12:00:00'
+        t + 'T12:00:00'
       );
 
 
     e.setDate(
-      e.getDate()+30
+      e.getDate() + 30
     );
 
 
-    const r=
+    const r =
       await c
         .from(
           'cuotas_deuda'
@@ -1512,23 +1512,23 @@
         )
         .lte(
           'fecha_vencimiento',
-          e.toISOString().slice(0,10)
+          e.toISOString().slice(0, 10)
         );
 
 
     $('deuda30Total')
-      .textContent=
-        money(
-          (r.data||[])
-            .reduce(
-              (s,q)=>
-                s+
-                Number(
-                  q.monto||0
-                ),
-              0
-            )
-        )
+      .textContent =
+      money(
+        (r.data || [])
+          .reduce(
+            (s, q) =>
+              s +
+              Number(
+                q.monto || 0
+              ),
+            0
+          )
+      );
   }
 
 
@@ -1536,13 +1536,13 @@
      LISTA DE DEUDAS
      ============================================================ */
 
-  function renderDebtList(){
+  function renderDebtList() {
 
-    $('deudasLista').innerHTML=
+    $('deudasLista').innerHTML =
       debts.length
         ?
-          debts
-            .map(d=>`
+        debts
+          .map(d => `
 
               <article class="debt-card">
 
@@ -1551,9 +1551,9 @@
                   <span class="debt-type">
 
                     ${esc(
-                      d.tipo_acreedor||
-                      'Sin clasificar'
-                    )}
+            d.tipo_acreedor ||
+            'Sin clasificar'
+          )}
 
                   </span>
 
@@ -1561,8 +1561,8 @@
                   <h3>
 
                     ${esc(
-                      d.acreedor
-                    )}
+            d.acreedor
+          )}
 
                   </h3>
 
@@ -1570,8 +1570,8 @@
                   <p>
 
                     ${esc(
-                      d.concepto||''
-                    )}
+            d.concepto || ''
+          )}
 
                   </p>
 
@@ -1588,8 +1588,8 @@
                   <strong>
 
                     ${money(
-                      d.saldo_actual
-                    )}
+            d.saldo_actual
+          )}
 
                   </strong>
 
@@ -1598,8 +1598,8 @@
 
                     Original:
                     ${money(
-                      d.monto_original
-                    )}
+            d.monto_original
+          )}
 
                   </small>
 
@@ -1611,8 +1611,8 @@
                   <span>
 
                     ${Number(
-                      d.numero_cuotas_pendientes||0
-                    )}
+            d.numero_cuotas_pendientes || 0
+          )}
 
                     cuotas pendientes
 
@@ -1624,9 +1624,9 @@
                     Próximo:
 
                     ${esc(
-                      d.proximo_vencimiento||
-                      '—'
-                    )}
+            d.proximo_vencimiento ||
+            '—'
+          )}
 
                   </span>
 
@@ -1670,9 +1670,9 @@
               </article>
 
             `)
-            .join('')
+          .join('')
         :
-          `
+        `
 
             <p class="muted">
 
@@ -1680,7 +1680,7 @@
 
             </p>
 
-          `
+          `;
   }
 
 
@@ -1688,135 +1688,141 @@
      B231 — MODELO DE MODALIDAD
      ============================================================ */
 
-  function setDebtModality(mode){
+  function setDebtModality(mode) {
 
-    const m=
+    const m =
       $('deudaModalidad');
 
-    const cw=
+    const cw =
       $('deudaCuotasWrap');
 
-    const qw=
+    const qw =
       $('deudaCuotaWrap');
 
-    const n=
+    const n =
       $('deudaCuotas');
 
-    const q=
+    const q =
       $('deudaCuota');
 
 
-    if(!m)
+    if (!m)
       return;
 
 
-    const unico=
-      mode==='UNICO';
+    const unico =
+      mode === 'UNICO';
 
 
-    m.value=
+    m.value =
       unico
         ?
-          'UNICO'
+        'UNICO'
         :
-          'CUOTAS';
+        'CUOTAS';
 
 
-    if(cw){
+    if (cw) {
 
-      cw.style.display=
+      cw.style.display =
         unico
           ?
-            'none'
+          'none'
           :
-            ''
+          '';
     }
 
 
-    if(qw){
+    if (qw) {
 
-      qw.style.display=
+      qw.style.display =
         unico
           ?
-            'none'
+          'none'
           :
-            ''
+          '';
     }
 
 
-    if(n){
+    if (n) {
 
-      n.disabled=
+      n.disabled =
         unico;
 
-      n.required=
+      n.required =
         !unico;
 
 
-      if(unico){
+      if (unico) {
 
-        n.value=''
+        n.value = '';
 
-      }else if(!n.value){
+      } else if (!n.value) {
 
-        n.value='1'
+        /*
+         * B231.5:
+         * NO se inventa una cuota.
+         *
+         * El usuario debe declarar
+         * explícitamente el número de cuotas.
+         */
+
+        n.value = '';
       }
     }
 
 
-    if(q){
+    if (q) {
 
-      q.disabled=
+      q.disabled =
         unico;
 
-      q.required=
+      q.required =
         !unico;
 
 
-      if(unico){
+      if (unico) {
 
-        q.value=''
+        q.value = '';
       }
     }
 
 
-    const help=
+    const help =
       $('deudaModalidadHelp');
 
 
-    if(help){
+    if (help) {
 
-      help.textContent=
+      help.textContent =
         unico
 
           ?
 
-            'Pago único: no existe un acuerdo vigente de cuotas. Puede tener fecha de vencimiento o quedar sin fecha; no se generará plan de cuotas.'
+          'Pago único: no existe un acuerdo vigente de cuotas. Puede tener fecha de vencimiento o quedar sin fecha; no se generará plan de cuotas.'
 
           :
 
-            'Cuotas: existe un acuerdo de pago en cuotas. Se generará el plan usando número, monto, frecuencia y primera cuota.'
+          'Cuotas: existe un acuerdo de pago en cuotas. Se generará el plan usando número, monto, frecuencia y primera cuota.';
     }
   }
 
 
-  function currentDebtModality(){
+  /* ============================================================
+     B231.5 — MODALIDAD ACTUAL
+     ============================================================ */
 
-    const m=
+  function currentDebtModality() {
+
+    const m =
       $('deudaModalidad');
 
-
-    return
-      m&&
-      m.value==='UNICO'
-
-        ?
-
-          'UNICO'
-
-        :
-
-          'CUOTAS'
+    return (
+      m &&
+      m.value === 'UNICO'
+    )
+      ? 'UNICO'
+      : 'CUOTAS';
   }
 
 
@@ -1824,112 +1830,106 @@
      CARGA DE DEUDA EN FORMULARIO
      ============================================================ */
 
-  function fillDebt(d){
+  function fillDebt(d) {
 
-    $('deudaId').value=
+    $('deudaId').value =
       d.id;
 
 
-    $('deudaTipo').value=
-      d.tipo_acreedor||
+    $('deudaTipo').value =
+      d.tipo_acreedor ||
       'Otro';
 
 
-    $('deudaAcreedor').value=
-      d.acreedor||
+    $('deudaAcreedor').value =
+      d.acreedor ||
       '';
 
 
-    $('deudaConcepto').value=
-      d.concepto||
+    $('deudaConcepto').value =
+      d.concepto ||
       '';
 
 
-    $('deudaMonto').value=
-      d.monto_original||
+    $('deudaMonto').value =
+      d.monto_original ||
       0;
 
 
-    $('deudaSaldo').value=
-      d.saldo_actual||
+    $('deudaSaldo').value =
+      d.saldo_actual ||
       0;
 
 
-    $('deudaTasa').value=
-      d.tasa_anual||
+    $('deudaTasa').value =
+      d.tasa_anual ||
       0;
 
 
     /*
-     * Una deuda existente se interpreta como
-     * PAGO ÚNICO cuando no existe un número
-     * de cuotas válido o cuando frecuencia = unico.
+     * B231.5
+     *
+     * La existencia de cuotas es la fuente
+     * primaria para determinar la modalidad.
+     *
+     * No usamos frecuencia='unico' para
+     * sobreescribir un acuerdo que posee
+     * numero_cuotas válido.
      */
 
-    const modalidad=
-      String(
-        d.frecuencia||''
-      ).toLowerCase()==='unico'||
+    const numeroCuotas =
       Number(
-        d.numero_cuotas||0
-      )<=0
+        d.numero_cuotas || 0
+      );
 
-        ?
-          'UNICO'
+    const modalidad =
+      numeroCuotas > 0
+        ? 'CUOTAS'
+        : 'UNICO';
 
-        :
-          'CUOTAS';
 
-
-    $('deudaModalidad').value=
+    $('deudaModalidad').value =
       modalidad;
 
 
-    $('deudaCuotas').value=
-      modalidad==='UNICO'
-
+    $('deudaCuotas').value =
+      modalidad === 'UNICO'
         ?
-          ''
-
+        ''
         :
-          (
-            d.numero_cuotas||
-            1
-          );
+        numeroCuotas;
 
 
-    $('deudaCuota').value=
-      modalidad==='UNICO'
-
+    $('deudaCuota').value =
+      modalidad === 'UNICO'
         ?
-          ''
-
+        ''
         :
-          (
-            d.cuota_acordada||
-            d.cuota||
-            0
-          );
+        (
+          d.cuota_acordada ||
+          d.cuota ||
+          0
+        );
 
 
-    $('deudaInicio').value=
-      d.fecha_inicio||
+    $('deudaInicio').value =
+      d.fecha_inicio ||
       today();
 
 
-    $('deudaPrimeraCuota').value=
-      d.fecha_primera_cuota||
-      d.fecha_proximo_pago||
+    $('deudaPrimeraCuota').value =
+      d.fecha_primera_cuota ||
+      d.fecha_proximo_pago ||
       today();
 
 
-    $('deudaFrecuencia').value=
-      d.frecuencia||
+    $('deudaFrecuencia').value =
+      d.frecuencia ||
       'mensual';
 
 
-    $('deudaNotas').value=
-      d.notas||
+    $('deudaNotas').value =
+      d.notas ||
       '';
 
 
@@ -1942,17 +1942,17 @@
      * Compatibilidad con B231.2.
      */
 
-    const sinFecha=
+    const sinFecha =
       document.getElementById(
         'b2312-sin-fecha'
       );
 
 
-    if(sinFecha){
+    if (sinFecha) {
 
-      sinFecha.checked=
+      sinFecha.checked =
         !(
-          d.fecha_primera_cuota||
+          d.fecha_primera_cuota ||
           d.fecha_proximo_pago
         );
 
@@ -1960,14 +1960,14 @@
         new Event(
           'change',
           {
-            bubbles:true
+            bubbles: true
           }
         )
-      )
+      );
     }
 
 
-    $('deudaSubmit').textContent=
+    $('deudaSubmit').textContent =
       'Guardar cambios';
 
 
@@ -1980,24 +1980,24 @@
 
 
     scrollTo({
-      top:0,
-      behavior:'smooth'
-    })
+      top: 0,
+      behavior: 'smooth'
+    });
   }
 
 
-  window.editarDeuda23=
-    id=>{
+  window.editarDeuda23 =
+    id => {
 
-      const d=
+      const d =
         debts.find(
-          x=>
-            Number(x.id)===
+          x =>
+            Number(x.id) ===
             Number(id)
         );
 
-      if(d)
-        fillDebt(d)
+      if (d)
+        fillDebt(d);
     };
 
 
@@ -2005,23 +2005,23 @@
      RESET DEUDA
      ============================================================ */
 
-  function resetDebt(){
+  function resetDebt() {
 
     $('deudaForm')
       .reset();
 
 
     $('deudaId')
-      .value='';
+      .value = '';
 
 
     /*
-     * Una deuda nueva comienza como
-     * PAGO ÚNICO.
+     * Una deuda nueva comienza siempre
+     * como PAGO ÚNICO.
      */
 
     $('deudaModalidad')
-      .value='UNICO';
+      .value = 'UNICO';
 
 
     setDebtModality(
@@ -2030,8 +2030,8 @@
 
 
     $('deudaSubmit')
-      .textContent=
-        'Registrar deuda';
+      .textContent =
+      'Registrar deuda';
 
 
     $('deudaCancel')
@@ -2040,608 +2040,34 @@
 
 
     $('deudaInicio')
-      .value=
-        today();
+      .value =
+      today();
 
 
     $('deudaPrimeraCuota')
-      .value=
-        today();
+      .value =
+      today();
 
 
-    const sinFecha=
+    const sinFecha =
       document.getElementById(
         'b2312-sin-fecha'
       );
 
 
-    if(sinFecha){
+    if (sinFecha) {
 
-      sinFecha.checked=false;
+      sinFecha.checked = false;
 
       sinFecha.dispatchEvent(
         new Event(
           'change',
           {
-            bubbles:true
+            bubbles: true
           }
         )
-      )
-    }
-  }
-
-
-  /* ============================================================
-     B231.5 — GUARDADO ROBUSTO DE DEUDA
-     ============================================================ */
-
-  async function saveDebt(e){
-
-    e.preventDefault();
-
-
-    const c=
-      await db();
-
-
-    if(!c){
-
-      $('deudasMsg').textContent=
-        'No fue posible conectar con Supabase.';
-
-      return
-    }
-
-
-    const id=
-      $('deudaId').value;
-
-
-    const modalidad=
-      currentDebtModality();
-
-
-    /*
-     * B231.2 — SIN FECHA
-     */
-
-    const sinFecha=
-      !!document
-        .getElementById(
-          'b2312-sin-fecha'
-        )
-        ?.checked;
-
-
-    const fechaPrimera=
-      sinFecha
-
-        ?
-
-          null
-
-        :
-
-          (
-            $('deudaPrimeraCuota')
-              .value||
-            null
-          );
-
-
-    /*
-     * CAMPOS DE MODALIDAD
-     */
-
-    const cuotas=
-      modalidad==='CUOTAS'
-
-        ?
-
-          Number(
-            $('deudaCuotas')
-              .value||0
-          )
-
-        :
-
-          null;
-
-
-    const cuota=
-      modalidad==='CUOTAS'
-
-        ?
-
-          Number(
-            $('deudaCuota')
-              .value||0
-          )
-
-        :
-
-          null;
-
-
-    const frecuencia=
-      modalidad==='UNICO'
-
-        ?
-
-          'unico'
-
-        :
-
-          (
-            $('deudaFrecuencia')
-              .value||
-            'mensual'
-          );
-
-
-    /* ==========================================================
-       VALIDACIONES
-       ========================================================== */
-
-    const montoOriginal=
-      Number(
-        $('deudaMonto')
-          .value||0
       );
-
-
-    const saldoActual=
-      Number(
-        $('deudaSaldo')
-          .value||0
-      );
-
-
-    if(
-      !(
-        montoOriginal>=0
-      )
-    ){
-
-      $('deudasMsg').textContent=
-        'El monto original no es válido.';
-
-      return
     }
-
-
-    if(
-      !(
-        saldoActual>=0
-      )
-    ){
-
-      $('deudasMsg').textContent=
-        'El saldo actual no es válido.';
-
-      return
-    }
-
-
-    if(
-      !$('deudaAcreedor')
-        .value
-        .trim()
-    ){
-
-      $('deudasMsg').textContent=
-        'Debes indicar el acreedor.';
-
-      return
-    }
-
-
-    /*
-     * CUOTAS exige acuerdo completo.
-     */
-
-    if(
-      modalidad==='CUOTAS'
-    ){
-
-      if(
-        !Number.isInteger(cuotas)||
-        cuotas<1
-      ){
-
-        $('deudasMsg').textContent=
-          'Para una deuda en cuotas, el número de cuotas debe ser un entero mayor o igual a 1.';
-
-        return
-      }
-
-
-      if(
-        !Number.isFinite(cuota)||
-        cuota<=0
-      ){
-
-        $('deudasMsg').textContent=
-          'Para una deuda en cuotas, la cuota acordada debe ser mayor que $0.';
-
-        return
-      }
-
-
-      if(
-        !fechaPrimera
-      ){
-
-        $('deudasMsg').textContent=
-          'Una deuda en cuotas necesita una primera fecha de pago. Si no existe fecha, debe registrarse como pago único.';
-
-        return
-      }
-    }
-
-
-    /*
-     * OBJETO DE PERSISTENCIA
-     */
-
-    const p={
-
-      tipo_acreedor:
-        $('deudaTipo')
-          .value,
-
-      acreedor:
-        $('deudaAcreedor')
-          .value
-          .trim(),
-
-      concepto:
-        $('deudaConcepto')
-          .value
-          .trim()||
-        null,
-
-      monto_original:
-        montoOriginal,
-
-      saldo_actual:
-        saldoActual,
-
-      tasa_anual:
-        Number(
-          $('deudaTasa')
-            .value||0
-        )||null,
-
-      numero_cuotas:
-        cuotas,
-
-      cuota_acordada:
-        cuota,
-
-      fecha_inicio:
-        $('deudaInicio')
-          .value||
-        null,
-
-      fecha_primera_cuota:
-        fechaPrimera,
-
-      frecuencia:
-        frecuencia,
-
-      fecha_proximo_pago:
-        fechaPrimera,
-
-      notas:
-        $('deudaNotas')
-          .value
-          .trim()||
-        null,
-
-      estado:
-        'vigente'
-    };
-
-
-    /* ==========================================================
-       EDICIÓN
-       ========================================================== */
-
-    if(id){
-
-      const r=
-        await c
-          .from('deudas')
-          .update(p)
-          .eq(
-            'id',
-            id
-          );
-
-
-      if(r.error){
-
-        $('deudasMsg').textContent=
-          'No se pudo actualizar la deuda: '+
-          r.error.message;
-
-        return
-      }
-
-
-      /*
-       * Si la deuda quedó como CUOTAS,
-       * comprobamos que exista un plan funcional.
-       *
-       * No regeneramos innecesariamente un plan
-       * que ya tenga cuotas pendientes.
-       */
-
-      if(
-        modalidad==='CUOTAS'
-      ){
-
-        const pending=
-          await c
-            .from(
-              'cuotas_deuda'
-            )
-            .select(
-              'id',
-              {
-                count:'exact',
-                head:true
-              }
-            )
-            .eq(
-              'deuda_id',
-              id
-            )
-            .in(
-              'estado',
-              [
-                'pendiente',
-                'vencida'
-              ]
-            );
-
-
-        if(pending.error){
-
-          $('deudasMsg').textContent=
-            'La deuda fue actualizada, pero no se pudo verificar el plan: '+
-            pending.error.message;
-
-          await loadDebts();
-
-          return
-        }
-
-
-        /*
-         * Si no hay cuotas pendientes,
-         * generamos/reconstruimos el plan.
-         */
-
-        if(
-          Number(
-            pending.count||0
-          )===0
-        ){
-
-          try{
-
-            const result=
-              await createPlan(
-                c,
-                id,
-                p,
-                await nextPlanVersion(
-                  c,
-                  id
-                )
-              );
-
-
-            if(
-              result.quotaCount!==cuotas
-            ){
-
-              throw new Error(
-                `Integridad inválida: se esperaban ${cuotas} cuotas y Supabase confirmó ${result.quotaCount}.`
-              )
-            }
-
-          }catch(x){
-
-            $('deudasMsg').textContent=
-              'La deuda fue actualizada, pero el plan no pudo generarse: '+
-              x.message;
-
-            await loadDebts();
-
-            return
-          }
-        }
-      }
-
-
-      $('deudasMsg').textContent=
-        'Deuda actualizada correctamente.';
-
-
-      resetDebt();
-
-      await loadDebts();
-
-      return
-    }
-
-
-    /* ==========================================================
-       NUEVA DEUDA
-       ========================================================== */
-
-    const ins=
-      await c
-        .from('deudas')
-        .insert(p)
-        .select('id')
-        .single();
-
-
-    if(ins.error){
-
-      $('deudasMsg').textContent=
-        'No se pudo registrar la deuda: '+
-        ins.error.message;
-
-      return
-    }
-
-
-    const debtId=
-      ins.data.id;
-
-
-    /*
-     * PAGO ÚNICO:
-     *
-     * nunca genera plan.
-     */
-
-    if(
-      modalidad==='UNICO'
-    ){
-
-      $('deudasMsg').textContent=
-        'Deuda de pago único registrada correctamente.';
-
-      resetDebt();
-
-      await loadDebts();
-
-      return
-    }
-
-
-    /*
-     * CUOTAS:
-     *
-     * generar y verificar plan.
-     */
-
-    try{
-
-      const result=
-        await createPlan(
-          c,
-          debtId,
-          p,
-          1
-        );
-
-
-      if(
-        result.quotaCount!==cuotas
-      ){
-
-        throw new Error(
-          `Integridad inválida: se esperaban ${cuotas} cuotas y Supabase confirmó ${result.quotaCount}.`
-        )
-      }
-
-
-    }catch(x){
-
-      /*
-       * B231.5 — COMPENSACIÓN DE FALLO
-       *
-       * No dejamos una deuda nueva incompleta
-       * con 0 cuotas si el plan no pudo generarse.
-       */
-
-      try{
-
-        await c
-          .from(
-            'cuotas_deuda'
-          )
-          .delete()
-          .eq(
-            'deuda_id',
-            debtId
-          );
-
-      }catch(cleanupQuotaError){
-
-        console.error(
-          'Error limpiando cuotas:',
-          cleanupQuotaError
-        )
-      }
-
-
-      try{
-
-        await c
-          .from(
-            'renegociaciones_deuda'
-          )
-          .delete()
-          .eq(
-            'deuda_id',
-            debtId
-          );
-
-      }catch(cleanupPlanError){
-
-        console.error(
-          'Error limpiando planes:',
-          cleanupPlanError
-        )
-      }
-
-
-      try{
-
-        await c
-          .from(
-            'deudas'
-          )
-          .delete()
-          .eq(
-            'id',
-            debtId
-          );
-
-      }catch(cleanupDebtError){
-
-        console.error(
-          'Error limpiando deuda:',
-          cleanupDebtError
-        )
-      }
-
-
-      $('deudasMsg').textContent=
-        'No se registró la deuda porque el plan de cuotas falló: '+
-        x.message;
-
-      await loadDebts();
-
-      return
-    }
-
-
-    $('deudasMsg').textContent=
-      `Deuda registrada correctamente con ${cuotas} cuotas.`;
-
-
-    resetDebt();
-
-    await loadDebts()
   }
 
 
@@ -2652,9 +2078,9 @@
   async function nextPlanVersion(
     c,
     debtId
-  ){
+  ) {
 
-    const r=
+    const r =
       await c
         .from(
           'renegociaciones_deuda'
@@ -2668,24 +2094,24 @@
         );
 
 
-    if(r.error)
+    if (r.error)
       throw r.error;
 
 
-    return(
+    return (
       (
-        r.data||[]
+        r.data || []
       ).reduce(
-        (m,p)=>
+        (m, p) =>
           Math.max(
             m,
             Number(
-              p.version||0
+              p.version || 0
             )
           ),
         0
-      )||0
-    )+1
+      ) || 0
+    ) + 1;
   }
 
 
@@ -2698,93 +2124,81 @@
     debtId,
     p,
     version
-  ){
+  ) {
 
-    /*
-     * VALIDACIÓN INTERNA
-     *
-     * Esta validación protege createPlan()
-     * incluso si es llamada desde otro flujo.
-     */
-
-    const n=
+    const n =
       Number(
         p.numero_cuotas
       );
 
 
-    const payment=
+    const payment =
       Number(
         p.cuota_acordada
       );
 
 
-    if(
-      !Number.isInteger(n)||
-      n<1
-    ){
+    if (
+      !Number.isInteger(n) ||
+      n < 1
+    ) {
 
       throw new Error(
         'El plan requiere un número de cuotas entero mayor o igual a 1.'
-      )
+      );
     }
 
 
-    if(
-      !Number.isFinite(payment)||
-      payment<=0
-    ){
+    if (
+      !Number.isFinite(payment) ||
+      payment <= 0
+    ) {
 
       throw new Error(
         'El plan requiere una cuota acordada mayor que $0.'
-      )
+      );
     }
 
 
-    if(
+    if (
       !p.fecha_primera_cuota
-    ){
+    ) {
 
       throw new Error(
         'El plan requiere una fecha de primera cuota.'
-      )
+      );
     }
 
 
-    const balanceInicial=
+    const balanceInicial =
       Number(
         p.saldo_actual
       );
 
 
-    if(
+    if (
       !Number.isFinite(
         balanceInicial
-      )||
-      balanceInicial<0
-    ){
+      ) ||
+      balanceInicial < 0
+    ) {
 
       throw new Error(
         'El saldo actual no es válido para construir el plan.'
-      )
+      );
     }
 
 
-    /*
-     * Primero obtenemos la versión correcta
-     * si el caller no la entregó.
-     */
+    if (
+      !version ||
+      Number(version) < 1
+    ) {
 
-    if(
-      !version||
-      Number(version)<1
-    ){
-
-      version=
+      version =
         await nextPlanVersion(
           c,
           debtId
-        )
+        );
     }
 
 
@@ -2792,7 +2206,7 @@
        INSERTAR NUEVO PLAN
        ========================================================== */
 
-    const pr=
+    const pr =
       await c
         .from(
           'renegociaciones_deuda'
@@ -2837,11 +2251,11 @@
         .single();
 
 
-    if(pr.error)
+    if (pr.error)
       throw pr.error;
 
 
-    const planId=
+    const planId =
       pr.data.id;
 
 
@@ -2849,162 +2263,145 @@
        CONSTRUCCIÓN DE CUOTAS
        ========================================================== */
 
-    const rows=[];
+    const rows = [];
 
 
-    let balance=
+    let balance =
       balanceInicial;
 
 
-    const annualRate=
+    const annualRate =
       Number(
-        p.tasa_anual||0
+        p.tasa_anual || 0
       );
 
 
-    /*
-     * Para cuotas mensuales se utiliza
-     * la tasa mensual.
-     *
-     * Para semanal/quincenal se mantiene
-     * la compatibilidad con el modelo actual.
-     */
-
-    const rate=
-      annualRate>0
+    const rate =
+      annualRate > 0
         ?
-          annualRate/100/12
+        annualRate / 100 / 12
         :
-          0;
+        0;
 
 
-    let date=
+    let date =
       new Date(
-        p.fecha_primera_cuota+
+        p.fecha_primera_cuota +
         'T12:00:00'
       );
 
 
-    if(
+    if (
       Number.isNaN(
         date.getTime()
       )
-    ){
+    ) {
 
       throw new Error(
         'La fecha de primera cuota no es válida.'
-      )
+      );
     }
 
 
-    for(
-      let i=1;
-      i<=n;
+    for (
+      let i = 1;
+      i <= n;
       i++
-    ){
+    ) {
 
-      let interest=
-        rate>0
+      let interest =
+        rate > 0
           ?
-            balance*rate
+          balance * rate
           :
-            0;
+          0;
 
 
-      let capital=
-        payment-interest;
+      let capital =
+        payment - interest;
 
 
       /*
-       * Si la cuota no alcanza para cubrir
-       * los intereses, el plan no es válido.
+       * La cuota debe cubrir al menos
+       * los intereses cuando existe saldo.
        */
 
-      if(
-        capital<=0 &&
-        balance>0
-      ){
+      if (
+        capital <= 0 &&
+        balance > 0
+      ) {
 
         throw new Error(
           `La cuota ${money(payment)} no alcanza para cubrir los intereses calculados de la deuda.`
-        )
+        );
       }
 
 
       /*
-       * La última cuota nunca puede exceder
-       * el saldo pendiente.
+       * La última cuota liquida el saldo restante.
        */
 
-      if(
-        i===n||
-        capital>balance
-      ){
+      if (
+        i === n ||
+        capital > balance
+      ) {
 
-        capital=
-          balance
+        capital =
+          balance;
       }
 
 
-      let amount=
-        capital+
+      let amount =
+        capital +
         interest;
 
 
       /*
        * Sin interés:
-       *
-       * las primeras cuotas utilizan
-       * la cuota acordada y la última
-       * liquida exactamente el saldo.
+       * las cuotas utilizan el monto acordado
+       * y la última liquida exactamente el saldo.
        */
 
-      if(
-        rate===0
-      ){
+      if (
+        rate === 0
+      ) {
 
-        amount=
-          i===n
+        amount =
+          i === n
             ?
-              balance
+            balance
             :
-              payment;
+            payment;
 
-
-        capital=
+        capital =
           amount;
 
-
-        interest=
-          0
+        interest =
+          0;
       }
 
 
-      /*
-       * Protección contra valores negativos.
-       */
-
-      if(
-        capital<0
+      if (
+        capital < 0
       )
-        capital=0;
+        capital = 0;
 
 
-      if(
-        interest<0
+      if (
+        interest < 0
       )
-        interest=0;
+        interest = 0;
 
 
-      amount=
-        capital+
+      amount =
+        capital +
         interest;
 
 
-      balance=
+      balance =
         Math.max(
           0,
-          balance-capital
+          balance - capital
         );
 
 
@@ -3022,7 +2419,7 @@
         fecha_vencimiento:
           date
             .toISOString()
-            .slice(0,10),
+            .slice(0, 10),
 
         monto:
           Math.round(
@@ -3057,29 +2454,29 @@
        * Avance de fecha.
        */
 
-      if(
-        p.frecuencia===
+      if (
+        p.frecuencia ===
         'semanal'
-      ){
+      ) {
 
         date.setDate(
-          date.getDate()+7
-        )
+          date.getDate() + 7
+        );
 
-      }else if(
-        p.frecuencia===
+      } else if (
+        p.frecuencia ===
         'quincenal'
-      ){
+      ) {
 
         date.setDate(
-          date.getDate()+15
-        )
+          date.getDate() + 15
+        );
 
-      }else{
+      } else {
 
         date.setMonth(
-          date.getMonth()+1
-        )
+          date.getMonth() + 1
+        );
       }
     }
 
@@ -3088,13 +2485,13 @@
        VERIFICACIÓN PREVIA
        ========================================================== */
 
-    if(
-      rows.length!==n
-    ){
+    if (
+      rows.length !== n
+    ) {
 
       throw new Error(
         `Error interno: se construyeron ${rows.length} cuotas para un plan de ${n}.`
-      )
+      );
     }
 
 
@@ -3102,7 +2499,7 @@
        INSERTAR CUOTAS
        ========================================================== */
 
-    const qr=
+    const qr =
       await c
         .from(
           'cuotas_deuda'
@@ -3112,7 +2509,7 @@
         );
 
 
-    if(qr.error)
+    if (qr.error)
       throw qr.error;
 
 
@@ -3120,7 +2517,7 @@
        VERIFICACIÓN POST-INSERCIÓN
        ========================================================== */
 
-    const verify=
+    const verify =
       await c
         .from(
           'cuotas_deuda'
@@ -3128,8 +2525,8 @@
         .select(
           'id',
           {
-            count:'exact',
-            head:true
+            count: 'exact',
+            head: true
           }
         )
         .eq(
@@ -3138,41 +2535,39 @@
         );
 
 
-    if(verify.error)
+    if (verify.error)
       throw verify.error;
 
 
-    const quotaCount=
+    const quotaCount =
       Number(
-        verify.count||0
+        verify.count || 0
       );
 
 
-    if(
-      quotaCount!==n
-    ){
+    if (
+      quotaCount !== n
+    ) {
 
       throw new Error(
         `Integridad del plan: se esperaban ${n} cuotas y Supabase confirmó ${quotaCount}.`
-      )
+      );
     }
 
 
     /*
-     * =========================================================
-     * El nuevo plan quedó correctamente creado.
+     * El nuevo plan quedó creado y verificado.
      *
-     * Ahora se desactivan los planes anteriores.
-     * =========================================================
+     * Solo ahora se desactivan planes anteriores.
      */
 
-    const old=
+    const old =
       await c
         .from(
           'renegociaciones_deuda'
         )
         .update({
-          estado:'inactivo'
+          estado: 'inactivo'
         })
         .eq(
           'deuda_id',
@@ -3188,22 +2583,21 @@
         );
 
 
-    if(old.error){
+    if (old.error) {
 
       /*
-       * El plan nuevo existe y las cuotas fueron
-       * verificadas. Se informa el error de
-       * versionado, sin ocultar que el plan existe.
+       * No se elimina el nuevo plan:
+       * ya fue verificado correctamente.
        */
 
       console.error(
         'No se pudieron desactivar planes anteriores:',
         old.error
-      )
+      );
     }
 
 
-    return{
+    return {
 
       planId:
         planId,
@@ -3211,7 +2605,799 @@
       quotaCount:
         quotaCount
 
+    };
+  }
+
+
+  /* ============================================================
+     B231.5 — GUARDADO ROBUSTO DE DEUDA
+     ============================================================ */
+
+  async function saveDebt(e) {
+
+    e.preventDefault();
+
+
+    const c =
+      await db();
+
+
+    if (!c) {
+
+      $('deudasMsg').textContent =
+        'No fue posible conectar con Supabase.';
+
+      return;
     }
+
+
+    const id =
+      $('deudaId').value;
+
+
+    const modalidad =
+      currentDebtModality();
+
+
+    /*
+     * B231.2 — SIN FECHA
+     */
+
+    const sinFecha =
+      !!document
+        .getElementById(
+          'b2312-sin-fecha'
+        )
+        ?.checked;
+
+
+    const fechaPrimera =
+      sinFecha
+        ?
+        null
+        :
+        (
+          $('deudaPrimeraCuota')
+            .value ||
+          null
+        );
+
+
+    /*
+     * CAMPOS DE MODALIDAD
+     */
+
+    const cuotas =
+      modalidad === 'CUOTAS'
+        ?
+        Number(
+          $('deudaCuotas')
+            .value || 0
+        )
+        :
+        null;
+
+
+    const cuota =
+      modalidad === 'CUOTAS'
+        ?
+        Number(
+          $('deudaCuota')
+            .value || 0
+        )
+        :
+        null;
+
+
+    const frecuencia =
+      modalidad === 'UNICO'
+        ?
+        'unico'
+        :
+        (
+          $('deudaFrecuencia')
+            .value ||
+          'mensual'
+        );
+
+
+    /* ==========================================================
+       VALIDACIONES
+       ========================================================== */
+
+    const montoOriginal =
+      Number(
+        $('deudaMonto')
+          .value || 0
+      );
+
+
+    const saldoActual =
+      Number(
+        $('deudaSaldo')
+          .value || 0
+      );
+
+
+    if (
+      !Number.isFinite(montoOriginal) ||
+      montoOriginal < 0
+    ) {
+
+      $('deudasMsg').textContent =
+        'El monto original no es válido.';
+
+      return;
+    }
+
+
+    if (
+      !Number.isFinite(saldoActual) ||
+      saldoActual < 0
+    ) {
+
+      $('deudasMsg').textContent =
+        'El saldo actual no es válido.';
+
+      return;
+    }
+
+
+    if (
+      !$('deudaAcreedor')
+        .value
+        .trim()
+    ) {
+
+      $('deudasMsg').textContent =
+        'Debes indicar el acreedor.';
+
+      return;
+    }
+
+
+    /*
+     * CUOTAS exige acuerdo completo.
+     */
+
+    if (
+      modalidad === 'CUOTAS'
+    ) {
+
+      if (
+        !Number.isInteger(cuotas) ||
+        cuotas < 1
+      ) {
+
+        $('deudasMsg').textContent =
+          'Para una deuda en cuotas, el número de cuotas debe ser un entero mayor o igual a 1.';
+
+        return;
+      }
+
+
+      if (
+        !Number.isFinite(cuota) ||
+        cuota <= 0
+      ) {
+
+        $('deudasMsg').textContent =
+          'Para una deuda en cuotas, la cuota acordada debe ser mayor que $0.';
+
+        return;
+      }
+
+
+      if (
+        !fechaPrimera
+      ) {
+
+        $('deudasMsg').textContent =
+          'Una deuda en cuotas necesita una primera fecha de pago. Si no existe fecha, debe registrarse como pago único.';
+
+        return;
+      }
+    }
+
+
+    /*
+     * OBJETO DE PERSISTENCIA
+     */
+
+    const p = {
+
+      tipo_acreedor:
+        $('deudaTipo')
+          .value,
+
+      acreedor:
+        $('deudaAcreedor')
+          .value
+          .trim(),
+
+      concepto:
+        $('deudaConcepto')
+          .value
+          .trim() ||
+        null,
+
+      monto_original:
+        montoOriginal,
+
+      saldo_actual:
+        saldoActual,
+
+      tasa_anual:
+        Number(
+          $('deudaTasa')
+            .value || 0
+        ) || null,
+
+      numero_cuotas:
+        cuotas,
+
+      cuota_acordada:
+        cuota,
+
+      fecha_inicio:
+        $('deudaInicio')
+          .value ||
+        null,
+
+      fecha_primera_cuota:
+        fechaPrimera,
+
+      frecuencia:
+        frecuencia,
+
+      fecha_proximo_pago:
+        fechaPrimera,
+
+      notas:
+        $('deudaNotas')
+          .value
+          .trim() ||
+        null,
+
+      estado:
+        'vigente'
+    };
+
+
+    /* ==========================================================
+       EDICIÓN
+       ========================================================== */
+
+    if (id) {
+
+      /*
+       * Primero persistimos la deuda.
+       */
+
+      const r =
+        await c
+          .from('deudas')
+          .update(p)
+          .eq(
+            'id',
+            id
+          );
+
+
+      if (r.error) {
+
+        $('deudasMsg').textContent =
+          'No se pudo actualizar la deuda: ' +
+          r.error.message;
+
+        return;
+      }
+
+
+      /*
+       * Verificación inmediata de persistencia.
+       *
+       * Esto permite detectar si Supabase,
+       * un trigger o la estructura de la tabla
+       * modificó numero_cuotas/cuota_acordada.
+       */
+
+      const persisted =
+        await c
+          .from('deudas')
+          .select(
+            'id,numero_cuotas,cuota_acordada,frecuencia,fecha_primera_cuota,fecha_proximo_pago'
+          )
+          .eq(
+            'id',
+            id
+          )
+          .single();
+
+
+      if (persisted.error) {
+
+        $('deudasMsg').textContent =
+          'La deuda se actualizó, pero no se pudo verificar la persistencia: ' +
+          persisted.error.message;
+
+        await loadDebts();
+
+        return;
+      }
+
+
+      const saved =
+        persisted.data;
+
+
+      if (
+        modalidad === 'CUOTAS'
+      ) {
+
+        if (
+          Number(
+            saved.numero_cuotas || 0
+          ) !== cuotas ||
+          Number(
+            saved.cuota_acordada || 0
+          ) !== cuota
+        ) {
+
+          $('deudasMsg').textContent =
+            `ERROR DE PERSISTENCIA: se enviaron ${cuotas} cuotas y ${money(cuota)}, pero Supabase confirmó ${Number(saved.numero_cuotas || 0)} cuotas y ${money(saved.cuota_acordada || 0)}.`;
+
+          await loadDebts();
+
+          return;
+        }
+      }
+
+
+      /*
+       * Pago único:
+       * no necesita plan.
+       */
+
+      if (
+        modalidad === 'UNICO'
+      ) {
+
+        $('deudasMsg').textContent =
+          'Deuda actualizada correctamente como pago único.';
+
+        resetDebt();
+
+        await loadDebts();
+
+        return;
+      }
+
+
+      /*
+       * CUOTAS:
+       *
+       * Verificamos si existe un plan activo.
+       */
+
+      const activePlan =
+        await c
+          .from(
+            'renegociaciones_deuda'
+          )
+          .select(
+            'id,version,numero_cuotas,estado'
+          )
+          .eq(
+            'deuda_id',
+            id
+          )
+          .eq(
+            'estado',
+            'activo'
+          );
+
+
+      if (activePlan.error) {
+
+        $('deudasMsg').textContent =
+          'La deuda fue actualizada, pero no se pudo verificar el plan: ' +
+          activePlan.error.message;
+
+        await loadDebts();
+
+        return;
+      }
+
+
+      /*
+       * Si ya existe un plan activo, NO lo regeneramos
+       * automáticamente.
+       *
+       * Esto evita que una deuda completamente pagada
+       * vuelva a recibir cuotas solamente por editarla.
+       *
+       * Para cambiar/reconstruir el acuerdo se utiliza
+       * "Reconstruir plan".
+       */
+
+      if (
+        (activePlan.data || []).length > 0
+      ) {
+
+        $('deudasMsg').textContent =
+          'Deuda actualizada correctamente. El plan vigente se conserva.';
+
+        resetDebt();
+
+        await loadDebts();
+
+        return;
+      }
+
+
+      /*
+       * No existe plan activo.
+       *
+       * Ahora comprobamos si existen cuotas históricas.
+       */
+
+      const historical =
+        await c
+          .from(
+            'cuotas_deuda'
+          )
+          .select(
+            'id',
+            {
+              count: 'exact',
+              head: true
+            }
+          )
+          .eq(
+            'deuda_id',
+            id
+          );
+
+
+      if (historical.error) {
+
+        $('deudasMsg').textContent =
+          'La deuda fue actualizada, pero no se pudo verificar el historial de cuotas: ' +
+          historical.error.message;
+
+        await loadDebts();
+
+        return;
+      }
+
+
+      /*
+       * Solo creamos automáticamente el primer plan
+       * cuando no existe ningún plan ni cuota histórica.
+       */
+
+      if (
+        Number(
+          historical.count || 0
+        ) === 0 &&
+        saldoActual > 0
+      ) {
+
+        try {
+
+          const result =
+            await createPlan(
+              c,
+              id,
+              p,
+              await nextPlanVersion(
+                c,
+                id
+              )
+            );
+
+
+          if (
+            result.quotaCount !==
+            cuotas
+          ) {
+
+            throw new Error(
+              `Integridad inválida: se esperaban ${cuotas} cuotas y Supabase confirmó ${result.quotaCount}.`
+            );
+          }
+
+        } catch (x) {
+
+          /*
+           * Intento de compensación del plan
+           * recién creado.
+           */
+
+          try {
+
+            await c
+              .from(
+                'cuotas_deuda'
+              )
+              .delete()
+              .eq(
+                'deuda_id',
+                id
+              );
+
+          } catch (cleanupQuotaError) {
+
+            console.error(
+              'Error limpiando cuotas:',
+              cleanupQuotaError
+            );
+          }
+
+
+          try {
+
+            await c
+              .from(
+                'renegociaciones_deuda'
+              )
+              .delete()
+              .eq(
+                'deuda_id',
+                id
+              )
+              .eq(
+                'estado',
+                'activo'
+              );
+
+          } catch (cleanupPlanError) {
+
+            console.error(
+              'Error limpiando plan:',
+              cleanupPlanError
+            );
+          }
+
+
+          $('deudasMsg').textContent =
+            'La deuda fue actualizada, pero el plan no pudo generarse: ' +
+            x.message;
+
+          await loadDebts();
+
+          return;
+        }
+      }
+
+
+      $('deudasMsg').textContent =
+        'Deuda actualizada correctamente.';
+
+      resetDebt();
+
+      await loadDebts();
+
+      return;
+    }
+
+
+    /* ==========================================================
+       NUEVA DEUDA
+       ========================================================== */
+
+    const ins =
+      await c
+        .from('deudas')
+        .insert(p)
+        .select(
+          'id,numero_cuotas,cuota_acordada,frecuencia,fecha_primera_cuota'
+        )
+        .single();
+
+
+    if (ins.error) {
+
+      $('deudasMsg').textContent =
+        'No se pudo registrar la deuda: ' +
+        ins.error.message;
+
+      return;
+    }
+
+
+    const debtId =
+      ins.data.id;
+
+
+    /*
+     * VERIFICACIÓN CRÍTICA DE PERSISTENCIA.
+     *
+     * Lo que Supabase devuelve inmediatamente después
+     * del INSERT debe coincidir con la modalidad enviada.
+     */
+
+    if (
+      modalidad === 'CUOTAS'
+    ) {
+
+      const persisted =
+        ins.data;
+
+
+      if (
+        Number(
+          persisted.numero_cuotas || 0
+        ) !== cuotas ||
+        Number(
+          persisted.cuota_acordada || 0
+        ) !== cuota
+      ) {
+
+        /*
+         * Limpieza compensatoria.
+         */
+
+        await c
+          .from(
+            'deudas'
+          )
+          .delete()
+          .eq(
+            'id',
+            debtId
+          );
+
+
+        $('deudasMsg').textContent =
+          `ERROR DE PERSISTENCIA: se enviaron ${cuotas} cuotas y ${money(cuota)}, pero Supabase confirmó ${Number(persisted.numero_cuotas || 0)} cuotas y ${money(persisted.cuota_acordada || 0)}. La deuda no fue conservada.`;
+
+        await loadDebts();
+
+        return;
+      }
+    }
+
+
+    /*
+     * PAGO ÚNICO:
+     *
+     * Nunca genera plan.
+     */
+
+    if (
+      modalidad === 'UNICO'
+    ) {
+
+      $('deudasMsg').textContent =
+        'Deuda de pago único registrada correctamente.';
+
+      resetDebt();
+
+      await loadDebts();
+
+      return;
+    }
+
+
+    /*
+     * CUOTAS:
+     *
+     * generar y verificar plan.
+     */
+
+    try {
+
+      const result =
+        await createPlan(
+          c,
+          debtId,
+          p,
+          1
+        );
+
+
+      if (
+        result.quotaCount !==
+        cuotas
+      ) {
+
+        throw new Error(
+          `Integridad inválida: se esperaban ${cuotas} cuotas y Supabase confirmó ${result.quotaCount}.`
+        );
+      }
+
+
+    } catch (x) {
+
+      /*
+       * B231.5 — COMPENSACIÓN
+       *
+       * No dejamos una deuda nueva
+       * sin su plan correspondiente.
+       */
+
+      try {
+
+        await c
+          .from(
+            'cuotas_deuda'
+          )
+          .delete()
+          .eq(
+            'deuda_id',
+            debtId
+          );
+
+      } catch (cleanupQuotaError) {
+
+        console.error(
+          'Error limpiando cuotas:',
+          cleanupQuotaError
+        );
+      }
+
+
+      try {
+
+        await c
+          .from(
+            'renegociaciones_deuda'
+          )
+          .delete()
+          .eq(
+            'deuda_id',
+            debtId
+          );
+
+      } catch (cleanupPlanError) {
+
+        console.error(
+          'Error limpiando planes:',
+          cleanupPlanError
+        );
+      }
+
+
+      try {
+
+        await c
+          .from(
+            'deudas'
+          )
+          .delete()
+          .eq(
+            'id',
+            debtId
+          );
+
+      } catch (cleanupDebtError) {
+
+        console.error(
+          'Error limpiando deuda:',
+          cleanupDebtError
+        );
+      }
+
+
+      $('deudasMsg').textContent =
+        'No se registró la deuda porque el plan de cuotas falló: ' +
+        x.message;
+
+      await loadDebts();
+
+      return;
+    }
+
+
+    $('deudasMsg').textContent =
+      `Deuda registrada correctamente con ${cuotas} cuotas.`;
+
+
+    resetDebt();
+
+    await loadDebts();
   }
 
 
@@ -3219,33 +3405,64 @@
      RECONSTRUIR PLAN
      ============================================================ */
 
-  window.reconstruirPlan23=
-    async()=>{
+  window.reconstruirPlan23 =
+    async () => {
 
-      if(!selected)
+      if (!selected)
         return;
 
 
-      const c=
+      const c =
         await db();
 
 
-      if(!c)
+      if (!c)
         return;
 
 
-      const d=
+      const d =
         selected;
 
 
-      const next=
+      const numeroCuotas =
+        Number(
+          d.numero_cuotas || 0
+        );
+
+
+      const cuotaAcordada =
+        Number(
+          d.cuota_acordada ||
+          d.cuota ||
+          0
+        );
+
+
+      const fechaPrimera =
+        d.fecha_primera_cuota ||
+        d.fecha_proximo_pago;
+
+
+      if (
+        numeroCuotas < 1 ||
+        !fechaPrimera ||
+        cuotaAcordada <= 0
+      ) {
+
+        return alert(
+          'Completa número de cuotas, cuota acordada y primera cuota en Editar deuda antes de reconstruir el plan.'
+        );
+      }
+
+
+      const next =
         await nextPlanVersion(
           c,
           d.id
         );
 
 
-      const p={
+      const p = {
 
         saldo_actual:
           d.saldo_actual,
@@ -3254,38 +3471,30 @@
           d.tasa_anual,
 
         numero_cuotas:
-          d.numero_cuotas,
+          numeroCuotas,
 
         cuota_acordada:
-          d.cuota_acordada||
-          d.cuota,
+          cuotaAcordada,
 
         fecha_primera_cuota:
-          d.fecha_primera_cuota||
-          d.fecha_proximo_pago,
+          fechaPrimera,
 
         frecuencia:
-          d.frecuencia||
-          'mensual'
+          d.frecuencia === 'unico'
+            ?
+            'mensual'
+            :
+            (
+              d.frecuencia ||
+              'mensual'
+            )
 
       };
 
 
-      if(
-        !p.numero_cuotas||
-        !p.fecha_primera_cuota||
-        !p.cuota_acordada
-      ){
+      try {
 
-        return alert(
-          'Completa número de cuotas, cuota acordada y primera cuota en Editar deuda antes de reconstruir el plan.'
-        )
-      }
-
-
-      try{
-
-        const result=
+        const result =
           await createPlan(
             c,
             d.id,
@@ -3294,16 +3503,16 @@
           );
 
 
-        if(
-          result.quotaCount!==
+        if (
+          result.quotaCount !==
           Number(
             p.numero_cuotas
           )
-        ){
+        ) {
 
           throw new Error(
             `Integridad inválida: se esperaban ${p.numero_cuotas} cuotas y se generaron ${result.quotaCount}.`
-          )
+          );
         }
 
 
@@ -3312,15 +3521,15 @@
         );
 
 
-        await loadDebts()
+        await loadDebts();
 
 
-      }catch(e){
+      } catch (e) {
 
         alert(
-          'No se pudo reconstruir el plan: '+
+          'No se pudo reconstruir el plan: ' +
           e.message
-        )
+        );
       }
     };
 
@@ -3329,10 +3538,10 @@
      ELIMINAR DEUDA
      ============================================================ */
 
-  window.eliminarDeuda23=
-    async id=>{
+  window.eliminarDeuda23 =
+    async id => {
 
-      if(
+      if (
         !confirm(
           '¿Eliminar esta deuda y sus planes/cuotas?'
         )
@@ -3340,15 +3549,15 @@
         return;
 
 
-      const c=
+      const c =
         await db();
 
 
-      if(!c)
+      if (!c)
         return;
 
 
-      const r=
+      const r =
         await c
           .from(
             'deudas'
@@ -3360,19 +3569,19 @@
           );
 
 
-      if(r.error)
+      if (r.error)
         return alert(
           r.error.message
         );
 
 
-      selected=null;
+      selected = null;
 
 
       await loadDebts();
 
 
-      $('deudaDetalle').innerHTML=`
+      $('deudaDetalle').innerHTML = `
 
         <p class="muted">
 
@@ -3380,7 +3589,7 @@
 
         </p>
 
-      `
+      `;
     };
 
 
@@ -3388,37 +3597,37 @@
      VER DETALLE
      ============================================================ */
 
-  window.verDeuda23=
-    async id=>{
+  window.verDeuda23 =
+    async id => {
 
-      const d=
+      const d =
         debts.find(
-          x=>
-            Number(x.id)===
+          x =>
+            Number(x.id) ===
             Number(id)
         );
 
 
-      if(!d)
+      if (!d)
         return;
 
 
-      selected=
+      selected =
         d;
 
 
-      const c=
+      const c =
         await db();
 
 
-      if(!c)
+      if (!c)
         return;
 
 
       const [
         pr,
         qr
-      ]=
+      ] =
         await Promise.all([
 
           c
@@ -3433,7 +3642,7 @@
             .order(
               'version',
               {
-                ascending:false
+                ascending: false
               }
             ),
 
@@ -3449,91 +3658,82 @@
             .order(
               'fecha_vencimiento',
               {
-                ascending:true
+                ascending: true
               }
             )
 
         ]);
 
 
-      if(
-        pr.error||
+      if (
+        pr.error ||
         qr.error
-      ){
+      ) {
 
         return alert(
           (
-            pr.error||
+            pr.error ||
             qr.error
           ).message
-        )
+        );
       }
 
 
-      plans=
-        pr.data||[];
+      plans =
+        pr.data || [];
 
 
-      quotas=
-        qr.data||[];
+      quotas =
+        qr.data || [];
 
 
       /*
-       * Solo CUOTAS debe presentar
-       * un plan activo.
+       * B231.5:
+       * la modalidad se determina por la existencia
+       * de un número de cuotas válido.
        */
 
-      const modalidad=
-        String(
-          d.frecuencia||''
-        ).toLowerCase()==='unico'||
+      const modalidad =
         Number(
-          d.numero_cuotas||0
-        )<=0
-
+          d.numero_cuotas || 0
+        ) > 0
           ?
-            'UNICO'
-
+          'CUOTAS'
           :
-            'CUOTAS';
+          'UNICO';
 
 
-      const plan=
-        modalidad==='CUOTAS'
+      const plan =
+        modalidad === 'CUOTAS'
           ?
-            (
-              plans.find(
-                p=>
-                  p.estado==='activo'
-              )||
-              plans[0]
-            )
+          (
+            plans.find(
+              p =>
+                p.estado === 'activo'
+            ) ||
+            plans[0]
+          )
           :
-            null;
+          null;
 
 
-      /*
-       * Las cuotas que se muestran pertenecen
-       * al plan activo cuando existe.
-       */
-
-      const displayedQuotas=
+      const displayedQuotas =
         plan
           ?
-            quotas.filter(
-              q=>
-                Number(
-                  q.plan_id
-                )===
-                Number(
-                  plan.id
-                )
-            )
+          quotas.filter(
+            q =>
+              Number(
+                q.plan_id
+              ) ===
+              Number(
+                plan.id
+              )
+          )
           :
-            [];
+          [];
 
 
-      $('deudaDetalle').innerHTML=`
+      $('deudaDetalle').innerHTML = `
 
         <div class="section-title">
 
@@ -3546,15 +3746,15 @@
 
             <h2>
               ${esc(
-                d.acreedor
-              )}
+        d.acreedor
+      )}
             </h2>
 
 
             <p>
               ${esc(
-                d.concepto||''
-              )}
+        d.concepto || ''
+      )}
             </p>
 
           </div>
@@ -3584,8 +3784,8 @@
 
             <strong>
               ${money(
-                d.saldo_actual
-              )}
+        d.saldo_actual
+      )}
             </strong>
 
           </article>
@@ -3599,8 +3799,8 @@
 
             <strong>
               ${money(
-                d.monto_original
-              )}
+        d.monto_original
+      )}
             </strong>
 
           </article>
@@ -3615,12 +3815,12 @@
             <strong>
 
               ${
-                modalidad==='UNICO'
-                  ?
-                    'Pago único'
-                  :
-                    'Cuotas'
-              }
+        modalidad === 'UNICO'
+          ?
+          'Pago único'
+          :
+          'Cuotas'
+      }
 
             </strong>
 
@@ -3635,8 +3835,8 @@
 
             <strong>
               ${Number(
-                d.numero_cuotas_pendientes||0
-              )}
+        d.numero_cuotas_pendientes || 0
+      )}
             </strong>
 
           </article>
@@ -3651,9 +3851,9 @@
             <strong>
 
               ${esc(
-                d.proximo_vencimiento||
-                '—'
-              )}
+        d.proximo_vencimiento ||
+        '—'
+      )}
 
             </strong>
 
@@ -3675,27 +3875,27 @@
 
 
           ${
-            modalidad==='CUOTAS'
-              ?
-                `
+        modalidad === 'CUOTAS'
+          ?
+          `
                   <button
                     onclick="
                       window.reconstruirPlan23()
                     ">
 
                     ${
-                      plan
-                        ?
-                          'Reconstruir plan'
-                        :
-                          'Crear plan de pago'
-                    }
+            plan
+              ?
+              'Reconstruir plan'
+              :
+              'Crear plan de pago'
+          }
 
                   </button>
                 `
-              :
-                ''
-          }
+          :
+          ''
+      }
 
 
           <button
@@ -3712,11 +3912,11 @@
 
 
         ${
-          modalidad==='UNICO'
+        modalidad === 'UNICO'
 
-            ?
+          ?
 
-              `
+          `
 
                 <h3>
                   Pago único
@@ -3735,9 +3935,9 @@
 
               `
 
-            :
+          :
 
-              `
+          `
 
                 <h3>
                   Plan de pago
@@ -3745,11 +3945,11 @@
 
 
                 ${
-                  plan
+            plan
 
-                    ?
+              ?
 
-                      `
+              `
 
                         <div class="debt-plan">
 
@@ -3764,8 +3964,8 @@
                           <span>
 
                             ${Number(
-                              plan.numero_cuotas
-                            )}
+                plan.numero_cuotas
+              )}
 
                             cuotas
 
@@ -3776,8 +3976,8 @@
 
                             Cuota
                             ${money(
-                              plan.cuota_acordada
-                            )}
+                plan.cuota_acordada
+              )}
 
                           </span>
 
@@ -3786,8 +3986,8 @@
 
                             Primera
                             ${esc(
-                              plan.fecha_primera_cuota
-                            )}
+                plan.fecha_primera_cuota
+              )}
 
                           </span>
 
@@ -3795,8 +3995,8 @@
                           <span>
 
                             ${esc(
-                              plan.frecuencia
-                            )}
+                plan.frecuencia
+              )}
 
                           </span>
 
@@ -3804,9 +4004,9 @@
 
                       `
 
-                    :
+              :
 
-                      `
+              `
 
                         <p class="muted">
 
@@ -3816,7 +4016,7 @@
                         </p>
 
                       `
-                }
+          }
 
 
                 <h3>
@@ -3827,12 +4027,12 @@
                 <div class="debt-quota-list">
 
                   ${
-                    displayedQuotas.length
+            displayedQuotas.length
 
-                      ?
+              ?
 
-                        displayedQuotas
-                          .map(q=>`
+              displayedQuotas
+                .map(q => `
 
                             <div class="quota-row">
 
@@ -3849,8 +4049,8 @@
                                 <span>
 
                                   ${esc(
-                                    q.fecha_vencimiento
-                                  )}
+                  q.fecha_vencimiento
+                )}
 
                                 </span>
 
@@ -3862,8 +4062,8 @@
                                 <strong>
 
                                   ${money(
-                                    q.monto
-                                  )}
+                  q.monto
+                )}
 
                                 </strong>
 
@@ -3871,8 +4071,8 @@
                                 <span>
 
                                   ${esc(
-                                    q.estado
-                                  )}
+                  q.estado
+                )}
 
                                 </span>
 
@@ -3880,16 +4080,16 @@
 
 
                               ${
-                                [
-                                  'pendiente',
-                                  'vencida'
-                                ].includes(
-                                  q.estado
-                                )
+                  [
+                    'pendiente',
+                    'vencida'
+                  ].includes(
+                    q.estado
+                  )
 
-                                  ?
+                    ?
 
-                                    `
+                    `
 
                                       <button
                                         onclick="
@@ -3902,19 +4102,19 @@
 
                                     `
 
-                                  :
+                    :
 
-                                    ''
-                              }
+                    ''
+                }
 
                             </div>
 
                           `)
-                          .join('')
+                .join('')
 
-                      :
+              :
 
-                        `
+              `
 
                           <p class="muted">
 
@@ -3923,14 +4123,14 @@
                           </p>
 
                         `
-                  }
+          }
 
                 </div>
 
               `
-        }
+      }
 
-      `
+      `;
     };
 
 
@@ -3938,33 +4138,33 @@
      PAGO DE CUOTA
      ============================================================ */
 
-  window.pagarCuota23=
-    async qid=>{
+  window.pagarCuota23 =
+    async qid => {
 
-      const q=
+      const q =
         quotas.find(
-          x=>
-            Number(x.id)===
+          x =>
+            Number(x.id) ===
             Number(qid)
         );
 
 
-      if(
-        !q||
+      if (
+        !q ||
         !selected
       )
         return;
 
 
-      const c=
+      const c =
         await db();
 
 
-      if(!c)
+      if (!c)
         return;
 
 
-      const amount=
+      const amount =
         Number(
           prompt(
             `Monto pagado para la cuota ${q.numero_cuota}:`,
@@ -3973,21 +4173,21 @@
         );
 
 
-      if(
-        !Number.isFinite(amount)||
-        amount<=0
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
       )
         return;
 
 
-      const date=
+      const date =
         prompt(
           'Fecha real de pago (AAAA-MM-DD):',
           today()
         );
 
 
-      if(!date)
+      if (!date)
         return;
 
 
@@ -3995,7 +4195,7 @@
        * MOVIMIENTO REAL
        */
 
-      const m=
+      const m =
         await c
           .from(
             'movimientos'
@@ -4022,7 +4222,7 @@
           .single();
 
 
-      if(m.error)
+      if (m.error)
         return alert(
           m.error.message
         );
@@ -4032,7 +4232,7 @@
        * REGISTRO DE PAGO
        */
 
-      const p=
+      const p =
         await c
           .from(
             'pagos_deuda'
@@ -4054,7 +4254,7 @@
           });
 
 
-      if(p.error){
+      if (p.error) {
 
         /*
          * Compensación del movimiento
@@ -4074,7 +4274,7 @@
 
         return alert(
           p.error.message
-        )
+        );
       }
 
 
@@ -4082,7 +4282,7 @@
        * MARCAR CUOTA PAGADA
        */
 
-      const u=
+      const u =
         await c
           .from(
             'cuotas_deuda'
@@ -4102,12 +4302,12 @@
           );
 
 
-      if(u.error){
+      if (u.error) {
 
         return alert(
-          'El pago fue registrado, pero no se pudo actualizar el estado de la cuota: '+
+          'El pago fue registrado, pero no se pudo actualizar el estado de la cuota: ' +
           u.error.message
-        )
+        );
       }
 
 
@@ -4116,7 +4316,7 @@
       );
 
 
-      await loadDebts()
+      await loadDebts();
     };
 
 
@@ -4124,49 +4324,49 @@
      FORMULARIO DE DEUDAS
      ============================================================ */
 
-  function setupDebtForm(){
+  function setupDebtForm() {
 
-    if(!$('deudaForm'))
+    if (!$('deudaForm'))
       return;
 
 
-    $('deudaCancel').onclick=
+    $('deudaCancel').onclick =
       resetDebt;
 
 
-    $('deudaForm').onsubmit=
+    $('deudaForm').onsubmit =
       saveDebt;
 
 
-    const modalidad=
+    const modalidad =
       $('deudaModalidad');
 
 
     modalidad?.addEventListener(
       'change',
-      ()=>{
+      () => {
 
         setDebtModality(
           modalidad.value
-        )
+        );
 
       }
     );
 
 
-    const r=
+    const r =
       $('deudaTasa');
 
 
-    const a=
+    const a =
       $('deudaMonto');
 
 
-    const n=
+    const n =
       $('deudaCuotas');
 
 
-    const q=
+    const q =
       $('deudaCuota');
 
 
@@ -4176,67 +4376,76 @@
      * Solo CUOTAS.
      */
 
-    const est=()=>{
+    const est = () => {
 
-      if(
-        currentDebtModality()!=='CUOTAS'
+      if (
+        currentDebtModality() !==
+        'CUOTAS'
       )
         return;
 
 
-      const P=
+      const P =
         Number(
           a.value
         );
 
 
-      const N=
+      const N =
         Number(
           n.value
         );
 
 
-      const annual=
+      const annual =
         Number(
           r.value
         );
 
 
-      if(
-        !(P>0&&N>0)
+      if (
+        !(P > 0 && N > 0)
       )
         return;
 
 
-      const rr=
-        annual/100/12;
+      const rr =
+        annual / 100 / 12;
 
 
-      q.value=
-        annual>0
+      /*
+       * Sin interés:
+       * principal dividido por número de cuotas.
+       *
+       * Con interés:
+       * fórmula de cuota fija.
+       */
+
+      q.value =
+        annual > 0
 
           ?
 
-            Math.round(
-              P*
-              rr*
+          Math.round(
+            P *
+            rr *
+            Math.pow(
+              1 + rr,
+              N
+            ) /
+            (
               Math.pow(
-                1+rr,
+                1 + rr,
                 N
-              )/
-              (
-                Math.pow(
-                  1+rr,
-                  N
-                )-1
-              )
+              ) - 1
             )
+          )
 
           :
 
-            Math.round(
-              P/N
-            )
+          Math.round(
+            P / N
+          );
     };
 
 
@@ -4245,7 +4454,7 @@
       a,
       n
     ].forEach(
-      x=>
+      x =>
         x?.addEventListener(
           'input',
           est
@@ -4259,7 +4468,7 @@
 
     setDebtModality(
       'UNICO'
-    )
+    );
   }
 
 
@@ -4267,87 +4476,114 @@
      INICIALIZACIÓN
      ============================================================ */
 
-  async function start(){
+  async function start() {
 
-    injectTabs();
+    try {
 
-    injectSections();
+      injectTabs();
 
-    setupAccountForm();
+      injectSections();
 
-    setupDebtForm();
+      setupAccountForm();
 
-    await loadAccounts();
+      setupDebtForm();
 
-    await loadDebts();
+      await loadAccounts();
 
-    await renderLiquidity();
+      await loadDebts();
 
-
-    /*
-     * Compatibilidad con refresh()
-     */
-
-    const old=
-      window.refresh;
+      await renderLiquidity();
 
 
-    if(
-      old&&
-      !old.__fin23wrapped
-    ){
+      /*
+       * Compatibilidad con refresh()
+       */
 
-      const wrapped=
-        async function(...args){
-
-          const r=
-            await old.apply(
-              this,
-              args
-            );
+      const old =
+        window.refresh;
 
 
-          try{
+      if (
+        old &&
+        !old.__fin23wrapped
+      ) {
 
-            await loadAccounts();
+        const wrapped =
+          async function (...args) {
 
-            await loadDebts();
-
-            await renderLiquidity()
-
-          }catch(e){
-
-            console.error(e)
-          }
-
-
-          return r
-        };
+            const r =
+              await old.apply(
+                this,
+                args
+              );
 
 
-      wrapped.__fin23wrapped=
-        true;
+            try {
+
+              await loadAccounts();
+
+              await loadDebts();
+
+              await renderLiquidity();
+
+            } catch (e) {
+
+              console.error(e);
+            }
 
 
-      window.refresh=
-        wrapped
+            return r;
+          };
+
+
+        wrapped.__fin23wrapped =
+          true;
+
+
+        window.refresh =
+          wrapped;
+      }
+
+    } catch (e) {
+
+      /*
+       * B231.5 — protección de arranque.
+       *
+       * Un error del módulo no debe dejar
+       * la aplicación completamente silenciosa.
+       */
+
+      console.error(
+        'FINANZAS V2.3.3 — Error de inicialización:',
+        e
+      );
+
+      const msg =
+        $('deudasMsg');
+
+      if (msg) {
+
+        msg.textContent =
+          'Error de inicialización del módulo financiero: ' +
+          e.message;
+      }
     }
   }
 
 
-  if(
-    document.readyState===
+  if (
+    document.readyState ===
     'loading'
-  ){
+  ) {
 
     document.addEventListener(
       'DOMContentLoaded',
       start
-    )
+    );
 
-  }else{
+  } else {
 
-    start()
+    start();
   }
 
 })();
