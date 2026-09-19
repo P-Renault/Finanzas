@@ -1,5 +1,5 @@
 /* ============================================================
-   B232 — CALENDARIO V2
+   B232 — CALENDARIO V2 · B232.8
    Calendario integrado: movimientos + compromisos + cuotas de deuda.
    No modifica saldos ni registra operaciones.
    Deudas sin fecha NO aparecen en el calendario.
@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '232.0';
+  const VERSION = '232.8';
   if (window.B232Calendario?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -123,7 +123,12 @@
       .b232-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
       .b232-nav{display:flex;gap:8px}
       .b232-nav button{min-width:44px}
-      .b232-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+      .b232-selection-summary{display:flex;flex-direction:column;gap:2px;margin:12px 0 8px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc}
+      .b232-selection-summary span{font-size:.68rem;letter-spacing:.08em;font-weight:800;color:#64748b}
+      .b232-selection-summary strong{font-size:.96rem;color:#111827}
+      .b232-selection-summary small{font-size:.72rem;color:#64748b}
+      .b232-month-reference{font-size:.72rem;color:#64748b;line-height:1.4;margin:8px 0 4px}
+      .b232-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0 12px}
       .b232-metric{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff}
       .b232-metric span,.b232-metric small{display:block;color:#64748b;font-size:.78rem}
       .b232-metric strong{display:block;margin-top:4px}
@@ -178,6 +183,18 @@
     const totalDebt=inMonthRows.reduce((s,x)=>s+x.debt,0);
     const finalBalance=inMonthRows.at(-1)?.balance||0;
 
+    // B232.8 — Los indicadores superiores pasan a representar
+    // exclusivamente la fecha actualmente seleccionada.
+    const selectedRow=byKey[selected];
+    const selectedIncome=selectedRow?.income||0;
+    const selectedExpense=selectedRow?.expense||0;
+    const selectedCommit=selectedRow?.scheduled||0;
+    const selectedDebt=selectedRow?.debt||0;
+    const selectedBalance=selectedRow?.balance||0;
+    const selectedDateLabel=parseDate(selected).toLocaleDateString('es-CL',{
+      weekday:'long',day:'numeric',month:'long',year:'numeric'
+    }).replace(/^./,c=>c.toUpperCase());
+
     host.innerHTML=`
       <div class="card">
         <div class="b232-toolbar">
@@ -192,12 +209,24 @@
           </div>
         </div>
 
+        <div class="b232-selection-summary">
+          <span>RESUMEN DE LA SELECCIÓN</span>
+          <strong>${esc(selectedDateLabel)}</strong>
+          <small>Los indicadores superiores corresponden exclusivamente al día seleccionado.</small>
+        </div>
+
         <div class="b232-metrics">
-          <div class="b232-metric"><span>Ingresos</span><strong>${money(totalIncome)}</strong></div>
-          <div class="b232-metric"><span>Gastos</span><strong>${money(totalExpense)}</strong></div>
-          <div class="b232-metric"><span>Compromisos</span><strong>${money(totalCommit)}</strong></div>
-          <div class="b232-metric"><span>Cuotas de deuda</span><strong>${money(totalDebt)}</strong></div>
-          <div class="b232-metric"><span>Saldo al cierre</span><strong>${money(finalBalance)}</strong></div>
+          <div class="b232-metric"><span>Ingresos</span><strong>${money(selectedIncome)}</strong></div>
+          <div class="b232-metric"><span>Gastos</span><strong>${money(selectedExpense)}</strong></div>
+          <div class="b232-metric"><span>Compromisos</span><strong>${money(selectedCommit)}</strong></div>
+          <div class="b232-metric"><span>Cuotas de deuda</span><strong>${money(selectedDebt)}</strong></div>
+          <div class="b232-metric"><span>Saldo al cierre</span><strong>${money(selectedBalance)}</strong></div>
+        </div>
+
+        <div class="b232-month-reference">
+          Mes completo · Ingresos ${money(totalIncome)} · Gastos ${money(totalExpense)} ·
+          Compromisos ${money(totalCommit)} · Cuotas ${money(totalDebt)} ·
+          Saldo al cierre ${money(finalBalance)}
         </div>
 
         <div class="b232-legend">
