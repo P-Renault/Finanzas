@@ -1,0 +1,32 @@
+--- a/b232-calendario-v2.js
++++ b/b232-calendario-v2.js
+@@
+-  const VERSION='232.9';
++  const VERSION='232.13';
+
+@@
+-  function boot(){
+-    const tab=document.querySelector('[data-tab="calendario"]');if(!tab)return;
+-    if(!tab.dataset.b2329Capture){
+-      tab.addEventListener('click',e=>{
+-        e.stopImmediatePropagation();
+-        load().catch(err=>{
+-          const h=$('calendario');
+-          if(h)h.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
+-        });
+-      },true);
+-      tab.dataset.b2329Capture='1';
+-    }
+-    if(tab.classList.contains('active'))load().catch(()=>{});
+-  }
++  function boot(){
++    const host=$('calendario');
++    if(!host)return;
++    const tab=document.querySelector('[data-tab="calendario"]');
++    if(tab&&tab.classList.contains('active'))load().catch(err=>{
++      host.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
++    });
++  }
+@@
+-  window.B232Calendario={version:VERSION,load,render};
++  window.B232Calendario={version:VERSION,load,render};

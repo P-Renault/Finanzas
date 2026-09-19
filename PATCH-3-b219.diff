@@ -1,0 +1,5 @@
+--- a/b219-arquitectura-navegacion.js
++++ b/b219-arquitectura-navegacion.js
+@@
+-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.3'];
++  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.13'];

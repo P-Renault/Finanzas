@@ -1,0 +1,27 @@
+VERIFICACIÓN B232.13
+
+Antes:
+- #calendario muestra "Plan mensual de ingresos y pagos"
+- KPIs: Ingresos registrados / Gastos registrados / Pagos programados / Saldo al cierre
+- No aparece el prefijo B232.
+
+Después esperado:
+- Encabezado: "B232 · CALENDARIO FINANCIERO · 232.13"
+- Botones: ‹ / Hoy / › propios de B232
+- KPIs: Ingresos recibidos / Gastos pagados / Ingresos proyectados / Obligaciones / Flujo proyectado
+- Grilla 7x6 (42 celdas)
+- Detalle del día seleccionado
+- Navegación Calendario -> Resumen -> Calendario funciona sin perder el motor B232.
+
+Prueba de regresión:
+1. Abrir Resumen.
+2. Abrir Calendario.
+3. Cambiar mes.
+4. Seleccionar un día.
+5. Volver a Resumen.
+6. Volver a Calendario.
+7. Recargar la página.
+8. Verificar nuevamente que no reaparece el calendario legacy.
+
+Criterio de cierre:
+El texto "Plan mensual de ingresos y pagos" no debe aparecer en #calendario.
