@@ -1,5 +1,5 @@
 /* ============================================================
-   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.0.2
+   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.0.3
    Versión: B233.0–B233.16
    Arquitectura: GitHub Pages + Supabase
    Regla: no modifica movimientos, deudas ni compromisos.
@@ -382,9 +382,9 @@
     // La columna public.presupuestos.periodo existente utiliza
     // varchar(7), por lo que debe recibir YYYY-MM y no YYYY-MM-DD.
     const periodo = ym(state.month);
-    // B233.0.2: la tabla existente limita estado a varchar(7).
-    // Los presupuestos nuevos se crean ACTIVOS para respetar el esquema
-    // existente sin modificar la base ni truncar valores.
+    // B233.0.3: la restricción existente permite estados en minúscula:
+    // borrador, activo y cerrado. Se conserva exactamente ese contrato
+    // existente y solo se capitaliza la etiqueta en pantalla.
 
     let budget = await safeSingle('presupuestos',
       q => q.select('*').eq('periodo',periodo).maybeSingle()
@@ -394,7 +394,7 @@
       const r = await db().from('presupuestos').insert({
         periodo,
         nombre:`Presupuesto ${monthLabel(state.month)}`,
-        estado:'ACTIVO'
+        estado:'activo'
       }).select('*').single();
 
       if (r.error) {
@@ -634,7 +634,9 @@
     $('b233Projected').textContent = money(calc.projectedResult);
 
     const b = state.budget;
-    $('b233BudgetStatus').textContent = b ? b.estado : 'Sin presupuesto';
+    $('b233BudgetStatus').textContent = b
+      ? ({borrador:'Borrador', activo:'Activo', cerrado:'Cerrado'}[String(b.estado).toLowerCase()] || b.estado)
+      : 'Sin presupuesto';
     $('b233BudgetName').textContent = b
       ? `${b.nombre || 'Presupuesto'} · ${monthLabel(state.month)}`
       : 'Crea el presupuesto del mes para comenzar.';
@@ -791,8 +793,8 @@
 
     $('b233Month').onchange = e => setMonth(e.target.value);
     $('b233Create').onclick = loadBudget;
-    $('b233Activate').onclick = () => updateStatus('ACTIVO');
-    $('b233Close').onclick = () => updateStatus('CERRADO');
+    $('b233Activate').onclick = () => updateStatus('activo');
+    $('b233Close').onclick = () => updateStatus('cerrado');
 
     $('b233LineForm').onsubmit = saveLine;
     $('b233LineCancel').onclick = resetLineForm;
