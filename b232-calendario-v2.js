@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const VERSION='232.9';
+  const VERSION='232.14';
   if(window.B232Calendario?.version===VERSION)return;
 
   const $=id=>document.getElementById(id);
