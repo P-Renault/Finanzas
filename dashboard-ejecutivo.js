@@ -160,51 +160,226 @@ window.ExecutiveDashboard = (() => {
   }
 
   function renderCharts({context, projection, state}) {
-    const root=document.getElementById('executive-charts');
-    if(!root) return;
-    const hist=[];
-    const byDate={};
-    (context.incomes||[]).forEach(x=>{
-      const d=byDate[x.date] ||= {date:x.date,income:0,expense:0};
-      d.income+=num(x.amount);
-    });
-    (context.expenses||[]).forEach(x=>{
-      const d=byDate[x.date] ||= {date:x.date,income:0,expense:0};
-      d.expense+=num(x.amount);
-    });
-    const flow=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+    const root = document.getElementById('executive-charts');
+    if (!root) return;
 
-    const futureFlow=(projection||[]).slice(0,30).map(x=>({
-      date:x.date,
-      income:num(x.assuredIncome)+num(x.projectedIncome)+num(x.plannedIncome),
-      expense:num(x.mandatoryExpenses)+num(x.discretionaryExpenses)
+    const num = value => Number(value || 0);
+
+    const flow30 = (projection || []).slice(0, 30).map(x => ({
+      date: x.date,
+      income: num(x.assuredIncome) + num(x.projectedIncome) + num(x.plannedIncome),
+      expense: num(x.mandatoryExpenses) + num(x.discretionaryExpenses)
     }));
 
-    const obligations=(context.obligations||[]).reduce((m,x)=>{
-      const key=x.source==='cuotas_deuda'?'Cuotas de deuda':x.source==='compromisos'?'Compromisos':'Deudas';
-      m[key]=(m[key]||0)+num(x.amount); return m;
-    },{});
-    const donut=Object.entries(obligations).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value);
+    const byDate = {};
+    (context.incomes || []).forEach(x => {
+      const d = byDate[x.date] ||= { date: x.date, income: 0, expense: 0 };
+      d.income += num(x.amount);
+    });
 
-    const charts=[
-      ['chart-liquidity','Curva de liquidez',()=>drawLineChart(document.getElementById('chart-liquidity'),(projection||[]).filter((_,i)=>i%3===0),r=>num(r.closingBalance),'Liquidez proyectada')],
-      ['chart-flow','Flujo próximo 30 días',()=>drawFlowBars(document.getElementById('chart-flow'),futureFlow)],
-      ['chart-obligations','Composición de obligaciones',()=>drawDonut(document.getElementById('chart-obligations'),donut)],
-      ['chart-candles','Velas financieras',()=>drawCandles(document.getElementById('chart-candles'),projection||[])]
-    ];
-    charts.forEach(([, ,fn])=>fn());
+    (context.expenses || []).forEach(x => {
+      const d = byDate[x.date] ||= { date: x.date, income: 0, expense: 0 };
+      d.expense += num(x.amount);
+    });
 
-    const ratio = state.committedExpenses>0 ? (state.assuredIncome+state.availableBalance)/state.committedExpenses : Infinity;
-    const riskNode=document.getElementById('executive-risk-summary');
-    if(riskNode){
-      riskNode.textContent = ratio===Infinity
-        ? 'Sin obligaciones con monto comparable.'
-        : `Cobertura actual + asegurada: ${Math.round(ratio*100)}%.`;
+    const history = Object.values(byDate)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-30);
+
+    const obligations = (context.obligations || []).reduce((m, x) => {
+      const key =
+        x.source === 'cuotas_deuda' ? 'Cuotas de deuda' :
+        x.source === 'compromisos' ? 'Compromisos' :
+        'Deudas';
+
+      m[key] = (m[key] || 0) + num(x.amount);
+      return m;
+    }, {});
+
+    const donut = Object.entries(obligations)
+      .map(([label, value]) => ({ label, value }))
+      .filter(x => x.value > 0)
+      .sort((a, b) => b.value - a.value);
+
+    const risk = (projection || []).find(
+      x => num(x.closingBalance) < num(context.minimumReserve)
+    );
+
+    const coverageBase =
+      num(state.availableBalance) + num(state.assuredIncome);
+
+    const coveragePct =
+      num(state.committedExpenses) > 0
+        ? (coverageBase / num(state.committedExpenses)) * 100
+        : 100;
+
+    const income30 = flow30.reduce((s, x) => s + x.income, 0);
+    const expense30 = flow30.reduce((s, x) => s + x.expense, 0);
+    const net30 = income30 - expense30;
+
+    // Executive insight cards: no asynchronous placeholder remains.
+    const liquidityReading = document.getElementById('exec-liquidity-reading');
+    if (liquidityReading) {
+      liquidityReading.textContent = risk
+        ? `Riesgo desde ${formatDate(risk.date)}`
+        : 'Sin caída bajo la reserva';
     }
 
-    const historicalNode=document.getElementById('chart-history');
-    if(historicalNode) drawFlowBars(historicalNode, flow);
+    const obligationReading = document.getElementById('exec-obligation-reading');
+    if (obligationReading) {
+      obligationReading.textContent =
+        state.committedExpenses > 0
+          ? `${formatPct(coveragePct)} de cobertura`
+          : 'Sin obligaciones cuantificadas';
+    }
+
+    const flowReading = document.getElementById('exec-flow-reading');
+    if (flowReading) {
+      flowReading.textContent =
+        `Neto 30 días: ${money(net30)}`;
+    }
+
+    const riskNode = document.getElementById('executive-risk-summary');
+    if (riskNode) {
+      riskNode.textContent =
+        state.committedExpenses > 0
+          ? `Cobertura actual + asegurada: ${formatPct(coveragePct)}.`
+          : 'Sin obligaciones con monto comparable.';
+    }
+
+    const charts = [
+      () => drawLineChart(
+        document.getElementById('chart-liquidity'),
+        (projection || []).filter((_, i) => i % 3 === 0),
+        r => num(r.closingBalance),
+        'Liquidez proyectada'
+      ),
+      () => drawFlowBars(
+        document.getElementById('chart-flow'),
+        flow30
+      ),
+      () => drawDonut(
+        document.getElementById('chart-obligations'),
+        donut
+      ),
+      () => drawCandles(
+        document.getElementById('chart-candles'),
+        projection || []
+      )
+    ];
+
+    charts.forEach(fn => fn());
+
+    const historicalNode = document.getElementById('chart-history');
+    if (historicalNode) drawFlowBars(historicalNode, history);
+
+    installFullscreenHandlers();
   }
+
+  function formatPct(value) {
+    if (!Number.isFinite(value)) return '0%';
+    return `${Math.round(value)}%`;
+  }
+
+  function formatDate(value) {
+    if (!value) return '—';
+    const p = String(value).split('-');
+    return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : value;
+  }
+
+  function installFullscreenHandlers() {
+    const cards = document.querySelectorAll(
+      '#executive-charts .executive-chart'
+    );
+
+    cards.forEach(card => {
+      if (card.dataset.fullscreenReady === '1') return;
+
+      card.dataset.fullscreenReady = '1';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute(
+        'aria-label',
+        `Ampliar gráfico: ${card.querySelector('h3')?.textContent || 'gráfico'}`
+      );
+
+      const open = () => openFullscreenChart(card);
+
+      card.addEventListener('click', open);
+      card.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          open();
+        }
+      });
+    });
+  }
+
+  function openFullscreenChart(card) {
+    const modal = document.getElementById('executive-chart-modal');
+    const body = document.getElementById('executive-chart-modal-body');
+    const title = document.getElementById('executive-chart-modal-title');
+
+    if (!modal || !body) return;
+
+    const heading = card.querySelector('h3');
+    const description = card.querySelector('p');
+    const svgNode = card.querySelector('svg');
+
+    title.textContent = heading ? heading.textContent : 'Gráfico financiero';
+    body.innerHTML = '';
+
+    if (description) {
+      const p = document.createElement('p');
+      p.className = 'modal-chart-description';
+      p.textContent = description.textContent;
+      body.appendChild(p);
+    }
+
+    if (svgNode) {
+      const clone = svgNode.cloneNode(true);
+      clone.removeAttribute('width');
+      clone.removeAttribute('height');
+      clone.setAttribute('class', 'fullscreen-chart-svg');
+      body.appendChild(clone);
+    }
+
+    modal.classList.add('open');
+    document.body.classList.add('executive-modal-open');
+
+    const close = document.getElementById('executive-chart-modal-close');
+    if (close) close.focus();
+  }
+
+  function closeFullscreenChart() {
+    const modal = document.getElementById('executive-chart-modal');
+    if (!modal) return;
+
+    modal.classList.remove('open');
+    document.body.classList.remove('executive-modal-open');
+  }
+
+  function bindModal() {
+    const modal = document.getElementById('executive-chart-modal');
+    const close = document.getElementById('executive-chart-modal-close');
+
+    if (!modal || modal.dataset.bound === '1') return;
+    modal.dataset.bound = '1';
+
+    if (close) close.addEventListener('click', closeFullscreenChart);
+
+    modal.addEventListener('click', event => {
+      if (event.target === modal) closeFullscreenChart();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeFullscreenChart();
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', bindModal);
+  bindModal();
+
 
   return { renderCharts, VERSION:'EXEC-DASH-V1.0.0' };
 })();

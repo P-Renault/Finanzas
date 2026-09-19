@@ -1,8 +1,20 @@
 DASHBOARD EJECUTIVO FINANCIERO
-Version: EXEC-DASH-V1.0.0
-Build ID: EXEC-DASH-V1.0.0-20260919T130124Z
-Objetivo: transformar el Centro de Control en dashboard ejecutivo visual.
-Componentes: curva de liquidez, flujo ingresos/egresos, donut de obligaciones, velas financieras, insights ejecutivos.
-Tecnología gráfica: SVG nativo, sin dependencia externa de gráficos.
-Validacion JavaScript: PASS.
-Estado de publicación: preparado para despliegue; no se declara publicado hasta verificar GitHub Pages.
+Version: EXEC-DASH-V1.1.0
+Build ID: EXEC-DASH-V1.1.0-20260919T131221Z
+
+MEJORAS
+- Cada gráfico ejecutivo se puede pulsar para ampliar a pantalla completa.
+- Cierre mediante botón X, clic fuera del gráfico o tecla Escape.
+- Soporte de teclado Enter/Espacio para abrir.
+- La lectura de liquidez se alimenta de la proyección real.
+- La presión de obligaciones se alimenta del estado financiero real.
+- El flujo de próximos 30 días se calcula desde la proyección real.
+- Cache-busting JS/CSS v1.1.0.
+
+VALIDACIÓN
+- Sintaxis JavaScript: PASS.
+- Hooks UI requeridos: PASS.
+
+PUBLICACIÓN
+- Paquete construido.
+- Requiere despliegue en GitHub Pages para quedar publicado.

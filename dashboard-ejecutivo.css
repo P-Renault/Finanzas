@@ -29,3 +29,101 @@
 .executive-insight span { display:block; color:#68737d; font-size:.76rem; }
 .executive-insight strong { display:block; margin-top:5px; font-size:1.05rem; }
 @media(max-width:800px){ .executive-chart-grid{grid-template-columns:1fr;} .executive-insight{grid-template-columns:1fr;} .executive-chart{min-height:310px;} .chart-wrap{height:255px;} }
+
+/* Executive Dashboard UX v1.1.0 — fullscreen chart viewer */
+.executive-chart {
+  cursor: zoom-in;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.executive-chart:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.07);
+}
+.executive-chart:focus-visible {
+  outline: 3px solid #1769aa;
+  outline-offset: 2px;
+}
+.executive-chart-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  background: rgba(9,16,27,.82);
+  padding: 14px;
+}
+.executive-chart-modal.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.executive-chart-modal-dialog {
+  width: min(1200px, 100%);
+  height: min(94vh, 900px);
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.executive-chart-modal-header {
+  min-height: 74px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e1e6ea;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.executive-chart-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.executive-chart-modal-close {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef2f5;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
+.executive-chart-modal-body {
+  flex: 1;
+  min-height: 0;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+.modal-chart-description {
+  margin: 0 0 8px;
+  color: #68737d;
+  font-size: .9rem;
+}
+.fullscreen-chart-svg {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+}
+body.executive-modal-open {
+  overflow: hidden;
+}
+@media (max-width: 800px) {
+  .executive-chart-modal {
+    padding: 0;
+  }
+  .executive-chart-modal-dialog {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .executive-chart-modal-header {
+    min-height: 64px;
+    padding: 10px 14px;
+  }
+  .executive-chart-modal-body {
+    padding: 10px;
+  }
+}

@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
-<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.0.0">
+<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.1.0">
 
 <title>Centro de Control Financiero · CCF-V5.0.0</title>
 </head>
@@ -256,7 +256,29 @@
 
         </section>
 
-      </main>
+      
+        <!-- VISOR DE GRÁFICOS A PANTALLA COMPLETA -->
+        <div id="executive-chart-modal"
+             class="executive-chart-modal"
+             aria-hidden="true">
+          <div class="executive-chart-modal-dialog"
+               role="dialog"
+               aria-modal="true"
+               aria-labelledby="executive-chart-modal-title">
+            <div class="executive-chart-modal-header">
+              <div>
+                <p class="eyebrow">ANÁLISIS VISUAL</p>
+                <h2 id="executive-chart-modal-title">Gráfico financiero</h2>
+              </div>
+              <button id="executive-chart-modal-close"
+                      class="executive-chart-modal-close"
+                      type="button"
+                      aria-label="Cerrar gráfico ampliado">×</button>
+            </div>
+            <div id="executive-chart-modal-body"
+                 class="executive-chart-modal-body"></div>
+          </div>
+        </div>
 
     </section>
 
@@ -629,7 +651,7 @@
     'motor_alertas.js?v=5.0.0',
     'motor_acciones.js?v=5.0.0',
     'resumen.js?v=5.0.0',
-    'dashboard-ejecutivo.js?v=1.0.0'
+    'dashboard-ejecutivo.js?v=1.1.0'
   ];
 
   function loadOne(src) {
