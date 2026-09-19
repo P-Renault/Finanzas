@@ -253,7 +253,8 @@
     observer.observe(host,{attributes:true,attributeFilter:['class']});
     host.dataset.b23214Observer='1';
   }
-}
+  }
+
 
 Mantener:
 window.B232Calendario={version:VERSION,load,render};
