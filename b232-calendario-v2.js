@@ -1,80 +1,282 @@
-/* FINANZAS B2.19 — arquitectura de navegación estable · B232.3
-   Conserva las funciones existentes en la barra horizontal y mueve las nuevas
-   funcionalidades a un menú desplegable. Carga legacy de forma secuencial para
-   evitar carreras entre módulos. No crea jornadas financieras duplicadas.
-   B232.3: integra Calendario V2 en la carga secuencial, sin duplicar motores existentes.
-   B232.6: conserva el último módulo visitado entre recargas; una nueva conexión inicia en Resumen. */
-(()=>{'use strict';
-const $=id=>document.getElementById(id);
-const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
-let client=null;
-const db=()=>{if(client)return client;const u=localStorage.getItem('sf_url'),k=localStorage.getItem('sf_key');if(u&&k&&window.supabase)client=window.supabase.createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}});return client};
-const wait=ms=>new Promise(r=>setTimeout(r,ms));
-function loadScript(src){return new Promise((resolve,reject)=>{const old=document.querySelector(`script[data-b219="${src}"]`);if(old){resolve();return}const s=document.createElement('script');s.src=src;s.dataset.b219=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('No se pudo cargar '+src));document.body.appendChild(s)})}
-async function loadLegacy(){
-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.3'];
-  for(const f of files){try{await loadScript(f);await wait(80)}catch(e){console.error('B219 legacy',e)}}
-}
-function baseStyles(){if($('b219Styles'))return;const s=document.createElement('style');s.id='b219Styles';s.textContent=`
-.b219-nav-shell{display:flex!important;align-items:flex-start!important;gap:8px!important;margin-bottom:16px!important;position:relative!important;z-index:20!important}.b219-nav-shell .tabs{display:flex!important;flex:1 1 auto!important;min-width:0!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:visible!important;gap:8px!important;padding:4px 0 9px!important;margin-bottom:0!important;-webkit-overflow-scrolling:touch;scrollbar-width:thin}.b219-nav-shell .tabs>button{flex:0 0 auto!important;white-space:nowrap!important}.b219-menu-wrap{position:relative;flex:0 0 auto;margin-left:auto}.b219-menu-btn{border:0;border-radius:10px;padding:10px 13px;background:#e5e7eb;color:#111827;font-weight:700;cursor:pointer}.b219-menu-btn.open{background:#111827;color:#fff}.b219-menu{position:absolute;right:0;top:calc(100% + 7px);z-index:1000;min-width:235px;background:#fff;border:1px solid #dbe2ea;border-radius:14px;box-shadow:0 12px 30px rgba(15,23,42,.16);padding:7px;display:none}.b219-menu.open{display:block}.b219-menu button{display:block;width:100%;text-align:left;border:0;background:#fff;border-radius:9px;padding:11px 12px;color:#111827;font-weight:700;cursor:pointer}.b219-menu button:hover{background:#f1f5f9}.b219-menu small{display:block;color:#64748b;font-weight:500;margin-top:2px}.b219-hidden-tab{display:none!important}
-.b219-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.b219-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.b219-kpi{padding:13px;border:1px solid #e5e7eb;border-radius:14px;background:#fff}.b219-kpi span{display:block;color:#64748b;font-size:11px}.b219-kpi strong{display:block;margin-top:5px;font-size:20px}.b219-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #e5e7eb}.b219-row small{display:block;color:#64748b;font-size:11px;margin-top:2px}.b219-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.b219-form .full{grid-column:1/-1}.b219-status{padding:10px;border-radius:10px;background:#f8fafc;color:#475569}.b219-chip{display:inline-block;padding:4px 8px;border:1px solid #dbe2ea;border-radius:999px;font-size:10px;color:#475569}
-@media(max-width:720px){.b219-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.b219-grid{grid-template-columns:1fr}}
-@media(max-width:700px){.b219-nav-shell{align-items:center!important}.b219-menu-btn{padding:10px 12px!important}}
-@media(max-width:480px){.b219-kpis{grid-template-columns:1fr 1fr}.b219-menu{right:0;min-width:220px}}
-`;document.head.appendChild(s)}
-function ensureSection(id,html){const app=$('app');if(!app)return null;let s=$(id);if(!s){s=document.createElement('section');s.id=id;s.className='tab hidden';s.innerHTML=html;app.appendChild(s)}return s}
-function show(id){document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.tabs button[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));if(id==='operaciones')loadOps();if(id==='ingresos')loadIncome();if(id==='jornadas')loadJornadas();if(id==='planificacion')window.fin216Plan?.();}
-function reorderTabs(){const t=document.querySelector('.tabs');if(!t)return;const order=['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion'];for(const id of order){const b=t.querySelector(`button[data-tab="${id}"]`);if(b)t.appendChild(b)}}
-function ensureCoreButtons(){const t=document.querySelector('.tabs');if(!t)return;const add=(id,label)=>{let b=t.querySelector(`[data-tab="${id}"]`);if(!b){b=document.createElement('button');b.type='button';b.dataset.tab=id;b.textContent=label;t.appendChild(b)}return b};add('operaciones','Operaciones');if(!t.querySelector('[data-tab="planificacion"]')){const b=document.createElement('button');b.type='button';b.dataset.tab='planificacion';b.textContent='Planificación';t.appendChild(b);const app=$('app');if(app&&!$('planificacion')){const s=document.createElement('section');s.id='planificacion';s.className='tab hidden';s.innerHTML='<div id="b216Content"></div>';app.appendChild(s)}}reorderTabs();}
-function installMenu(){const t=document.querySelector('.tabs');if(!t||$('b219MenuWrap'))return;const shell=document.createElement('div');shell.id='b219NavShell';shell.className='b219-nav-shell';t.parentNode.insertBefore(shell,t);shell.appendChild(t);const wrap=document.createElement('div');wrap.id='b219MenuWrap';wrap.className='b219-menu-wrap';wrap.innerHTML=`<button type="button" id="b219MenuBtn" class="b219-menu-btn" aria-expanded="false">Más ▾</button><div id="b219Menu" class="b219-menu" role="menu"><button type="button" data-b219-open="ingresos">Motor Multifuente<small>Generación · cobro · ingresos pendientes</small></button><button type="button" data-b219-open="jornadas">Control de Jornada<small>Integración financiera Uber / inDrive</small></button></div>`;shell.appendChild(wrap);const btn=$('b219MenuBtn'),menu=$('b219Menu');btn.onclick=e=>{e.stopPropagation();const open=!menu.classList.contains('open');menu.classList.toggle('open',open);btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open))};menu.addEventListener('click',e=>{const b=e.target.closest('[data-b219-open]');if(!b)return;show(b.dataset.b219Open);menu.classList.remove('open');btn.classList.remove('open');btn.setAttribute('aria-expanded','false')});document.addEventListener('click',()=>{menu.classList.remove('open');btn.classList.remove('open');btn.setAttribute('aria-expanded','false')})}
-function installGenericNav(){
-  const t=document.querySelector('.tabs');
-  if(!t||t.dataset.b219Nav)return;
-  t.dataset.b219Nav='1';
+/* ============================================================
+   B232 — CALENDARIO V2
+   Calendario integrado: movimientos + compromisos + cuotas de deuda.
+   No modifica saldos ni registra operaciones.
+   Deudas sin fecha NO aparecen en el calendario.
+   ============================================================ */
+(() => {
+  'use strict';
 
-  /* B232.6 · Persistencia de navegación
-     Primera conexión: Resumen.
-     Reingreso/recarga con conexión existente: conserva el último módulo.
-     Cierre mediante Salir: limpia la vista guardada para que una nueva conexión
-     vuelva a comenzar en Resumen. */
-  const NAV_KEY='cf_active_tab_v1';
-  const validTab=id=>['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion','ingresos','jornadas'].includes(id);
+  const VERSION = '232.0';
+  if (window.B232Calendario?.version === VERSION) return;
 
-  t.addEventListener('click',e=>{
-    const b=e.target.closest('button[data-tab]');
-    if(!b)return;
-    const id=b.dataset.tab;
-    if(id==='ingresos'||id==='jornadas')return;
-    if(validTab(id))localStorage.setItem(NAV_KEY,id);
-    show(id);
-  });
+  const $ = id => document.getElementById(id);
+  const money = n => new Intl.NumberFormat('es-CL',{
+    style:'currency',currency:'CLP',maximumFractionDigits:0
+  }).format(Number(n)||0);
+  const today = () => {
+    const d = new Date();
+    return new Date(d.getTime()-d.getTimezoneOffset()*60000)
+      .toISOString().slice(0,10);
+  };
+  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]));
+  const parseDate = s => new Date(`${s}T12:00:00`);
+  const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
-  const logout=$('logoutBtn');
-  if(logout&&!logout.dataset.b2326Logout){
-    logout.dataset.b2326Logout='1';
-    logout.addEventListener('click',()=>localStorage.removeItem(NAV_KEY));
+  let client = null;
+  let month = new Date();
+  let selected = today();
+  let data = {mov:[], fut:[], quotas:[]};
+
+  async function db(){
+    if(client) return client;
+    const u=localStorage.getItem('sf_url'), k=localStorage.getItem('sf_key');
+    if(!u || !k || !window.supabase) return null;
+    client=window.supabase.createClient(u,k,{
+      auth:{persistSession:false,autoRefreshToken:false}
+    });
+    return client;
   }
 
-  const saved=localStorage.getItem(NAV_KEY);
-  if(saved&&validTab(saved)){
-    setTimeout(()=>{
-      const button=t.querySelector(`button[data-tab="${saved}"]`);
-      if(button)show(saved);
-    },50);
+  async function load(){
+    const c=await db();
+    if(!c) throw Error('Supabase no está conectado.');
+
+    const [mov,fut,quotas] = await Promise.all([
+      c.from('movimientos')
+        .select('*')
+        .order('fecha',{ascending:true}),
+      c.from('compromisos')
+        .select('*')
+        .order('fecha_vencimiento',{ascending:true}),
+      c.from('cuotas_deuda')
+        .select('id,deuda_id,numero_cuota,monto,fecha_vencimiento,estado')
+        .in('estado',['pendiente','vencida'])
+        .order('fecha_vencimiento',{ascending:true})
+    ]);
+
+    for(const r of [mov,fut,quotas]) if(r.error) throw r.error;
+
+    data={
+      mov:mov.data||[],
+      fut:fut.data||[],
+      quotas:quotas.data||[]
+    };
+    render();
   }
-}
-async function safe(p,fb=[]){try{const r=await Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),7000))]);return r?.error?fb:(r?.data??fb)}catch{return fb}}
-async function loadOps(){const m=$('b219OpsMsg');if(!m)return;const c=db();if(!c){m.textContent='Conecta Supabase para consultar Operaciones.';return}m.textContent='Actualizando…';const [cl,banks,debtRows,inc,exp,genRows]=await Promise.all([safe(c.from('cierres_financieros').select('saldo_efectivo_actual').eq('activo',true).order('fecha_corte',{ascending:false}).limit(1)),safe(c.from('cuentas_bancarias').select('nombre_banco,nombre_cuenta,saldo_actual').eq('activa',true)),safe(c.from('v_deudas_resumen').select('acreedor,saldo_actual,proximo_vencimiento,estado').order('acreedor')),safe(c.from('movimientos').select('tipo,monto,fecha').eq('tipo','ingreso').gte('fecha',today())),safe(c.from('movimientos').select('tipo,monto,fecha').eq('tipo','gasto').gte('fecha',today())),safe(c.from('generacion_ingresos').select('monto_neto,estado_cobro').limit(100))]);const cash=Number(cl[0]?.saldo_efectivo_actual||0),bank=banks.reduce((s,x)=>s+Number(x.saldo_actual||0),0),liq=cash+bank,futureIn=inc.reduce((s,x)=>s+Number(x.monto||0),0),futureOut=exp.reduce((s,x)=>s+Number(x.monto||0),0),debt=debtRows.reduce((s,x)=>!['pagada','cancelada'].includes(String(x.estado).toLowerCase())?s+Number(x.saldo_actual||0):s,0),gen=genRows.filter(x=>x.estado_cobro!=='cancelado').reduce((s,x)=>s+Number(x.monto_neto||0),0);$('b219Liq').textContent=money(liq);$('b219Future').textContent=money(futureIn);$('b219Proj').textContent=money(liq+futureIn-futureOut);$('b219Debt').textContent=money(debt);$('b219Gen').textContent=money(gen);$('b219Cash').textContent=money(cash);$('b219Bank').textContent=money(bank);$('b219BankList').innerHTML=banks.map(x=>`<div class="b219-row"><span>${esc(x.nombre_banco)}<small>${esc(x.nombre_cuenta||'Cuenta')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin cuentas activas.</p>';$('b219DebtList').innerHTML=debtRows.filter(x=>!['pagada','cancelada'].includes(String(x.estado).toLowerCase())).slice(0,8).map(x=>`<div class="b219-row"><span>${esc(x.acreedor)}<small>Próximo: ${esc(x.proximo_vencimiento||'—')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin deudas pendientes.</p>';m.textContent='Operaciones actualizado.'}
-async function loadIncome(){const c=db();if(!c)return;const [f,g]=await Promise.all([safe(c.from('fuentes_ingreso').select('*').eq('activa',true).order('nombre')),safe(c.from('generacion_ingresos').select('*').order('fecha_generacion',{ascending:false}).limit(50))]);$('b219Source').innerHTML=f.map(x=>`<option value="${x.id}">${esc(x.nombre)}</option>`).join('');const gen=g.filter(x=>x.estado_cobro!=='cancelado').reduce((s,x)=>s+Number(x.monto_neto||0),0),rec=g.filter(x=>x.estado_cobro==='cobrado').reduce((s,x)=>s+Number(x.monto_neto||0),0);$('b219Generated').textContent=money(gen);$('b219Received').textContent=money(rec);$('b219Pending').textContent=money(gen-rec);$('b219IncomeList').innerHTML=g.map(x=>`<div class="b219-row"><span>${esc(x.actividad)}<small>${esc(x.fecha_generacion)} · ${esc(x.estado_cobro)}</small></span><strong>${money(x.monto_neto)}</strong></div>`).join('')||'<p class="muted">Sin generaciones registradas.</p>'}
-async function loadJornadas(){const c=db();if(!c)return;const f=await safe(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').maybeSingle(),null);const rows=f?.id?await safe(c.from('generacion_ingresos').select('*').eq('fuente_id',f.id).order('fecha_generacion',{ascending:false}).limit(30)):[];$('b219JCount').textContent=String(rows.length);$('b219JNet').textContent=money(rows.reduce((s,x)=>s+Number(x.monto_neto||0),0));$('b219JList').innerHTML=rows.map(x=>`<div class="b219-row"><span>${esc(x.fecha_generacion)} · ${esc(x.actividad)}<small>Resultado financiero integrado · ${esc(x.estado_cobro)}</small></span><strong>${money(x.monto_neto)}</strong></div>`).join('')||'<p class="muted">Sin resultados integrados todavía. No se duplican horas, kilómetros, combustible ni viajes.</p>'}
-function sections(){
-ensureSection('operaciones',`<div class="card"><div class="section-title"><div><span class="muted">B2.19 · CENTRO DE OPERACIONES</span><h2>Operaciones</h2><p class="muted">Liquidez real, obligaciones, flujo futuro y generación financiera.</p></div><button type="button" class="secondary" id="b219OpsRefresh">Actualizar</button></div><div class="b219-kpis"><article class="b219-kpi"><span>Liquidez real</span><strong id="b219Liq">$0</strong></article><article class="b219-kpi"><span>Ingresos futuros</span><strong id="b219Future">$0</strong></article><article class="b219-kpi"><span>Disponible proyectado</span><strong id="b219Proj">$0</strong></article><article class="b219-kpi"><span>Deuda pendiente</span><strong id="b219Debt">$0</strong></article><article class="b219-kpi"><span>Ingresos generados</span><strong id="b219Gen">$0</strong></article></div></div><div class="b219-grid"><div class="card"><h3>Liquidez</h3><div class="b219-row"><span>Efectivo</span><strong id="b219Cash">$0</strong></div><div class="b219-row"><span>Bancos</span><strong id="b219Bank">$0</strong></div><div id="b219BankList"></div></div><div class="card"><h3>Deudas estructuradas</h3><div id="b219DebtList"></div></div></div><p id="b219OpsMsg" class="b219-status">Listo.</p>`);
-ensureSection('ingresos',`<div class="card"><span class="muted">B2.19 · MOTOR MULTIFUENTE</span><h2>Generación de ingresos</h2><p class="muted">Una entrada financiera para múltiples actividades, sin mezclar generación con liquidez.</p><div class="b219-kpis"><article class="b219-kpi"><span>Generado neto</span><strong id="b219Generated">$0</strong></article><article class="b219-kpi"><span>Cobrado</span><strong id="b219Received">$0</strong></article><article class="b219-kpi"><span>Pendiente</span><strong id="b219Pending">$0</strong></article></div></div><div class="card"><h3>Registrar generación</h3><form id="b219IncomeForm" class="b219-form"><label>Fuente<select id="b219Source"></select></label><label>Actividad<input id="b219Activity" required placeholder="Conducción, formateo, desarrollo, venta…"></label><label>Cliente<input id="b219Client"></label><label>Fecha de generación<input id="b219Date" type="date" required></label><label>Monto bruto<input id="b219Gross" type="number" min="0" step="1" value="0"></label><label>Costos<input id="b219Cost" type="number" min="0" step="1" value="0"></label><label>Comisiones<input id="b219Comm" type="number" min="0" step="1" value="0"></label><label>Estado<select id="b219State"><option value="pendiente">Pendiente</option><option value="cobrado">Cobrado</option></select></label><label>Fecha de cobro<input id="b219Collection" type="date"></label><label class="full">Notas<input id="b219Notes"></label><button class="full" type="submit">Registrar generación</button></form><p id="b219IncomeMsg" class="status"></p></div><div class="card"><h3>Últimas generaciones</h3><div id="b219IncomeList"></div></div>`);
-ensureSection('jornadas',`<div class="card"><span class="muted">B2.19 · PUENTE OPERACIONAL</span><h2>Control de Jornada</h2><p class="muted">El detalle de horas, km, combustible, viajes, bruto y comisión permanece en Control de Jornada. Finanzas recibe solamente el resultado financiero.</p><div class="b219-kpis"><article class="b219-kpi"><span>Resultados integrados</span><strong id="b219JCount">0</strong></article><article class="b219-kpi"><span>Neto integrado</span><strong id="b219JNet">$0</strong></article></div><div class="card"><h3>Integrar resultado de una jornada</h3><form id="b219JForm" class="b219-form"><label>Fecha<input id="b219JDate" type="date" required></label><label>Neto generado<input id="b219JNetInput" type="number" min="0" step="1" required></label><label>Costos incluidos<input id="b219JCost" type="number" min="0" step="1" value="0"></label><label>Estado<select id="b219JState"><option value="cobrado">Cobrado</option><option value="pendiente">Pendiente</option></select></label><label class="full">Referencia<input id="b219JRef" placeholder="Jornada Uber/inDrive"></label><button class="full" type="submit">Integrar resultado financiero</button></form><p id="b219JMsg" class="status"></p></div></div><div class="card"><h3>Historial integrado</h3><div id="b219JList"></div></div>`);
-}
-function forms(){const d=today();$('b219Date').value=d;$('b219JDate').value=d;$('b219IncomeForm').onsubmit=async e=>{e.preventDefault();const c=db(),m=$('b219IncomeMsg');if(!c){m.textContent='Conecta Supabase.';return}const state=$('b219State').value;const p={fuente_id:Number($('b219Source').value),actividad:$('b219Activity').value.trim(),cliente:$('b219Client').value.trim()||null,fecha_generacion:$('b219Date').value,fecha_cobro:state==='cobrado'?($('b219Collection').value||d):null,monto_bruto:+$('b219Gross').value||0,costos:+$('b219Cost').value||0,comisiones:+$('b219Comm').value||0,estado_cobro:state,notas:$('b219Notes').value.trim()||null};const r=await safe(c.from('generacion_ingresos').insert(p),null);m.textContent=r===null?'No se pudo registrar.':'Generación registrada. La liquidez no cambia automáticamente.';if(r!==null){e.target.reset();$('b219Date').value=today();await loadIncome()}};$('b219JForm').onsubmit=async e=>{e.preventDefault();const c=db(),m=$('b219JMsg');if(!c){m.textContent='Conecta Supabase.';return}const f=await safe(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').maybeSingle(),null);if(!f){m.textContent='No existe la fuente Uber / inDrive. Ejecuta el SQL B2.17/B2.18 una sola vez.';return}const net=+$('b219JNetInput').value||0,cost=+$('b219JCost').value||0,state=$('b219JState').value;const p={fuente_id:f.id,actividad:'Resultado Control de Jornada',descripcion:$('b219JRef').value.trim()||'Integración financiera de jornada',fecha_generacion:$('b219JDate').value,monto_bruto:net+cost,costos:cost,comisiones:0,estado_cobro:state,fecha_cobro:state==='cobrado'?$('b219JDate').value:null,notas:'Origen: Control de Jornada'};const r=await safe(c.from('generacion_ingresos').insert(p),null);m.textContent=r===null?'No se pudo integrar.':`Resultado integrado: ${money(net)}.`;if(r!==null){e.target.reset();$('b219JDate').value=today();await loadJornadas()}};$('b219OpsRefresh').onclick=loadOps}
-async function boot(){baseStyles();await loadLegacy();await wait(650);ensureCoreButtons();sections();forms();installGenericNav();installMenu();reorderTabs();}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,250),{once:true});else setTimeout(boot,250);
+
+  function monthRows(){
+    const y=month.getFullYear(), m=month.getMonth();
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    const start=new Date(first); start.setDate(1-first.getDay());
+
+    const movementBy={}, futureBy={}, quotaBy={};
+    for(const x of data.mov)(movementBy[x.fecha]??=[]).push(x);
+    for(const x of data.fut.filter(x=>x.estado==='pendiente'))
+      (futureBy[x.fecha_vencimiento]??=[]).push(x);
+    for(const x of data.quotas)
+      if(x.fecha_vencimiento)(quotaBy[x.fecha_vencimiento]??=[]).push(x);
+
+    const rows=[];
+    let running=0;
+
+    const beforeMov=data.mov.filter(x=>x.fecha<dateKey(first));
+    const beforeFuture=data.fut.filter(x=>x.estado==='pendiente'&&x.fecha_vencimiento<dateKey(first));
+    const beforeQuota=data.quotas.filter(x=>x.fecha_vencimiento<dateKey(first));
+
+    for(const x of beforeMov)
+      running += x.tipo==='ingreso'?Number(x.monto): -Number(x.monto);
+    for(const x of beforeFuture) running -= Number(x.monto);
+    for(const x of beforeQuota) running -= Number(x.monto);
+
+    for(let day=1;day<=last.getDate();day++){
+      const key=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const movements=movementBy[key]||[];
+      const commitments=futureBy[key]||[];
+      const debtQuotas=quotaBy[key]||[];
+
+      const income=movements.filter(x=>x.tipo==='ingreso')
+        .reduce((s,x)=>s+Number(x.monto||0),0);
+      const expense=movements.filter(x=>x.tipo==='gasto')
+        .reduce((s,x)=>s+Number(x.monto||0),0);
+      const scheduled=commitments.reduce((s,x)=>s+Number(x.monto||0),0);
+      const debt=debtQuotas.reduce((s,x)=>s+Number(x.monto||0),0);
+
+      running += income-expense-scheduled-debt;
+
+      rows.push({
+        key,day,income,expense,scheduled,debt,balance:running,
+        movements,commitments,debtQuotas
+      });
+    }
+
+    return {rows,movementBy,futureBy,quotaBy};
+  }
+
+  function injectStyle(){
+    if($('b232Style')) return;
+    const s=document.createElement('style');
+    s.id='b232Style';
+    s.textContent=`
+      .b232-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+      .b232-nav{display:flex;gap:8px}
+      .b232-nav button{min-width:44px}
+      .b232-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+      .b232-metric{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff}
+      .b232-metric span,.b232-metric small{display:block;color:#64748b;font-size:.78rem}
+      .b232-metric strong{display:block;margin-top:4px}
+      .b232-legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0;color:#475569;font-size:.8rem}
+      .b232-calendar{display:grid;grid-template-columns:repeat(7,minmax(90px,1fr));overflow:auto;border:1px solid #e5e7eb;border-radius:12px}
+      .b232-week{display:contents}
+      .b232-week>div{padding:8px;border-bottom:1px solid #e5e7eb;font-size:.72rem;font-weight:700;text-align:center}
+      .b232-day{min-height:120px;border:0;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;background:#fff;text-align:left;padding:7px;cursor:pointer}
+      .b232-day.outside{background:#f8fafc;color:#94a3b8}
+      .b232-day.selected{outline:2px solid #0f172a;outline-offset:-2px}
+      .b232-day-head{display:flex;justify-content:space-between;gap:4px;margin-bottom:5px}
+      .b232-event{display:block;font-size:.68rem;margin-top:3px;padding:3px 5px;border-radius:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+      .b232-income{background:#ecfdf5;color:#166534}
+      .b232-expense{background:#fef2f2;color:#991b1b}
+      .b232-commitment{background:#fff7ed;color:#9a3412}
+      .b232-debt{background:#eff6ff;color:#1d4ed8}
+      .b232-balance{margin-top:6px;font-size:.68rem;color:#475569}
+      .b232-detail{margin-top:14px}
+      .b232-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      .b232-block{border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff}
+      .b232-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9}
+      .b232-row:last-child{border-bottom:0}
+      .b232-kind{font-size:.72rem;color:#64748b}
+      @media(max-width:760px){
+        .b232-metrics{grid-template-columns:1fr 1fr}
+        .b232-detail-grid{grid-template-columns:1fr}
+        .b232-calendar{grid-template-columns:repeat(7,92px)}
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function render(){
+    const host=$('calendario');
+    if(!host) return;
+    injectStyle();
+
+    const {rows}=monthRows();
+    const byKey=Object.fromEntries(rows.map(x=>[x.key,x]));
+    const y=month.getFullYear(), m=month.getMonth();
+    const first=new Date(y,m,1);
+    const gridStart=new Date(first);
+    gridStart.setDate(1-first.getDay());
+    const days=Array.from({length:42},(_,i)=>{
+      const d=new Date(gridStart);d.setDate(gridStart.getDate()+i);return d;
+    });
+
+    const inMonthRows=rows;
+    const totalIncome=inMonthRows.reduce((s,x)=>s+x.income,0);
+    const totalExpense=inMonthRows.reduce((s,x)=>s+x.expense,0);
+    const totalCommit=inMonthRows.reduce((s,x)=>s+x.scheduled,0);
+    const totalDebt=inMonthRows.reduce((s,x)=>s+x.debt,0);
+    const finalBalance=inMonthRows.at(-1)?.balance||0;
+
+    host.innerHTML=`
+      <div class="card">
+        <div class="b232-toolbar">
+          <div>
+            <span class="muted">B232 · CALENDARIO V2</span>
+            <h2 id="b232MonthTitle">${month.toLocaleDateString('es-CL',{month:'long',year:'numeric'})}</h2>
+          </div>
+          <div class="b232-nav">
+            <button type="button" class="secondary" id="b232Prev">‹</button>
+            <button type="button" class="secondary" id="b232Today">Hoy</button>
+            <button type="button" class="secondary" id="b232Next">›</button>
+          </div>
+        </div>
+
+        <div class="b232-metrics">
+          <div class="b232-metric"><span>Ingresos</span><strong>${money(totalIncome)}</strong></div>
+          <div class="b232-metric"><span>Gastos</span><strong>${money(totalExpense)}</strong></div>
+          <div class="b232-metric"><span>Compromisos</span><strong>${money(totalCommit)}</strong></div>
+          <div class="b232-metric"><span>Cuotas de deuda</span><strong>${money(totalDebt)}</strong></div>
+          <div class="b232-metric"><span>Saldo al cierre</span><strong>${money(finalBalance)}</strong></div>
+        </div>
+
+        <div class="b232-legend">
+          <span>↑ Ingreso</span><span>↓ Gasto</span>
+          <span>● Compromiso</span><span>◆ Cuota de deuda</span>
+        </div>
+
+        <div class="b232-calendar">
+          ${['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'].map(x=>`<div>${x}</div>`).join('')}
+          ${days.map(d=>{
+            const key=dateKey(d), r=byKey[key], inMonth=d.getMonth()===m;
+            const items=[];
+            for(const x of (r?.movements||[]))
+              items.push(`<span class="b232-event ${x.tipo==='ingreso'?'b232-income':'b232-expense'}">${x.tipo==='ingreso'?'↑':'↓'} ${money(x.monto)}</span>`);
+            for(const x of (r?.commitments||[]))
+              items.push(`<span class="b232-event b232-commitment">● ${money(x.monto)}</span>`);
+            for(const x of (r?.debtQuotas||[]))
+              items.push(`<span class="b232-event b232-debt">◆ ${money(x.monto)}</span>`);
+            return `<button type="button" class="b232-day ${inMonth?'':'outside'} ${key===selected?'selected':''}" data-date="${key}">
+              <div class="b232-day-head"><strong>${d.getDate()}</strong>${key===today()?'<small>HOY</small>':''}</div>
+              ${items.slice(0,4).join('')}
+              ${items.length>4?`<span class="b232-kind">+${items.length-4} más</span>`:''}
+              ${inMonth&&r?`<div class="b232-balance">Saldo ${money(r.balance)}</div>`:''}
+            </button>`;
+          }).join('')}
+        </div>
+
+        <div id="b232Detail" class="b232-detail"></div>
+        <p class="muted">Las deudas sin fecha no aparecen en el calendario. Se incorporan cuando existe una fecha de vencimiento o una cuota calendarizada. Las transferencias de fondos no se contabilizan como ingreso ni gasto.</p>
+      </div>
+    `;
+
+    $('b232Prev').onclick=async()=>{month.setMonth(month.getMonth()-1);selected=dateKey(new Date(month.getFullYear(),month.getMonth(),1));render()};
+    $('b232Next').onclick=async()=>{month.setMonth(month.getMonth()+1);selected=dateKey(new Date(month.getFullYear(),month.getMonth(),1));render()};
+    $('b232Today').onclick=async()=>{month=new Date();selected=today();render()};
+    host.querySelectorAll('.b232-day').forEach(b=>b.onclick=()=>{selected=b.dataset.date;render()});
+
+    const r=byKey[selected];
+    const selectedDate=parseDate(selected);
+    const label=selectedDate.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+    const movements=r?.movements||[], commitments=r?.commitments||[], quotas=r?.debtQuotas||[];
+
+    $('b232Detail').innerHTML=`
+      <div class="b232-block">
+        <h3>Detalle del ${esc(label)}</h3>
+        <div class="b232-detail-grid">
+          <div class="b232-block">
+            <strong>Ingresos y gastos registrados</strong>
+            ${movements.length?movements.map(x=>`<div class="b232-row"><span>${esc(x.categoria||x.descripcion||'Movimiento')}</span><strong>${x.tipo==='ingreso'?'+':'-'}${money(x.monto)}</strong></div>`).join(''):'<p class="muted">Sin movimientos registrados.</p>'}
+          </div>
+          <div class="b232-block">
+            <strong>Obligaciones</strong>
+            ${commitments.map(x=>`<div class="b232-row"><span>${esc(x.concepto||'Compromiso')}</span><strong>${money(x.monto)}</strong></div>`).join('') || '<p class="muted">Sin compromisos programados.</p>'}
+            ${quotas.map(x=>`<div class="b232-row"><span>Cuota deuda #${esc(x.numero_cuota)} · ${esc(x.estado)}</span><strong>${money(x.monto)}</strong></div>`).join('')}
+          </div>
+        </div>
+        ${r?`<div class="b232-row"><span>Saldo acumulado al cierre</span><strong>${money(r.balance)}</strong></div>`:''}
+      </div>
+    `;
+  }
+
+  function mount(){
+    const tab=document.querySelector('[data-tab="calendario"]');
+    if(!tab || !document.getElementById('calendario')) return false;
+    if(!tab.dataset.b232Bound){
+      tab.addEventListener('click',()=>{
+        load().catch(e=>{
+          const host=$('calendario');
+          if(host) host.innerHTML=`<div class="card"><p class="status">${esc(e.message||e)}</p></div>`;
+        });
+      });
+      tab.dataset.b232Bound='1';
+    }
+    return true;
+  }
+
+  window.B232Calendario={version:VERSION,load,render};
+
+  const boot=()=>{mount(); if(document.querySelector('[data-tab="calendario"].active')) load().catch(()=>{})};
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else setTimeout(boot,250);
 })();
