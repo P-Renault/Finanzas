@@ -1,5 +1,16 @@
-EXEC-DASH-V1.2.5
-Restauración de integración del Dashboard Ejecutivo.
-Mantiene CCF V5.0.1, proyección, brecha, margen, alertas y acciones.
-Incluye dashboard-ejecutivo.js + CSS + contenedores HTML + llamada desde resumen.js.
-No elimina ni sustituye módulos existentes.
+EXEC-DASH-V1.2.6
+Fecha: 2026-09-19
+Propósito: integrar análisis ejecutivo de anticipación y apoyo cuantitativo a decisiones.
+
+Correcciones:
+- Dashboard Ejecutivo ubicado dentro de Resumen, no dentro de Ahorro.
+- Cache-busting actualizado a v1.2.6.
+- Mantiene CCF-V5.0.1 y la corrección rawDebts.map.
+- Se agregan gráficos de Ventana de riesgo y Brecha y recursos.
+- Se restauran Deudas del mes y Backlog de deudas.
+- Se mantiene Curva de liquidez, Ingresos vs egresos, Composición de obligaciones y Velas financieras.
+- Los gráficos consumen el mismo context/state/projection del Centro de Control.
+- Los gráficos son interactivos y pueden ampliarse.
+
+Criterio funcional:
+El Dashboard Ejecutivo debe servir como capa de anticipación y apoyo a decisiones, no solo como visualización histórica.

@@ -14,9 +14,9 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
-<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.5">
+<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.6">
 
-<title>Centro de Control Financiero · CCF-V5.0.1</title>
+<title>Centro de Control Financiero · CCF-V5.0.1 + EXEC-DASH-V1.2.6</title>
 </head>
 
 <body>
@@ -217,6 +217,86 @@
           </div>
 
         </section>
+
+
+        <!-- =========================================================
+             DASHBOARD EJECUTIVO — ANTICIPACIÓN Y APOYO DE DECISIONES
+             ========================================================= -->
+        <section class="executive-dashboard" id="executive-dashboard">
+          <div class="executive-head">
+            <div>
+              <p class="eyebrow">ANÁLISIS VISUAL</p>
+              <h2>Dashboard Ejecutivo</h2>
+              <p>Anticipación de liquidez, presión financiera y apoyo cuantitativo a decisiones.</p>
+            </div>
+            <span id="executive-risk-summary">Calculando...</span>
+          </div>
+
+          <div class="executive-insights">
+            <article><span>Lectura de liquidez</span><strong id="exec-liquidity-reading">Calculando...</strong></article>
+            <article><span>Presión de obligaciones</span><strong id="exec-obligation-reading">Calculando...</strong></article>
+            <article><span>Flujo próximo</span><strong id="exec-flow-reading">Calculando...</strong></article>
+            <article><span>Generación requerida</span><strong id="exec-generation-reading">Calculando...</strong></article>
+          </div>
+
+          <div class="executive-charts" id="executive-charts">
+            <article class="executive-chart">
+              <h3>Curva de liquidez</h3>
+              <p>Trayectoria del saldo proyectado y aproximación de la reserva mínima.</p>
+              <div id="chart-liquidity"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Ingresos vs egresos</h3>
+              <p>Comparación de los flujos previstos para anticipar presión de caja.</p>
+              <div id="chart-flow"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Composición de obligaciones</h3>
+              <p>Distribución del compromiso financiero por fuente.</p>
+              <div id="chart-obligations"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Velas financieras</h3>
+              <p>Variación semanal: apertura, máximo, mínimo y cierre de liquidez.</p>
+              <div id="chart-candles"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Ventana de riesgo</h3>
+              <p>Anticipación de la primera caída bajo la reserva mínima.</p>
+              <div id="chart-risk"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Brecha y recursos</h3>
+              <p>Recursos disponibles/asegurados frente a obligaciones cuantificadas.</p>
+              <div id="chart-gap"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Deudas del mes en curso</h3>
+              <p>Deudas con fecha de inicio o vencimiento dentro del mes actual.</p>
+              <div id="chart-debt-month"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Backlog de deudas</h3>
+              <p>Pendientes de negociación, pago y deudas sin fecha de inicio.</p>
+              <div id="chart-debt-planning"></div>
+            </article>
+          </div>
+        </section>
+
+        <div id="executive-chart-modal" class="executive-modal" aria-hidden="true">
+          <div class="executive-modal-card">
+            <button id="executive-chart-modal-close" type="button">Cerrar</button>
+            <h2 id="executive-chart-modal-title">Gráfico financiero</h2>
+            <div id="executive-chart-modal-body"></div>
+          </div>
+        </div>
 
       </main>
 
@@ -533,24 +613,7 @@
       <div class="card">
         <h2>Historial de ahorro</h2>
         <div id="ahorroLista"></div>
-            <section class="executive-dashboard" id="executive-dashboard">
-        <div class="executive-head">
-          <div><p class="eyebrow">ANÁLISIS VISUAL</p><h2>Dashboard Ejecutivo</h2><p>Lectura visual de liquidez, flujos, obligaciones y riesgo.</p></div>
-          <span id="executive-risk-summary">Calculando...</span>
-        </div>
-        <div class="executive-insights">
-          <article><span>Lectura de liquidez</span><strong id="exec-liquidity-reading">Calculando...</strong></article>
-          <article><span>Presión de obligaciones</span><strong id="exec-obligation-reading">Calculando...</strong></article>
-          <article><span>Flujo próximo</span><strong id="exec-flow-reading">Calculando...</strong></article>
-        </div>
-        <div class="executive-charts" id="executive-charts">
-          <article class="executive-chart"><h3>Curva de liquidez</h3><p>Trayectoria del saldo proyectado.</p><div id="chart-liquidity"></div></article>
-          <article class="executive-chart"><h3>Ingresos vs egresos</h3><p>Comparación de flujos previstos.</p><div id="chart-flow"></div></article>
-          <article class="executive-chart"><h3>Composición de obligaciones</h3><p>Distribución del monto comprometido.</p><div id="chart-obligations"></div></article>
-          <article class="executive-chart"><h3>Velas financieras</h3><p>Variación de apertura, máximo, mínimo y cierre.</p><div id="chart-candles"></div></article>
-        </div>
-      </section>
-      <div id="executive-chart-modal" class="executive-modal" aria-hidden="true"><div class="executive-modal-card"><button id="executive-chart-modal-close" type="button">Cerrar</button><h2 id="executive-chart-modal-title">Gráfico financiero</h2><div id="executive-chart-modal-body"></div></div></div>
+</div>
 </div>
 
     </section>
@@ -609,7 +672,7 @@
     'motor_alertas.js?v=5.0.0',
     'motor_acciones.js?v=5.0.0',
     'resumen.js?v=5.0.0',
-    'dashboard-ejecutivo.js?v=1.2.5'
+    'dashboard-ejecutivo.js?v=1.2.6'
   ];
 
   function loadOne(src) {

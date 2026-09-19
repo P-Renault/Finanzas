@@ -1,20 +1,20 @@
-EXEC-DASH-V1.2.5 — RESTAURACIÓN DASHBOARD EJECUTIVO
-
-1. Mantiene el desbloqueo CCF V5.0.1: rawDebts.map(...).
-2. Mantiene cache bust supabase_finanzas.js?v=5.0.1.
-3. Restaura dashboard-ejecutivo.js?v=1.2.5.
-4. Restaura la sección visual y sus contenedores.
-5. Restaura la invocación ExecutiveDashboard.renderCharts desde resumen.js.
-6. Agrega dashboard-ejecutivo.css?v=1.2.5.
-7. Los gráficos consumen el mismo context/state/projection del Centro de Control.
-8. No reemplaza el shell ni elimina módulos existentes.
-
-ACEPTACIÓN:
-- Sin ReferenceError debts is not defined.
-- KPIs reales conservados.
-- Proyección financiera conservada.
-- Dashboard Ejecutivo visible.
-- Curva de liquidez visible.
-- Ingresos vs egresos visible.
-- Composición de obligaciones visible.
-- Velas financieras visible.
+RELEASE EXEC-DASH-V1.2.6
+1. Integrar dashboard ejecutivo dentro de Resumen.
+2. Cargar dashboard-ejecutivo.js?v=1.2.6.
+3. Cargar dashboard-ejecutivo.css?v=1.2.6.
+4. Mantener supabase_finanzas.js?v=5.0.1.
+5. Validar:
+   - no ReferenceError debts is not defined
+   - KPIs reales
+   - proyección real
+   - acciones y próxima necesidad
+   - curva de liquidez
+   - ingresos vs egresos
+   - composición de obligaciones
+   - velas financieras
+   - ventana de riesgo
+   - brecha y recursos
+   - deudas del mes
+   - backlog de deudas
+6. El dashboard debe mostrar datos o un mensaje explícito de ausencia; nunca quedarse silenciosamente en Calculando.
+7. La sección no debe aparecer dentro de Ahorro.
