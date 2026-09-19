@@ -1,0 +1,11 @@
+# B232.14 — PATCH b219-arquitectura-navegacion.js
+
+En loadLegacy(), reemplazar:
+
+'b232-calendario-v2.js?v=232.3'
+
+por:
+
+'b232-calendario-v2.js?v=232.14'
+
+No agregar otro listener de clic para Calendario.

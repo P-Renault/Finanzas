@@ -1,0 +1,49 @@
+# B232.14 — PATCH app.js
+# Objetivo: B232 se renderiza inmediatamente al abrir Calendario y no depende
+# de pulsar las flechas. El renderer legacy deja de ser propietario visual.
+
+## 1) Reemplazar el manejador actual de pestañas
+
+ACTUAL:
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
+
+NUEVO:
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));
+  $(b.dataset.tab).classList.remove('hidden');
+
+  if(b.dataset.tab==='calendario'){
+    setTimeout(()=>{
+      if(window.B232Calendario && typeof window.B232Calendario.load==='function'){
+        window.B232Calendario.load().catch(console.error);
+      }
+    },0);
+  }
+});
+
+## 2) Reemplazar la llamada legacy dentro de refresh()
+
+ACTUAL:
+renderMov(cache.mov);renderFuture(cache.fut);renderSaving(cache.sav);renderDash(cache.mov,cache.fut,cache.sav);renderCalendar(cache.mov,cache.fut);
+
+NUEVO:
+renderMov(cache.mov);
+renderFuture(cache.fut);
+renderSaving(cache.sav);
+renderDash(cache.mov,cache.fut,cache.sav);
+
+const calendarHost=document.getElementById('calendario');
+if(
+  calendarHost &&
+  !calendarHost.classList.contains('hidden') &&
+  window.B232Calendario &&
+  typeof window.B232Calendario.load==='function'
+){
+  window.B232Calendario.load().catch(console.error);
+}
+
+## 3) No eliminar todavía las funciones legacy de calendario.
+Quedan sin llamadas desde refresh(), como compatibilidad histórica. El propietario
+visual queda exclusivamente en B232.

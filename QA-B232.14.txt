@@ -1,0 +1,40 @@
+# QA B232.14 — Integrabilidad del Calendario
+
+## Caso 1 — Entrada
+Abrir Resumen -> Calendario.
+Resultado esperado: B232 aparece directamente, sin pantalla legacy.
+
+## Caso 2 — Estructura superior
+Debe verse:
+flecha izquierda | mes centrado + "Ir a hoy" | flecha derecha
+y debajo todos los KPI B232.
+
+## Caso 3 — Navegación
+‹ cambia al mes anterior.
+› cambia al mes siguiente.
+Ir a hoy vuelve al mes actual.
+
+## Caso 4 — Persistencia de datos
+Debe mantenerse:
+- ingresos reales
+- gastos reales
+- ingresos proyectados
+- gastos planificados
+- compromisos
+- cuotas
+- rentabilidad
+- flujo proyectado
+- saldo real acumulado
+- detalle del día
+- control de caja.
+
+## Caso 5 — Regresión
+Volver a Resumen y entrar nuevamente a Calendario.
+No debe aparecer nunca "Plan mensual de ingresos y pagos".
+
+## Caso 6 — Recarga
+Recargar la página estando en Calendario.
+B232 debe quedar disponible sin necesitar una flecha para activarlo.
+
+## Cierre
+No marcar cerrado hasta verificar la pantalla publicada.

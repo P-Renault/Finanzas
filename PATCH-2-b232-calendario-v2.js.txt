@@ -1,0 +1,117 @@
+# B232.14 — PATCH b232-calendario-v2.js
+
+## A. Versión
+Cambiar:
+const VERSION='232.9';
+
+por:
+const VERSION='232.14';
+
+## B. Sustituir boot() completo
+
+ELIMINAR el listener capture que contiene:
+  e.stopImmediatePropagation();
+
+El B232 no debe controlar la navegación.
+
+NUEVO boot():
+
+function boot(){
+  const host=document.getElementById('calendario');
+  if(!host)return;
+
+  const paint=()=>{
+    if(!host.classList.contains('hidden')){
+      load().catch(err=>{
+        host.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
+      });
+    }
+  };
+
+  paint();
+
+  if(window.MutationObserver && !host.dataset.b23214Observer){
+    const observer=new MutationObserver(()=>{
+      if(!host.classList.contains('hidden')) paint();
+    });
+    observer.observe(host,{attributes:true,attributeFilter:['class']});
+    host.dataset.b23214Observer='1';
+  }
+}
+
+Mantener:
+window.B232Calendario={version:VERSION,load,render};
+
+## C. Estructura superior integrada
+
+En render(), reemplazar el bloque .b232-toolbar actual por una cabecera
+estructuralmente equivalente al calendario legacy, pero conservando todos los
+KPI y datos B232:
+
+<div class="b23214-head">
+  <button type="button" class="b23214-arrow" id="b2329Prev" aria-label="Mes anterior">‹</button>
+  <div class="b23214-month">
+    <span class="muted">B232 · CALENDARIO FINANCIERO · 232.14</span>
+    <h2>${month.toLocaleDateString('es-CL',{month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase())}</h2>
+    <button type="button" class="b23214-today" id="b2329Today">Ir a hoy</button>
+  </div>
+  <button type="button" class="b23214-arrow" id="b2329Next" aria-label="Mes siguiente">›</button>
+</div>
+
+Después de esa cabecera conservar:
+- RESUMEN DEL DÍA SELECCIONADO
+- 5 KPI de B232:
+  Ingresos recibidos
+  Gastos pagados
+  Ingresos proyectados
+  Obligaciones
+  Flujo proyectado
+- resumen mensual
+- calendario 42 días
+- detalle del día
+- control de caja
+- cuotas
+- notas de integración.
+
+## D. CSS
+
+Agregar:
+
+.b23214-head{
+  display:grid;
+  grid-template-columns:42px 1fr 42px;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+.b23214-month{text-align:center}
+.b23214-month h2{margin:2px 0 6px;font-size:20px}
+.b23214-arrow{
+  width:34px;height:34px;border:0;border-radius:9px;
+  background:#111827;color:#fff;font-size:22px;cursor:pointer;
+}
+.b23214-today{
+  border:0;border-radius:8px;padding:7px 14px;
+  background:#e5e7eb;color:#111827;font-weight:700;cursor:pointer;
+}
+.b23214-head .muted{font-size:10px}
+
+En móvil:
+@media(max-width:760px){
+  .b23214-head{grid-template-columns:36px 1fr 36px}
+  .b23214-month h2{font-size:18px}
+}
+
+IMPORTANTE:
+Los IDs b2329Prev, b2329Today y b2329Next se mantienen para no romper los
+handlers existentes que vienen inmediatamente después del innerHTML.
+
+## Resultado esperado
+
+Al pulsar "Calendario":
+1. app.js cambia la pestaña.
+2. inmediatamente llama B232Calendario.load().
+3. B232 pinta directamente la vista completa.
+4. No aparece primero el calendario legacy.
+5. La navegación mensual solo cambia month y vuelve a render().
+6. Los KPI, detalle, cuotas, flujo y control de caja permanecen.
