@@ -233,19 +233,30 @@
   }
 
   function boot(){
-    const tab=document.querySelector('[data-tab="calendario"]');if(!tab)return;
-    if(!tab.dataset.b2329Capture){
-      tab.addEventListener('click',e=>{
-        e.stopImmediatePropagation();
-        load().catch(err=>{
-          const h=$('calendario');
-          if(h)h.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
-        });
-      },true);
-      tab.dataset.b2329Capture='1';
+  const host=document.getElementById('calendario');
+  if(!host)return;
+
+  const paint=()=>{
+    if(!host.classList.contains('hidden')){
+      load().catch(err=>{
+        host.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
+      });
     }
-    if(tab.classList.contains('active'))load().catch(()=>{});
+  };
+
+  paint();
+
+  if(window.MutationObserver && !host.dataset.b23214Observer){
+    const observer=new MutationObserver(()=>{
+      if(!host.classList.contains('hidden')) paint();
+    });
+    observer.observe(host,{attributes:true,attributeFilter:['class']});
+    host.dataset.b23214Observer='1';
   }
+}
+
+Mantener:
+window.B232Calendario={version:VERSION,load,render};
 
   window.B232Calendario={version:VERSION,load,render};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,350));
