@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="Control financiero personal — Centro de Control Financiero, liquidez, cuentas, deudas, operaciones y planificación.">
+<link rel="manifest" href="manifest.json">
+
+<link rel="stylesheet" href="styles.css?v=2521">
+<link rel="stylesheet" href="deudas-styles.css?v=2521">
+<link rel="stylesheet" href="deudas-centro.css?v=2521">
+<link rel="stylesheet" href="finanzas-v233.css?v=2521">
+<link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
+<link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
+<link rel="stylesheet" href="resumen.css?v=2.0.0">
+
+<title>Centro de Control Financiero · Finanzas</title>
+</head>
+
+<body>
+<header class="topbar">
+  <div>
+    <h1>Control Financiero</h1>
+    <p>Ingresos, gastos, compromisos, liquidez, ahorro y planificación</p>
+  </div>
+  <button id="logoutBtn" class="ghost hidden">Salir</button>
+</header>
+
+<main class="container">
+
+  <!-- =========================
+       CONFIGURACIÓN / CONEXIÓN
+       ========================= -->
+  <section id="configPanel" class="card">
+    <h2>Conectar base de datos</h2>
+    <p class="muted">Conecta esta aplicación con tu proyecto de Supabase.</p>
+
+    <div class="grid2">
+      <label>
+        Supabase URL
+        <input id="supabaseUrl" placeholder="https://xxxx.supabase.co">
+      </label>
+
+      <label>
+        Supabase Publishable Key
+        <input id="supabaseKey" placeholder="sb_publishable_...">
+      </label>
+    </div>
+
+    <button id="saveConfig">Conectar</button>
+    <p id="configMsg" class="status"></p>
+  </section>
+
+  <!-- =========================
+       APLICACIÓN
+       ========================= -->
+  <section id="app" class="hidden">
+
+    <nav class="tabs" aria-label="Módulos financieros">
+      <button data-tab="dashboard" class="active">Resumen</button>
+      <button data-tab="movimientos">Movimientos</button>
+      <button data-tab="futuros">Pagos futuros</button>
+      <button data-tab="calendario">Calendario</button>
+      <button data-tab="ahorro">Ahorro</button>
+      <button data-tab="deudas">Deudas</button>
+      <button data-tab="cuentas">Cuentas</button>
+      <button data-tab="operaciones">Operaciones</button>
+      <button data-tab="planificacion">Planificación</button>
+    </nav>
+
+    <!-- =========================================================
+         NUEVO RESUMEN
+         Centro de Control Financiero
+         Data -> Estado -> Liquidez -> Brecha -> Margen -> Alertas
+         ========================================================= -->
+    <section id="dashboard" class="tab">
+
+      <main id="financial-control" class="financial-control">
+
+        <header class="summary-header">
+          <div>
+            <p class="eyebrow">CONTROL FINANCIERO</p>
+            <h2>Centro de Control Financiero</h2>
+            <p id="summary-status-text" class="summary-status">
+              Calculando estado financiero...
+            </p>
+          </div>
+
+          <div id="summary-semaphore"
+               class="semaphore"
+               aria-live="polite">
+            —
+          </div>
+        </header>
+
+        <!-- KPIs EJECUTIVOS -->
+        <section class="kpi-grid" aria-label="Indicadores ejecutivos">
+
+          <article class="kpi-card">
+            <span>Saldo disponible real</span>
+            <strong id="kpi-real-balance">$0</strong>
+          </article>
+
+          <article class="kpi-card">
+            <span>Ingresos asegurados</span>
+            <strong id="kpi-assured">$0</strong>
+          </article>
+
+          <article class="kpi-card">
+            <span>Ingresos proyectados</span>
+            <strong id="kpi-projected">$0</strong>
+          </article>
+
+          <article class="kpi-card">
+            <span>Egresos comprometidos</span>
+            <strong id="kpi-committed">$0</strong>
+          </article>
+
+          <article class="kpi-card">
+            <span>Saldo proyectado</span>
+            <strong id="kpi-projected-balance">$0</strong>
+          </article>
+
+          <article class="kpi-card">
+            <span>Brecha financiera</span>
+            <strong id="kpi-gap">$0</strong>
+          </article>
+
+        </section>
+
+        <!-- MARGEN DIARIO -->
+        <section class="daily-margin panel">
+
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">CONTROL DIARIO</p>
+              <h3>Margen de gasto — Hoy</h3>
+            </div>
+
+            <strong id="margin-status">NORMAL</strong>
+          </div>
+
+          <div class="margin-main">
+
+            <div>
+              <span>Margen máximo</span>
+              <strong id="margin-maximum">$0</strong>
+            </div>
+
+            <div>
+              <span>Gastado</span>
+              <strong id="margin-spent">$0</strong>
+            </div>
+
+            <div>
+              <span>Margen restante</span>
+              <strong id="margin-remaining">$0</strong>
+            </div>
+
+          </div>
+
+          <div class="progress-track" aria-label="Consumo del margen">
+            <div id="margin-progress"
+                 class="progress-value"
+                 style="width:0%">
+            </div>
+          </div>
+
+          <div class="margin-meta">
+            <span id="margin-percent">0% consumido</span>
+            <span id="margin-projection">Proyección: 0%</span>
+          </div>
+
+          <div id="margin-alert"
+               class="alert-box"
+               role="status">
+            No hay alertas.
+          </div>
+
+        </section>
+
+        <!-- PROYECCIÓN DE LIQUIDEZ -->
+        <section class="projection panel">
+
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">LIQUIDEZ</p>
+              <h3>Proyección financiera</h3>
+            </div>
+
+            <span>90 días</span>
+          </div>
+
+          <div id="projection-table"
+               class="projection-table">
+          </div>
+
+        </section>
+
+        <!-- DECISIONES -->
+        <section class="decision-grid">
+
+          <div class="panel">
+            <p class="eyebrow">PRÓXIMA NECESIDAD</p>
+            <div id="next-need">
+              Calculando...
+            </div>
+          </div>
+
+          <div class="panel">
+            <p class="eyebrow">ACCIONES PRIORITARIAS</p>
+            <div id="priority-actions">
+              Calculando...
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+    </section>
+
+    <!-- =========================================================
+         MOVIMIENTOS
+         ========================================================= -->
+    <section id="movimientos" class="tab hidden">
+
+      <div class="card">
+        <h2 id="movFormTitle">Registrar movimiento</h2>
+
+        <form id="movForm" class="grid2">
+          <input type="hidden" id="movId">
+
+          <label>
+            Tipo
+            <select id="movTipo">
+              <option value="ingreso">Ingreso</option>
+              <option value="gasto">Gasto</option>
+            </select>
+          </label>
+
+          <label>
+            Fecha
+            <input id="movFecha" type="date" required>
+          </label>
+
+          <label>
+            Monto
+            <input id="movMonto" type="number" min="0" step="1" required>
+          </label>
+
+          <label>
+            Categoría
+            <input id="movCategoria"
+                   placeholder="Alimentación, combustible...">
+          </label>
+
+          <label class="full">
+            Descripción
+            <input id="movDescripcion" placeholder="Detalle">
+          </label>
+
+          <div class="form-actions full">
+            <button type="submit" id="movSubmit">Guardar movimiento</button>
+            <button type="button"
+                    id="movCancel"
+                    class="secondary hidden">
+              Cancelar edición
+            </button>
+          </div>
+        </form>
+
+        <p id="movMsg" class="status"></p>
+      </div>
+
+      <div class="card">
+        <h2>Historial de movimientos</h2>
+        <p class="muted">
+          Los registros con fecha posterior a hoy son futuros
+          y no afectan el saldo actual.
+        </p>
+        <div id="movimientosLista"></div>
+      </div>
+
+    </section>
+
+    <!-- =========================================================
+         PAGOS / COMPROMISOS FUTUROS
+         ========================================================= -->
+    <section id="futuros" class="tab hidden">
+
+      <div class="card">
+
+        <h2 id="futureFormTitle">
+          Crear pago o compromiso futuro
+        </h2>
+
+        <form id="futureForm" class="grid2">
+
+          <input type="hidden" id="futureId">
+
+          <label>
+            Concepto
+            <input id="futureConcepto"
+                   required
+                   placeholder="Internet, arriendo, cuota...">
+          </label>
+
+          <label>
+            Fecha de vencimiento
+            <input id="futureFecha"
+                   type="date"
+                   required>
+          </label>
+
+          <label>
+            Monto
+            <input id="futureMonto"
+                   type="number"
+                   min="0"
+                   step="1"
+                   required>
+          </label>
+
+          <label>
+            Categoría
+            <input id="futureCategoria"
+                   placeholder="Deuda, servicios...">
+          </label>
+
+          <label>
+            Periodicidad
+            <select id="futureRecurrence">
+              <option value="unico">Único</option>
+              <option value="mensual">Mensual</option>
+              <option value="semanal">Semanal</option>
+              <option value="anual">Anual</option>
+            </select>
+          </label>
+
+          <label class="full">
+            Notas
+            <input id="futureNotas"
+                   placeholder="Información adicional">
+          </label>
+
+          <div class="form-actions full">
+            <button type="submit" id="futureSubmit">
+              Crear compromiso
+            </button>
+            <button type="button"
+                    id="futureCancel"
+                    class="secondary hidden">
+              Cancelar edición
+            </button>
+          </div>
+
+        </form>
+
+        <p id="futureMsg" class="status"></p>
+
+      </div>
+
+      <div class="card">
+        <h2>Compromisos futuros</h2>
+        <div id="futurosLista"></div>
+      </div>
+
+    </section>
+
+    <!-- =========================================================
+         CALENDARIO
+         ========================================================= -->
+    <section id="calendario" class="tab hidden">
+
+      <div class="card calendar-card">
+
+        <div class="calendar-toolbar">
+          <button id="calPrev" class="nav-month">‹</button>
+
+          <div class="calendar-heading">
+            <h2 id="calendarMonth">Septiembre 2026</h2>
+            <span>Plan mensual de ingresos y pagos</span>
+          </div>
+
+          <button id="calNext" class="nav-month">›</button>
+        </div>
+
+        <button id="calToday"
+                class="secondary today-btn">
+          Ir a hoy
+        </button>
+
+        <div class="calendar-metrics">
+
+          <article>
+            <span>Ingresos registrados</span>
+            <strong id="calIncome">$0</strong>
+          </article>
+
+          <article>
+            <span>Gastos registrados</span>
+            <strong id="calExpenses">$0</strong>
+          </article>
+
+          <article>
+            <span>Pagos programados</span>
+            <strong id="calPayments">$0</strong>
+          </article>
+
+          <article>
+            <span>Saldo al cierre</span>
+            <strong id="calFinalBalance">$0</strong>
+          </article>
+
+        </div>
+
+        <div class="legend">
+          <span><i class="dot income-dot"></i>Ingreso</span>
+          <span><i class="dot expense-dot"></i>Gasto</span>
+          <span><i class="dot payment-dot"></i>Pago programado</span>
+          <span><i class="dot balance-dot"></i>Saldo acumulado</span>
+        </div>
+
+        <div class="calendar-scroll">
+
+          <div class="calendar-grid week-head">
+            <div>DOM</div>
+            <div>LUN</div>
+            <div>MAR</div>
+            <div>MIÉ</div>
+            <div>JUE</div>
+            <div>VIE</div>
+            <div>SÁB</div>
+          </div>
+
+          <div id="calendarGrid"
+               class="calendar-grid">
+          </div>
+
+        </div>
+
+        <p id="calMonthNote"
+           class="muted calendar-note">
+        </p>
+
+        <div id="calendarDayDetails"
+             class="calendar-day-details">
+          <p class="muted">
+            Selecciona un día del calendario para ver sus ingresos y gastos.
+          </p>
+        </div>
+
+        <p class="calendar-help">
+          Desliza horizontalmente si quieres ver el calendario completo en el teléfono.
+        </p>
+
+      </div>
+
+    </section>
+
+    <!-- =========================================================
+         AHORRO
+         ========================================================= -->
+    <section id="ahorro" class="tab hidden">
+
+      <div class="card">
+
+        <h2 id="savingFormTitle">Fondo de ahorro</h2>
+
+        <form id="savingForm" class="grid2">
+
+          <input type="hidden" id="savingId">
+
+          <label>
+            Tipo
+            <select id="savingTipo">
+              <option value="aporte">Aporte</option>
+              <option value="retiro">Retiro</option>
+            </select>
+          </label>
+
+          <label>
+            Fecha
+            <input id="savingFecha"
+                   type="date"
+                   required>
+          </label>
+
+          <label>
+            Monto
+            <input id="savingMonto"
+                   type="number"
+                   min="0"
+                   step="1"
+                   required>
+          </label>
+
+          <label class="full">
+            Descripción
+            <input id="savingDescripcion"
+                   placeholder="Ahorro del día...">
+          </label>
+
+          <div class="form-actions full">
+            <button type="submit"
+                    id="savingSubmit">
+              Registrar
+            </button>
+
+            <button type="button"
+                    id="savingCancel"
+                    class="secondary hidden">
+              Cancelar edición
+            </button>
+          </div>
+
+        </form>
+
+        <p class="big-number"
+           id="savingBalance">
+          $0
+        </p>
+
+        <p id="savingMsg"
+           class="status">
+        </p>
+
+      </div>
+
+      <div class="card">
+        <h2>Historial de ahorro</h2>
+        <div id="ahorroLista"></div>
+      </div>
+
+    </section>
+
+    <!--
+      Los módulos Deudas, Cuentas, Operaciones y Planificación
+      mantienen su integración dinámica existente.
+    -->
+
+  </section>
+</main>
+
+<!-- =============================================================
+     CORE
+     ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js?v=220.2"></script>
+
+<!-- =============================================================
+     CARGA CONTROLADA DE MÓDULOS
+     - Mantiene los módulos legacy.
+     - Conecta el nuevo Centro de Control.
+     - Evita ejecutar motores financieros antes de Supabase.
+     ============================================================= -->
+<script>
+(function () {
+  'use strict';
+
+  var legacyLoaded = false;
+  var summaryLoaded = false;
+
+  var legacyModules = [
+    'b219-arquitectura-navegacion.js?v=231.7-R4',
+    'b220-motor-ejecucion-financiera.js?v=231.7-R4',
+    'b220.2-puente-ejecucion.js?v=231.7-R4',
+    'b221-movimientos-liquidez.js?v=231.7-R4',
+    'b222-centro-operaciones.js?v=231.7-R4',
+    'b223-centro-operaciones-planificacion-fix.js?v=231.7-R4',
+    'b224.1-planificacion-integrada.js?v=231.7-R4',
+    'b227-ia-financiera.js?v=231.7-R4',
+    'b229-movimientos-fondos.js?v=231.7-R4',
+    'finanzas-v233.js?v=231.7-R4',
+    'b231.0-adaptador-deudas-v2.js?v=231.7-R4',
+    'b231.1-persistencia-deuda-sin-fecha.js?v=231.7-R4',
+    'b231.2-deudas-fecha.js?v=231.7-R4',
+    'b231.3-abonos-parciales.js?v=231.7-R4',
+    'b233-motor-presupuesto.js?v=233.0.2'
+  ];
+
+  var summaryModules = [
+    'supabase_finanzas.js?v=2.0.0',
+    'motor_estado_financiero.js?v=2.0.0',
+    'motor_proyeccion_liquidez.js?v=2.0.0',
+    'motor_brecha.js?v=2.0.0',
+    'motor_margen_diario.js?v=2.0.0',
+    'motor_alertas.js?v=2.0.0',
+    'motor_acciones.js?v=2.0.0',
+    'resumen.js?v=2.0.0'
+  ];
+
+  function loadOne(src) {
+    return new Promise(function (resolve) {
+      if (document.querySelector(
+        'script[data-finance-module="' + src + '"]'
+      )) {
+        resolve();
+        return;
+      }
+
+      var el = document.createElement('script');
+      el.src = src;
+      el.async = false;
+      el.dataset.financeModule = src;
+
+      el.onload = resolve;
+
+      el.onerror = function () {
+        console.error(
+          '[Finance] No se pudo cargar:',
+          src
+        );
+        resolve();
+      };
+
+      document.body.appendChild(el);
+    });
+  }
+
+  function ensureSummaryClient() {
+    if (window.supabaseClient) {
+      return true;
+    }
+
+    if (
+      !window.supabase ||
+      !window.supabase.createClient
+    ) {
+      return false;
+    }
+
+    var url = localStorage.getItem('sf_url');
+    var key = localStorage.getItem('sf_key');
+
+    if (!url || !key) {
+      return false;
+    }
+
+    try {
+      window.supabaseClient =
+        window.supabase.createClient(
+          url,
+          key,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false
+            }
+          }
+        );
+
+      return true;
+
+    } catch (error) {
+      console.error(
+        '[Finance] Error creando cliente del resumen:',
+        error
+      );
+
+      return false;
+    }
+  }
+
+  async function loadLegacyModules() {
+    if (legacyLoaded) return;
+
+    var app = document.getElementById('app');
+    var panel = document.getElementById('configPanel');
+
+    if (
+      !app ||
+      app.classList.contains('hidden') ||
+      (panel && !panel.classList.contains('hidden'))
+    ) {
+      return;
+    }
+
+    legacyLoaded = true;
+
+    for (
+      var i = 0;
+      i < legacyModules.length;
+      i++
+    ) {
+      await loadOne(legacyModules[i]);
+    }
+  }
+
+  async function loadFinancialSummary() {
+    if (summaryLoaded) return;
+
+    var app = document.getElementById('app');
+    var panel = document.getElementById('configPanel');
+
+    if (
+      !app ||
+      app.classList.contains('hidden') ||
+      (panel && !panel.classList.contains('hidden'))
+    ) {
+      return;
+    }
+
+    if (!ensureSummaryClient()) {
+      return;
+    }
+
+    summaryLoaded = true;
+
+    for (
+      var i = 0;
+      i < summaryModules.length;
+      i++
+    ) {
+      await loadOne(summaryModules[i]);
+    }
+
+    if (
+      window.FinancialSummary &&
+      typeof window.FinancialSummary.init === 'function'
+    ) {
+      try {
+        await window.FinancialSummary.init();
+
+      } catch (error) {
+
+        console.error(
+          '[Finance] Error en Centro de Control Financiero:',
+          error
+        );
+
+        var status =
+          document.getElementById(
+            'summary-status-text'
+          );
+
+        if (status) {
+          status.textContent =
+            'No fue posible cargar el estado financiero: ' +
+            (error.message || error);
+        }
+      }
+    }
+  }
+
+  async function refreshSummary() {
+    if (
+      window.FinancialSummary &&
+      typeof window.FinancialSummary.init === 'function'
+    ) {
+      try {
+        await window.FinancialSummary.init();
+      } catch (error) {
+        console.error(
+          '[Finance] Error actualizando resumen:',
+          error
+        );
+      }
+    }
+  }
+
+  async function boot() {
+
+    var app = document.getElementById('app');
+    var panel = document.getElementById('configPanel');
+
+    if (
+      !app ||
+      app.classList.contains('hidden') ||
+      (panel && !panel.classList.contains('hidden'))
+    ) {
+      return;
+    }
+
+    await loadLegacyModules();
+    await loadFinancialSummary();
+
+  }
+
+  function watch() {
+
+    var app =
+      document.getElementById('app');
+
+    if (!app) return;
+
+    if (
+      app.classList.contains('hidden')
+    ) {
+
+      var observer =
+        new MutationObserver(
+          boot
+        );
+
+      observer.observe(
+        app,
+        {
+          attributes: true,
+          attributeFilter: ['class']
+        }
+      );
+
+    } else {
+
+      boot();
+
+    }
+
+    setTimeout(boot, 500);
+    setTimeout(boot, 1500);
+    setTimeout(boot, 3000);
+  }
+
+  /*
+   * Refresco del nuevo resumen cuando se vuelve a la pestaña
+   * y después de operaciones normales del sistema.
+   */
+  document.addEventListener(
+    'click',
+    function (event) {
+
+      var button =
+        event.target.closest(
+          '[data-tab="dashboard"]'
+        );
+
+      if (button) {
+        setTimeout(
+          refreshSummary,
+          50
+        );
+      }
+
+    }
+  );
+
+  /*
+   * El app.js original mantiene refresh() como función global.
+   * Se envuelve para que cada alta/edición/borrado actualice
+   * también el Centro de Control Financiero.
+   */
+  setTimeout(function () {
+
+    if (
+      typeof window.refresh === 'function' &&
+      !window.__financialRefreshWrapped
+    ) {
+
+      var originalRefresh =
+        window.refresh;
+
+      window.refresh =
+        async function () {
+
+          var result =
+            await originalRefresh.apply(
+              this,
+              arguments
+            );
+
+          setTimeout(
+            refreshSummary,
+            0
+          );
+
+          return result;
+
+        };
+
+      window.__financialRefreshWrapped = true;
+    }
+
+  }, 1000);
+
+  if (
+    document.readyState === 'loading'
+  ) {
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      watch,
+      { once: true }
+    );
+
+  } else {
+
+    watch();
+
+  }
+
+})();
+</script>
+
+</body>
+</html>
