@@ -1,20 +1,14 @@
 DASHBOARD EJECUTIVO FINANCIERO
-Version: EXEC-DASH-V1.1.0
-Build ID: EXEC-DASH-V1.1.0-20260919T131221Z
+Version: EXEC-DASH-V1.2.0
+Build ID: EXEC-DASH-V1.2.0-20260919T132429Z
 
 MEJORAS
-- Cada gráfico ejecutivo se puede pulsar para ampliar a pantalla completa.
-- Cierre mediante botón X, clic fuera del gráfico o tecla Escape.
-- Soporte de teclado Enter/Espacio para abrir.
-- La lectura de liquidez se alimenta de la proyección real.
-- La presión de obligaciones se alimenta del estado financiero real.
-- El flujo de próximos 30 días se calcula desde la proyección real.
-- Cache-busting JS/CSS v1.1.0.
+- Visualización de deudas del mes en curso.
+- Backlog de deudas para planificación.
+- Clasificación: pendientes de negociación, pendientes de pago y sin fecha de inicio.
+- Se preservan deudas sin fecha; no se inventan fechas.
+- Se mantienen fullscreen, cierre y gráficos V1.1.0.
+- Cache-busting v1.2.0.
 
 VALIDACIÓN
-- Sintaxis JavaScript: PASS.
-- Hooks UI requeridos: PASS.
-
-PUBLICACIÓN
-- Paquete construido.
-- Requiere despliegue en GitHub Pages para quedar publicado.
+JavaScript: PASS

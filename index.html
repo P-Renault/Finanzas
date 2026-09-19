@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
-<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.1.0">
+<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.0">
 
 <title>Centro de Control Financiero · CCF-V5.0.0</title>
 </head>
@@ -233,6 +233,17 @@
             <article class="executive-chart">
               <h3>Velas financieras</h3><p>Variación semanal: apertura, máximo, mínimo y cierre de liquidez.</p>
               <div id="chart-candles" class="chart-wrap"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Deudas del mes en curso</h3>
+              <p>Deudas con fecha de inicio o vencimiento dentro del mes actual.</p>
+              <div id="chart-debt-month" class="chart-wrap"></div>
+            </article>
+            <article class="executive-chart">
+              <h3>Backlog de deudas</h3>
+              <p>Pendientes de negociación, pendientes de pago y sin fecha de inicio.</p>
+              <div id="chart-debt-planning" class="chart-wrap"></div>
             </article>
           </div>
         </section>
@@ -651,7 +662,7 @@
     'motor_alertas.js?v=5.0.0',
     'motor_acciones.js?v=5.0.0',
     'resumen.js?v=5.0.0',
-    'dashboard-ejecutivo.js?v=1.1.0'
+    'dashboard-ejecutivo.js?v=1.2.0'
   ];
 
   function loadOne(src) {

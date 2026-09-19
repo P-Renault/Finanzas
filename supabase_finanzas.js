@@ -404,6 +404,88 @@ window.FinanceRepository = (() => {
       );
     }
 
+
+    // Executive debt backlog: preserve debts without dates; never invent a start date.
+    const debtPlanning = debts.map(d => {
+      const balance = n(
+        d.saldo_pendiente ?? d.saldo_actual ?? d.saldo ??
+        d.monto_original ?? d.monto
+      );
+      const startDate = String(
+        d.fecha_inicio ??
+        d.fecha_inicio_pago ??
+        d.fecha_primer_pago ??
+        d.inicio_pago ??
+        d.fecha_inicio_negociacion ??
+        ''
+      ).slice(0,10);
+      const dueDate = String(
+        d.fecha_vencimiento ??
+        d.proximo_vencimiento ??
+        d.fecha_proximo_pago ??
+        ''
+      ).slice(0,10);
+      const state = String(
+        d.estado ?? d.status ?? d.estado_deuda ?? ''
+      ).trim().toLowerCase();
+
+      const negotiation =
+        state.includes('negoci') ||
+        state.includes('renegoci') ||
+        state.includes('por negociar') ||
+        state.includes('acuerdo pendiente');
+
+      const unpaid =
+        !negotiation &&
+        (
+          !state ||
+          state.includes('pendiente') ||
+          state.includes('vencid') ||
+          state.includes('atras') ||
+          state.includes('activo') ||
+          state.includes('vigente')
+        );
+
+      return {
+        id: d.id,
+        creditor: d.acreedor || d.nombre || d.descripcion || 'Deuda',
+        amount: balance,
+        originalAmount: n(d.monto_original ?? d.monto),
+        startDate: startDate || null,
+        dueDate: dueDate || null,
+        state: state || 'sin estado',
+        negotiation,
+        unpaid,
+        noStartDate: !startDate,
+        row: d
+      };
+    }).filter(d => d.amount > 0);
+
+    const currentMonth = t.slice(0,7);
+    const currentMonthDebts = debtPlanning.filter(d =>
+      (d.dueDate && d.dueDate.slice(0,7) === currentMonth) ||
+      (d.startDate && d.startDate.slice(0,7) === currentMonth)
+    );
+
+    const debtPlanningSummary = {
+      currentMonth: {
+        count: currentMonthDebts.length,
+        amount: currentMonthDebts.reduce((s,d)=>s+d.amount,0)
+      },
+      negotiation: {
+        count: debtPlanning.filter(d=>d.negotiation).length,
+        amount: debtPlanning.filter(d=>d.negotiation).reduce((s,d)=>s+d.amount,0)
+      },
+      unpaid: {
+        count: debtPlanning.filter(d=>d.unpaid).length,
+        amount: debtPlanning.filter(d=>d.unpaid).reduce((s,d)=>s+d.amount,0)
+      },
+      noStartDate: {
+        count: debtPlanning.filter(d=>d.noStartDate).length,
+        amount: debtPlanning.filter(d=>d.noStartDate).reduce((s,d)=>s+d.amount,0)
+      }
+    };
+
     return {
       today: t,
 
@@ -418,6 +500,8 @@ window.FinanceRepository = (() => {
       incomes,
       expenses,
       obligations: uniqueObligations,
+      debtPlanning,
+      debtPlanningSummary,
       calendar,
 
       marginInput: {

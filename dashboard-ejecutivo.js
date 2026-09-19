@@ -159,6 +159,51 @@ window.ExecutiveDashboard = (() => {
     text(s,L,16,'Velas de liquidez — apertura / máximo / mínimo / cierre semanal','chart-title');
   }
 
+
+  function drawDebtPlanning(container, items) {
+    container.innerHTML = '';
+    const rows = (items || []).filter(x => Number(x.value || 0) > 0);
+    const W=760, H=Math.max(270, 90 + rows.length*56), L=180, R=90, T=34, B=28;
+    const s=svg(W,H); container.appendChild(s);
+    if (!rows.length) {
+      text(s,W/2,130,'No hay deudas en estas categorías','chart-empty');
+      return;
+    }
+    const max=Math.max(...rows.map(x=>Number(x.value||0)),1);
+    rows.forEach((row,i)=>{
+      const y=T+i*56;
+      const width=(Number(row.value||0)/max)*(W-L-R);
+      text(s,6,y+19,row.label,'chart-axis');
+      rect(s,L,y,width,30,`debt-bar debt-${i%4}`);
+      text(s,Math.min(W-4,L+width+8),y+20,
+        `${compactMoney(row.value)} · ${row.count} deuda${row.count===1?'':'s'}`,
+        'chart-legend-value');
+    });
+    text(s,L,18,'Backlog de deudas para planificación','chart-title');
+  }
+
+  function drawCurrentMonthDebt(container, items) {
+    container.innerHTML = '';
+    const rows = (items || []).filter(x => Number(x.value || 0) > 0);
+    const W=760,H=290,L=58,R=24,T=34,B=54;
+    const s=svg(W,H); container.appendChild(s);
+    if (!rows.length) {
+      text(s,W/2,145,'Sin deudas registradas para el mes en curso','chart-empty');
+      return;
+    }
+    const max=Math.max(...rows.map(x=>Number(x.value||0)),1);
+    const slot=(W-L-R)/rows.length;
+    rows.forEach((row,i)=>{
+      const x=L+i*slot+slot/2;
+      const bw=Math.min(28,slot*.25);
+      const h=(Number(row.value||0)/max)*(H-T-B-18);
+      rect(s,x-bw/2,H-B-h,bw,h,`month-debt month-${i%4}`);
+      text(s,x,H-30,String(row.label).slice(5),'chart-axis');
+      text(s,x,H-B-h-8,compactMoney(row.value),'chart-legend-value');
+    });
+    text(s,L,18,'Deudas del mes en curso','chart-title');
+  }
+
   function renderCharts({context, projection, state}) {
     const root = document.getElementById('executive-charts');
     if (!root) return;
@@ -200,6 +245,35 @@ window.ExecutiveDashboard = (() => {
       .map(([label, value]) => ({ label, value }))
       .filter(x => x.value > 0)
       .sort((a, b) => b.value - a.value);
+
+
+    const debtPlan = context.debtPlanning || [];
+    const currentMonth = String(context.today || '').slice(0,7);
+    const currentMonthDebt = debtPlan.filter(d =>
+      (d.dueDate && d.dueDate.slice(0,7) === currentMonth) ||
+      (d.startDate && d.startDate.slice(0,7) === currentMonth)
+    );
+    const monthRows = currentMonthDebt
+      .sort((a,b)=>b.amount-a.amount)
+      .map(d=>({label:d.dueDate || d.startDate || 'Sin fecha', value:d.amount}));
+
+    const planningRows = [
+      {
+        label:'Pendientes de negociación',
+        count:debtPlan.filter(d=>d.negotiation).length,
+        value:debtPlan.filter(d=>d.negotiation).reduce((s,d)=>s+d.amount,0)
+      },
+      {
+        label:'Pendientes de pago',
+        count:debtPlan.filter(d=>d.unpaid).length,
+        value:debtPlan.filter(d=>d.unpaid).reduce((s,d)=>s+d.amount,0)
+      },
+      {
+        label:'Sin fecha de inicio',
+        count:debtPlan.filter(d=>d.noStartDate).length,
+        value:debtPlan.filter(d=>d.noStartDate).reduce((s,d)=>s+d.amount,0)
+      }
+    ];
 
     const risk = (projection || []).find(
       x => num(x.closingBalance) < num(context.minimumReserve)
@@ -265,6 +339,14 @@ window.ExecutiveDashboard = (() => {
       () => drawCandles(
         document.getElementById('chart-candles'),
         projection || []
+      ),
+      () => drawCurrentMonthDebt(
+        document.getElementById('chart-debt-month'),
+        monthRows
+      ),
+      () => drawDebtPlanning(
+        document.getElementById('chart-debt-planning'),
+        planningRows
       )
     ];
 

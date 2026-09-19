@@ -127,3 +127,8 @@ body.executive-modal-open {
     padding: 10px;
   }
 }
+
+.debt-bar { fill:#6b5b95; rx:5; }
+.debt-1 { fill:#b42318; } .debt-2 { fill:#c77c00; } .debt-3 { fill:#18794e; }
+.month-debt { fill:#1769aa; rx:4; }
+.month-1 { fill:#b42318; } .month-2 { fill:#c77c00; } .month-3 { fill:#18794e; }
