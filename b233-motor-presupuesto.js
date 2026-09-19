@@ -1,5 +1,5 @@
 /* ============================================================
-   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO
+   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.0.1
    Versión: B233.0–B233.16
    Arquitectura: GitHub Pages + Supabase
    Regla: no modifica movimientos, deudas ni compromisos.
@@ -378,7 +378,11 @@
   }
 
   async function ensureBudget() {
-    const periodo = monthStart(state.month);
+    // B233.0.1:
+    // La columna public.presupuestos.periodo existente utiliza
+    // varchar(7), por lo que debe recibir YYYY-MM y no YYYY-MM-DD.
+    const periodo = ym(state.month);
+
     let budget = await safeSingle('presupuestos',
       q => q.select('*').eq('periodo',periodo).maybeSingle()
     );
