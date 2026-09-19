@@ -1,8 +1,8 @@
-/* FINANZAS B2.19 — arquitectura de navegación estable · B231.7
+/* FINANZAS B2.19 — arquitectura de navegación estable · B232.3
    Conserva las funciones existentes en la barra horizontal y mueve las nuevas
    funcionalidades a un menú desplegable. Carga legacy de forma secuencial para
    evitar carreras entre módulos. No crea jornadas financieras duplicadas.
-   B231.7: no recarga los motores ya declarados por index.html (deudas/ejecución). */
+   B232.3: integra Calendario V2 en la carga secuencial, sin duplicar motores existentes. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
@@ -13,7 +13,7 @@ const db=()=>{if(client)return client;const u=localStorage.getItem('sf_url'),k=l
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function loadScript(src){return new Promise((resolve,reject)=>{const old=document.querySelector(`script[data-b219="${src}"]`);if(old){resolve();return}const s=document.createElement('script');s.src=src;s.dataset.b219=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('No se pudo cargar '+src));document.body.appendChild(s)})}
 async function loadLegacy(){
-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521'];
+  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.3'];
   for(const f of files){try{await loadScript(f);await wait(80)}catch(e){console.error('B219 legacy',e)}}
 }
 function baseStyles(){if($('b219Styles'))return;const s=document.createElement('style');s.id='b219Styles';s.textContent=`
