@@ -1,6 +1,6 @@
 /* ============================================================
-   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.0.3
-   Versión: B233.0–B233.16
+   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.17
+   Versión: B233.0–B233.17
    Arquitectura: GitHub Pages + Supabase
    Regla: no modifica movimientos, deudas ni compromisos.
    ============================================================ */
@@ -113,6 +113,18 @@
       .b233-hidden{display:none!important}
       .b233-actions{display:flex;gap:8px;flex-wrap:wrap}
       .b233-table-wrap{overflow:auto}
+      .b233-trace{margin-top:12px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;padding:12px}
+      .b233-trace-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+      .b233-trace-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+      .b233-trace-box{border:1px solid #e5e7eb;border-radius:10px;background:#fff;padding:10px}
+      .b233-trace-box h4{margin:0 0 7px;font-size:13px}
+      .b233-trace-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #eef2f7;font-size:12px}
+      .b233-trace-row:last-child{border-bottom:0}
+      .b233-trace-row small{display:block;color:#64748b}
+      .b233-trace-total{font-weight:800}
+      .b233-trace-warning{margin-top:10px;padding:9px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:11px}
+      .b233-trace-ok{margin-top:10px;padding:9px;border-radius:9px;background:#ecfdf5;color:#166534;font-size:11px}
+      @media(max-width:700px){.b233-trace-grid{grid-template-columns:1fr}.b233-trace-head{align-items:flex-start;flex-direction:column}}
     `;
     document.head.appendChild(s);
   }
@@ -731,9 +743,187 @@
       <div class="b233-detail-total"><span>Ingresos proyectados</span><strong>${money(calc.projectedIncome)}</strong></div>
       <div class="b233-detail-row"><div><b>Ingresos futuros</b><small>Movimientos futuros + fuentes futuras disponibles</small></div><strong>${money(calc.futureIncome)}</strong></div>
       <div class="b233-detail-row"><div><b>Egresos futuros</b><small>Movimientos futuros + gastos planificados + obligaciones pendientes</small></div><strong>${money(calc.futureExpense)}</strong></div>
-      <div class="b233-detail-total"><span>Resultado proyectado</span><strong>${money(calc.projectedResult)}</strong></div>`;
+      <div class="b233-detail-total"><span>Resultado proyectado</span><strong>${money(calc.projectedResult)}</strong></div>
+      <div class="b233-actions" style="margin-top:10px">
+        <button type="button" class="secondary small" id="b233TraceToggle">Ver cálculo detallado</button>
+      </div>
+      <div id="b233TracePanel" class="b233-hidden"></div>`;
+    const toggle = $('b233TraceToggle');
+    if (toggle) {
+      toggle.onclick = () => {
+        const panel = $('b233TracePanel');
+        if (!panel) return;
+        const hidden = panel.classList.contains('b233-hidden');
+        if (hidden) {
+          renderTraceability(calc);
+          panel.classList.remove('b233-hidden');
+          toggle.textContent = 'Ocultar cálculo detallado';
+        } else {
+          panel.classList.add('b233-hidden');
+          toggle.textContent = 'Ver cálculo detallado';
+        }
+      };
+    }
   }
 
+  function futureMovementRows(type) {
+    const wanted = type === 'INGRESO';
+    return state.movements
+      .filter(r => {
+        const t = String(r.tipo || '').toLowerCase();
+        const isIncome = t === 'ingreso' || t === 'income';
+        return isIncome === wanted && String(r.fecha || '') > today();
+      })
+      .map(r => ({
+        source: 'MOVIMIENTO_FUTURO',
+        id: r.id ?? '',
+        date: r.fecha || '',
+        label: movementCategory(r),
+        amount: movementAmount(r)
+      }));
+  }
+
+  function futureTableRows(type) {
+    const rows = [];
+
+    for (const r of type === 'INGRESO' ? state.futureIncomes : state.futureExpenses) {
+      rows.push({
+        source: type === 'INGRESO' ? 'INGRESO_FUTURO' : 'GASTO_PLANIFICADO',
+        id: r.id ?? '',
+        date: r.fecha || r.fecha_vencimiento || '',
+        label: r.concepto || r.descripcion || r.nombre || (type === 'INGRESO' ? 'Ingreso futuro' : 'Gasto planificado'),
+        amount: futureAmount(r)
+      });
+    }
+
+    if (type === 'EGRESO') {
+      const committed = buildCommitted();
+      const futureCommitted = committed
+        .filter(x => x.date && x.date > today())
+        .map(x => ({
+          source: x.source,
+          id: x.id ?? '',
+          date: x.date,
+          label: x.label,
+          amount: x.amount
+        }));
+      rows.push(...futureCommitted);
+    }
+
+    return rows.filter(x => Number(x.amount) > 0);
+  }
+
+  function traceRows(type) {
+    return [...futureMovementRows(type), ...futureTableRows(type)]
+      .filter(x => Number(x.amount) > 0)
+      .sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  }
+
+  function traceDuplicateGroups(rows) {
+    const groups = new Map();
+    for (const r of rows) {
+      const key = normalizeKey(r.label, r.date, r.amount);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(r);
+    }
+    return [...groups.values()].filter(g => g.length > 1);
+  }
+
+  function renderTraceRows(rows) {
+    if (!rows.length) {
+      return '<p class="muted">Sin registros futuros que alimenten este componente.</p>';
+    }
+    return rows.map(r => `
+      <div class="b233-trace-row">
+        <span>
+          <b>${esc(r.label)}</b>
+          <small>${esc(r.source)} · ${esc(r.date || 'Sin fecha')}${r.id !== '' ? ` · ID ${esc(r.id)}` : ''}</small>
+        </span>
+        <strong>${money(r.amount)}</strong>
+      </div>
+    `).join('');
+  }
+
+  function renderTraceability(calc) {
+    const panel = $('b233TracePanel');
+    if (!panel) return;
+
+    const incomeRows = traceRows('INGRESO');
+    const expenseRows = traceRows('EGRESO');
+    const incomeDuplicates = traceDuplicateGroups(incomeRows);
+    const expenseDuplicates = traceDuplicateGroups(expenseRows);
+
+    const futureIncomeRows = incomeRows;
+    const futureExpenseRows = expenseRows;
+
+    const incomeFutureSum = futureIncomeRows.reduce((s,x) => s + Number(x.amount || 0), 0);
+    const expenseFutureSum = futureExpenseRows.reduce((s,x) => s + Number(x.amount || 0), 0);
+
+    const formulaIncome = `${money(calc.execIncome)} + ${money(calc.futureIncome)} = ${money(calc.projectedIncome)}`;
+    const formulaExpense = `${money(calc.execExpense)} + ${money(calc.futureExpense)} = ${money(calc.projectedExpense)}`;
+    const formulaResult = `${money(calc.projectedIncome)} - ${money(calc.projectedExpense)} = ${money(calc.projectedResult)}`;
+
+    const warning = incomeDuplicates.length || expenseDuplicates.length
+      ? `<div class="b233-trace-warning"><b>Revisión de posibles duplicados:</b> se detectaron registros con misma descripción, fecha y monto en las fuentes consultadas. No se eliminan ni descuentan automáticamente; requieren validación funcional antes de cambiar el cálculo.</div>`
+      : `<div class="b233-trace-ok">No se detectaron coincidencias exactas por descripción + fecha + monto dentro de las fuentes futuras consultadas.</div>`;
+
+    panel.innerHTML = `
+      <div class="b233-trace">
+        <div class="b233-trace-head">
+          <div>
+            <b>Trazabilidad B233.17</b>
+            <small class="muted">Cada total puede relacionarse con sus componentes de origen.</small>
+          </div>
+          <span class="b233-badge">LECTURA</span>
+        </div>
+
+        <div class="b233-trace-grid">
+          <div class="b233-trace-box">
+            <h4>Ingresos</h4>
+            <div class="b233-trace-row"><span>Ejecutados</span><strong>${money(calc.execIncome)}</strong></div>
+            <div class="b233-trace-row"><span>Futuros detectados</span><strong>${money(incomeFutureSum)}</strong></div>
+            <div class="b233-trace-row b233-trace-total"><span>Proyectados</span><strong>${money(calc.projectedIncome)}</strong></div>
+            <p class="muted" style="font-size:11px;margin:8px 0 0">${esc(formulaIncome)}</p>
+          </div>
+
+          <div class="b233-trace-box">
+            <h4>Egresos</h4>
+            <div class="b233-trace-row"><span>Ejecutados</span><strong>${money(calc.execExpense)}</strong></div>
+            <div class="b233-trace-row"><span>Futuros + obligaciones</span><strong>${money(expenseFutureSum)}</strong></div>
+            <div class="b233-trace-row b233-trace-total"><span>Proyectados</span><strong>${money(calc.projectedExpense)}</strong></div>
+            <p class="muted" style="font-size:11px;margin:8px 0 0">${esc(formulaExpense)}</p>
+          </div>
+        </div>
+
+        <div class="b233-trace-box" style="margin-top:10px">
+          <h4>Resultado proyectado</h4>
+          <div class="b233-trace-row b233-trace-total">
+            <span>Ingresos proyectados − egresos proyectados</span>
+            <strong>${money(calc.projectedResult)}</strong>
+          </div>
+          <p class="muted" style="font-size:11px;margin:8px 0 0">${esc(formulaResult)}</p>
+        </div>
+
+        <div class="b233-trace-grid">
+          <div class="b233-trace-box">
+            <h4>Origen de ingresos futuros</h4>
+            ${renderTraceRows(incomeRows)}
+          </div>
+          <div class="b233-trace-box">
+            <h4>Origen de egresos futuros</h4>
+            ${renderTraceRows(expenseRows)}
+          </div>
+        </div>
+
+        ${warning}
+        <p class="muted" style="font-size:10px;margin:9px 0 0">
+          Esta trazabilidad es de lectura. No modifica movimientos, ingresos futuros, gastos planificados, compromisos ni cuotas.
+        </p>
+      </div>`;
+  }
+
+  // B233.17 — Trazabilidad de cálculos y componentes de proyección.
+  // No cambia las fórmulas existentes; solo expone sus fuentes y posibles coincidencias.
   function renderAll() {
     const calc = calculate();
     renderHeader(calc);
