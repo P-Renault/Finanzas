@@ -1,0 +1,9 @@
+RELEASE
+Dashboard: EXEC-DASH-V1.2.3
+Adapter: CCF-V5.0.1
+Build ID: EXEC-DASH-V1.2.3-CCF-V5.0.1-20260919T153545Z
+
+Critical fix: ReferenceError `debts is not defined` corrected by building debtPlanning from rawDebts.
+Cache bust: supabase_finanzas.js?v=5.0.1
+Validation: node --check PASS
+GitHub direct write: HTTP 403; package prepared for deployment.

@@ -14,7 +14,6 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
-<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.0">
 
 <title>Centro de Control Financiero · CCF-V5.0.0</title>
 </head>
@@ -199,55 +198,6 @@
 
         </section>
 
-
-        <!-- DASHBOARD EJECUTIVO VISUAL -->
-        <section id="executive-charts" class="executive-dashboard panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">ANÁLISIS VISUAL</p>
-              <h3>Dashboard Ejecutivo</h3>
-              <p class="summary-status">Lectura visual de liquidez, flujos, obligaciones y riesgo.</p>
-            </div>
-            <strong id="executive-risk-summary">Calculando...</strong>
-          </div>
-
-          <div class="executive-insight">
-            <article><span>Lectura de liquidez</span><strong id="exec-liquidity-reading">Calculando...</strong></article>
-            <article><span>Presión de obligaciones</span><strong id="exec-obligation-reading">Calculando...</strong></article>
-            <article><span>Flujo próximo 30 días</span><strong id="exec-flow-reading">Calculando...</strong></article>
-          </div>
-
-          <div class="executive-chart-grid">
-            <article class="executive-chart">
-              <h3>Curva de liquidez</h3><p>Trayectoria del saldo proyectado durante 90 días.</p>
-              <div id="chart-liquidity" class="chart-wrap"></div>
-            </article>
-            <article class="executive-chart">
-              <h3>Ingresos vs egresos</h3><p>Comparación de los flujos previstos para los próximos 30 días.</p>
-              <div id="chart-flow" class="chart-wrap"></div>
-            </article>
-            <article class="executive-chart">
-              <h3>Composición de obligaciones</h3><p>Distribución del monto comprometido por tipo de obligación.</p>
-              <div id="chart-obligations" class="chart-wrap"></div>
-            </article>
-            <article class="executive-chart">
-              <h3>Velas financieras</h3><p>Variación semanal: apertura, máximo, mínimo y cierre de liquidez.</p>
-              <div id="chart-candles" class="chart-wrap"></div>
-            </article>
-
-            <article class="executive-chart">
-              <h3>Deudas del mes en curso</h3>
-              <p>Deudas con fecha de inicio o vencimiento dentro del mes actual.</p>
-              <div id="chart-debt-month" class="chart-wrap"></div>
-            </article>
-            <article class="executive-chart">
-              <h3>Backlog de deudas</h3>
-              <p>Pendientes de negociación, pendientes de pago y sin fecha de inicio.</p>
-              <div id="chart-debt-planning" class="chart-wrap"></div>
-            </article>
-          </div>
-        </section>
-
         <!-- DECISIONES -->
         <section class="decision-grid">
 
@@ -267,29 +217,7 @@
 
         </section>
 
-      
-        <!-- VISOR DE GRÁFICOS A PANTALLA COMPLETA -->
-        <div id="executive-chart-modal"
-             class="executive-chart-modal"
-             aria-hidden="true">
-          <div class="executive-chart-modal-dialog"
-               role="dialog"
-               aria-modal="true"
-               aria-labelledby="executive-chart-modal-title">
-            <div class="executive-chart-modal-header">
-              <div>
-                <p class="eyebrow">ANÁLISIS VISUAL</p>
-                <h2 id="executive-chart-modal-title">Gráfico financiero</h2>
-              </div>
-              <button id="executive-chart-modal-close"
-                      class="executive-chart-modal-close"
-                      type="button"
-                      aria-label="Cerrar gráfico ampliado">×</button>
-            </div>
-            <div id="executive-chart-modal-body"
-                 class="executive-chart-modal-body"></div>
-          </div>
-        </div>
+      </main>
 
     </section>
 
@@ -654,15 +582,14 @@
   ];
 
   var summaryModules = [
-    'supabase_finanzas.js?v=5.0.0',
+    'supabase_finanzas.js?v=5.0.1',
     'motor_estado_financiero.js?v=5.0.0',
     'motor_proyeccion_liquidez.js?v=5.0.0',
     'motor_brecha.js?v=5.0.0',
     'motor_margen_diario.js?v=5.0.0',
     'motor_alertas.js?v=5.0.0',
     'motor_acciones.js?v=5.0.0',
-    'resumen.js?v=5.0.0',
-    'dashboard-ejecutivo.js?v=1.2.0'
+    'resumen.js?v=5.0.0'
   ];
 
   function loadOne(src) {
@@ -796,10 +723,7 @@
       typeof window.FinancialSummary.init === 'function'
     ) {
       try {
-        var result = await window.FinancialSummary.init();
-        if (window.ExecutiveDashboard && result) {
-          window.ExecutiveDashboard.renderCharts(result);
-        }
+        await window.FinancialSummary.init();
 
       } catch (error) {
 
@@ -828,10 +752,7 @@
       typeof window.FinancialSummary.init === 'function'
     ) {
       try {
-        var result = await window.FinancialSummary.init();
-        if (window.ExecutiveDashboard && result) {
-          window.ExecutiveDashboard.renderCharts(result);
-        }
+        await window.FinancialSummary.init();
       } catch (error) {
         console.error(
           '[Finance] Error actualizando resumen:',
@@ -974,5 +895,6 @@
 })();
 </script>
 
+<script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
 </body>
 </html>
