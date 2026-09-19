@@ -79,6 +79,8 @@ window.FinancialSummary = (() => {
         risk
       );
 
+      if (window.ExecutiveDashboard) window.ExecutiveDashboard.renderCharts({ context, state, projection });
+
       return {
         version: VERSION,
         context,

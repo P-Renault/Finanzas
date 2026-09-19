@@ -1,0 +1,31 @@
+/* Executive Dashboard Visual Analytics — v1.0.0 */
+.executive-dashboard { margin-top: 18px; }
+.executive-chart-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.executive-chart { background:#fff; border:1px solid var(--border,#dfe4e8); border-radius:16px; padding:16px; min-height:330px; }
+.executive-chart h3 { margin:0 0 4px; font-size:1rem; }
+.executive-chart p { margin:0 0 10px; color:var(--muted,#68737d); font-size:.78rem; }
+.chart-wrap { width:100%; height:270px; }
+.chart-wrap svg { overflow:visible; }
+.chart-grid { stroke:#e5e9ed; stroke-width:1; }
+.chart-line,.chart-path { fill:none; stroke:currentColor; stroke-width:3; }
+.chart-dot { fill:currentColor; }
+.chart-bar,.chart-income,.chart-expense { rx:3; }
+.chart-income { fill:#1769aa; }
+.chart-expense { fill:#b42318; }
+.chart-axis { font-size:11px; fill:#68737d; }
+.chart-title { font-size:13px; font-weight:700; fill:#17202a; }
+.chart-legend,.chart-legend-value { font-size:11px; fill:#68737d; }
+.chart-legend-value { text-anchor:end; font-weight:700; }
+.chart-donut { fill:none; stroke-width:38; }
+.donut-0 { stroke:#1769aa; } .donut-1 { stroke:#b42318; } .donut-2 { stroke:#c77c00; }
+.donut-3 { stroke:#18794e; } .donut-4 { stroke:#6b5b95; } .donut-5 { stroke:#5f6b73; }
+.chart-swatch { rx:2; } .chart-center { text-anchor:middle; font-size:20px; font-weight:800; fill:#17202a; }
+.chart-center-small { text-anchor:middle; font-size:11px; fill:#68737d; }
+.chart-empty { text-anchor:middle; font-size:14px; fill:#68737d; }
+.candle-wick { stroke:#5f6b73; stroke-width:2; }
+.candle-up { fill:#18794e; } .candle-down { fill:#b42318; }
+.executive-insight { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.executive-insight article { padding:14px; border-radius:12px; background:#f4f6f8; }
+.executive-insight span { display:block; color:#68737d; font-size:.76rem; }
+.executive-insight strong { display:block; margin-top:5px; font-size:1.05rem; }
+@media(max-width:800px){ .executive-chart-grid{grid-template-columns:1fr;} .executive-insight{grid-template-columns:1fr;} .executive-chart{min-height:310px;} .chart-wrap{height:255px;} }
