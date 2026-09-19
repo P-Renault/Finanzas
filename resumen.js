@@ -1,6 +1,6 @@
 /* Centro de Control Financiero — UI v5.0.0 */
 window.FinancialSummary = (() => {
-  const VERSION = 'CCF-V5.0.0';
+  const VERSION = 'CCF-V5.0.1';
 
   const money = value =>
     Number(value || 0).toLocaleString('es-CL', {
@@ -169,6 +169,10 @@ window.FinancialSummary = (() => {
     renderProjection(projection);
     renderActions(actions);
     renderNextNeed(context);
+
+    if (window.ExecutiveDashboard && typeof window.ExecutiveDashboard.renderCharts === 'function') {
+      window.ExecutiveDashboard.renderCharts({ context, projection, state });
+    }
 
     setText(
       'summary-status-text',
