@@ -1,0 +1,56 @@
+*** Begin Patch
+*** Update File: b232-calendario-v2.js
+@@
+-   B232 — CALENDARIO V2 · B232.9
++   B232 — CALENDARIO V2 · B232.10
+@@
+-  const VERSION='232.9';
++  const VERSION='232.10';
+@@
+-  async function q(p){
+-    try{const r=await p;if(r.error){console.warn('[B232.9]',r.error.message);return []}return r.data||[]}
+-    catch(e){console.warn('[B232.9]',e);return []}
++  async function q(p){
++    try{const r=await p;if(r.error){console.warn('[B232.10]',r.error.message);return []}return r.data||[]}
++    catch(e){console.warn('[B232.10]',e);return []}
+@@
+-    if(!tab.dataset.b2329Capture){
++    if(!tab.dataset.b23210Capture){
+       tab.addEventListener('click',e=>{
+-        e.stopImmediatePropagation();
+-        load().catch(err=>{
+-          const h=$('calendario');
+-          if(h)h.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
+-        });
++        setTimeout(()=>load().catch(err=>{
++          const h=$('calendario');
++          if(h)h.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
++        }),0);
+       },true);
+-      tab.dataset.b2329Capture='1';
++      tab.dataset.b23210Capture='1';
+     }
+*** Update File: b219-arquitectura-navegacion.js
+@@
+-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.3'];
++  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.10'];
+@@
+   document.addEventListener('click',e=>{
+     const b=e.target.closest('.tabs button[data-tab]');
+     if(b){
+       const id=b.dataset.tab;
+       if(validTab(id))localStorage.setItem(NAV_KEY,id);
++      if(id==='calendario'){
++        setTimeout(()=>{
++          if(window.B232Calendario&&typeof window.B232Calendario.load==='function'){
++            window.B232Calendario.load().catch(err=>console.error('[B219] Error cargando B232 Calendario',err));
++          }
++        },0);
++      }
+       return;
+     }
+*** Update File: index.html
+@@
+-    'b219-arquitectura-navegacion.js?v=231.7-R4',
++    'b219-arquitectura-navegacion.js?v=231.7-R5-CAL-B232.10',
+*** End Patch
