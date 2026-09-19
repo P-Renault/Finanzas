@@ -1,5 +1,5 @@
 /* ============================================================
-   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.0.1
+   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.0.2
    Versión: B233.0–B233.16
    Arquitectura: GitHub Pages + Supabase
    Regla: no modifica movimientos, deudas ni compromisos.
@@ -382,6 +382,9 @@
     // La columna public.presupuestos.periodo existente utiliza
     // varchar(7), por lo que debe recibir YYYY-MM y no YYYY-MM-DD.
     const periodo = ym(state.month);
+    // B233.0.2: la tabla existente limita estado a varchar(7).
+    // Los presupuestos nuevos se crean ACTIVOS para respetar el esquema
+    // existente sin modificar la base ni truncar valores.
 
     let budget = await safeSingle('presupuestos',
       q => q.select('*').eq('periodo',periodo).maybeSingle()
@@ -391,7 +394,7 @@
       const r = await db().from('presupuestos').insert({
         periodo,
         nombre:`Presupuesto ${monthLabel(state.month)}`,
-        estado:'BORRADOR'
+        estado:'ACTIVO'
       }).select('*').single();
 
       if (r.error) {
