@@ -1,216 +1,435 @@
-/* Centro de Control Financiero — adaptador real de datos v4 */
+/* Centro de Control Financiero — Data Adapter v5.0.0 */
 window.FinanceRepository = (() => {
   const today = () => {
     const d = new Date();
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 10);
   };
-  const n = v => Number(v ?? 0) || 0;
+
+  const n = v => {
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
+  };
 
   function client() {
     if (window.supabaseClient) return window.supabaseClient;
     const url = localStorage.getItem('sf_url');
     const key = localStorage.getItem('sf_key');
+
     if (!url || !key || !window.supabase?.createClient) return null;
+
     window.supabaseClient = window.supabase.createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
+
     return window.supabaseClient;
   }
 
-  async function select(table, columns = '*', configure = q => q) {
+  async function select(table) {
     const db = client();
     if (!db) throw new Error('Supabase no está conectado.');
-    const query = configure(db.from(table).select(columns));
-    const result = await query;
-    if (result.error) {
-      throw new Error(`${table}: ${result.error.message}`);
-    }
-    return result.data || [];
+
+    const { data, error } = await db.from(table).select('*');
+
+    if (error) throw new Error(`${table}: ${error.message}`);
+
+    return data || [];
   }
 
-  const amountOf = row => n(
-    row?.monto ?? row?.amount ?? row?.saldo_actual ?? row?.saldo_pendiente ?? row?.saldo
-  );
+  const movementAmount = row => n(row?.monto ?? row?.amount);
+
+  const debtBalance = row =>
+    n(row?.saldo_pendiente ?? row?.saldo_actual ?? row?.saldo ?? row?.monto_original);
+
+  function normalizeState(v) {
+    return String(v ?? '').trim().toLowerCase();
+  }
 
   function classification(row) {
     return String(
-      row?.clasificacion ?? row?.classification ?? row?.tipo_ingreso ?? row?.naturaleza ?? row?.tipo ?? ''
+      row?.clasificacion ??
+      row?.classification ??
+      row?.tipo_ingreso ??
+      row?.naturaleza ??
+      ''
     ).trim().toUpperCase();
   }
 
-  function incomeClass(row, future) {
-    if (!future) return 'REAL';
+  function incomeClass(row, isFuture) {
+    if (!isFuture) return 'REAL';
+
     const x = classification(row);
-    return x.includes('ASEGUR') || x.includes('CONFIRM') || x.includes('SEGURO') || x === 'ASSURED'
-      ? 'ASSURED' : 'PROJECTED';
+
+    return (
+      x.includes('ASEGUR') ||
+      x.includes('CONFIRM') ||
+      x.includes('SEGURO') ||
+      x === 'ASSURED'
+    ) ? 'ASSURED' : 'PROJECTED';
   }
 
-  function uniqueBySource(items) {
+  function dedupe(items, keyFn) {
     const map = new Map();
-    for (const item of items || []) {
-      const key = item.sourceId || `${item.source || 'x'}:${item.id}`;
+
+    for (const item of items) {
+      const key = keyFn(item);
+
       if (!map.has(key)) map.set(key, item);
     }
+
     return [...map.values()];
+  }
+
+  function obligationKey(x) {
+    return [
+      x.date,
+      Math.round(x.amount),
+      String(x.concept || '').trim().toUpperCase()
+    ].join('|');
   }
 
   async function loadSummaryContext() {
     const t = today();
-    const db = client();
-    if (!db) throw new Error('Supabase no está conectado.');
 
-    // Consultamos tablas sin filtros sobre columnas potencialmente variables.
-    // Los filtros se aplican después de recibir los datos. Así un cambio menor
-    // de esquema no convierte todo el Centro de Control en $0 silenciosamente.
-    const results = await Promise.allSettled([
-      select('cuentas_bancarias', '*'),
-      select('cierres_financieros', '*'),
-      select('movimientos', '*'),
-      select('compromisos', '*'),
-      select('deudas', '*'),
-      select('cuotas_deuda', '*'),
-      select('pagos_deuda', '*')
-    ]);
+    const tables = [
+      'cuentas_bancarias',
+      'cierres_financieros',
+      'movimientos',
+      'compromisos',
+      'deudas',
+      'cuotas_deuda',
+      'pagos_deuda'
+    ];
 
-    const names = ['cuentas_bancarias','cierres_financieros','movimientos','compromisos','deudas','cuotas_deuda','pagos_deuda'];
+    const results = await Promise.allSettled(tables.map(select));
     const data = {};
     const errors = [];
-    results.forEach((r, i) => {
-      if (r.status === 'fulfilled') data[names[i]] = r.value || [];
-      else { data[names[i]] = []; errors.push(`${names[i]}: ${r.reason?.message || r.reason}`); }
+
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        data[tables[i]] = result.value;
+      } else {
+        data[tables[i]] = [];
+        errors.push(`${tables[i]}: ${result.reason?.message || result.reason}`);
+      }
     });
 
-    const accounts = data.cuentas_bancarias.filter(a => a.activa !== false);
-    const closures = data.cierres_financieros;
-    const movements = data.movimientos;
-    const commitments = data.compromisos.filter(r => String(r.estado || 'pendiente').toLowerCase() === 'pendiente');
-    const debts = data.deudas.filter(d => amountOf(d) > 0);
-    const quotas = data.cuotas_deuda.filter(q => {
-      const state = String(q.estado || 'pendiente').toLowerCase();
-      return ['pendiente','vencida','atrasada'].includes(state) && n(q.monto) > 0;
-    });
-    const debtPayments = data.pagos_deuda;
+    const accounts = (data.cuentas_bancarias || [])
+      .filter(a => a.activa !== false);
 
-    const bankCurrent = accounts.reduce((s, a) => s + n(a.saldo_actual), 0);
-    const latestClosure = [...closures]
-      .filter(c => c.activo !== false)
-      .sort((a,b) => String(b.fecha_corte || '').localeCompare(String(a.fecha_corte || '')))[0] || null;
+    const closures = data.cierres_financieros || [];
+    const movements = data.movimientos || [];
+    const rawCommitments = data.compromisos || [];
+    const rawDebts = data.deudas || [];
+    const rawQuotas = data.cuotas_deuda || [];
+    const debtPayments = data.pagos_deuda || [];
 
-    // saldo_efectivo_actual es la fuente actual de caja cuando existe.
-    // Nunca usamos saldo_inicial histórico como efectivo actual si ya existe
-    // una columna de caja actual; evita inflar la liquidez con los $50 de apertura.
-    const cashCurrentRaw = latestClosure?.saldo_efectivo_actual ?? latestClosure?.efectivo_actual ?? null;
-    const cashCurrent = cashCurrentRaw != null ? n(cashCurrentRaw) : 0;
-    const openingTotal = n(latestClosure?.saldo_inicial);
-    const openingBank = latestClosure
-      ? accounts.filter(a => String(a.fecha_corte || '') === String(latestClosure.fecha_corte || ''))
-          .reduce((s,a) => s + n(a.saldo_apertura), 0)
-      : 0;
-    const cashOpening = Math.max(0, openingTotal - openingBank);
-    const initialBalance = bankCurrent + cashCurrent;
+    /*
+     * SALDO REAL:
+     * Las tablas de cuentas representan el saldo actual.
+     * NO volvemos a sumar el historial de movimientos, porque eso produciría
+     * doble contabilización.
+     */
+    const bankCurrent = accounts.reduce(
+      (sum, account) => sum + n(account.saldo_actual),
+      0
+    );
 
+    const latestClosure =
+      [...closures]
+        .filter(c => c.activo !== false)
+        .sort((a, b) =>
+          String(b.fecha_corte || '').localeCompare(String(a.fecha_corte || ''))
+        )[0] || null;
+
+    const cashField =
+      latestClosure?.saldo_efectivo_actual ??
+      latestClosure?.efectivo_actual;
+
+    const cashCurrent = cashField == null ? 0 : n(cashField);
+
+    const availableBalance = bankCurrent + cashCurrent;
+
+    /*
+     * Movimientos: solo sirven para actividad/ingresos/gastos.
+     * El saldo disponible ya proviene de cuentas + caja actual.
+     */
     const debtPaymentMovementIds = new Set(
-      debtPayments.map(p => String(p.movimiento_id ?? p.movimientoId ?? '')).filter(Boolean)
+      debtPayments
+        .map(p => String(p.movimiento_id ?? p.movimientoId ?? ''))
+        .filter(Boolean)
     );
 
     const incomes = [];
     const expenses = [];
+
     for (const row of movements) {
       if (!row.fecha) continue;
-      const type = String(row.tipo || '').toLowerCase();
-      const item = {
-        id: row.id, sourceId: `movimiento:${row.id}`, source: 'movimientos',
-        amount: amountOf(row), date: String(row.fecha).slice(0,10), row
-      };
+
+      const date = String(row.fecha).slice(0, 10);
+      const type = normalizeState(row.tipo);
+
       if (type === 'ingreso') {
-        item.classification = incomeClass(row, item.date > t);
-        incomes.push(item);
-      } else if (type === 'gasto') {
-        item.classification = item.date > t ? 'PROJECTED' : 'PAID';
-        item.isDebtPayment = debtPaymentMovementIds.has(String(row.id));
-        expenses.push(item);
+        incomes.push({
+          id: row.id,
+          sourceId: `movimiento:${row.id}`,
+          source: 'movimientos',
+          amount: movementAmount(row),
+          date,
+          classification: incomeClass(row, date > t),
+          row
+        });
+      }
+
+      if (type === 'gasto') {
+        expenses.push({
+          id: row.id,
+          sourceId: `movimiento:${row.id}`,
+          source: 'movimientos',
+          amount: movementAmount(row),
+          date,
+          classification: date > t ? 'PROJECTED' : 'PAID',
+          isDebtPayment: debtPaymentMovementIds.has(String(row.id)),
+          row
+        });
       }
     }
 
-    const obligations = [];
+    /*
+     * Deudas con cuotas: la obligación proyectable se representa por sus
+     * cuotas, no por el saldo total de la deuda.
+     */
     const quotaDebtIds = new Set();
 
-    for (const row of commitments) {
-      const date = String(row.fecha_vencimiento || row.fecha || '').slice(0,10);
-      const amount = amountOf(row);
+    const quotas = rawQuotas.filter(q => {
+      const state = normalizeState(q.estado);
+
+      const valid =
+        ['pendiente', 'vencida', 'atrasada'].includes(state) &&
+        n(q.monto) > 0 &&
+        q.fecha_vencimiento;
+
+      if (valid && q.deuda_id != null) {
+        quotaDebtIds.add(String(q.deuda_id));
+      }
+
+      return valid;
+    });
+
+    const obligations = [];
+
+    for (const row of rawCommitments) {
+      const state = normalizeState(row.estado);
+
+      if (state && state !== 'pendiente') continue;
+
+      const date = String(
+        row.fecha_vencimiento ?? row.fecha ?? ''
+      ).slice(0, 10);
+
+      const amount = n(row.monto ?? row.amount);
+
       if (!date || amount <= 0) continue;
+
+      /*
+       * Evita incorporar un compromiso que explícitamente pertenece
+       * a una cuota/deuda.
+       */
       if (row.deuda_id || row.cuota_id || row.cuota_deuda_id) continue;
+
       obligations.push({
-        id: row.id, sourceId: `compromiso:${row.id}`, source: 'compromisos',
-        amount, date, classification: date < t ? 'OVERDUE' : 'COMMITTED',
-        concept: row.concepto || row.descripcion || row.categoria || 'Compromiso'
+        id: row.id,
+        sourceId: `compromiso:${row.id}`,
+        source: 'compromisos',
+        amount,
+        date,
+        classification: date < t ? 'OVERDUE' : 'COMMITTED',
+        concept:
+          row.concepto ||
+          row.descripcion ||
+          row.categoria ||
+          'Compromiso'
       });
     }
 
     for (const q of quotas) {
-      const date = String(q.fecha_vencimiento || '').slice(0,10);
-      if (!date || n(q.monto) <= 0) continue;
-      if (q.deuda_id != null) quotaDebtIds.add(String(q.deuda_id));
+      const date = String(q.fecha_vencimiento).slice(0, 10);
+
       obligations.push({
-        id: q.id, sourceId: `cuota:${q.id}`, source: 'cuotas_deuda', amount: n(q.monto), date,
-        classification: ['vencida','atrasada'].includes(String(q.estado || '').toLowerCase()) || date < t ? 'OVERDUE' : 'INSTALLMENT',
-        concept: q.descripcion || `Cuota de deuda #${q.numero_cuota ?? ''}`.trim()
+        id: q.id,
+        sourceId: `cuota:${q.id}`,
+        source: 'cuotas_deuda',
+        amount: n(q.monto),
+        date,
+        classification:
+          ['vencida', 'atrasada'].includes(normalizeState(q.estado)) ||
+          date < t
+            ? 'OVERDUE'
+            : 'INSTALLMENT',
+        concept:
+          q.descripcion ||
+          `Cuota de deuda #${q.numero_cuota ?? ''}`.trim()
       });
     }
 
-    for (const d of debts) {
+    /*
+     * Deudas sin cuotas asociadas: solo usamos vencimiento explícito.
+     * Nunca inventamos fechas.
+     */
+    for (const d of rawDebts) {
       if (quotaDebtIds.has(String(d.id))) continue;
-      const date = String(d.fecha_vencimiento || '').slice(0,10);
-      const balance = n(d.saldo_pendiente ?? d.saldo_actual ?? d.saldo);
-      if (!date || balance <= 0) continue;
+
+      const balance = debtBalance(d);
+      const date = String(d.fecha_vencimiento || '').slice(0, 10);
+
+      if (balance <= 0 || !date) continue;
+
       obligations.push({
-        id: d.id, sourceId: `deuda:${d.id}`, source: 'deudas', amount: balance, date,
+        id: d.id,
+        sourceId: `deuda:${d.id}`,
+        source: 'deudas',
+        amount: balance,
+        date,
         classification: date < t ? 'OVERDUE' : 'COMMITTED',
-        concept: d.acreedor || d.nombre || d.descripcion || 'Deuda'
+        concept:
+          d.acreedor ||
+          d.nombre ||
+          d.descripcion ||
+          'Deuda'
       });
     }
 
-    const calendar = {};
-    const day = date => calendar[date] ||= {
-      assuredIncome:0, projectedIncome:0, plannedIncome:0,
-      mandatoryExpenses:0, discretionaryExpenses:0
-    };
-    for (const x of incomes) {
-      if (x.date < t) continue;
-      const d = day(x.date);
-      if (x.classification === 'ASSURED') d.assuredIncome += x.amount;
-      else d.projectedIncome += x.amount;
-    }
-    for (const x of obligations) day(x.date < t ? t : x.date).mandatoryExpenses += x.amount;
+    const uniqueObligations = dedupe(obligations, obligationKey);
 
-    const paidToday = expenses.filter(x => x.date === t && !x.isDebtPayment).reduce((s,x)=>s+x.amount,0);
-    const storedReserve = n(localStorage.getItem('finance_minimum_reserve'));
-    const minimumReserve = storedReserve > 0 ? storedReserve : Math.round(Math.max(0, initialBalance) * .10);
-    const safetyBufferPct = Math.min(50, Math.max(0, n(localStorage.getItem('finance_safety_buffer_pct')) || 10));
+    /*
+     * Calendario de proyección.
+     */
+    const calendar = {};
+
+    const day = date => {
+      if (!calendar[date]) {
+        calendar[date] = {
+          assuredIncome: 0,
+          projectedIncome: 0,
+          plannedIncome: 0,
+          mandatoryExpenses: 0,
+          discretionaryExpenses: 0
+        };
+      }
+
+      return calendar[date];
+    };
+
+    for (const income of incomes) {
+      if (income.date <= t) continue;
+
+      const d = day(income.date);
+
+      if (income.classification === 'ASSURED') {
+        d.assuredIncome += income.amount;
+      } else {
+        d.projectedIncome += income.amount;
+      }
+    }
+
+    for (const obligation of uniqueObligations) {
+      if (obligation.date < t) {
+        day(t).mandatoryExpenses += obligation.amount;
+      } else {
+        day(obligation.date).mandatoryExpenses += obligation.amount;
+      }
+    }
+
+    /*
+     * Gasto discrecional real de hoy:
+     * pagos de deuda NO consumen el margen diario discrecional.
+     */
+    const paidToday = expenses
+      .filter(x => x.date === t && !x.isDebtPayment)
+      .reduce((sum, x) => sum + x.amount, 0);
+
+    const storedReserve = n(
+      localStorage.getItem('finance_minimum_reserve')
+    );
+
+    const minimumReserve =
+      storedReserve > 0
+        ? storedReserve
+        : Math.round(Math.max(0, availableBalance) * 0.10);
+
+    const configuredSafety = n(
+      localStorage.getItem('finance_safety_buffer_pct')
+    );
+
+    const safetyBufferPct =
+      configuredSafety > 0
+        ? Math.min(50, configuredSafety)
+        : 10;
 
     const diagnostics = {
-      errors, accounts: accounts.length, closures: closures.length, movements: movements.length,
-      commitments: commitments.length, debts: debts.length, quotas: quotas.length,
-      debtPayments: debtPayments.length, bankCurrent, cashCurrent, cashOpening, openingTotal,
-      initialBalance, latestClosure
+      version: 'CCF-V5.0.0',
+      errors,
+      accounts: accounts.length,
+      closures: closures.length,
+      movements: movements.length,
+      commitments: rawCommitments.length,
+      debts: rawDebts.length,
+      quotas: rawQuotas.length,
+      debtPayments: debtPayments.length,
+      bankCurrent,
+      cashCurrent,
+      availableBalance,
+      uniqueObligations: uniqueObligations.length,
+      latestClosure
     };
+
     window.__financialSummaryDiagnostics = diagnostics;
 
-    // Si ninguna fuente principal devuelve datos, no presentamos una falsa lectura de $0.
-    const primaryCount = accounts.length + movements.length + debts.length + quotas.length + commitments.length;
-    if (primaryCount === 0 && errors.length) {
-      throw new Error('El Centro de Control no pudo leer las tablas financieras: ' + errors.join(' | '));
+    /*
+     * Si las tablas principales no pudieron leerse, detenemos el cálculo.
+     * Un error de lectura nunca debe convertirse en $0.
+     */
+    const successfulSources = [
+      accounts.length,
+      movements.length,
+      rawCommitments.length,
+      rawDebts.length,
+      rawQuotas.length
+    ].reduce((sum, x) => sum + x, 0);
+
+    if (successfulSources === 0 && errors.length) {
+      throw new Error(
+        'No se pudieron leer las fuentes financieras: ' +
+        errors.join(' | ')
+      );
     }
 
     return {
-      today: t, initialBalance, minimumReserve, safetyBufferPct,
-      incomes: uniqueBySource(incomes), expenses: uniqueBySource(expenses),
-      obligations: uniqueBySource(obligations), calendar,
+      today: t,
+
+      /*
+       * Este es el saldo realmente disponible según las cuentas/caja actuales.
+       */
+      initialBalance: availableBalance,
+
+      minimumReserve,
+      safetyBufferPct,
+
+      incomes,
+      expenses,
+      obligations: uniqueObligations,
+      calendar,
+
       marginInput: {
-        protectedLiquidity: Math.max(0, initialBalance), minimumReserve,
-        discretionarySpent: paidToday, safetyBufferPct,
-        projectedSpendRatePerHour: 0, remainingHours: 0
-      }, diagnostics
+        protectedLiquidity: Math.max(0, availableBalance),
+        minimumReserve,
+        discretionarySpent: paidToday,
+        safetyBufferPct,
+        projectedSpendRatePerHour: 0,
+        remainingHours: 0
+      },
+
+      diagnostics
     };
   }
 

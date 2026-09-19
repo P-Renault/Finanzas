@@ -1,15 +1,12 @@
-ARCHIVO: motor_alertas.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Financial Alert Engine — v5.0.0 */
 window.FinancialAlertEngine = (() => {
   function fromMargin(margin) {
     if (margin.excess > 0 || margin.consumedPct >= 100) {
       return {
         type: 'DAILY_MARGIN_EXCEEDED',
         severity: 'CRITICAL',
-        message: 'LÍMITE DIARIO ALCANZADO. No generes nuevos gastos no esenciales hoy.'
+        message:
+          'LÍMITE DIARIO ALCANZADO. No generes nuevos gastos no esenciales hoy.'
       };
     }
 
@@ -17,7 +14,8 @@ window.FinancialAlertEngine = (() => {
       return {
         type: 'DAILY_MARGIN_CRITICAL',
         severity: 'CRITICAL',
-        message: 'Detén gastos no esenciales: el margen diario está prácticamente agotado.'
+        message:
+          'Detén gastos no esenciales: el margen diario está prácticamente agotado.'
       };
     }
 
@@ -25,7 +23,8 @@ window.FinancialAlertEngine = (() => {
       return {
         type: 'DAILY_MARGIN_CAUTION',
         severity: 'WARNING',
-        message: 'Estás cerca de tu límite diario de gasto.'
+        message:
+          'Estás cerca de tu límite diario de gasto.'
       };
     }
 
@@ -33,7 +32,8 @@ window.FinancialAlertEngine = (() => {
       return {
         type: 'DAILY_MARGIN_PREVENTIVE',
         severity: 'INFO',
-        message: 'Tu consumo de margen diario requiere atención.'
+        message:
+          'Tu consumo de margen diario requiere atención.'
       };
     }
 

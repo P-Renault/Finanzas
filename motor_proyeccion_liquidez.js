@@ -1,11 +1,7 @@
-ARCHIVO: motor_proyeccion_liquidez.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Liquidity Projection Engine — v5.0.0 */
 window.LiquidityProjectionEngine = (() => {
   function project(context, state, scenario = 'CONSERVATIVE', days = 90) {
-    let balance = state.availableBalance;
+    let balance = Number(state.availableBalance || 0);
     const result = [];
 
     for (let i = 0; i < days; i++) {
@@ -13,6 +9,7 @@ window.LiquidityProjectionEngine = (() => {
       const day = context.calendar?.[date] || {};
 
       const assured = Number(day.assuredIncome || 0);
+
       const projected =
         scenario === 'CONSERVATIVE'
           ? 0
@@ -27,6 +24,7 @@ window.LiquidityProjectionEngine = (() => {
       const discretionary = Number(day.discretionaryExpenses || 0);
 
       const opening = balance;
+
       balance =
         opening +
         assured +
@@ -57,7 +55,9 @@ window.LiquidityProjectionEngine = (() => {
   }
 
   function firstRisk(projection, reserve) {
-    return projection.find(x => x.closingBalance < reserve) || null;
+    return projection.find(
+      x => x.closingBalance < reserve
+    ) || null;
   }
 
   return { project, firstRisk };

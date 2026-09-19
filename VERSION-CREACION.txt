@@ -1,0 +1,6 @@
+CENTRO DE CONTROL FINANCIERO
+Versión de construcción: CCF-V5.0.0
+Código único de creación: CCF-V5.0.0-20260919T125235Z
+Objetivo: corrección integral de integración y cálculo.
+Validación JS: OK.
+Estado de publicación: NO PUBLICADO AUTOMÁTICAMENTE; GitHub ha rechazado las escrituras del conector con HTTP 403.

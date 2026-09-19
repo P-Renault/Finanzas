@@ -1,14 +1,10 @@
-ARCHIVO: motor_margen_diario.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Daily Spending Margin Engine — v5.0.0 */
 window.DailySpendingMarginEngine = (() => {
   function calculate(input) {
-    const protectedLiquidity = Number(input.protectedLiquidity || 0);
-    const minimumReserve = Number(input.minimumReserve || 0);
-    const spent = Math.max(0, Number(input.discretionarySpent || 0));
-    const safety = Number(input.safetyBufferPct ?? 10);
+    const protectedLiquidity = Number(input?.protectedLiquidity || 0);
+    const minimumReserve = Number(input?.minimumReserve || 0);
+    const spent = Math.max(0, Number(input?.discretionarySpent || 0));
+    const safety = Number(input?.safetyBufferPct ?? 10);
 
     const maximum = Math.max(
       0,
@@ -24,16 +20,16 @@ window.DailySpendingMarginEngine = (() => {
     const remaining = Math.max(0, maximum - spent);
 
     const consumedPct =
-      maximum > 0 ? (spent / maximum) * 100 : 100;
+      maximum > 0 ? (spent / maximum) * 100 : 0;
 
     const hourlyRate = Math.max(
       0,
-      Number(input.projectedSpendRatePerHour || 0)
+      Number(input?.projectedSpendRatePerHour || 0)
     );
 
     const hoursRemaining = Math.max(
       0,
-      Number(input.remainingHours || 0)
+      Number(input?.remainingHours || 0)
     );
 
     const projectedEndSpend =
@@ -42,7 +38,7 @@ window.DailySpendingMarginEngine = (() => {
     const projectedConsumedPct =
       maximum > 0
         ? (projectedEndSpend / maximum) * 100
-        : 100;
+        : 0;
 
     return {
       maximum,
@@ -53,12 +49,13 @@ window.DailySpendingMarginEngine = (() => {
       consumedPct,
       projectedConsumedPct,
       excess: Math.max(0, spent - maximum),
-      limitReached: spent >= maximum,
-      status: resolveStatus(consumedPct, projectedConsumedPct)
+      limitReached: maximum > 0 && spent >= maximum,
+      status: resolveStatus(consumedPct, projectedConsumedPct, maximum)
     };
   }
 
-  function resolveStatus(actual, projected) {
+  function resolveStatus(actual, projected, maximum) {
+    if (maximum <= 0) return 'NO_MARGIN';
     if (actual >= 100) return 'LIMIT_REACHED';
     if (actual >= 90 || projected >= 100) return 'CRITICAL';
     if (actual >= 80 || projected >= 90) return 'CAUTION';

@@ -1,8 +1,4 @@
-ARCHIVO: motor_acciones.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Financial Action Engine — v5.0.0 */
 window.FinancialActionEngine = (() => {
   function build({ risk, gap, marginAlert }) {
     const actions = [];
@@ -11,8 +7,10 @@ window.FinancialActionEngine = (() => {
       actions.push({
         priority: 1,
         title: 'Proteger liquidez',
-        problem: `La liquidez proyectada cae bajo la reserva el ${risk.date}.`,
-        action: 'Reducir gasto discrecional y asegurar recursos antes de esa fecha.'
+        problem:
+          `La liquidez proyectada cae bajo la reserva el ${risk.date}.`,
+        action:
+          'Reducir gasto discrecional y asegurar recursos antes de esa fecha.'
       });
     }
 
@@ -20,8 +18,10 @@ window.FinancialActionEngine = (() => {
       actions.push({
         priority: 2,
         title: 'Cerrar brecha financiera',
-        problem: `Existe una brecha de $${Math.round(gap.gap).toLocaleString('es-CL')}.`,
-        action: 'Asegurar o generar recursos y priorizar las obligaciones críticas.'
+        problem:
+          `Existe una brecha de $${Math.round(gap.gap).toLocaleString('es-CL')}.`,
+        action:
+          'Asegurar o generar recursos y priorizar las obligaciones críticas.'
       });
     }
 
@@ -30,7 +30,8 @@ window.FinancialActionEngine = (() => {
         priority: 3,
         title: 'Controlar gasto diario',
         problem: marginAlert.message,
-        action: 'Suspender gastos no esenciales hasta recuperar margen.'
+        action:
+          'Suspender gastos no esenciales hasta recuperar margen.'
       });
     }
 

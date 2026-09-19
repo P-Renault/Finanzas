@@ -1,8 +1,4 @@
-ARCHIVO: motor_estado_financiero.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Financial State Engine — v5.0.0 */
 window.FinancialStateEngine = (() => {
   const amount = x => Number(x?.amount || 0);
 
@@ -13,23 +9,32 @@ window.FinancialStateEngine = (() => {
   }
 
   function calculate(context) {
-    const incomes = deduplicate(context.incomes || []);
-    const expenses = deduplicate(context.expenses || []);
+    const incomes = context.incomes || [];
+    const expenses = context.expenses || [];
+    const obligations = context.obligations || [];
 
     const realIncome = sumByClass(incomes, ['REAL']);
     const assuredIncome = sumByClass(incomes, ['ASSURED']);
     const projectedIncome = sumByClass(incomes, ['PROJECTED']);
 
     const paidExpenses = sumByClass(expenses, ['PAID']);
-    const committedExpenses = sumByClass(
-      expenses,
-      ['COMMITTED', 'INSTALLMENT', 'PENDING', 'OVERDUE', 'DUE_SOON']
+
+    /*
+     * Las obligaciones salen de compromisos/cuotas/deudas.
+     * No se calculan desde movements, porque un compromiso futuro todavía
+     * no es un gasto pagado.
+     */
+    const committedExpenses = obligations.reduce(
+      (sum, x) => sum + amount(x),
+      0
     );
 
-    const availableBalance =
-      Number(context.initialBalance || 0) +
-      realIncome -
-      paidExpenses;
+    /*
+     * IMPORTANTE:
+     * context.initialBalance ya representa el saldo actual de bancos + caja.
+     * No sumamos ingresos históricos ni restamos gastos históricos nuevamente.
+     */
+    const availableBalance = Number(context.initialBalance || 0);
 
     const projectedBalance =
       availableBalance +
@@ -39,12 +44,14 @@ window.FinancialStateEngine = (() => {
 
     const financialGap = Math.max(
       0,
-      committedExpenses - (availableBalance + assuredIncome)
+      committedExpenses -
+      (availableBalance + assuredIncome)
     );
 
-    const coverageRatio = committedExpenses > 0
-      ? (availableBalance + assuredIncome) / committedExpenses
-      : Infinity;
+    const coverageRatio =
+      committedExpenses > 0
+        ? (availableBalance + assuredIncome) / committedExpenses
+        : Infinity;
 
     return {
       realIncome,
@@ -57,15 +64,6 @@ window.FinancialStateEngine = (() => {
       financialGap,
       coverageRatio
     };
-  }
-
-  function deduplicate(items) {
-    const map = new Map();
-    items.forEach(item => {
-      const key = item.sourceId || item.id;
-      if (!key || !map.has(key)) map.set(key || crypto.randomUUID(), item);
-    });
-    return [...map.values()];
   }
 
   return { calculate };

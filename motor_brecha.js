@@ -1,16 +1,12 @@
-ARCHIVO: motor_brecha.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Financial Gap Engine — v5.0.0 */
 window.FinancialGapEngine = (() => {
   function calculate(obligations, resources) {
     const obligationsTotal = (obligations || [])
       .reduce((sum, x) => sum + Number(x.amount || 0), 0);
 
     const resourcesTotal =
-      Number(resources.available || 0) +
-      Number(resources.assured || 0);
+      Number(resources?.available || 0) +
+      Number(resources?.assured || 0);
 
     return {
       obligations: obligationsTotal,
