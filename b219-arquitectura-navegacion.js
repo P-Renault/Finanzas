@@ -2,7 +2,8 @@
    Conserva las funciones existentes en la barra horizontal y mueve las nuevas
    funcionalidades a un menú desplegable. Carga legacy de forma secuencial para
    evitar carreras entre módulos. No crea jornadas financieras duplicadas.
-   B232.3: integra Calendario V2 en la carga secuencial, sin duplicar motores existentes. */
+   B232.3: integra Calendario V2 en la carga secuencial, sin duplicar motores existentes.
+   B232.7: persistencia real del módulo activo mediante captura + restauración escalonada. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
@@ -28,7 +29,80 @@ function show(id){document.querySelectorAll('.tab').forEach(s=>s.classList.toggl
 function reorderTabs(){const t=document.querySelector('.tabs');if(!t)return;const order=['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion'];for(const id of order){const b=t.querySelector(`button[data-tab="${id}"]`);if(b)t.appendChild(b)}}
 function ensureCoreButtons(){const t=document.querySelector('.tabs');if(!t)return;const add=(id,label)=>{let b=t.querySelector(`[data-tab="${id}"]`);if(!b){b=document.createElement('button');b.type='button';b.dataset.tab=id;b.textContent=label;t.appendChild(b)}return b};add('operaciones','Operaciones');if(!t.querySelector('[data-tab="planificacion"]')){const b=document.createElement('button');b.type='button';b.dataset.tab='planificacion';b.textContent='Planificación';t.appendChild(b);const app=$('app');if(app&&!$('planificacion')){const s=document.createElement('section');s.id='planificacion';s.className='tab hidden';s.innerHTML='<div id="b216Content"></div>';app.appendChild(s)}}reorderTabs();}
 function installMenu(){const t=document.querySelector('.tabs');if(!t||$('b219MenuWrap'))return;const shell=document.createElement('div');shell.id='b219NavShell';shell.className='b219-nav-shell';t.parentNode.insertBefore(shell,t);shell.appendChild(t);const wrap=document.createElement('div');wrap.id='b219MenuWrap';wrap.className='b219-menu-wrap';wrap.innerHTML=`<button type="button" id="b219MenuBtn" class="b219-menu-btn" aria-expanded="false">Más ▾</button><div id="b219Menu" class="b219-menu" role="menu"><button type="button" data-b219-open="ingresos">Motor Multifuente<small>Generación · cobro · ingresos pendientes</small></button><button type="button" data-b219-open="jornadas">Control de Jornada<small>Integración financiera Uber / inDrive</small></button></div>`;shell.appendChild(wrap);const btn=$('b219MenuBtn'),menu=$('b219Menu');btn.onclick=e=>{e.stopPropagation();const open=!menu.classList.contains('open');menu.classList.toggle('open',open);btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open))};menu.addEventListener('click',e=>{const b=e.target.closest('[data-b219-open]');if(!b)return;show(b.dataset.b219Open);menu.classList.remove('open');btn.classList.remove('open');btn.setAttribute('aria-expanded','false')});document.addEventListener('click',()=>{menu.classList.remove('open');btn.classList.remove('open');btn.setAttribute('aria-expanded','false')})}
-function installGenericNav(){const t=document.querySelector('.tabs');if(!t||t.dataset.b219Nav)return;t.dataset.b219Nav='1';t.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(!b)return;const id=b.dataset.tab;if(id==='ingresos'||id==='jornadas')return;show(id)})}
+function installGenericNav(){
+  const t=document.querySelector('.tabs');
+  if(!t||t.dataset.b219Nav)return;
+  t.dataset.b219Nav='1';
+
+  /* B232.7 · Persistencia REAL de navegación
+     - Primera conexión sin historial: Resumen.
+     - Recarga/reapertura con conexión existente: conserva el último módulo.
+     - El guardado ocurre en CAPTURE para que app.js no pueda sobrescribirlo.
+     - Se restaura después de que B219 y los módulos dinámicos hayan terminado.
+     - Salir elimina el estado de navegación. */
+  const NAV_KEY='cf_active_tab_v2';
+  const LEGACY_KEY='cf_active_tab_v1';
+  const validTab=id=>['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion','ingresos','jornadas'].includes(id);
+
+  function savedTab(){
+    const v=localStorage.getItem(NAV_KEY);
+    if(v&&validTab(v))return v;
+    const legacy=localStorage.getItem(LEGACY_KEY);
+    if(legacy&&validTab(legacy)){
+      localStorage.setItem(NAV_KEY,legacy);
+      return legacy;
+    }
+    return null;
+  }
+
+  function restore(){
+    const id=savedTab();
+    if(!id)return false;
+    const button=document.querySelector(`.tabs button[data-tab="${id}"]`);
+    if(!button)return false;
+    show(id);
+    return true;
+  }
+
+  /* Captura antes del onclick de app.js. Así el estado queda persistido
+     aunque otro módulo tenga su propio manejador de clic. */
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('.tabs button[data-tab]');
+    if(b){
+      const id=b.dataset.tab;
+      if(validTab(id))localStorage.setItem(NAV_KEY,id);
+      return;
+    }
+    const logout=e.target.closest('#logoutBtn');
+    if(logout){
+      localStorage.removeItem(NAV_KEY);
+      localStorage.removeItem(LEGACY_KEY);
+    }
+  },true);
+
+  /* Restauración escalonada: algunos módulos crean pestañas después del
+     arranque de app.js. No se cambia nada si no existe un módulo guardado. */
+  const attempts=[0,150,400,800,1500,2500];
+  attempts.forEach(ms=>setTimeout(()=>restore(),ms));
+
+  if(window.MutationObserver){
+    const observer=new MutationObserver(()=>{
+      if(restore())observer.disconnect();
+    });
+    observer.observe(t,{childList:true,subtree:true});
+    setTimeout(()=>observer.disconnect(),3500);
+  }
+
+  /* Compatibilidad con B232.6 */
+  const logout=$('logoutBtn');
+  if(logout&&!logout.dataset.b2327Logout){
+    logout.dataset.b2327Logout='1';
+    logout.addEventListener('click',()=>{
+      localStorage.removeItem(NAV_KEY);
+      localStorage.removeItem(LEGACY_KEY);
+    });
+  }
+}
 async function safe(p,fb=[]){try{const r=await Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),7000))]);return r?.error?fb:(r?.data??fb)}catch{return fb}}
 async function loadOps(){const m=$('b219OpsMsg');if(!m)return;const c=db();if(!c){m.textContent='Conecta Supabase para consultar Operaciones.';return}m.textContent='Actualizando…';const [cl,banks,debtRows,inc,exp,genRows]=await Promise.all([safe(c.from('cierres_financieros').select('saldo_efectivo_actual').eq('activo',true).order('fecha_corte',{ascending:false}).limit(1)),safe(c.from('cuentas_bancarias').select('nombre_banco,nombre_cuenta,saldo_actual').eq('activa',true)),safe(c.from('v_deudas_resumen').select('acreedor,saldo_actual,proximo_vencimiento,estado').order('acreedor')),safe(c.from('movimientos').select('tipo,monto,fecha').eq('tipo','ingreso').gte('fecha',today())),safe(c.from('movimientos').select('tipo,monto,fecha').eq('tipo','gasto').gte('fecha',today())),safe(c.from('generacion_ingresos').select('monto_neto,estado_cobro').limit(100))]);const cash=Number(cl[0]?.saldo_efectivo_actual||0),bank=banks.reduce((s,x)=>s+Number(x.saldo_actual||0),0),liq=cash+bank,futureIn=inc.reduce((s,x)=>s+Number(x.monto||0),0),futureOut=exp.reduce((s,x)=>s+Number(x.monto||0),0),debt=debtRows.reduce((s,x)=>!['pagada','cancelada'].includes(String(x.estado).toLowerCase())?s+Number(x.saldo_actual||0):s,0),gen=genRows.filter(x=>x.estado_cobro!=='cancelado').reduce((s,x)=>s+Number(x.monto_neto||0),0);$('b219Liq').textContent=money(liq);$('b219Future').textContent=money(futureIn);$('b219Proj').textContent=money(liq+futureIn-futureOut);$('b219Debt').textContent=money(debt);$('b219Gen').textContent=money(gen);$('b219Cash').textContent=money(cash);$('b219Bank').textContent=money(bank);$('b219BankList').innerHTML=banks.map(x=>`<div class="b219-row"><span>${esc(x.nombre_banco)}<small>${esc(x.nombre_cuenta||'Cuenta')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin cuentas activas.</p>';$('b219DebtList').innerHTML=debtRows.filter(x=>!['pagada','cancelada'].includes(String(x.estado).toLowerCase())).slice(0,8).map(x=>`<div class="b219-row"><span>${esc(x.acreedor)}<small>Próximo: ${esc(x.proximo_vencimiento||'—')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin deudas pendientes.</p>';m.textContent='Operaciones actualizado.'}
 async function loadIncome(){const c=db();if(!c)return;const [f,g]=await Promise.all([safe(c.from('fuentes_ingreso').select('*').eq('activa',true).order('nombre')),safe(c.from('generacion_ingresos').select('*').order('fecha_generacion',{ascending:false}).limit(50))]);$('b219Source').innerHTML=f.map(x=>`<option value="${x.id}">${esc(x.nombre)}</option>`).join('');const gen=g.filter(x=>x.estado_cobro!=='cancelado').reduce((s,x)=>s+Number(x.monto_neto||0),0),rec=g.filter(x=>x.estado_cobro==='cobrado').reduce((s,x)=>s+Number(x.monto_neto||0),0);$('b219Generated').textContent=money(gen);$('b219Received').textContent=money(rec);$('b219Pending').textContent=money(gen-rec);$('b219IncomeList').innerHTML=g.map(x=>`<div class="b219-row"><span>${esc(x.actividad)}<small>${esc(x.fecha_generacion)} · ${esc(x.estado_cobro)}</small></span><strong>${money(x.monto_neto)}</strong></div>`).join('')||'<p class="muted">Sin generaciones registradas.</p>'}
