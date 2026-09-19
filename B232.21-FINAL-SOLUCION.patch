@@ -1,0 +1,264 @@
+*** B232.21 — SOLUCIÓN FINAL: ARRANQUE + NAVEGACIÓN ***
+
+OBJETIVO
+- Evitar que un fallo de Supabase deje bloqueada la interfaz en "Conectar".
+- Unificar la navegación de botones estáticos y dinámicos.
+- Integrar Operaciones, Planificación, Motor Multifuente y Control de Jornada.
+- Mantener B232 como propietario del Calendario.
+- Eliminar runtimes de navegación superpuestos.
+
+1) app.js
+REEMPLAZAR COMPLETAMENTE el bloque `async function connect(){...}` por:
+
+async function connect(){
+  const url=$('supabaseUrl').value.trim();
+  const key=$('supabaseKey').value.trim();
+
+  if(!url||!key){
+    return msg('configMsg','Completa ambos campos.');
+  }
+
+  const btn=$('saveConfig');
+  if(btn){ btn.disabled=true; btn.textContent='Conectando...'; }
+
+  try{
+    if(!window.supabase||typeof window.supabase.createClient!=='function'){
+      throw new Error('La biblioteca de Supabase no está disponible.');
+    }
+
+    db=window.supabase.createClient(url,key,{
+      auth:{persistSession:false,autoRefreshToken:false}
+    });
+
+    localStorage.setItem('sf_url',url);
+    localStorage.setItem('sf_key',key);
+
+    $('configPanel').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    $('logoutBtn').classList.remove('hidden');
+
+    const notice=document.getElementById('appStatus');
+    if(notice) notice.textContent='Verificando conexión con Supabase...';
+
+    const probe=await db.from('movimientos').select('id').limit(1);
+
+    if(probe.error){
+      console.error('Supabase probe:',probe.error);
+      if(notice){
+        notice.textContent='Interfaz cargada. Supabase respondió con error: '+probe.error.message;
+      }
+      return;
+    }
+
+    if(notice) notice.textContent='Supabase conectado correctamente.';
+    await refresh();
+
+  }catch(e){
+    console.error('[FINANZAS] Error de conexión:',e);
+
+    $('configPanel').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    $('logoutBtn').classList.remove('hidden');
+
+    const notice=document.getElementById('appStatus');
+    if(notice){
+      notice.textContent='Error de conexión: '+(e.message||e);
+    }
+
+  }finally{
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Conectar';
+    }
+  }
+}
+
+REEMPLAZAR el bloque antiguo `TABS` de app.js por:
+
+/* ============================================================
+   B232.21 · NAVEGACIÓN UNIFICADA
+   ============================================================ */
+
+function navigateTab(id){
+  const section=$(id);
+
+  if(!section){
+    console.warn('[B232.21] Sección no disponible:',id);
+    return false;
+  }
+
+  document.querySelectorAll('.tab').forEach(x=>{
+    x.classList.toggle('hidden',x.id!==id);
+  });
+
+  document.querySelectorAll('.tabs button[data-tab]').forEach(x=>{
+    x.classList.toggle('active',x.dataset.tab===id);
+  });
+
+  localStorage.setItem('cf_active_tab_v2',id);
+
+  try{
+    if(
+      (id==='operaciones' ||
+       id==='ingresos' ||
+       id==='jornadas') &&
+      typeof window.b219Show==='function'
+    ){
+      window.b219Show(id);
+    }
+
+    if(
+      id==='planificacion' &&
+      typeof window.fin216Plan==='function'
+    ){
+      window.fin216Plan();
+    }
+
+    if(
+      id==='calendario' &&
+      window.B232Calendario &&
+      typeof window.B232Calendario.load==='function'
+    ){
+      setTimeout(()=>{
+        window.B232Calendario.load().catch(console.error);
+      },0);
+    }
+
+  }catch(error){
+    console.error(
+      '[B232.21] Error cargando módulo '+id,
+      error
+    );
+  }
+
+  return true;
+}
+
+document.addEventListener('click',event=>{
+  const button=event.target.closest(
+    '.tabs button[data-tab]'
+  );
+
+  if(!button)return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if(typeof event.stopImmediatePropagation==='function'){
+    event.stopImmediatePropagation();
+  }
+
+  navigateTab(button.dataset.tab);
+
+},true);
+
+window.B23221Navigation={
+  version:'232.21',
+  navigate:navigateTab
+};
+
+2) b219-arquitectura-navegacion.js
+
+CAMBIAR `show()` para exponerla:
+
+function show(id){
+  document.querySelectorAll('.tab')
+    .forEach(s=>s.classList.toggle('hidden',s.id!==id));
+
+  document.querySelectorAll('.tabs button[data-tab]')
+    .forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+
+  if(id==='operaciones')loadOps();
+  if(id==='ingresos')loadIncome();
+  if(id==='jornadas')loadJornadas();
+  if(id==='planificacion')window.fin216Plan?.();
+
+  localStorage.setItem('cf_active_tab_v2',id);
+}
+
+window.b219Show=show;
+
+CAMBIAR el orden de pestañas a:
+
+const order=[
+  'dashboard',
+  'movimientos',
+  'futuros',
+  'calendario',
+  'ahorro',
+  'deudas',
+  'cuentas',
+  'operaciones',
+  'planificacion',
+  'ingresos',
+  'jornadas'
+];
+
+CAMBIAR `ensureCoreButtons()` para garantizar los cuatro módulos:
+
+add('operaciones','Operaciones');
+add('planificacion','Planificación');
+add('ingresos','Motor Multifuente');
+add('jornadas','Control de Jornada');
+
+y conservar la creación de la sección `planificacion`.
+
+3) index.html
+
+Cambiar:
+
+<script src="app.js?v=220.2"></script>
+
+por:
+
+<script src="app.js?v=232.21"></script>
+
+ELIMINAR estas referencias antiguas si están presentes:
+
+- calendario-runtime-hotfix-B232.12.js
+- b232-sistema-tabs-final.js
+- B232.20-SISTEMA-NAVEGACION-Y-MODULOS.js
+- RECUPERACION-ACCESO-B232.15.js
+
+MUY IMPORTANTE:
+eliminar cualquier línea corrupta como:
+
+<script <script src="...">
+
+No agregar otro runtime de navegación.
+
+4) ORDEN DE CARGA FINAL
+
+Supabase CDN
+→ app.js?v=232.21
+→ loader legacy existente
+→ B219
+→ FIN23/B235
+→ B216
+→ B232
+→ motores de resumen
+
+No agregar otro controlador de pestañas.
+
+5) VALIDACIÓN
+
+Después de subir:
+
+- Recargar completamente.
+- Debe salir de "Conectar base de datos".
+- Resumen debe abrir.
+- Operaciones debe abrir.
+- Planificación debe abrir.
+- Motor Multifuente debe abrir.
+- Control de Jornada debe abrir.
+- Deudas debe abrir.
+- Cuentas debe abrir.
+- Calendario debe abrir y cargar B232.
+- Volver a Resumen y repetir.
+- Recargar y verificar que no vuelva a quedar atrapado en la pantalla de conexión.
+
+ESTADO DE ESTA ENTREGA
+La corrección fue auditada contra la rama Punto-referencia.
+La escritura automática en GitHub fue intentada, pero la integración disponible devolvió HTTP 403:
+"Resource not accessible by integration".
+Por ello este parche no debe presentarse como publicado hasta subirlo al repositorio.
