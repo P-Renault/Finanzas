@@ -1,8 +1,4 @@
-ARCHIVO: motor_margen_diario.js
-LENGUAJE: JavaScript ES2022
-EXTENSIÓN DE IMPLEMENTACIÓN: .js
-EXTENSIÓN DE ENTREGA: .txt
-
+/* Motor de Margen Diario */
 window.DailySpendingMarginEngine = (() => {
   function calculate(input) {
     const protectedLiquidity = Number(input.protectedLiquidity || 0);
@@ -10,48 +6,23 @@ window.DailySpendingMarginEngine = (() => {
     const spent = Math.max(0, Number(input.discretionarySpent || 0));
     const safety = Number(input.safetyBufferPct ?? 10);
 
-    const maximum = Math.max(
-      0,
-      protectedLiquidity - minimumReserve
-    );
-
+    const maximum = Math.max(0, protectedLiquidity - minimumReserve);
     const sustainable = maximum;
-    const recommended = Math.max(
-      0,
-      maximum * (1 - safety / 100)
-    );
-
+    const recommended = Math.max(0, maximum * (1 - safety / 100));
     const remaining = Math.max(0, maximum - spent);
-
-    const consumedPct =
-      maximum > 0 ? (spent / maximum) * 100 : 100;
-
-    const hourlyRate = Math.max(
-      0,
-      Number(input.projectedSpendRatePerHour || 0)
-    );
-
-    const hoursRemaining = Math.max(
-      0,
-      Number(input.remainingHours || 0)
-    );
+    const consumedPct = maximum > 0 ? (spent / maximum) * 100 : 100;
 
     const projectedEndSpend =
-      spent + hourlyRate * hoursRemaining;
+      spent +
+      Math.max(0, Number(input.projectedSpendRatePerHour || 0)) *
+      Math.max(0, Number(input.remainingHours || 0));
 
     const projectedConsumedPct =
-      maximum > 0
-        ? (projectedEndSpend / maximum) * 100
-        : 100;
+      maximum > 0 ? (projectedEndSpend / maximum) * 100 : 100;
 
     return {
-      maximum,
-      sustainable,
-      recommended,
-      spent,
-      remaining,
-      consumedPct,
-      projectedConsumedPct,
+      maximum, sustainable, recommended, spent, remaining,
+      consumedPct, projectedConsumedPct,
       excess: Math.max(0, spent - maximum),
       limitReached: spent >= maximum,
       status: resolveStatus(consumedPct, projectedConsumedPct)
