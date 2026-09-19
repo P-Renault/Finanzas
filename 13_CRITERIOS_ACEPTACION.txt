@@ -1,0 +1,28 @@
+ARCHIVO: 13_CRITERIOS_ACEPTACION.txt
+LENGUAJE: QA / Documentación
+EXTENSIÓN DE ENTREGA: .txt
+
+[ ] Panel construido en HTML5.
+[ ] Estilos separados en CSS3.
+[ ] Lógica separada en JavaScript.
+[ ] Datos aislados mediante adaptador Supabase.
+[ ] Saldo real excluye ingresos futuros.
+[ ] Ingresos no se contabilizan dos veces.
+[ ] Obligaciones futuras no reducen artificialmente el saldo actual.
+[ ] Proyección de liquidez hasta 90 días.
+[ ] Detección de primera fecha de riesgo.
+[ ] Cálculo de brecha.
+[ ] Margen máximo diario.
+[ ] Margen sostenible.
+[ ] Margen recomendado.
+[ ] Gasto acumulado.
+[ ] Margen restante.
+[ ] Alertas 70/80/90/100%.
+[ ] Alerta predictiva.
+[ ] Exceso sobre margen.
+[ ] Un gasto real nunca se bloquea.
+[ ] Acciones prioritarias.
+[ ] Pruebas unitarias.
+[ ] RLS conservado.
+[ ] Sin service_role en frontend.
+[ ] Validación contra el esquema real antes de producción.

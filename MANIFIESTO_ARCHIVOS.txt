@@ -1,0 +1,31 @@
+MOTOR DE RESUMEN v3 — MANIFIESTO DE ARCHIVOS
+
+ARQUITECTURA:
+Todos los archivos del sistema se cargan en el directorio raíz.
+No se crean subdirectorios para estos módulos.
+
+ARCHIVOS DE IMPLEMENTACIÓN:
+- resumen.html — HTML5
+- resumen.css — CSS3
+- resumen.js — JavaScript ES2022
+- supabase_finanzas.js — JavaScript ES2022 + Supabase
+- motor_estado_financiero.js — JavaScript ES2022
+- motor_proyeccion_liquidez.js — JavaScript ES2022
+- motor_brecha.js — JavaScript ES2022
+- motor_margen_diario.js — JavaScript ES2022
+- motor_alertas.js — JavaScript ES2022
+- motor_acciones.js — JavaScript ES2022
+- resumen.test.js — JavaScript ES2022 / Jest
+
+DOCUMENTACIÓN:
+- 00_README_MOTOR_RESUMEN.txt
+- 12_INTEGRACION_SUPABASE.txt
+- 13_CRITERIOS_ACEPTACION.txt
+
+IMPORTANTE:
+Esta versión ya NO agrega .txt a HTML/CSS/JS.
+Los archivos se entregan con su extensión nativa porque están destinados a
+incorporarse directamente al directorio raíz del repositorio.
+
+No sobrescribir archivos existentes hasta comparar el contenido y confirmar
+la integración con el código actual.

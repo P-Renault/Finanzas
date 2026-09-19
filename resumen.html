@@ -1,0 +1,104 @@
+ARCHIVO: resumen.html
+LENGUAJE: HTML5
+EXTENSIÓN DE IMPLEMENTACIÓN: .html
+EXTENSIÓN DE ENTREGA: .txt
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Centro de Control Financiero</title>
+  <link rel="stylesheet" href="./resumen.css">
+</head>
+<body>
+  <main id="financial-control" class="financial-control">
+    <header class="summary-header">
+      <div>
+        <p class="eyebrow">CONTROL FINANCIERO</p>
+        <h1>Centro de Control Financiero</h1>
+        <p id="summary-status-text">Calculando estado financiero...</p>
+      </div>
+      <div id="summary-semaphore" class="semaphore" aria-live="polite">—</div>
+    </header>
+
+    <section class="kpi-grid" aria-label="Indicadores ejecutivos">
+      <article class="kpi-card"><span>Saldo disponible real</span><strong id="kpi-real-balance">$0</strong></article>
+      <article class="kpi-card"><span>Ingresos asegurados</span><strong id="kpi-assured">$0</strong></article>
+      <article class="kpi-card"><span>Ingresos proyectados</span><strong id="kpi-projected">$0</strong></article>
+      <article class="kpi-card"><span>Egresos comprometidos</span><strong id="kpi-committed">$0</strong></article>
+      <article class="kpi-card"><span>Saldo proyectado</span><strong id="kpi-projected-balance">$0</strong></article>
+      <article class="kpi-card"><span>Brecha financiera</span><strong id="kpi-gap">$0</strong></article>
+    </section>
+
+    <section class="daily-margin panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">CONTROL DIARIO</p>
+          <h2>Margen de gasto — Hoy</h2>
+        </div>
+        <strong id="margin-status">NORMAL</strong>
+      </div>
+
+      <div class="margin-main">
+        <div>
+          <span>Margen máximo</span>
+          <strong id="margin-maximum">$0</strong>
+        </div>
+        <div>
+          <span>Gastado</span>
+          <strong id="margin-spent">$0</strong>
+        </div>
+        <div>
+          <span>Margen restante</span>
+          <strong id="margin-remaining">$0</strong>
+        </div>
+      </div>
+
+      <div class="progress-track" aria-label="Consumo del margen">
+        <div id="margin-progress" class="progress-value" style="width:0%"></div>
+      </div>
+
+      <div class="margin-meta">
+        <span id="margin-percent">0% consumido</span>
+        <span id="margin-projection">Proyección: 0%</span>
+      </div>
+
+      <div id="margin-alert" class="alert-box" role="status">
+        No hay alertas.
+      </div>
+    </section>
+
+    <section class="projection panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">LIQUIDEZ</p>
+          <h2>Proyección financiera</h2>
+        </div>
+        <span>90 días</span>
+      </div>
+      <div id="projection-table" class="projection-table"></div>
+    </section>
+
+    <section class="decision-grid">
+      <div class="panel">
+        <p class="eyebrow">PRÓXIMA NECESIDAD</p>
+        <div id="next-need">Sin necesidades críticas detectadas.</div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">ACCIONES PRIORITARIAS</p>
+        <div id="priority-actions">Sin acciones pendientes.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./supabase_finanzas.js"></script>
+  <script src="./motor_estado_financiero.js"></script>
+  <script src="./motor_proyeccion_liquidez.js"></script>
+  <script src="./motor_brecha.js"></script>
+  <script src="./motor_margen_diario.js"></script>
+  <script src="./motor_alertas.js"></script>
+  <script src="./motor_acciones.js"></script>
+  <script src="./resumen.js"></script>
+</body>
+</html>

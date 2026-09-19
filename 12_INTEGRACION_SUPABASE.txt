@@ -1,0 +1,67 @@
+ARCHIVO: 12_INTEGRACION_SUPABASE.txt
+LENGUAJE: JavaScript ES2022 + Supabase
+EXTENSIÓN DE IMPLEMENTACIÓN: .js
+EXTENSIÓN DE ENTREGA: .txt
+
+INTEGRACIÓN
+
+1. Mantener el repositorio actual y sus políticas RLS.
+2. Crear o adaptar una RPC llamada:
+   get_financial_summary_context
+
+CONTRATO SUGERIDO DE RESPUESTA:
+
+{
+  today: "YYYY-MM-DD",
+  initialBalance: 0,
+  minimumReserve: 0,
+  safetyBufferPct: 10,
+  incomes: [
+    {
+      id,
+      sourceId,
+      amount,
+      date,
+      classification: "REAL|ASSURED|PROJECTED|PLANNED"
+    }
+  ],
+  expenses: [
+    {
+      id,
+      sourceId,
+      amount,
+      date,
+      classification:
+        "PAID|PENDING|COMMITTED|INSTALLMENT|OVERDUE|DUE_SOON|PROJECTED"
+    }
+  ],
+  obligations: [
+    { id, amount, dueDate, criticality }
+  ],
+  calendar: {
+    "YYYY-MM-DD": {
+      assuredIncome,
+      projectedIncome,
+      plannedIncome,
+      mandatoryExpenses,
+      discretionaryExpenses
+    }
+  },
+  marginInput: {
+    protectedLiquidity,
+    minimumReserve,
+    discretionarySpent,
+    safetyBufferPct,
+    projectedSpendRatePerHour,
+    remainingHours
+  }
+}
+
+REGLA DE SEGURIDAD:
+Nunca colocar service_role key en el navegador.
+
+MIGRACIÓN:
+Primero ejecutar en modo comparación contra el Resumen actual.
+Después validar resultados.
+Luego cambiar el componente para consumir el nuevo motor.
+Finalmente retirar cálculos duplicados.
