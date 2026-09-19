@@ -1,208 +1,304 @@
 /* ============================================================
-   FINANZAS — CALENDARIO RUNTIME HOTFIX · B232.12
-   Propósito:
-   - Elimina la competencia entre el calendario legacy de app.js
-     y B232 Calendario V2.
-   - B232 pasa a ser el único propietario visual del módulo.
-   - No modifica Supabase ni datos financieros.
+   FINANZAS — RUNTIME FINAL · B232.18
+   OBJETIVO
+   - Recuperar navegación core sin depender de listeners legacy.
+   - Recuperar conexión Supabase sin B232.15/B232.16/B232.17.
+   - Cargar B232 inmediatamente al entrar en Calendario.
+   - Mantener Operaciones/IA/Presupuesto/Resumen.
+   - Evitar doble carga de módulos y reducir esperas.
+
+   INSTALACIÓN
+   - Este archivo reemplaza cualquier:
+       calendario-runtime-hotfix-B232.12.js
+       RESTORE-MODULOS-B232.16.js
+       RECUPERACION-ACCESO-B232.15.js
+   - Debe ser el ÚNICO runtime final de compatibilidad.
+   - NO requiere modificar Supabase.
    ============================================================ */
 (() => {
   'use strict';
 
-  const VERSION = 'B232.12';
-  const B232_SRC = 'b232-calendario-v2.js?v=232.12';
-  let b232Promise = null;
-  let installed = false;
-  let observer = null;
+  const VERSION = 'B232.18';
+  const CORE = new Set([
+    'dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas'
+  ]);
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
 
-  function isCalendarActive() {
-    const section = document.getElementById('calendario');
-    return !!section && !section.classList.contains('hidden');
+  let navReady = false;
+  let connectReady = false;
+  let calendarPromise = null;
+
+  function appVisible() {
+    const app = $('app');
+    return !!app && !app.classList.contains('hidden');
   }
 
-  function loadB232() {
-    if (window.B232Calendario &&
-        typeof window.B232Calendario.load === 'function') {
-      return Promise.resolve(window.B232Calendario);
-    }
+  function saveTab(id) {
+    if (CORE.has(id)) localStorage.setItem('cf_active_tab_v2', id);
+  }
 
-    if (b232Promise) return b232Promise;
+  function showTab(id) {
+    const target = $(id);
+    if (!target) return false;
 
-    b232Promise = new Promise((resolve, reject) => {
-      const existing = document.querySelector(
-        'script[data-b232-runtime-loader="1"]'
-      );
-
-      if (existing) {
-        const wait = setInterval(() => {
-          if (window.B232Calendario &&
-              typeof window.B232Calendario.load === 'function') {
-            clearInterval(wait);
-            resolve(window.B232Calendario);
-          }
-        }, 50);
-
-        setTimeout(() => {
-          clearInterval(wait);
-          if (window.B232Calendario &&
-              typeof window.B232Calendario.load === 'function') {
-            resolve(window.B232Calendario);
-          } else {
-            reject(new Error('B232 no quedó disponible.'));
-          }
-        }, 8000);
-        return;
-      }
-
-      const s = document.createElement('script');
-      s.src = B232_SRC;
-      s.async = false;
-      s.dataset.b232RuntimeLoader = '1';
-
-      s.onload = () => {
-        if (window.B232Calendario &&
-            typeof window.B232Calendario.load === 'function') {
-          resolve(window.B232Calendario);
-        } else {
-          reject(new Error('B232 cargó pero no expuso el motor.'));
-        }
-      };
-
-      s.onerror = () =>
-        reject(new Error('No se pudo cargar ' + B232_SRC));
-
-      document.body.appendChild(s);
+    document.querySelectorAll('#app .tab').forEach(s => {
+      s.classList.toggle('hidden', s.id !== id);
     });
 
-    return b232Promise;
-  }
+    document.querySelectorAll('.tabs button').forEach(b => {
+      const bid = b.dataset.finalTab || b.dataset.tab;
+      b.classList.toggle('active', bid === id);
+    });
 
-  async function renderB232(reason) {
-    if (!isCalendarActive()) return;
+    saveTab(id);
 
-    try {
-      const engine = await loadB232();
-
-      if (engine && typeof engine.load === 'function') {
-        await engine.load();
-        const host = document.getElementById('calendario');
-        if (host) {
-          host.dataset.calendarOwner = VERSION;
-          host.dataset.calendarReason = reason || 'runtime';
-        }
-      }
-    } catch (error) {
-      console.error('[B232.12]', error);
-      const host = document.getElementById('calendario');
-
-      /*
-       * No sustituimos el contenido por un error destructivo.
-       * Si B232 falla, se conserva la interfaz existente y el error
-       * queda disponible en consola para diagnóstico.
-       */
-      if (host) {
-        host.dataset.calendarOwner = 'ERROR';
-        host.dataset.calendarError = error.message || String(error);
-      }
+    if (id === 'calendario') loadCalendar();
+    if (id === 'deudas') {
+      setTimeout(() => window.DashboardDeudas?.render?.(), 0);
     }
+
+    return true;
   }
 
-  function neutralizeLegacyCalendarRenderer() {
-    /*
-     * app.js define renderCalendar() como función global.
-     * refresh() la invoca automáticamente después de cargar datos.
-     *
-     * Reemplazamos únicamente ese renderer legacy. No tocamos
-     * refresh(), movimientos, compromisos ni Supabase.
-     */
-    try {
-      window.renderCalendar = function () {
-        if (isCalendarActive()) {
-          setTimeout(() => renderB232('legacy-render-intercept'), 0);
-        }
-      };
-      window.__calendarLegacyRendererDisabled = true;
-    } catch (e) {
-      console.warn('[B232.12] No fue posible neutralizar renderer legacy', e);
+  async function loadCalendar() {
+    if (!appVisible() || $('calendario')?.classList.contains('hidden')) return;
+
+    if (window.B232Calendario?.load) {
+      try { await window.B232Calendario.load(); } catch (e) {
+        console.error('[B232.18] calendario:', e);
+      }
+      return;
     }
-  }
 
-  function installNavigationBridge() {
-    if (installed) return;
-    installed = true;
-
-    /*
-     * app.js conserva la navegación original.
-     * Nosotros esperamos a que termine y luego entregamos el módulo
-     * a B232. No usamos stopImmediatePropagation().
-     */
-    document.addEventListener('click', event => {
-      const button = event.target.closest(
-        '.tabs button[data-tab="calendario"]'
-      );
-
-      if (!button) return;
-
-      setTimeout(() => renderB232('tab-click'), 0);
-    }, false);
-
-    /*
-     * Si otro módulo vuelve a escribir el contenido de #calendario,
-     * B232 recupera la propiedad visual.
-     */
-    const host = document.getElementById('calendario');
-
-    if (host && window.MutationObserver) {
-      let lastOwner = '';
-      observer = new MutationObserver(() => {
-        if (!isCalendarActive()) return;
-
-        const owner = host.dataset.calendarOwner || '';
-
-        /*
-         * Evita bucles: cuando B232 renderiza también modifica el host.
-         */
-        if (owner === VERSION) {
-          lastOwner = owner;
+    if (!calendarPromise) {
+      calendarPromise = new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-b23218-loader="1"]');
+        if (existing) {
+          const timer = setInterval(() => {
+            if (window.B232Calendario?.load) {
+              clearInterval(timer);
+              resolve(window.B232Calendario);
+            }
+          }, 25);
+          setTimeout(() => {
+            clearInterval(timer);
+            if (window.B232Calendario?.load) resolve(window.B232Calendario);
+            else reject(new Error('B232 no quedó disponible.'));
+          }, 5000);
           return;
         }
 
-        if (lastOwner === VERSION && owner === VERSION) return;
-
-        clearTimeout(host.__b23212Timer);
-        host.__b23212Timer = setTimeout(() => {
-          if (isCalendarActive()) renderB232('dom-recovery');
-        }, 0);
-      });
-
-      observer.observe(host, {
-        childList: true,
-        subtree: true
+        const s = document.createElement('script');
+        s.src = 'b232-calendario-v2.js?v=232.18';
+        s.async = false;
+        s.dataset.b23218Loader = '1';
+        s.onload = () => window.B232Calendario
+          ? resolve(window.B232Calendario)
+          : reject(new Error('B232 cargó sin exponer el motor.'));
+        s.onerror = () => reject(new Error('No se pudo cargar B232.'));
+        document.body.appendChild(s);
       });
     }
+
+    try {
+      const engine = await calendarPromise;
+      await engine.load();
+    } catch (e) {
+      console.error('[B232.18] loadCalendar:', e);
+    }
+  }
+
+  /*
+     Los parches anteriores instalaron listeners de captura en document.
+     No intentamos quitarlos: hacemos que los botones visibles ya no tengan
+     data-tab, por lo que esos listeners dejan de reconocerlos.
+  */
+  function normalizeNavButtons() {
+    const tabs = document.querySelector('.tabs');
+    if (!tabs) return false;
+
+    const buttons = [...tabs.querySelectorAll('button[data-tab]')];
+    for (const b of buttons) {
+      const id = b.dataset.tab;
+      if (CORE.has(id)) {
+        b.dataset.finalTab = id;
+        b.removeAttribute('data-tab');
+      }
+    }
+
+    if (!tabs.dataset.b23218Navigation) {
+      tabs.dataset.b23218Navigation = '1';
+      tabs.addEventListener('click', e => {
+        const b = e.target.closest('button[data-final-tab]');
+        if (!b) return;
+        e.preventDefault();
+        e.stopPropagation();
+        showTab(b.dataset.finalTab);
+      });
+    }
+
+    navReady = true;
+    return true;
+  }
+
+  function ensureCoreButtons() {
+    const tabs = document.querySelector('.tabs');
+    if (!tabs) return false;
+
+    const existing = new Set(
+      [...tabs.querySelectorAll('button')]
+        .map(b => b.dataset.finalTab || b.dataset.tab)
+        .filter(Boolean)
+    );
+
+    const labels = {
+      dashboard:'Resumen', movimientos:'Movimientos', futuros:'Pagos futuros',
+      calendario:'Calendario', ahorro:'Ahorro', deudas:'Deudas', cuentas:'Cuentas'
+    };
+
+    for (const id of CORE) {
+      if (existing.has(id)) continue;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = labels[id];
+      b.dataset.finalTab = id;
+      tabs.appendChild(b);
+    }
+
+    return normalizeNavButtons();
+  }
+
+  function installNavigation() {
+    if (!appVisible()) return false;
+    return ensureCoreButtons();
+  }
+
+  function repairConnectionButton() {
+    const old = $('saveConfig');
+    if (!old || connectReady) return;
+
+    /* Clonar elimina listeners instalados por B232.15 y app.js.
+       Reinstalamos un único flujo de conexión. */
+    const fresh = old.cloneNode(true);
+    fresh.dataset.b23218 = '1';
+    old.replaceWith(fresh);
+    connectReady = true;
+
+    fresh.addEventListener('click', async e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const url = ($('supabaseUrl')?.value || '').trim();
+      const key = ($('supabaseKey')?.value || '').trim();
+      const status = $('configMsg');
+
+      if (!url || !key) {
+        if (status) status.textContent = 'Completa la URL y la Publishable Key de Supabase.';
+        return;
+      }
+
+      if (!window.supabase?.createClient) {
+        if (status) status.textContent = 'No se cargó la librería de Supabase.';
+        return;
+      }
+
+      fresh.disabled = true;
+      fresh.textContent = 'Conectando…';
+      if (status) status.textContent = 'Conectando con Supabase…';
+
+      try {
+        const client = window.supabase.createClient(url, key, {
+          auth: { persistSession:false, autoRefreshToken:false }
+        });
+
+        const probe = await Promise.race([
+          client.from('movimientos').select('id').limit(1),
+          new Promise((_, reject) => setTimeout(
+            () => reject(new Error('Tiempo de espera agotado al consultar Supabase.')),
+            10000
+          ))
+        ]);
+
+        if (probe?.error) throw new Error(probe.error.message);
+
+        localStorage.setItem('sf_url', url);
+        localStorage.setItem('sf_key', key);
+        window.supabaseClient = client;
+
+        $('configPanel')?.classList.add('hidden');
+        $('app')?.classList.remove('hidden');
+        $('logoutBtn')?.classList.remove('hidden');
+
+        if (status) status.textContent = 'Conectado. Cargando módulos…';
+
+        if (typeof window.refresh === 'function') {
+          await window.refresh();
+        }
+
+        /* El loader de index.html detecta #app visible y carga B219,
+           resumen y módulos financieros. */
+        for (const ms of [0, 100, 300, 700, 1200]) {
+          setTimeout(() => {
+            installNavigation();
+            if (window.FinancialSummary?.init) {
+              window.FinancialSummary.init().catch(console.error);
+            }
+          }, ms);
+        }
+
+        if (status) status.textContent = 'Conectado correctamente.';
+        setTimeout(() => { if (status) status.textContent = ''; }, 1200);
+
+      } catch (error) {
+        console.error('[B232.18] conexión:', error);
+        if (status) status.textContent = 'No se pudo conectar: ' + (error.message || error);
+      } finally {
+        fresh.disabled = false;
+        fresh.textContent = 'Conectar';
+      }
+    });
+  }
+
+  function restoreCredentials() {
+    const url = localStorage.getItem('sf_url');
+    const key = localStorage.getItem('sf_key');
+    if (url && $('supabaseUrl') && !$('supabaseUrl').value) $('supabaseUrl').value = url;
+    if (key && $('supabaseKey') && !$('supabaseKey').value) $('supabaseKey').value = key;
+  }
+
+  function restoreActive() {
+    if (!appVisible()) return;
+    const saved = localStorage.getItem('cf_active_tab_v2');
+    const active = document.querySelector('.tabs button.active')?.dataset.finalTab;
+    const id = CORE.has(saved) ? saved : (CORE.has(active) ? active : 'dashboard');
+    showTab(id);
   }
 
   function boot() {
-    neutralizeLegacyCalendarRenderer();
-    installNavigationBridge();
-
-    /*
-     * Si el usuario ya está dentro de Calendario cuando este hotfix
-     * entra en ejecución, se corrige inmediatamente.
-     */
-    if (isCalendarActive()) {
-      renderB232('boot');
-    }
+    restoreCredentials();
+    repairConnectionButton();
+    installNavigation();
+    restoreActive();
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot, { once: true });
+    document.addEventListener('DOMContentLoaded', boot, { once:true });
   } else {
     boot();
   }
 
+  /* El loader de B219 crea/reordena botones después de la conexión. */
+  const observer = new MutationObserver(() => {
+    if (appVisible()) installNavigation();
+  });
+  observer.observe(document.body, { childList:true, subtree:true });
+  setTimeout(() => observer.disconnect(), 12000);
+
   window.B232CalendarRuntimeFix = {
     version: VERSION,
-    load: () => renderB232('manual')
+    load: loadCalendar
   };
+
+  console.info('[B232.18] Runtime final instalado.');
 })();
