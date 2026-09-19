@@ -145,14 +145,11 @@
     localStorage.setItem('cf_active_tab_v2', id);
 
     try {
-      if ((id === 'operaciones' || id === 'ingresos' || id === 'jornadas') &&
+      // B232.30: Operaciones y Planificación tienen motor propietario.
+      // No delegar a módulos legacy; el router B232.30 actualiza al pulsar.
+      if ((id === 'ingresos' || id === 'jornadas') &&
           typeof window.b219Show === 'function') {
         window.b219Show(id);
-      }
-
-      if (id === 'planificacion' &&
-          typeof window.fin216Plan === 'function') {
-        window.fin216Plan();
       }
 
       if (id === 'calendario' &&
