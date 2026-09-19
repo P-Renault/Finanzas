@@ -1,0 +1,95 @@
+AUDITORÍA DE INTEGRACIÓN — CALENDARIO / RAMA Punto-referencia
+Repositorio: P-Renault/Finanzas
+Fecha: 2026-09-19
+
+HALLAZGO PRINCIPAL
+El problema no está en la construcción matemática de B232 ni en Supabase.
+Existe una competencia de dos motores de calendario:
+
+1. app.js contiene un calendario legacy completo:
+   - renderCalendar()
+   - renderCalendarDayDetails()
+   - renderFromCache()
+   - navegación calPrev/calNext/calToday
+   - refresh() llama directamente renderCalendar(...)
+
+2. b232-calendario-v2.js contiene un segundo calendario:
+   - B232Calendario.load()
+   - genera su propia cuadrícula
+   - genera su propio detalle
+   - reemplaza el contenido de #calendario.
+
+3. index.html carga app.js primero.
+4. b219-arquitectura-navegacion.js carga B232 de forma dinámica.
+5. Los hotfix anteriores intentaron resolverlo mediante propagación de eventos
+   (capture/stopImmediatePropagation), creando una segunda capa de navegación.
+
+RESULTADO
+La pantalla mostrada por el usuario corresponde inequívocamente al renderer
+legacy de app.js:
+- "Ingresos registrados"
+- "Gastos registrados"
+- "Pagos programados"
+- "Saldo al cierre"
+- "Plan mensual de ingresos y pagos"
+- cuadrícula vacía
+
+B232 no debe competir por el click. Debe existir un único propietario del
+DOM del módulo Calendario.
+
+SOLUCIÓN ELEGIDA
+B232.12 introduce un puente runtime único:
+
+A. Neutraliza únicamente window.renderCalendar(), que es el renderer legacy
+   llamado por refresh().
+
+B. Mantiene intacto:
+   - refresh()
+   - movimientos
+   - compromisos
+   - ahorro
+   - Supabase
+   - navegación general.
+
+C. Después del click normal de Calendario, ejecuta B232Calendario.load().
+
+D. Si B232 todavía no está cargado, el hotfix lo carga directamente:
+   b232-calendario-v2.js?v=232.12
+
+E. MutationObserver recupera B232 si otro módulo vuelve a escribir
+   #calendario.
+
+F. No utiliza stopImmediatePropagation().
+
+VENTAJA
+No hay que sustituir app.js completo ni reescribir el núcleo financiero.
+Se corrige solamente la colisión entre los dos propietarios del Calendario.
+
+ARCHIVOS QUE NO DEBEN MODIFICARSE
+- tablas Supabase
+- SQL financiero
+- movimientos
+- compromisos
+- deudas
+- cuotas
+- motor de presupuesto
+- motor de liquidez
+- Centro de Control Financiero.
+
+CRITERIO DE ÉXITO
+Al pulsar Calendario:
+1. aparece B232 Calendario V2;
+2. aparece la cuadrícula mensual;
+3. aparecen los 42 días;
+4. anterior/hoy/siguiente funcionan;
+5. seleccionar día funciona;
+6. el detalle se actualiza;
+7. volver a Resumen y regresar a Calendario funciona;
+8. refresh no devuelve el calendario legacy.
+
+NOTA DE DESPLIEGUE
+El hotfix debe cargarse DESPUÉS de app.js. Puede agregarse antes de </body>.
+No requiere eliminar el B232 existente de B219; el runtime loader detecta si ya
+está disponible.
+
+NO SE DEBE MARCAR COMO RESUELTO HASTA VERIFICAR LA PANTALLA REAL.

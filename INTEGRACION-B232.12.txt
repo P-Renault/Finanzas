@@ -1,0 +1,23 @@
+INTEGRACIÓN
+
+1. Subir:
+   calendario-runtime-hotfix-B232.12.js
+
+2. En index.html agregar, después de app.js y antes de </body>:
+
+<script src="calendario-runtime-hotfix-B232.12.js?v=232.12"></script>
+
+3. Publicar en rama Punto-referencia.
+
+4. Recargar la PWA / navegador con caché limpio.
+
+5. Abrir Calendario.
+
+6. Confirmar:
+   - encabezado B232;
+   - cuadrícula completa;
+   - navegación mensual;
+   - selección de día;
+   - detalle.
+
+El archivo es deliberadamente independiente del resto del sistema.
