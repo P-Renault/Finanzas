@@ -1,0 +1,54 @@
+CONTROL FINANCIERO — DEPLOYMENT MANIFEST
+
+Version ejecutable:
+EXEC-DASH-V1.2.4
+
+Base:
+EXEC-DASH-V1.2.3 + CCF-V5.0.1
+
+CORRECCIÓN CRÍTICA
+El runtime publicado mostraba:
+  ReferenceError: debts is not defined
+
+La causa estaba en:
+  const debtPlanning = debts.map(...)
+
+La fuente correcta ya disponible en el adaptador es:
+  rawDebts
+
+La versión entregada contiene:
+  const debtPlanning = rawDebts.map(...)
+
+CACHE-BUSTING
+supabase_finanzas.js?v=5.0.1
+
+También contiene:
+- motor de estado financiero
+- proyección de liquidez
+- brecha financiera
+- margen diario
+- alertas
+- acciones
+- dashboard ejecutivo
+- gráficos de deuda
+- conector directo de deudas V1.2.2
+
+CRITERIO DE ACEPTACIÓN
+1. No debe aparecer "debts is not defined".
+2. Centro de Control no debe quedar en ERROR.
+3. KPIs deben recibir datos reales.
+4. Proyección debe abandonar "Calculando...".
+5. Los gráficos deben recibir el mismo universo de datos que Centro de Deudas.
+6. El Centro de Deudas debe conservar sus valores actuales.
+
+ESTADO DE PUBLICACIÓN
+El repositorio GitHub rechazó las escrituras del conector con HTTP 403:
+Resource not accessible by integration.
+
+Por tanto:
+- paquete construido: SÍ
+- paquete validado: SÍ
+- publicación GitHub desde esta conexión: NO
+
+El despliegue efectivo requiere una conexión GitHub con permiso de escritura
+sobre P-Renault/Finanzas o cargar estos archivos en la rama Punto-referencia.
