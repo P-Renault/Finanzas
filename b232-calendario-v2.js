@@ -7,7 +7,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '232.4';
+  const VERSION = '232.5';
   if (window.B232Calendario?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -124,6 +124,36 @@
     return `${base} · Cuota #${q.numero_cuota}`;
   }
 
+  /*
+   * B232.5 — duración real del compromiso.
+   * NO existe una ventana fija de 15 días.
+   * Para una cuota, el período visible se obtiene desde el inicio del crédito
+   * o desde la cuota anterior hasta su vencimiento.
+   * Para un compromiso periódico, el período visible se obtiene desde la
+   * ocurrencia anterior hasta la ocurrencia actual.
+   */
+  function quotaTrackingStart(q){
+    const due=q.fecha_vencimiento;
+    if(!due) return null;
+    const same=data.quotas
+      .filter(x=>String(x.deuda_id)===String(q.deuda_id) && x.fecha_vencimiento && x.fecha_vencimiento<due)
+      .sort((a,b)=>a.fecha_vencimiento.localeCompare(b.fecha_vencimiento));
+    if(same.length) return datePlusDays(same.at(-1).fecha_vencimiento,1);
+    const debt=data.debts.find(x=>String(x.id)===String(q.deuda_id));
+    return debt?.fecha_inicio || due;
+  }
+
+  function commitmentTrackingStart(x,due){
+    const step=commitmentStep(x.periodicidad);
+    if(!step) return due;
+    const prev=shiftOccurrence(due,step==='day'?'day':step==='week'?'week':step==='15days'?'15days':step==='month'?'month':'2months');
+    return datePlusDays(prev,1);
+  }
+
+  function inRange(key,start,end){
+    return !!start && key>=start && key<=end;
+  }
+
   async function db(){
     if(client) return client;
     const u=localStorage.getItem('sf_url'), k=localStorage.getItem('sf_key');
@@ -178,14 +208,14 @@
 
     for(const x of data.quotas){
       if(x.fecha_vencimiento)(quotaBy[x.fecha_vencimiento]??=[]).push(x);
-      const start=dateMinusDays(x.fecha_vencimiento,14);
+      const start=quotaTrackingStart(x);
       const end=x.fecha_vencimiento;
       const from=start<monthStart?monthStart:start;
       const to=end>monthEnd?monthEnd:end;
       let d=parseDate(from), stop=parseDate(to);
       while(d<=stop){
         const k=dateKey(d);
-        (planningBy[k]??=[]).push({...x,_planningOnly:k!==x.fecha_vencimiento,_due_date:x.fecha_vencimiento,_label:debtLabel(x)});
+        (planningBy[k]??=[]).push({...x,_planningOnly:k!==x.fecha_vencimiento,_due_date:x.fecha_vencimiento,_trackingStart:start,_trackingEnd:end,_label:debtLabel(x)});
         d.setDate(d.getDate()+1);
       }
     }
@@ -340,7 +370,7 @@
       <div class="card">
         <div class="b232-toolbar">
           <div>
-            <span class="muted">B232 · CALENDARIO V2.4</span>
+            <span class="muted">B232 · CALENDARIO V2.5</span>
             <h2>${month.toLocaleDateString('es-CL',{month:'long',year:'numeric'})}</h2>
           </div>
           <div class="b232-nav">
@@ -380,7 +410,7 @@
 
         <div class="b232-legend">
           <span>↑ Ingreso</span><span>↓ Egreso</span>
-          <span>● Compromiso</span><span>◆ Deuda</span><span>◌ En seguimiento 15 días</span>
+          <span>● Compromiso</span><span>◆ Deuda</span><span>◌ Seguimiento durante la duración del compromiso</span>
         </div>
 
         <div class="b232-calendar">
@@ -415,9 +445,9 @@
 
         <div id="b232Detail" class="b232-detail"></div>
         <p class="muted">
-          Las obligaciones pendientes se muestran durante los 15 días previos a su vencimiento como
-          <b>seguimiento</b>. Solo afectan el saldo y el consolidado financiero en su fecha efectiva de vencimiento,
-          evitando duplicar un mismo egreso.
+          Las obligaciones se muestran durante <b>todo su período de duración</b>, desde el inicio del compromiso o el período anterior hasta su vencimiento.
+          La visualización sirve para anticipar recursos, mantener flujo disponible y facilitar la continuidad o renovación del capital.
+          Solo afectan el saldo y el consolidado financiero en su fecha efectiva de vencimiento, evitando duplicar un mismo egreso.
         </p>
       </div>
     `;
@@ -464,10 +494,10 @@
               </div>`).join(''):'<p class="muted">No hay egresos efectivos para este día.</p>'}
 
             <div class="scheduled-section">
-              <div class="b232-panel-title"><strong>Obligaciones en seguimiento (15 días)</strong><span>${tracking.length}</span></div>
+              <div class="b232-panel-title"><strong>Obligaciones en seguimiento · duración real</strong><span>${tracking.length}</span></div>
               ${tracking.length?tracking.map(x=>`
                 <div class="b232-row">
-                  <span><strong>${esc(x._label||x.concepto||'Obligación')}</strong><small class="b232-kind">Pendiente · vence ${esc(x._due_date)} · aún no afecta el saldo</small></span>
+                  <span><strong>${esc(x._label||x.concepto||'Obligación')}</strong><small class="b232-kind">Pendiente · período ${esc(x._trackingStart||selected)} → ${esc(x._due_date)} · vence ${esc(x._due_date)} · aún no afecta el saldo</small></span>
                   <strong>${money(x.monto)}</strong>
                 </div>`).join(''):'<p class="muted">No hay obligaciones pendientes dentro de la ventana de seguimiento.</p>'}
             </div>
