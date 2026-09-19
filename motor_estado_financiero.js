@@ -1,30 +1,41 @@
-/* Motor de Estado Financiero — implementación */
+ARCHIVO: motor_estado_financiero.js
+LENGUAJE: JavaScript ES2022
+EXTENSIÓN DE IMPLEMENTACIÓN: .js
+EXTENSIÓN DE ENTREGA: .txt
+
 window.FinancialStateEngine = (() => {
   const amount = x => Number(x?.amount || 0);
 
+  function sumByClass(items, classes) {
+    return (items || [])
+      .filter(x => classes.includes(x.classification))
+      .reduce((sum, x) => sum + amount(x), 0);
+  }
+
   function calculate(context) {
-    const incomes = context.incomes || [];
-    const expenses = context.expenses || [];
-    const obligations = context.obligations || [];
+    const incomes = deduplicate(context.incomes || []);
+    const expenses = deduplicate(context.expenses || []);
 
-    const realIncome = incomes.filter(x => x.classification === 'REAL')
-      .reduce((s, x) => s + amount(x), 0);
-    const assuredIncome = incomes.filter(x => x.classification === 'ASSURED')
-      .reduce((s, x) => s + amount(x), 0);
-    const projectedIncome = incomes.filter(x => x.classification === 'PROJECTED')
-      .reduce((s, x) => s + amount(x), 0);
+    const realIncome = sumByClass(incomes, ['REAL']);
+    const assuredIncome = sumByClass(incomes, ['ASSURED']);
+    const projectedIncome = sumByClass(incomes, ['PROJECTED']);
 
-    const paidExpenses = expenses.filter(x => x.classification === 'PAID')
-      .reduce((s, x) => s + amount(x), 0);
+    const paidExpenses = sumByClass(expenses, ['PAID']);
+    const committedExpenses = sumByClass(
+      expenses,
+      ['COMMITTED', 'INSTALLMENT', 'PENDING', 'OVERDUE', 'DUE_SOON']
+    );
 
-    const committedExpenses = obligations
-      .reduce((s, x) => s + amount(x), 0);
-
-    // initialBalance es liquidez actual; no se le vuelve a aplicar el historial.
-    const availableBalance = Number(context.initialBalance || 0);
+    const availableBalance =
+      Number(context.initialBalance || 0) +
+      realIncome -
+      paidExpenses;
 
     const projectedBalance =
-      availableBalance + assuredIncome + projectedIncome - committedExpenses;
+      availableBalance +
+      assuredIncome +
+      projectedIncome -
+      committedExpenses;
 
     const financialGap = Math.max(
       0,
@@ -46,6 +57,15 @@ window.FinancialStateEngine = (() => {
       financialGap,
       coverageRatio
     };
+  }
+
+  function deduplicate(items) {
+    const map = new Map();
+    items.forEach(item => {
+      const key = item.sourceId || item.id;
+      if (!key || !map.has(key)) map.set(key || crypto.randomUUID(), item);
+    });
+    return [...map.values()];
   }
 
   return { calculate };

@@ -1,145 +1,169 @@
-/* Centro de Control Financiero — render e integración */
+ARCHIVO: resumen.js
+LENGUAJE: JavaScript ES2022
+EXTENSIÓN DE IMPLEMENTACIÓN: .js
+EXTENSIÓN DE ENTREGA: .txt
+
 window.FinancialSummary = (() => {
-  let lastResult = null;
+  const money = value =>
+    Number(value || 0).toLocaleString('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      maximumFractionDigits: 0
+    });
 
-  const money = v => '$' + Math.round(Number(v || 0)).toLocaleString('es-CL');
-  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
+  async function init() {
+    const context = await window.FinanceRepository.loadSummaryContext();
 
-  function set(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
+    const state =
+      window.FinancialStateEngine.calculate(context);
+
+    const projection =
+      window.LiquidityProjectionEngine.project(
+        context,
+        state,
+        'CONSERVATIVE',
+        90
+      );
+
+    const risk =
+      window.LiquidityProjectionEngine.firstRisk(
+        projection,
+        Number(context.minimumReserve || 0)
+      );
+
+    const gap =
+      window.FinancialGapEngine.calculate(
+        context.obligations,
+        {
+          available: state.availableBalance,
+          assured: state.assuredIncome
+        }
+      );
+
+    const margin =
+      window.DailySpendingMarginEngine.calculate(
+        context.marginInput || {
+          protectedLiquidity: state.availableBalance,
+          minimumReserve: context.minimumReserve,
+          discretionarySpent: 0,
+          safetyBufferPct: context.safetyBufferPct
+        }
+      );
+
+    const alert =
+      window.FinancialAlertEngine.fromMargin(margin);
+
+    const actions =
+      window.FinancialActionEngine.build({
+        risk,
+        gap,
+        marginAlert: alert
+      });
+
+    render(state, margin, alert, projection, actions);
+
+    return { context, state, margin, alert, projection, actions };
   }
 
-  function semaphore(state, risk, gap) {
-    if (gap.gap > 0 || risk) return ['ACCIÓN', 'immediate'];
-    if (state.coverageRatio < 1.25) return ['ATENCIÓN', 'attention'];
-    return ['ESTABLE', 'stable'];
+  function render(state, margin, alert, projection, actions) {
+    setText('kpi-real-balance', money(state.availableBalance));
+    setText('kpi-assured', money(state.assuredIncome));
+    setText('kpi-projected', money(state.projectedIncome));
+    setText('kpi-committed', money(state.committedExpenses));
+    setText('kpi-projected-balance', money(state.projectedBalance));
+    setText('kpi-gap', money(state.financialGap));
+
+    setText('margin-status', margin.status);
+    setText('margin-maximum', money(margin.maximum));
+    setText('margin-spent', money(margin.spent));
+    setText('margin-remaining', money(margin.remaining));
+    setText('margin-percent', `${Math.round(margin.consumedPct)}% consumido`);
+    setText('margin-projection', `Proyección: ${Math.round(margin.projectedConsumedPct)}%`);
+
+    const progress = Math.min(100, Math.max(0, margin.consumedPct));
+    document.getElementById('margin-progress').style.width = `${progress}%`;
+
+    const alertBox = document.getElementById('margin-alert');
+    alertBox.textContent = alert
+      ? alert.message
+      : 'Margen diario dentro de parámetros.';
+
+    document.getElementById('summary-semaphore').textContent =
+      state.financialGap > 0 ? 'ATENCIÓN' : 'ESTABLE';
+
+    renderProjection(projection);
+    renderActions(actions);
+
+    setText(
+      'summary-status-text',
+      riskText(projection, Number(window.__minimumReserve || 0))
+    );
   }
 
-  function renderProjection(projection, reserve) {
-    const el = document.getElementById('projection-table');
-    if (!el) return;
-    const indexes = [0, 6, 14, 29, 59, 89].filter(i => projection[i]);
-    el.innerHTML = `
-      <div class="projection-row projection-head">
-        <span>Horizonte</span><span>Apertura</span><span>Ingresos</span><span>Egresos</span><span>Cierre</span>
-      </div>` +
-      indexes.map(i => {
-        const r = projection[i];
-        const inc = r.assuredIncome + r.projectedIncome + r.plannedIncome;
-        const exp = r.mandatoryExpenses + r.discretionaryExpenses;
-        const cls = r.closingBalance < reserve ? 'risk-row' : '';
-        return `<div class="projection-row ${cls}">
-          <span>${i === 0 ? 'Hoy' : `${i + 1} días`}</span>
-          <span>${money(r.openingBalance)}</span>
-          <span>${money(inc)}</span>
-          <span>${money(exp)}</span>
-          <strong>${money(r.closingBalance)}</strong>
-        </div>`;
-      }).join('');
+  function renderProjection(rows) {
+    const container = document.getElementById('projection-table');
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Inicial</th>
+            <th>Ingresos</th>
+            <th>Egresos</th>
+            <th>Cierre</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.filter((_, i) => [0,6,14,29,59,89].includes(i))
+            .map(row => `
+              <tr>
+                <td>${row.date}</td>
+                <td>${money(row.openingBalance)}</td>
+                <td>${money(row.assuredIncome + row.projectedIncome + row.plannedIncome)}</td>
+                <td>${money(row.mandatoryExpenses + row.discretionaryExpenses)}</td>
+                <td>${money(row.closingBalance)}</td>
+              </tr>
+            `).join('')}
+        </tbody>
+      </table>
+    `;
   }
 
   function renderActions(actions) {
-    const el = document.getElementById('priority-actions');
-    if (!el) return;
-    if (!actions.length) {
-      el.innerHTML = '<p class="muted">No hay acciones prioritarias detectadas.</p>';
-      return;
-    }
-    el.innerHTML = actions.map(a => `
-      <article class="action-item">
-        <strong>${esc(a.title)}</strong>
-        <p>${esc(a.problem)}</p>
-        <small>${esc(a.action)}</small>
-      </article>`).join('');
+    const container = document.getElementById('priority-actions');
+    container.innerHTML = actions.length
+      ? actions.map(a => `
+          <div class="action-item">
+            <strong>${escapeHtml(a.title)}</strong>
+            <p>${escapeHtml(a.problem)}</p>
+            <small>${escapeHtml(a.action)}</small>
+          </div>
+        `).join('')
+      : 'Sin acciones prioritarias.';
   }
 
-  function renderNextNeed(obligations, today) {
-    const el = document.getElementById('next-need');
-    if (!el) return null;
-    const sorted = (obligations || []).filter(x => x.date && x.amount > 0)
-      .sort((a,b) => String(a.date).localeCompare(String(b.date)));
-    const next = sorted[0];
-    if (!next) {
-      el.innerHTML = '<p class="muted">No hay obligaciones con vencimiento informado.</p>';
-      return null;
-    }
-    el.innerHTML = `
-      <strong>${esc(next.concept)}</strong>
-      <p>${money(next.amount)} · vencimiento ${esc(next.date)}</p>
-      <small>${next.date < today ? 'VENCIDO' : 'Próximo vencimiento'}</small>`;
-    return next;
+  function riskText(projection, reserve) {
+    const risk = projection.find(x => x.closingBalance < reserve);
+    return risk
+      ? `Primera fecha de riesgo de liquidez: ${risk.date}.`
+      : 'No se detecta caída bajo la reserva en el horizonte evaluado.';
   }
 
-  async function init() {
-    const status = document.getElementById('summary-status-text');
-    try {
-      if (status) status.textContent = 'Cargando datos financieros...';
-
-      const context = await window.FinanceRepository.loadSummaryContext();
-      const state = window.FinancialStateEngine.calculate(context);
-      const projection = window.LiquidityProjectionEngine.project(context, state, 'BASE', 90);
-      const risk = window.LiquidityProjectionEngine.firstRisk(projection, context.minimumReserve);
-      const gap = window.FinancialGapEngine.calculate(context.obligations, {
-        available: state.availableBalance,
-        assured: state.assuredIncome,
-        today: context.today,
-        horizonDays: 90
-      });
-      const margin = window.DailySpendingMarginEngine.calculate(context.marginInput);
-      const alert = window.FinancialAlertEngine.fromMargin(margin);
-      const nextNeed = renderNextNeed(context.obligations, context.today);
-      const actions = window.FinancialActionEngine.build({ risk, gap, marginAlert: alert, nextNeed });
-
-      set('kpi-real-balance', money(state.availableBalance));
-      set('kpi-assured', money(state.assuredIncome));
-      set('kpi-projected', money(state.projectedIncome));
-      set('kpi-committed', money(state.committedExpenses));
-      set('kpi-projected-balance', money(state.projectedBalance));
-      set('kpi-gap', money(gap.gap));
-
-      set('margin-status', margin.status.replace('_', ' '));
-      set('margin-maximum', money(margin.maximum));
-      set('margin-spent', money(margin.spent));
-      set('margin-remaining', money(margin.remaining));
-      set('margin-percent', `${Math.round(margin.consumedPct)}% consumido`);
-      set('margin-projection', `Proyección: ${Math.round(margin.projectedConsumedPct)}%`);
-
-      const progress = document.getElementById('margin-progress');
-      if (progress) progress.style.width = `${Math.min(100, Math.max(0, margin.consumedPct))}%`;
-
-      const alertEl = document.getElementById('margin-alert');
-      if (alertEl) alertEl.textContent = alert ? alert.message : 'No hay alertas.';
-
-      const [label] = semaphore(state, risk, gap);
-      set('summary-semaphore', label);
-      set('summary-status-text',
-        risk
-          ? `Riesgo de liquidez detectado para ${risk.date}. Reserva mínima: ${money(context.minimumReserve)}.`
-          : gap.gap > 0
-            ? `Existe una brecha de ${money(gap.gap)} dentro del horizonte de 90 días.`
-            : `Liquidez actual ${money(state.availableBalance)}. Sin caída bajo la reserva en 90 días.`);
-
-      renderProjection(projection, context.minimumReserve);
-      renderActions(actions);
-
-      lastResult = { context, state, projection, risk, gap, margin, alert, nextNeed, actions };
-      window.__financialSummaryLastResult = lastResult;
-      return lastResult;
-    } catch (error) {
-      console.error('[Finance] Centro de Control:', error);
-      if (status) status.textContent = `Error al cargar el estado financiero: ${error.message || error}`;
-      const action = document.getElementById('priority-actions');
-      if (action) action.innerHTML = '<p class="muted">Revisa la consola del navegador para el detalle técnico.</p>';
-      throw error;
-    }
+  function setText(id, value) {
+    const node = document.getElementById(id);
+    if (node) node.textContent = value;
   }
 
-  return {
-    init,
-    refresh: init,
-    getLastResult: () => lastResult
-  };
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  return { init };
 })();
