@@ -1,0 +1,24 @@
+*** Begin Patch
+*** Update File: b232-calendario-v2.js
+@@
+-   B232 — CALENDARIO V2 · B232.9
++   B232 — CALENDARIO V2 · B232.10
+@@
+-  const VERSION='232.9';
++  const VERSION='232.10';
+@@
+-      tab.addEventListener('click',e=>{
+-        e.stopImmediatePropagation();
++      tab.addEventListener('click',e=>{
+         load().catch(err=>{
+@@
+-  if(r.error){console.warn('[B232.9]',r.error.message);return []}
++  if(r.error){console.warn('[B232.10]',r.error.message);return []}
+@@
+-    catch(e){console.warn('[B232.9]',e);return []}
++    catch(e){console.warn('[B232.10]',e);return []}
+*** Update File: b219-arquitectura-navegacion.js
+@@
+-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.3'];
++  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.10'];
+*** End Patch

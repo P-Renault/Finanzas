@@ -1,0 +1,46 @@
+CALENDARIO FIX — B232.10
+Fecha: 2026-09-19
+
+DIAGNÓSTICO CONFIRMADO
+El problema no está en la existencia de la pestaña ni en el HTML del calendario.
+
+La pestaña Calendario existe y el motor B232 sí está cargado, pero B232.9 instala
+un listener en fase CAPTURE sobre el botón:
+
+    e.stopImmediatePropagation();
+
+Ese listener intercepta el clic antes de que el manejador normal de navegación
+de app.js pueda ejecutar la apertura de la sección #calendario.
+
+Resultado:
+- La pestaña aparece.
+- El clic es capturado.
+- El motor intenta cargar datos.
+- La navegación normal queda bloqueada.
+- El usuario percibe que la pestaña no se puede acceder.
+
+CORRECCIÓN B232.10
+1. Se elimina e.stopImmediatePropagation().
+2. Se mantiene la carga del motor al seleccionar Calendario.
+3. Se incrementa VERSION de 232.9 a 232.10.
+4. Se cambia el cache-busting de:
+      b232-calendario-v2.js?v=232.3
+   a:
+      b232-calendario-v2.js?v=232.10
+
+No se modifica la lógica financiera del calendario.
+
+CRITERIO DE ACEPTACIÓN
+- Al pulsar Calendario debe cambiarse efectivamente a #calendario.
+- El motor B232.10 debe renderizar el calendario.
+- Prev / Hoy / Next deben seguir funcionando.
+- Seleccionar un día debe seguir funcionando.
+- Un fallo de consulta Supabase no debe impedir entrar al módulo.
+- No se debe alterar la navegación de los demás módulos.
+
+ESTADO DE PUBLICACIÓN
+La integración GitHub continúa bloqueada por:
+HTTP 403 — Resource not accessible by integration.
+
+Por lo tanto este parche está preparado para aplicación, pero no se declara
+publicado en producción hasta que la conexión GitHub permita escritura.
