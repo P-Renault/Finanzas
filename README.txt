@@ -1,9 +1,8 @@
-Aplicar CALENDARIO-FIX-B232.10-R2.zip en la rama Punto-referencia.
-
-Archivos:
+Aplicar B232.11 a:
 - b232-calendario-v2.js
 - b219-arquitectura-navegacion.js
+- app.js
 - index.html
 
-El patch es intencionalmente acotado al problema de navegación/renderizado del Calendario.
-Después de publicar, realizar hard refresh / limpiar cache de la PWA y ejecutar la validación del manifiesto.
+Después publicar en Punto-referencia y hacer hard refresh / limpiar cache de PWA.
+No marcar QA como cerrado hasta comprobar la pantalla real.

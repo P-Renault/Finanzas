@@ -1,49 +1,24 @@
-CALENDARIO FIX — B232.10 R2
-Fecha: 2026-09-19
+B232.11 — HOTFIX CALENDARIO
+Diagnóstico:
+La captura sigue mostrando el DOM del calendario legacy de app.js:
+- calendar-grid vacío
+- métricas legacy
+- mensaje legacy
+Esto demuestra que B232 V2 no está reemplazando #calendario en runtime.
 
-PROBLEMA OBSERVADO
-La pestaña Calendario ya abre, pero la vista visible corresponde al calendario legacy:
-- encabezado y métricas antiguas;
-- cuadrícula mensual sin días;
-- no se está observando el render del B232 V2.
+Solución robusta:
+1. B232.11 deja de bloquear la navegación con stopImmediatePropagation.
+2. B219 carga B232.11 con cache-buster nuevo.
+3. app.js, que es el controlador definitivo de pestañas, dispara explícitamente B232Calendario.load() después de abrir Calendario.
+4. index.html invalida cache de B219 y app.js.
 
-CAUSA OPERACIONAL
-El arranque depende de múltiples manejadores de navegación:
-1. app.js conserva el manejador original de pestañas;
-2. B219 instala navegación/persistencia;
-3. B232 instala un listener propio sobre la pestaña.
-La integración anterior podía dejar la navegación en el render legacy sin garantizar una llamada posterior a B232.load().
+La lógica financiera de B232 no se modifica.
+El objetivo es garantizar que, una vez abierta la pestaña, B232 sea el renderer efectivo y no el calendario legacy.
 
-SOLUCIÓN R2
-1. B232.10:
-   - elimina stopImmediatePropagation();
-   - conserva la navegación normal de app.js;
-   - ejecuta B232.load() inmediatamente después del click mediante setTimeout(0);
-   - actualiza version/cache marker.
-2. B219:
-   - actualiza la referencia del script B232 a ?v=232.10;
-   - al hacer click en Calendario, fuerza B232Calendario.load() después de la navegación.
-3. index.html:
-   - cambia el cache-buster de B219 para impedir reutilizar el archivo anterior.
-
-NO SE MODIFICA
-- modelo financiero;
-- tablas Supabase;
-- cálculos de deudas;
-- movimientos;
-- compromisos;
-- cuotas;
-- lógica de liquidez.
-
-VALIDACIÓN DE ACEPTACIÓN
-A. Abrir Calendario:
-   - debe aparecer B232 · CALENDARIO FINANCIERO · 232.10.
-B. Deben aparecer los 42 botones/días del grid mensual.
-C. Anterior / Hoy / Siguiente deben cambiar el mes.
-D. Seleccionar un día debe actualizar el detalle.
-E. Si Supabase devuelve error en una consulta, el calendario debe seguir renderizando con los datos disponibles.
-F. Volver a Resumen y regresar a Calendario debe seguir funcionando.
-G. Ninguna otra pestaña debe perder navegación.
-
-ESTADO DE PUBLICACIÓN
-No publicado desde esta sesión: la integración GitHub devuelve HTTP 403 "Resource not accessible by integration".
+QA:
+- Al abrir Calendario debe verse "B232 · CALENDARIO FINANCIERO · 232.11".
+- Deben existir las 42 celdas del mes.
+- Deben funcionar anterior/hoy/siguiente.
+- Debe funcionar selección de día.
+- Si una consulta Supabase falla, el renderer debe seguir mostrando la cuadrícula.
+- Volver a Resumen y volver a Calendario debe volver a ejecutar B232.load().

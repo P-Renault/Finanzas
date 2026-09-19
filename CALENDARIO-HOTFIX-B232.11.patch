@@ -1,0 +1,50 @@
+*** Begin Patch
+*** Update File: b232-calendario-v2.js
+@@
+-   B232 — CALENDARIO V2 · B232.9
++   B232 — CALENDARIO V2 · B232.11
+@@
+-  const VERSION='232.9';
++  const VERSION='232.11';
+@@
+-  async function q(p){
+-    try{const r=await p;if(r.error){console.warn('[B232.9]',r.error.message);return []}return r.data||[]}
+-    catch(e){console.warn('[B232.9]',e);return []}
++  async function q(p){
++    try{const r=await p;if(r.error){console.warn('[B232.11]',r.error.message);return []}return r.data||[]}
++    catch(e){console.warn('[B232.11]',e);return []}
+@@
+-    if(!tab.dataset.b2329Capture){
++    if(!tab.dataset.b23211Capture){
+       tab.addEventListener('click',e=>{
+-        e.stopImmediatePropagation();
+-        load().catch(err=>{
+-          const h=$('calendario');
+-          if(h)h.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
+-        });
++        setTimeout(()=>load().catch(err=>{
++          const h=$('calendario');
++          if(h)h.innerHTML='<div class="card"><p class="status">'+esc(err.message||err)+'</p></div>';
++        }),0);
+       },true);
+-      tab.dataset.b2329Capture='1';
++      tab.dataset.b23211Capture='1';
+     }
+*** Update File: b219-arquitectura-navegacion.js
+@@
+-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.3'];
++  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.11'];
+@@
+ function show(id){document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('hidden',s.id!==id));document.querySelectorAll('.tabs button[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));if(id==='operaciones')loadOps();if(id==='ingresos')loadIncome();if(id==='jornadas')loadJornadas();if(id==='planificacion')window.fin216Plan?.();}
+*** Update File: app.js
+@@
+-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
++document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden');if(b.dataset.tab==='calendario'&&window.B232Calendario?.load)setTimeout(()=>window.B232Calendario.load().catch(e=>console.error('[APP] B232 Calendario',e)),0)});
+*** Update File: index.html
+@@
+-    'b219-arquitectura-navegacion.js?v=231.7-R4',
++    'b219-arquitectura-navegacion.js?v=231.7-R5-B232.11',
+@@
+-<script src="app.js?v=220.2"></script>
++<script src="app.js?v=220.2-B232.11"></script>
+*** End Patch
