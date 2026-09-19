@@ -1,0 +1,11 @@
+EXEC-DASH-V1.2.2 — INTEGRACIÓN
+En index.html, en summaryModules, después de:
+  'dashboard-ejecutivo.js?v=1.2.0'
+agregar:
+  'dashboard-deudas-v1.2.2-fix.js?v=1.2.2'
+
+Preferentemente reemplazar la línea existente por:
+  'dashboard-ejecutivo.js?v=1.2.0',
+  'dashboard-deudas-v1.2.2-fix.js?v=1.2.2'
+
+No eliminar ningún otro módulo.
