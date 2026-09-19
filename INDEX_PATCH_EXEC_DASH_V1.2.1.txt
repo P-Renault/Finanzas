@@ -1,0 +1,9 @@
+INTEGRACION EXEC-DASH-V1.2.1
+
+Agregar este script en index.html DESPUES de dashboard-ejecutivo.js y antes de </body>:
+<script src="dashboard-deudas-v1.2.1-fix.js?v=1.2.1"></script>
+
+Motivo:
+El Centro de Deudas visible en producción obtiene sus datos desde v_deudas_resumen, mientras el adaptador del dashboard consulta deudas directamente. Si RLS/permisos impiden leer deudas directamente, el gráfico recibe cero aunque el Centro de Deudas tenga registros reales.
+
+La corrección usa v_deudas_resumen como fuente operativa para los gráficos de deuda, sin inventar fechas y sin alterar el motor de liquidez.
