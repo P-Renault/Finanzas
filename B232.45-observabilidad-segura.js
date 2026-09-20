@@ -1,12 +1,7 @@
 /*
- * B232.45 · Observabilidad segura · FINAL
- *
- * Integración deliberadamente aislada:
- * - No modifica app.js ni motores financieros.
- * - No usa MutationObserver.
- * - No usa setInterval ni polling.
- * - Montaje controlado en 0 / 900 / 2200 ms para convivir
- *   con los módulos de Resumen y Dashboard Ejecutivo.
+ * B232.45 · Observabilidad segura · FINAL ESTÁTICO
+ * Panel persistente fuera del #dashboard.
+ * Sin MutationObserver, sin polling, sin intervalos y sin tocar motores financieros.
  */
 (function () {
   'use strict';
@@ -15,20 +10,8 @@
 
   var VERSION = '232.45';
   var PANEL_ID = 'b23245-observability-panel';
-  var MOUNT_ATTEMPTS = [0, 900, 2200];
 
-  function esc(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function $(selector, root) {
-    return (root || document).querySelector(selector);
-  }
+  function $(id) { return document.getElementById(id); }
 
   function formatMs(value) {
     return Number.isFinite(value) ? Math.round(value) + ' ms' : '—';
@@ -37,22 +20,18 @@
   function visibleTabId() {
     var tabs = document.querySelectorAll('.tab');
     for (var i = 0; i < tabs.length; i++) {
-      if (!tabs[i].classList.contains('hidden')) {
-        return tabs[i].id || '—';
-      }
+      if (!tabs[i].classList.contains('hidden')) return tabs[i].id || '—';
     }
     return '—';
   }
 
   function loadingState() {
-    var visible = $('.tab:not(.hidden)');
+    var visible = document.querySelector('.tab:not(.hidden)');
     if (!visible) return { state: 'NORMAL', detail: 'Sin pestaña visible' };
-
     var text = (visible.innerText || '').toLowerCase();
     if (/cargando|calculando/.test(text)) {
-      return { state: 'ATENCIÓN', detail: 'Estado transitorio detectado' };
+      return { state: 'ATENCIÓN', detail: 'Estado de carga detectado' };
     }
-
     return { state: 'ESTABLE', detail: 'Sin estados de carga persistentes' };
   }
 
@@ -62,119 +41,85 @@
       ? perf.getEntriesByType('navigation')[0]
       : null;
 
-    var scripts = document.scripts ? document.scripts.length : 0;
-
     var dom = nav && Number.isFinite(nav.domContentLoadedEventEnd)
-      ? nav.domContentLoadedEventEnd
-      : NaN;
+      ? nav.domContentLoadedEventEnd : NaN;
 
-    var load = nav &&
-      Number.isFinite(nav.loadEventEnd) &&
-      nav.loadEventEnd > 0
-      ? nav.loadEventEnd
-      : NaN;
+    var load = nav && Number.isFinite(nav.loadEventEnd) && nav.loadEventEnd > 0
+      ? nav.loadEventEnd : NaN;
 
     var state = loadingState();
 
     return {
       version: VERSION,
-      status: state.state === 'ESTABLE' ? 'ESTABLE' : 'ATENCIÓN',
+      status: state.state,
+      detail: state.detail,
       tab: visibleTabId(),
       dom: dom,
       load: load,
-      scripts: scripts,
+      scripts: document.scripts ? document.scripts.length : 0,
       supabase: !!window.supabaseClient,
-      detail: state.detail,
-      timestamp: new Date().toLocaleTimeString(
-        'es-CL',
-        { hour: '2-digit', minute: '2-digit', second: '2-digit' }
-      )
+      time: new Date().toLocaleTimeString('es-CL', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      })
     };
   }
 
   function metric(label, value) {
     return '<div style="padding:10px;border-radius:10px;background:rgba(127,127,127,.08)">' +
-      '<div style="font-size:10px;opacity:.68">' + esc(label) + '</div>' +
-      '<div style="font-weight:700;margin-top:3px">' + esc(value) + '</div>' +
+      '<div style="font-size:10px;opacity:.68">' + label + '</div>' +
+      '<div style="font-weight:700;margin-top:3px">' + value + '</div>' +
       '</div>';
   }
 
   function render(result) {
-    var panel = document.getElementById(PANEL_ID);
-    if (!panel) return;
+    var panel = $(PANEL_ID);
+    if (!panel) return false;
 
-    panel.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">' +
-        '<div>' +
-          '<div style="font-size:11px;letter-spacing:.06em;opacity:.72">B232.45 · OBSERVABILIDAD SEGURA</div>' +
-          '<div style="font-weight:700;font-size:18px;margin-top:4px">' +
-            esc(result.status) +
-          '</div>' +
-        '</div>' +
-        '<button type="button" id="b23245-audit" style="border:0;border-radius:10px;padding:9px 12px;cursor:pointer">Auditar ahora</button>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px">' +
+    var status = $('b23245-status');
+    var metrics = $('b23245-metrics');
+    var detail = $('b23245-detail');
+
+    if (status) status.textContent = result.status;
+    if (metrics) {
+      metrics.innerHTML =
         metric('DOM interactivo', formatMs(result.dom)) +
         metric('Carga', formatMs(result.load)) +
         metric('Scripts', String(result.scripts)) +
-        metric('Supabase', result.supabase ? 'CLIENTE OK' : 'NO DETECTADO') +
-      '</div>' +
-      '<div style="margin-top:10px;font-size:12px;opacity:.78">' +
-        'Pestaña: ' + esc(result.tab) +
-        ' · ' + esc(result.detail) +
-        ' · Auditoría ' + esc(result.timestamp) +
-      '</div>';
-
-    var button = document.getElementById('b23245-audit');
-    if (button) {
-      button.addEventListener('click', function () {
-        render(audit());
-      });
+        metric('Supabase', result.supabase ? 'CLIENTE OK' : 'NO DETECTADO');
     }
+    if (detail) {
+      detail.textContent =
+        'Pestaña: ' + result.tab + ' · ' +
+        result.detail + ' · Auditoría ' + result.time;
+    }
+    return true;
   }
 
   function mount() {
-    var dashboard = document.getElementById('dashboard');
-    if (!dashboard) return false;
-
-    var existing = document.getElementById(PANEL_ID);
-
-    if (!existing) {
-      existing = document.createElement('section');
-      existing.id = PANEL_ID;
-      existing.className = 'panel';
-      existing.style.marginTop = '16px';
-      existing.setAttribute('aria-label', 'Observabilidad B232.45');
-
-      dashboard.appendChild(existing);
-    }
-
-    render(audit());
-    return true;
+    return render(audit());
   }
 
   window.B23245Observability = {
     version: VERSION,
     audit: audit,
     mount: mount,
-    render: function () {
-      render(audit());
-    }
+    render: function () { return render(audit()); }
   };
 
-  function scheduleMounts() {
-    for (var i = 0; i < MOUNT_ATTEMPTS.length; i++) {
-      (function (delay) {
-        setTimeout(function () {
-          mount();
-        }, delay);
-      })(MOUNT_ATTEMPTS[i]);
+  function boot() {
+    mount();
+    var button = $('b23245-audit');
+    if (button && !button.dataset.b23245Bound) {
+      button.dataset.b23245Bound = '1';
+      button.addEventListener('click', function () {
+        mount();
+      });
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', scheduleMounts, { once: true });
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
   } else {
-    scheduleMounts();
+    boot();
   }
 })();
