@@ -116,6 +116,41 @@ table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 </style>
 
+
+<script id="b23251-early-runtime-capture">
+(function(){
+  'use strict';
+  if(window.__B23251EarlyErrors) return;
+  var max=20;
+  window.__B23251EarlyErrors=[];
+  function push(item){
+    if(window.__B23251EarlyErrors.length>=max) return;
+    window.__B23251EarlyErrors.push(item);
+  }
+  window.addEventListener('error',function(e){
+    push({
+      type:'error',
+      message:String(e.message||'Error'),
+      filename:String(e.filename||'desconocido'),
+      line:Number(e.lineno||0),
+      column:Number(e.colno||0),
+      stack:e.error&&e.error.stack?String(e.error.stack):''
+    });
+  },true);
+  window.addEventListener('unhandledrejection',function(e){
+    var reason=e.reason;
+    push({
+      type:'unhandledrejection',
+      message:reason&&reason.message?String(reason.message):String(reason||'Promise rechazada'),
+      filename:'',
+      line:0,
+      column:0,
+      stack:reason&&reason.stack?String(reason.stack):''
+    });
+  },true);
+})();
+</script>
+
 </head>
 
 <body>
@@ -338,6 +373,9 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
     <div class="b23250-item"><div class="b23250-label">Errores JS</div><div id="b23250-js" class="b23250-value">0</div></div>
     <div class="b23250-item"><div class="b23250-label">Promesas rechazadas</div><div id="b23250-rejections" class="b23250-value">0</div></div>
     <div class="b23250-item"><div class="b23250-label">Último evento</div><div id="b23250-last" class="b23250-value">Ninguno</div></div>
+    <div class="b23250-item"><div class="b23250-label">Archivo</div><div id="b23250-file" class="b23250-value">—</div></div>
+    <div class="b23250-item"><div class="b23250-label">Línea</div><div id="b23250-line" class="b23250-value">—</div></div>
+    <div class="b23250-item"><div class="b23250-label">Columna</div><div id="b23250-column" class="b23250-value">—</div></div>
   </div>
   <div id="b23250-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
     No registra datos financieros ni contenido de formularios.
@@ -1246,7 +1284,7 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 <script src="B232.46-mantenimiento-financiero.js?v=232.46.4"></script>
 <script src="B232.47-ux-movil.js?v=232.47.1"></script>
 <script src="B232.48.3-qa-runtime.js?v=232.48.3"></script>
-<script src="B232.49-security-audit.js?v=232.49.1"></script>
-<script src="B232.50-runtime-errors.js?v=232.50.1"></script>
+<script src="B232.49-security-audit.js?v=232.49.2"></script>
+<script src="B232.51-runtime-diagnostics.js?v=232.51.1"></script>
 </body>
 </html>
