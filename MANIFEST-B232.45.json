@@ -1,0 +1,15 @@
+{
+  "baseline": "B232.44",
+  "next_sprint": "B232.45",
+  "mode": "controlled_evolution",
+  "new_features_in_baseline": false,
+  "reference": {
+    "liquidity": 12996,
+    "debt_outstanding": 27719614,
+    "obligations_30d": 964000,
+    "dom_interactive_ms": 397,
+    "load_ms": 567,
+    "scripts": 31
+  },
+  "principle": "future changes must be versioned and regression-tested"
+}

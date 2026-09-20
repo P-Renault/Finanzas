@@ -1,0 +1,13 @@
+B232.45 — EVOLUCIÓN CONTROLADA
+
+Este paquete NO modifica la aplicación B232.44.
+
+Contiene la línea base y el backlog de evolución para iniciar la siguiente
+etapa sin romper la versión aprobada.
+
+Archivos:
+- BASELINE-B232.44.md
+- BACKLOG-B232.45.md
+- MANIFEST-B232.45.json
+
+No hay index.html nuevo en este sprint porque no se requiere modificarlo.
