@@ -1,0 +1,24 @@
+B232.52.2 — CORRECCIÓN PLANIFICACIÓN / RUNTIME
+
+INCIDENCIA DE LA CAPTURA:
+Uncaught ReferenceError: renderPlan is not defined
+b232.31-planificacion-integrada-restaurada.js:351:21
+
+CORRECCIÓN:
+Se retira del index.html la referencia a:
+b232.31-planificacion-integrada-restaurada.js?v=232.32
+
+y se reemplaza por:
+B232.52-planificacion-safe.js?v=232.52.2
+
+El nuevo módulo conserva las APIs:
+- window.B23232Planificacion.mount()
+- window.B23232Planificacion.render()
+- window.CCFRouter.show()
+- window.CCFRouter.normalize()
+- window.CCFRouter.refreshModule()
+
+También conserva la lectura financiera de Planificación y Operaciones,
+pero elimina la dependencia del módulo que está generando el ReferenceError.
+
+B232.42.2 y B232.48.3 quedan incluidos.
