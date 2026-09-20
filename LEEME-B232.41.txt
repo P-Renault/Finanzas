@@ -1,0 +1,72 @@
+B232.41 — INTEGRACIÓN Y REGRESIÓN FINAL
+==========================================
+
+Objetivo
+--------
+Cierre del sprint B232.41 sin reemplazar los motores financieros ya validados.
+
+El módulo:
+- audita las fuentes financieras principales de Supabase;
+- distingue error / vacío / cero / datos disponibles;
+- detecta duplicados por ID en ingresos futuros, compromisos y cuotas;
+- detecta vínculos ingreso_futuro -> movimiento para evitar falsos doble conteos;
+- valida navegación: botones, secciones y targets;
+- revisa estados "Calculando..." / "Cargando..." / errores en módulos críticos;
+- mide el tiempo de las consultas;
+- expone un informe reproducible en window.B23241Regression.lastReport;
+- muestra un indicador compacto B232.41 en el Resumen;
+- NO modifica app.js, B232.35, B232.39 ni B232.40;
+- NO utiliza polling permanente ni setInterval.
+
+Instalación
+-----------
+Añadir UNA línea al final de index.html, inmediatamente después de:
+
+<script src="B232.40-correccion-planificacion.js?v=232.40"></script>
+
+Agregar:
+
+<script src="B232.41-integracion-regresion-final.js?v=232.41"></script>
+
+No cambiar app.js ni los módulos B232.35/B232.39/B232.40.
+
+Validación
+----------
+Después de desplegar y conectar Supabase:
+
+1. Abrir Resumen.
+2. Esperar la carga inicial.
+3. Debe aparecer el indicador:
+   "B232.41 · INTEGRACIÓN OPERATIVA"
+   si no existen errores críticos.
+4. Navegar por Resumen, Deudas, Cuentas, Operaciones y Planificación.
+5. Volver a Resumen y recargar la página.
+6. Para consultar el informe completo desde la consola:
+   window.B23241Regression.getLastReport()
+
+También se puede ejecutar manualmente:
+   await window.B23241Regression.run()
+
+Criterio de cierre B232.41
+--------------------------
+PASS:
+- Supabase responde;
+- no hay targets de navegación faltantes;
+- no hay duplicados por ID;
+- no quedan estados de error/cálculo en los elementos auditados;
+- el router y los módulos críticos están presentes.
+
+WARNING:
+- consulta lenta (>1500 ms);
+- algún módulo todavía está cargando al momento del diagnóstico.
+
+ERROR:
+- fuente Supabase con error;
+- duplicado por ID;
+- target de navegación inexistente;
+- estado explícito de error en módulo crítico.
+
+Nota
+----
+El snapshot de liquidez se presenta como "componentes" para diagnóstico y no
+reemplaza las fórmulas de los módulos financieros existentes.
