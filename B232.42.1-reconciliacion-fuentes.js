@@ -1,24 +1,13 @@
 /* ============================================================
-   B232.42.1 — RECONCILIACIÓN DE FUENTES
-   Contrato financiero único para Operaciones, Planificación e IA.
-
-   Regla de ingresos futuros:
-   - ingresos_futuros pendientes
-   - + movimientos futuros de tipo ingreso que NO estén enlazados
-     a un registro de ingresos_futuros
-
-   Regla de obligaciones:
-   - gastos_planificados próximos 30 días
-   - + compromisos pendientes próximos 30 días
-   - + cuotas pendientes/vencidas próximas 30 días
-
-   Este módulo solo lee Supabase y normaliza la presentación.
-   No crea, modifica ni elimina datos.
+   B232.42.2 — RECONCILIACIÓN DE FUENTES · CORRECCIÓN SINTÁCTICA
+   Corrección B232.42.1:
+   - evita redeclaración de `futureIncome`;
+   - conserva exactamente el contrato financiero existente.
    ============================================================ */
 (() => {
   'use strict';
 
-  const VERSION = '232.42.1';
+  const VERSION = '232.42.2';
   if (window.B232421Reconciliation?.version === VERSION) return;
 
   const $ = id => document.getElementById(id);
@@ -63,7 +52,7 @@
       });
       return window.supabaseClient;
     } catch(e){
-      console.error('[B232.42.1] Supabase',e);
+      console.error('[B232.42.2] Supabase',e);
       return null;
     }
   }
@@ -82,7 +71,7 @@
     const t = today();
     const end = addDays(t,29);
 
-    const [close,accounts,movements,futureIncome,plannedOut,commitments,quotas,debtRows] = await Promise.all([
+    const [close,accounts,movements,futureIncomeRows,plannedOut,commitments,quotas,debtRows] = await Promise.all([
       read('cierres_financieros','*',q=>q.eq('activo',true).order('fecha_corte',{ascending:false}).limit(1)),
       read('cuentas_bancarias','*',q=>q.eq('activa',true)),
       read('movimientos','id,tipo,fecha,monto,movimiento_id',q=>q.gte('fecha',t).lte('fecha',end)),
@@ -97,7 +86,7 @@
     const cash = closure ? num(closure.saldo_efectivo_actual ?? closure.saldo_inicial) : 0;
     const bank = accounts.reduce((s,x)=>s+num(x.saldo_actual),0);
 
-    const futureRows = futureIncome.filter(x=>pending(x.estado));
+    const futureRows = futureIncomeRows.filter(x=>pending(x.estado));
     const linkedIds = new Set(
       futureRows
         .map(x=>x.movimiento_id ?? x.movement_id ?? x.movimientoId)
@@ -162,25 +151,12 @@
     });
 
     return {
-      asOf:t,
-      end,
-      liquidity:cash+bank,
-      cash,
-      bank,
-      programmedIncome,
-      futureMovementIncome,
-      futureIncome,
-      plannedExpenses,
-      commitments30d,
-      quotas30d,
-      obligations30d,
-      debtOutstanding,
+      asOf:t,end,liquidity:cash+bank,cash,bank,programmedIncome,
+      futureMovementIncome,futureIncome,plannedExpenses,commitments30d,
+      quotas30d,obligations30d,debtOutstanding,
       projectedBalance:cash+bank+futureIncome-obligations30d,
-      minBalance,
-      minDate,
-      maxDeficit,
-      maxDeficitDate,
-      linkedFutureMovements: [...linkedIds].filter(id=>movements.some(x=>String(x.id ?? x.movimiento_id)===id)).length,
+      minBalance,minDate,maxDeficit,maxDeficitDate,
+      linkedFutureMovements:[...linkedIds].filter(id=>movements.some(x=>String(x.id ?? x.movimiento_id)===id)).length,
       counts:{futureIncome:futureRows.length,movements:movements.length,plannedExpenses:plannedOut.length,commitments:commitments.length,quotas:quotas.length,debts:debtRows.length}
     };
   }
@@ -233,7 +209,6 @@
         strong.className=s.projectedBalance>=0?'b23224-positive':'b23224-negative';
       }
     });
-
     const rows=[...host.querySelectorAll('.b23224-row')];
     rows.forEach(row=>{
       const label=norm(row.querySelector('span')?.childNodes?.[0]?.textContent);
@@ -258,14 +233,8 @@
       const anchor=$('executive-dashboard') || dashboard.firstElementChild;
       anchor?.parentNode ? anchor.parentNode.insertBefore(panel,anchor) : dashboard.appendChild(panel);
     }
-    panel.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><div style="font-size:11px;color:#64748b">B232.42.1 · RECONCILIACIÓN</div><h3 style="margin:3px 0">Fuentes financieras reconciliadas</h3></div><strong style="color:#166534">INTEGRO</strong></div><div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px"><div><small>Liquidez</small><div><strong>${money(s.liquidity)}</strong></div></div><div><small>Ingresos futuros consolidados</small><div><strong>${money(s.futureIncome)}</strong></div></div><div><small>Obligaciones 30 días</small><div><strong>${money(s.obligations30d)}</strong></div></div><div><small>Deuda pendiente</small><div><strong>${money(s.debtOutstanding)}</strong></div></div></div><p style="margin:10px 0 6px;font-size:12px">Ingresos = programados ${money(s.programmedIncome)} + movimientos futuros no enlazados ${money(s.futureMovementIncome)}. Obligaciones = planificados ${money(s.plannedExpenses)} + compromisos ${money(s.commitments30d)} + cuotas ${money(s.quotas30d)}.</p><p style="margin:0;font-size:12px">Movimientos enlazados excluidos del segundo conteo: ${s.linkedFutureMovements}. Escenario: mínimo ${money(s.minBalance)} el ${s.minDate || '—'}.</p><button id="b232421Refresh" type="button" class="secondary" style="margin-top:10px">↻ Reconciliar ahora</button>`;
+    panel.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><div style="font-size:11px;color:#64748b">B232.42.2 · RECONCILIACIÓN</div><h3 style="margin:3px 0">Fuentes financieras reconciliadas</h3></div><strong style="color:#166534">INTEGRO</strong></div><div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px"><div><small>Liquidez</small><div><strong>${money(s.liquidity)}</strong></div></div><div><small>Ingresos futuros consolidados</small><div><strong>${money(s.futureIncome)}</strong></div></div><div><small>Obligaciones 30 días</small><div><strong>${money(s.obligations30d)}</strong></div></div><div><small>Deuda pendiente</small><div><strong>${money(s.debtOutstanding)}</strong></div></div></div><p style="margin:10px 0 6px;font-size:12px">Ingresos = programados ${money(s.programmedIncome)} + movimientos futuros no enlazados ${money(s.futureMovementIncome)}. Obligaciones = planificados ${money(s.plannedExpenses)} + compromisos ${money(s.commitments30d)} + cuotas ${money(s.quotas30d)}.</p><p style="margin:0;font-size:12px">Movimientos enlazados excluidos del segundo conteo: ${s.linkedFutureMovements}. Escenario: mínimo ${money(s.minBalance)} el ${s.minDate || '—'}.</p><button id="b232421Refresh" type="button" class="secondary" style="margin-top:10px">↻ Reconciliar ahora</button>`;
     $('b232421Refresh')?.addEventListener('click',()=>run());
-  }
-
-  function removeLegacyPanel(){
-    const old=$('b23242IntegrityPanel');
-    // Este mismo ID se reutiliza deliberadamente: el panel se sobrescribe.
-    return old;
   }
 
   let running=false;
@@ -279,13 +248,10 @@
       lastSnapshot=s;
       window.B232421Reconciliation.lastReport={version:VERSION,status:'ok',timestamp:new Date().toISOString(),snapshot:s};
       window.__B232421_RECONCILIATION__=s;
-      patchOperations(s);
-      patchIA(s);
-      patchPlan(s);
-      renderPanel(s);
+      patchOperations(s); patchIA(s); patchPlan(s); renderPanel(s);
       return s;
     }catch(e){
-      console.error('[B232.42.1]',e);
+      console.error('[B232.42.2]',e);
       window.B232421Reconciliation.lastReport={version:VERSION,status:'error',error:e?.message||String(e)};
       const panel=$('b23242IntegrityPanel');
       if(panel) panel.querySelector('strong')?.replaceChildren(document.createTextNode('ERROR'));
@@ -307,9 +273,7 @@
   }
 
   window.B232421Reconciliation={
-    version:VERSION,
-    run,
-    getLastReport:()=>window.B232421Reconciliation.lastReport||null
+    version:VERSION,run,getLastReport:()=>window.B232421Reconciliation.lastReport||null
   };
 
   const boot=()=>{
