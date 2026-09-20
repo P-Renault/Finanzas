@@ -1,0 +1,27 @@
+B232.45.1 — OBSERVABILIDAD OPERATIVA
+
+ARCHIVOS FINALES:
+- index.html — HTML COMPLETO FINAL.
+- B232.45.1-observabilidad-operativa.js — módulo de diagnóstico.
+
+NO ES UN PATCH:
+El index.html debe reemplazarse completo.
+
+FUNCIONES:
+- versión visible;
+- estado de Supabase;
+- módulo activo;
+- estado Cargando/Calculando;
+- contador de errores JavaScript;
+- últimos errores visibles;
+- diagnóstico manual desde el botón;
+- API:
+  window.B232451Observability.run()
+  window.B232451Observability.getLastReport()
+
+REGLAS:
+- solo lectura;
+- no modifica Supabase;
+- no modifica cálculos;
+- no modifica navegación;
+- no polling.
