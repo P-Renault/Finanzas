@@ -1,14 +1,17 @@
 /*
- * B232.46.3 · MANTENIMIENTO FINANCIERO · DOBLE ENVÍO
+ * B232.46.4 · MANTENIMIENTO FINANCIERO · DOBLE ENVÍO SIN BLOQUEAR SUBMIT
  *
- * Corrección:
- * Los listeners de B232.46 se registran INMEDIATAMENTE al cargar
- * este script, antes de DOMContentLoaded. Esto es necesario porque
- * app.js instala sus listeners de formularios durante DOMContentLoaded.
+ * Corrección de B232.46.3:
+ * B232.46.3 deshabilitaba el botón durante el click. En algunos
+ * navegadores/handlers esto impide que el click produzca el submit
+ * nativo, por lo que app.js nunca recibía la primera operación.
  *
- * Capas:
- * 1) click en botón submit -> bloqueo inmediato.
- * 2) submit en captura -> segunda barrera.
+ * B232.46.4:
+ * - NO deshabilita el botón durante el primer click.
+ * - NO cancela el primer submit válido.
+ * - Bloquea únicamente el segundo click/submit idéntico.
+ * - Mantiene la validación previa.
+ * - Mantiene una ventana de 2 segundos para evitar doble envío.
  *
  * No modifica app.js.
  * No escribe directamente en Supabase.
@@ -17,15 +20,16 @@
 (function () {
   'use strict';
 
-  if (window.B23246Maintenance?.version === '232.46.3') return;
+  if (window.B23246Maintenance?.version === '232.46.4') return;
 
-  var VERSION = '232.46.3';
+  var VERSION = '232.46.4';
   var LOCK_MS = 2000;
 
   var stats = {
     validations: 0,
     blocked: 0,
-    invalid: 0
+    invalid: 0,
+    allowed: 0
   };
 
   var formLocks = new WeakMap();
@@ -173,26 +177,31 @@
     }
   }
 
-  function setButtonLocked(form, locked) {
+  /*
+   * IMPORTANTE:
+   * No usamos button.disabled=true.
+   * El primer click debe poder generar el submit nativo y llegar
+   * al handler original de app.js.
+   */
+  function setButtonBusy(form, busy) {
     var button = $(SUBMIT_BY_FORM[form.id]);
 
     if (!button) return;
 
-    if (locked) {
-      if (button.dataset.b23246Locked === '1') return;
+    if (busy) {
+      if (button.dataset.b23246Busy === '1') return;
 
-      button.dataset.b23246Locked = '1';
+      button.dataset.b23246Busy = '1';
       button.dataset.b23246OriginalText =
         button.textContent;
 
-      button.disabled = true;
       button.setAttribute('aria-busy', 'true');
+      button.dataset.b23246BusyVisual = '1';
       button.textContent = 'Guardando...';
 
     } else {
-      button.disabled = false;
       button.removeAttribute('aria-busy');
-      button.dataset.b23246Locked = '0';
+      button.dataset.b23246Busy = '0';
 
       if (button.textContent.trim() === 'Guardando...' &&
           button.dataset.b23246OriginalText) {
@@ -208,7 +217,7 @@
 
       if (lock && lock.signature === sig) {
         formLocks.delete(form);
-        setButtonLocked(form, false);
+        setButtonBusy(form, false);
       }
     }, LOCK_MS);
   }
@@ -232,13 +241,25 @@
     if (detail) {
       detail.textContent =
         'Montos, fechas y doble envío se validan antes de la escritura. ' +
-        'Validaciones ejecutadas: ' +
-        stats.validations + '.';
+        'Validaciones: ' + stats.validations +
+        ' · Permitidos: ' + stats.allowed +
+        ' · Bloqueados: ' + stats.blocked + '.';
     }
   }
 
   /*
-   * Capa 1: se instala AHORA, no dentro de DOMContentLoaded.
+   * CAPA 1 — click.
+   *
+   * Primer click:
+   * - registra el lock
+   * - cambia visualmente el botón
+   * - NO cancela el evento
+   *
+   * Por lo tanto el navegador puede continuar con el submit.
+   *
+   * Segundo click:
+   * - se cancela
+   * - no llega al handler original.
    */
   function handleClick(event) {
     var form = getForm(event.target);
@@ -277,17 +298,25 @@
 
     formLocks.set(form, {
       signature: sig,
-      until: now + LOCK_MS
+      until: now + LOCK_MS,
+      submitted: false
     });
 
-    setButtonLocked(form, true);
+    setButtonBusy(form, true);
     unlockLater(form, sig);
     renderStatus();
+
+    /*
+     * Deliberadamente no hacemos preventDefault ni
+     * stopImmediatePropagation aquí.
+     */
   }
 
   /*
-   * Capa 2: también se instala AHORA, antes de que app.js
-   * registre sus listeners durante DOMContentLoaded.
+   * CAPA 2 — submit.
+   *
+   * El primer submit de la operación debe continuar a app.js.
+   * Solo el segundo submit idéntico se cancela.
    */
   function handleSubmit(event) {
     var form = event.target;
@@ -317,20 +346,36 @@
     var sig = signature(form);
     var lock = formLocks.get(form);
 
-    if (lock &&
-        lock.signature === sig &&
-        now < lock.until) {
+    /*
+     * Primer submit después del click:
+     * se marca como enviado y SE DEJA PASAR.
+     */
+    if (
+      lock &&
+      lock.signature === sig &&
+      now < lock.until &&
+      !lock.submitted
+    ) {
+      lock.submitted = true;
+      stats.allowed++;
+      renderStatus();
 
       /*
-       * El primer submit también puede llegar con lock creado
-       * por click. Para distinguirlo, marcamos una transición.
+       * CRÍTICO: no preventDefault.
+       * app.js recibe el submit.
        */
-      if (!lock.submitted) {
-        lock.submitted = true;
-        renderStatus();
-        return;
-      }
+      return;
+    }
 
+    /*
+     * Segundo submit idéntico.
+     */
+    if (
+      lock &&
+      lock.signature === sig &&
+      now < lock.until &&
+      lock.submitted
+    ) {
       event.preventDefault();
       event.stopImmediatePropagation();
 
@@ -346,7 +391,8 @@
     }
 
     /*
-     * Submit sin click (por teclado/programático).
+     * Submit sin click (teclado/programático):
+     * crea lock y deja pasar el primero.
      */
     formLocks.set(form, {
       signature: sig,
@@ -354,13 +400,18 @@
       submitted: true
     });
 
-    setButtonLocked(form, true);
+    stats.allowed++;
+    setButtonBusy(form, true);
     unlockLater(form, sig);
     renderStatus();
+
+    /*
+     * También se deja pasar.
+     */
   }
 
   /*
-   * Registro inmediato, antes de DOMContentLoaded.
+   * Registro INMEDIATO para adelantarnos a los handlers de app.js.
    */
   document.addEventListener('click', handleClick, true);
   document.addEventListener('submit', handleSubmit, true);
@@ -371,15 +422,12 @@
       return {
         validations: stats.validations,
         blocked: stats.blocked,
-        invalid: stats.invalid
+        invalid: stats.invalid,
+        allowed: stats.allowed
       };
     }
   };
 
-  /*
-   * Solo el panel visual espera al DOM completo.
-   * Los listeners de seguridad YA están instalados.
-   */
   function initPanel() {
     renderStatus();
   }
