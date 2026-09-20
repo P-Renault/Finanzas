@@ -1,0 +1,32 @@
+B232.51.3 — SOLUCIÓN DEFINITIVA
+
+INCIDENTE
+---------
+La captura B232.51.2 confirmó que el error seguía originándose en:
+b219-arquitectura-navegacion.js -> forms()
+TypeError: Cannot set properties of null (setting 'value')
+
+CAUSA
+-----
+B219-R6 asume propiedad exclusiva de las secciones dinámicas #ingresos y
+#jornadas. B232.31/B232.40 puede haberlas creado antes, por lo que B219
+entra en forms() y encuentra #b219Date/#b219JDate inexistentes.
+
+SOLUCIÓN
+--------
+Se elimina de index.html la carga de B219-R6 y se incorpora
+B232.51.3-navigation-safe.js.
+
+El nuevo módulo conserva la navegación y el menú Más sin ejecutar el
+código defectuoso de B219. No toca Supabase ni los motores financieros.
+
+OBJETIVO DE QA
+--------------
+B232.50/B232.51 debe pasar a:
+0 errores JS
+0 promesas rechazadas
+
+B232.49:
+SEGURIDAD OK / CLIENTE OK
+
+El Centro de Control Financiero debe mantener sus valores existentes.

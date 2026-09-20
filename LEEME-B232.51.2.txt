@@ -1,0 +1,16 @@
+B232.51.2 — RUNTIME HARDENING
+
+Corrige el segundo incidente detectado después de B219-R5:
+“Cannot set properties of null (setting 'value')”.
+
+Cambios:
+- B219 cache-buster R5 -> R6.
+- Protección de handlers de edición ante DOM incompleto.
+- Diagnóstico de Promise rejection con mayor detalle de stack.
+- Sin cambios en Supabase, tablas ni cálculos financieros.
+
+Esperado:
+B232.49 = SEGURIDAD OK / CLIENTE OK
+B232.50/51 = 0 errores JS / 0 promesas rechazadas
+B232.46 = 0 inválidas / 0 duplicados bloqueados
+Centro de Control mantiene los valores financieros existentes.

@@ -1,0 +1,53 @@
+B232.51.1 · SOLUCIÓN FINAL — ERROR B219
+
+OBJETIVO
+Corregir el SyntaxError detectado por B232.51 en:
+  b219-arquitectura-navegacion.js
+
+CAUSA CONFIRMADA
+La línea 17 de B219 tenía una cadena sin cerrar:
+  b232-calendario-v2.js?v=232.14]
+
+CORRECCIÓN
+Se restauró la comilla de cierre:
+  b232-calendario-v2.js?v=232.14'
+
+CONTROL DE CACHÉ
+index.html ahora carga:
+  b219-arquitectura-navegacion.js?v=231.7-R5
+
+No debe quedar la referencia R4 para B219.
+
+ARCHIVOS DEL PAQUETE
+1. index.html — HTML completo de la aplicación, con B232.51 y referencia B219 R5.
+2. b219-arquitectura-navegacion.js — archivo completo corregido.
+3. B232.49-security-audit.js — auditoría de seguridad B232.49.2.
+4. B232.51-runtime-diagnostics.js — diagnóstico runtime B232.51.1.
+
+VERIFICACIÓN LOCAL
+- node --check B219: OK
+- node --check B232.49: OK
+- node --check B232.51: OK
+- token defectuoso de línea 17: ausente
+- referencia B219 R5: presente
+- referencia B219 R4: ausente
+
+CARGA
+Reemplazar el index.html completo y subir los tres archivos JS del paquete manteniendo sus nombres exactos.
+No modificar Supabase ni los motores financieros.
+
+VALIDACIÓN ESPERADA EN EL NAVEGADOR
+B232.49:
+  SEGURIDAD OK
+  HTTPS OK
+  Supabase CLIENTE OK
+  Scripts mixtos 0
+  Credenciales sensibles 0
+
+B232.51:
+  MONITOR ACTIVO
+  Errores JS 0
+  Promesas rechazadas 0
+  Último evento Ninguno
+
+Si el navegador conserva el estado anterior, realizar una recarga completa/limpiar caché del sitio y volver a comprobar.
