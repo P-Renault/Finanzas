@@ -64,6 +64,35 @@ table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
 }
 </style>
 
+
+<style id="b23249-security-css">
+#b23249-security-panel .b23249-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23249-security-panel .b23249-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23249-security-panel .b23249-label{
+  font-size:10px;
+  color:#64748b;
+}
+#b23249-security-panel .b23249-value{
+  font-weight:800;
+  margin-top:3px;
+}
+@media(max-width:720px){
+  #b23249-security-panel .b23249-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){
+  #b23249-security-panel .b23249-grid{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 
 <body>
@@ -198,7 +227,7 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
   style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
     <div>
-      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.48 · QA RUNTIME</div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.48.3 · QA RUNTIME</div>
       <div id="b23248-status" style="font-weight:800;font-size:18px;margin-top:4px;">AUDITORÍA PENDIENTE</div>
     </div>
     <button id="b23248-run" type="button"
@@ -232,6 +261,35 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 
   <div id="b23248-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
     Auditoría manual disponible. No modifica datos ni operaciones.
+  </div>
+
+</section>
+
+<section id="b23249-security-panel"
+  class="panel"
+  aria-label="Auditoría de seguridad B232.49"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.49 · SEGURIDAD CLIENTE</div>
+      <div id="b23249-status" style="font-weight:800;font-size:18px;margin-top:4px;">AUDITORÍA PENDIENTE</div>
+    </div>
+    <button id="b23249-run" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Auditar ahora
+    </button>
+  </div>
+  <div id="b23249-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Comprobación inicial pendiente.
+  </div>
+  <div class="b23249-grid">
+    <div class="b23249-item"><div class="b23249-label">HTTPS</div><div id="b23249-https" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Supabase</div><div id="b23249-supabase" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Scripts mixtos</div><div id="b23249-mixed" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Credenciales sensibles</div><div id="b23249-secret" class="b23249-value">—</div></div>
+  </div>
+  <div id="b23249-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    Auditoría de configuración del cliente. No modifica datos.
   </div>
 </section>
 
@@ -1136,6 +1194,7 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 <script src="B232.45-observabilidad-segura.js?v=232.45.3"></script>
 <script src="B232.46-mantenimiento-financiero.js?v=232.46.4"></script>
 <script src="B232.47-ux-movil.js?v=232.47.1"></script>
-<script src="B232.48-qa-runtime.js?v=232.48.2"></script>
+<script src="B232.48.3-qa-runtime.js?v=232.48.3"></script>
+<script src="B232.49-security-audit.js?v=232.49.1"></script>
 </body>
 </html>
