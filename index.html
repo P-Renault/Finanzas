@@ -77,6 +77,35 @@
          ========================================================= -->
     <section id="dashboard" class="tab">
 
+
+      <!-- =========================================================
+           B232.45 · OBSERVABILIDAD SEGURA
+           Panel estático dentro de #dashboard.
+           B232.43 puede anteponer su propio panel, pero no elimina
+           este nodo porque no se observa ni se reemplaza el padre.
+           ========================================================= -->
+      <section id="b23245-observability-panel"
+               class="panel"
+               aria-label="Observabilidad B232.45"
+               style="margin:12px 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;position:relative;z-index:2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.45 · OBSERVABILIDAD SEGURA</div>
+            <div id="b23245-status" style="font-weight:800;font-size:18px;margin-top:4px;">INICIALIZANDO</div>
+          </div>
+          <button type="button" id="b23245-audit"
+                  style="border:0;border-radius:10px;padding:9px 12px;cursor:pointer;">
+            Auditar ahora
+          </button>
+        </div>
+        <div id="b23245-metrics"
+             style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">
+        </div>
+        <div id="b23245-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+          Preparando auditoría...
+        </div>
+      </section>
+
       <main id="financial-control" class="financial-control">
 
         <header class="summary-header">
@@ -297,31 +326,6 @@
             <div id="executive-chart-modal-body"></div>
           </div>
         </div>
-
-    <!-- B232.45 · OBSERVABILIDAD SEGURA
-         Panel estático dentro del Resumen, inmediatamente después del Dashboard Ejecutivo. -->
-    <section id="b23245-observability-panel"
-             class="panel"
-             aria-label="Observabilidad B232.45"
-             style="margin:16px 0;display:block;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:11px;letter-spacing:.06em;opacity:.72">B232.45 · OBSERVABILIDAD SEGURA</div>
-          <div id="b23245-status" style="font-weight:700;font-size:18px;margin-top:4px">INICIALIZANDO</div>
-        </div>
-        <button type="button" id="b23245-audit"
-                style="border:0;border-radius:10px;padding:9px 12px;cursor:pointer">
-          Auditar ahora
-        </button>
-      </div>
-      <div id="b23245-metrics"
-           style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px">
-      </div>
-      <div id="b23245-detail" style="margin-top:10px;font-size:12px;opacity:.78">
-        Preparando auditoría...
-      </div>
-    </section>
-
 
       </main>
 
@@ -1000,6 +1004,6 @@
 <script src="B232.41-integracion-regresion-final.js?v=232.41"></script>
 <script src="B232.42.1-reconciliacion-fuentes.js?v=232.42.1"></script>
 <script src="B232.43-rendimiento-ux.js?v=232.43"></script>
-<script src="B232.45-observabilidad-segura.js?v=232.45.final"></script>
+<script src="B232.45-observabilidad-segura.js?v=232.45.3"></script>
 </body>
 </html>
