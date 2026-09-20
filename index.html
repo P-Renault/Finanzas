@@ -121,19 +121,34 @@ table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
 (function(){
   'use strict';
   if(window.__B23251EarlyErrors) return;
-  var max=20;
+  var max=40;
   window.__B23251EarlyErrors=[];
   function push(item){
     if(window.__B23251EarlyErrors.length>=max) return;
     window.__B23251EarlyErrors.push(item);
   }
+  function isResource(target){
+    if(!target || !target.tagName) return false;
+    return ['script','link','img','iframe','audio','video','source','object','embed','track','input']
+      .indexOf(String(target.tagName).toLowerCase())>=0;
+  }
+  function url(target){
+    if(!target) return '';
+    try{return String(target.src||target.href||target.currentSrc||target.data||'');}
+    catch(e){return '';}
+  }
   window.addEventListener('error',function(e){
+    var target=e.target;
+    var resource=isResource(target) &&
+      !(e.error||e.filename||e.lineno||e.colno||e.message);
     push({
-      type:'error',
-      message:String(e.message||'Error'),
-      filename:String(e.filename||'desconocido'),
+      type:resource?'resource':'error',
+      message:String(e.message||((e.error&&e.error.message)||'Error')),
+      filename:String(e.filename||''),
       line:Number(e.lineno||0),
       column:Number(e.colno||0),
+      tag:target&&target.tagName?String(target.tagName).toLowerCase():'',
+      resourceUrl:url(target),
       stack:e.error&&e.error.stack?String(e.error.stack):''
     });
   },true);
@@ -142,9 +157,11 @@ table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
     push({
       type:'unhandledrejection',
       message:reason&&reason.message?String(reason.message):String(reason||'Promise rechazada'),
-      filename:'',
-      line:0,
-      column:0,
+      filename:reason&&(reason.fileName||reason.filename)?String(reason.fileName||reason.filename):'',
+      line:Number(reason&&(reason.lineNumber||reason.lineno)||0),
+      column:Number(reason&&(reason.columnNumber||reason.colno)||0),
+      tag:'',
+      resourceUrl:'',
       stack:reason&&reason.stack?String(reason.stack):''
     });
   },true);
@@ -354,11 +371,11 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 
 <section id="b23250-errors-panel"
   class="panel"
-  aria-label="Monitor de errores B232.50"
+  aria-label="Diagnóstico runtime B232.51.4"
   style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
     <div>
-      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.50 · ERRORES RUNTIME</div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.51.4 · DIAGNÓSTICO RUNTIME</div>
       <div id="b23250-status" style="font-weight:800;font-size:18px;margin-top:4px;">MONITOR ACTIVO</div>
     </div>
     <button id="b23250-clear" type="button"
@@ -367,11 +384,12 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
     </button>
   </div>
   <div id="b23250-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
-    Captura controlada de errores JavaScript y promesas rechazadas.
+    Clasifica por separado errores JavaScript, promesas rechazadas y fallos de carga de recursos.
   </div>
   <div class="b23250-grid">
     <div class="b23250-item"><div class="b23250-label">Errores JS</div><div id="b23250-js" class="b23250-value">0</div></div>
     <div class="b23250-item"><div class="b23250-label">Promesas rechazadas</div><div id="b23250-rejections" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Recursos con error</div><div id="b23250-resource" class="b23250-value">0</div></div>
     <div class="b23250-item"><div class="b23250-label">Último evento</div><div id="b23250-last" class="b23250-value">Ninguno</div></div>
     <div class="b23250-item"><div class="b23250-label">Archivo</div><div id="b23250-file" class="b23250-value">—</div></div>
     <div class="b23250-item"><div class="b23250-label">Línea</div><div id="b23250-line" class="b23250-value">—</div></div>
@@ -1284,7 +1302,7 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 <script src="B232.47-ux-movil.js?v=232.47.1"></script>
 <script src="B232.48.3-qa-runtime.js?v=232.48.3"></script>
 <script src="B232.49-security-audit.js?v=232.49.2"></script>
-<script src="B232.51-runtime-diagnostics.js?v=232.51.2"></script>
+<script src="B232.51.4-runtime-diagnostics.js?v=232.51.4"></script>
 <script src="B232.51.2-runtime-hardening.js?v=232.51.2"></script>
 <script src="B232.51.3-navigation-safe.js?v=232.51.3"></script>
 </body>
