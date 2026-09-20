@@ -1,6 +1,6 @@
-/* B232.31 — Planificación integrada: restauración del escenario y componentes */
+/* B232.32 — Planificación integrada robusta: carga + escenario + componentes */
 (()=>{'use strict';
-if(window.__B23224_FIX__)return; window.__B23224_FIX__=true;
+if(window.__B23232_PLAN__)return; window.__B23232_PLAN__=true;
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
 const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -17,12 +17,20 @@ section('ingresos',`<div class="card"><h2>Motor Multifuente</h2><p class="muted"
 section('jornadas',`<div class="card"><h2>Planificador de Jornada</h2><p class="muted">Planifica una jornada de Uber/inDrive y registra el resultado financiero.</p><div class="b23224-kpis"><div class="b23224-kpi"><span>Meta neta</span><strong id="f24JTarget">$0</strong></div><div class="b23224-kpi"><span>Neto integrado</span><strong id="f24JNet">$0</strong></div><div class="b23224-kpi"><span>Jornadas integradas</span><strong id="f24JCount">0</strong></div><div class="b23224-kpi"><span>Brecha</span><strong id="f24JGap">$0</strong></div></div></div><div class="card"><h3>Planificar jornada</h3><form id="f24JForm" class="grid2"><label>Fecha<input id="f24JDate" type="date" required></label><label>Meta neta<input id="f24JTargetInput" type="number" min="0" value="60000" required></label><label>Horas<input id="f24JHours" type="number" min="0" step=".5" value="8"></label><label>Km<input id="f24JKm" type="number" min="0" value="0"></label><label>Bruto estimado<input id="f24JGross" type="number" min="0" value="0"></label><label>Costos estimados<input id="f24JCost" type="number" min="0" value="0"></label><label class="full">Notas<input id="f24JNotes"></label><button class="full" type="submit">Guardar planificación</button></form><p id="f24JMsg" class="status"></p></div><div class="card"><h3>Resultados integrados</h3><div id="f24JList"></div></div>`);
 section('operaciones',`<div class="card"><h2>Operaciones</h2><p class="muted">Liquidez, cuentas, ingresos futuros y obligaciones.</p><div class="b23224-kpis"><div class="b23224-kpi"><span>Liquidez real</span><strong id="f24Liq">$0</strong></div><div class="b23224-kpi"><span>Ingresos futuros</span><strong id="f24Future">$0</strong></div><div class="b23224-kpi"><span>Obligaciones</span><strong id="f24Oblig">$0</strong></div><div class="b23224-kpi"><span>Proyección</span><strong id="f24Proj">$0</strong></div></div><div id="f24OpsStatus" class="b23224-status">Calculando...</div></div><div class="b23224-grid"><div class="card"><h3>Cuentas</h3><div id="f24Accounts"></div></div><div class="card"><h3>Próximas obligaciones</h3><div id="f24ObligList"></div></div></div><div class="card"><button id="f24OpsRefresh" type="button">Actualizar Operaciones</button></div>`);
 section('planificacion',`<div id="b216Content"></div>`)}
+window.B23232Planificacion={
+  version:'232.32',
+  mount:()=>{try{styles();buildSections();return !!$('planificacion')}catch(e){console.error('[B232.32] mount',e);return false}},
+  render:()=>renderPlan()
+};
+
 async function renderOps(){const c=client();if(!c)return;const [close,banks,mov,inc,exp,comm,quota]=await Promise.all([read(c.from('cierres_financieros').select('*').eq('activo',true).order('fecha_corte',{ascending:false}).limit(1)),read(c.from('cuentas_bancarias').select('*').eq('activa',true)),read(c.from('movimientos').select('tipo,monto,fecha')),read(c.from('ingresos_futuros').select('*').gte('fecha',today())),read(c.from('gastos_planificados').select('*').gte('fecha',today())),read(c.from('compromisos').select('*').eq('estado','pendiente').order('fecha_vencimiento')),read(c.from('cuotas_deuda').select('*').in('estado',['pendiente','vencida']).gte('fecha_vencimiento',today()).order('fecha_vencimiento'))]);let liquidity=Number(close[0]?.saldo_efectivo_actual||0)+banks.reduce((s,x)=>s+Number(x.saldo_actual||0),0);if(!liquidity)liquidity=mov.reduce((s,x)=>s+(x.tipo==='ingreso'?Number(x.monto):-Number(x.monto)),0);const futureIn=inc.reduce((s,x)=>s+Number(x.monto||0),0),oblig=exp.reduce((s,x)=>s+Number(x.monto||0),0)+comm.reduce((s,x)=>s+Number(x.monto||0),0)+quota.reduce((s,x)=>s+Number(x.monto||0),0);$('f24Liq').textContent=money(liquidity);$('f24Future').textContent=money(futureIn);$('f24Oblig').textContent=money(oblig);$('f24Proj').textContent=money(liquidity+futureIn-oblig);$('f24Accounts').innerHTML=banks.map(x=>`<div class="b23224-row"><span>${esc(x.nombre_banco||'Banco')}<small>${esc(x.nombre_cuenta||'Cuenta')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin cuentas activas.</p>';const rows=[...comm.map(x=>({date:x.fecha_vencimiento,name:x.concepto||'Compromiso',amount:x.monto})),...quota.map(x=>({date:x.fecha_vencimiento,name:'Cuota de deuda',amount:x.monto}))].sort((a,b)=>String(a.date).localeCompare(String(b.date)));$('f24ObligList').innerHTML=rows.slice(0,15).map(x=>`<div class="b23224-row"><span>${esc(x.name)}<small>${esc(x.date||'')}</small></span><strong>${money(x.amount)}</strong></div>`).join('')||'<p class="muted">Sin obligaciones próximas.</p>';$('f24OpsStatus').textContent=`Actualizado: liquidez ${money(liquidity)}, ingresos futuros ${money(futureIn)}, obligaciones ${money(oblig)}.`}
 async function renderIncome(){const c=client();if(!c)return;const [sources,g]=await Promise.all([read(c.from('fuentes_ingreso').select('*').eq('activa',true).order('nombre')),read(c.from('generacion_ingresos').select('*').order('fecha_generacion',{ascending:false}).limit(100))]);$('f24Sources').textContent=sources.length;$('f24Source').innerHTML=sources.map(x=>`<option value="${x.id}">${esc(x.nombre)}</option>`).join('');const generated=g.filter(x=>x.estado_cobro!=='cancelado').reduce((s,x)=>s+Number(x.monto_neto||0),0),collected=g.filter(x=>x.estado_cobro==='cobrado').reduce((s,x)=>s+Number(x.monto_neto||0),0);$('f24Generated').textContent=money(generated);$('f24Collected').textContent=money(collected);$('f24Pending').textContent=money(generated-collected);$('f24IncomeList').innerHTML=g.map(x=>`<div class="b23224-row"><span>${esc(x.actividad||x.descripcion||'Generación')}<small>${esc(x.fecha_generacion||'')} · ${esc(x.estado_cobro||'')}</small></span><strong>${money(x.monto_neto)}</strong></div>`).join('')||'<p class="muted">Sin generaciones registradas.</p>'}
 async function renderJornadas(){const c=client();if(!c)return;const [src,rows]=await Promise.all([read(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').limit(1)),read(c.from('generacion_ingresos').select('*').order('fecha_generacion',{ascending:false}).limit(100))]);const uber=src[0]?.id,own=uber?rows.filter(x=>String(x.fuente_id)===String(uber)):[],net=own.reduce((s,x)=>s+Number(x.monto_neto||0),0),target=60000;$('f24JTarget').textContent=money(target);$('f24JNet').textContent=money(net);$('f24JCount').textContent=String(own.length);$('f24JGap').textContent=money(Math.max(0,target-net));$('f24JList').innerHTML=own.map(x=>`<div class="b23224-row"><span>${esc(x.fecha_generacion||'')} · ${esc(x.actividad||'Jornada')}<small>${esc(x.descripcion||'')}</small></span><strong>${money(x.monto_neto)}</strong></div>`).join('')||'<p class="muted">Sin resultados integrados.</p>'}
 async function renderPlan(){
  const c=client();if(!c)return;
- const box=$('b216Content');if(!box)return;
+ let box=$('b216Content');
+ if(!box){try{buildSections();}catch(e){console.error('[B232.32] buildSections',e)};box=$('b216Content');}
+ if(!box){console.error('[B232.32] Contenedor de Planificación no disponible');return;}
  const horizon=30;
  const addDays=(base,n)=>{const d=new Date(base+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
  const end=addDays(today(),horizon-1);
@@ -296,11 +304,11 @@ function normalize(id){
 
 const legacyShow=window.b219Show;
 
-// B232.30 — carga bajo demanda real. El clic del usuario es el disparador
+// B232.32 — carga bajo demanda real. El clic del usuario es el disparador
 // de la consulta; no se depende de una recarga de página ni de un timer.
 function ensureModuleSection(id){
   if($(id)) return true;
-  try{ if(typeof buildSections==='function') buildSections(); }catch(e){console.warn('[B232.30] buildSections',e)}
+  try{ window.B23232Planificacion?.mount?.(); }catch(e){console.warn('[B232.32] mount',e)}
   return !!$(id);
 }
 
@@ -342,7 +350,7 @@ async function show(id){
 }
 window.fin23230Plan=renderPlan;
 window.fin23230Ops=renderOps;
-window.CCFRouter={version:'232.30',show,normalize,refreshModule};
+window.CCFRouter={version:'232.32',show,normalize,refreshModule};
 window.b219Show=show;
 // Compatibilidad controlada: cualquier dependencia antigua que solicite Planificación
 // recibe el mismo motor B232.30, evitando que B2.16/B2.23/B2.24 recuperen el control.

@@ -145,8 +145,16 @@
     localStorage.setItem('cf_active_tab_v2', id);
 
     try {
-      // B232.30: Operaciones y Planificación tienen motor propietario.
-      // No delegar a módulos legacy; el router B232.30 actualiza al pulsar.
+      // B232.32: Operaciones y Planificación tienen motor propietario.
+      // El handler global de app.js debe entregar explícitamente el clic al
+      // router propietario; de lo contrario solo cambia la visibilidad y
+      // puede dejar una sección vacía si el motor dinámico aún no ha renderizado.
+      if ((id === 'operaciones' || id === 'planificacion') &&
+          window.CCFRouter && typeof window.CCFRouter.show === 'function') {
+        window.CCFRouter.show(id);
+        return true;
+      }
+
       if ((id === 'ingresos' || id === 'jornadas') &&
           typeof window.b219Show === 'function') {
         window.b219Show(id);
