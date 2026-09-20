@@ -50,9 +50,9 @@
     last={
       type:'unhandledrejection',
       message:clip(r&&r.message?r.message:r,220),
-      filename:'',
-      line:0,column:0,
-      stack:r&&r.stack?clip(r.stack,500):''
+      filename:(r&&r.fileName)?clip(r.fileName,180):'',
+      line:Number(r&&r.lineNumber||0),column:Number(r&&r.columnNumber||0),
+      stack:r&&r.stack?clip(r.stack,1000):''
     };
     render();
   },true);
@@ -68,7 +68,7 @@
     if(a)a.textContent=String(jsErrors);
     if(r)r.textContent=String(rejections);
     if(l)l.textContent=last?(last.type==='unhandledrejection'?'Promise rechazada':'Error JS'):'Ninguno';
-    if(f)f.textContent=last&&last.filename?last.filename.split('/').pop():'—';
+    if(f)f.textContent=last&&last.filename?last.filename.split('/').pop():(last&&last.stack?clip(last.stack.split('\n')[1]||last.stack,180):'—');
     if(ln)ln.textContent=last&&last.line?String(last.line):'—';
     if(c)c.textContent=last&&last.column?String(last.column):'—';
 
