@@ -14,7 +14,7 @@ const db=()=>{if(client)return client;const u=localStorage.getItem('sf_url'),k=l
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function loadScript(src){return new Promise((resolve,reject)=>{const old=document.querySelector(`script[data-b219="${src}"]`);if(old){resolve();return}const s=document.createElement('script');s.src=src;s.dataset.b219=src;s.async=false;s.onload=resolve;s.onerror=()=>reject(new Error('No se pudo cargar '+src));document.body.appendChild(s)})}
 async function loadLegacy(){
-  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.14];
+  const files=['dashboard-deudas-v234.js?v=2521','centro-deudas-navegacion-b235.js?v=2521','b216-planificacion-financiera.js?v=2521','b232-calendario-v2.js?v=232.14'];
   for(const f of files){try{await loadScript(f);await wait(80)}catch(e){console.error('B219 legacy',e)}}
 }
 function baseStyles(){if($('b219Styles'))return;const s=document.createElement('style');s.id='b219Styles';s.textContent=`
@@ -33,75 +33,15 @@ function installGenericNav(){
   const t=document.querySelector('.tabs');
   if(!t||t.dataset.b219Nav)return;
   t.dataset.b219Nav='1';
-
-  /* B232.7 · Persistencia REAL de navegación
-     - Primera conexión sin historial: Resumen.
-     - Recarga/reapertura con conexión existente: conserva el último módulo.
-     - El guardado ocurre en CAPTURE para que app.js no pueda sobrescribirlo.
-     - Se restaura después de que B219 y los módulos dinámicos hayan terminado.
-     - Salir elimina el estado de navegación. */
   const NAV_KEY='cf_active_tab_v2';
   const LEGACY_KEY='cf_active_tab_v1';
   const validTab=id=>['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion','ingresos','jornadas'].includes(id);
-
-  function savedTab(){
-    const v=localStorage.getItem(NAV_KEY);
-    if(v&&validTab(v))return v;
-    const legacy=localStorage.getItem(LEGACY_KEY);
-    if(legacy&&validTab(legacy)){
-      localStorage.setItem(NAV_KEY,legacy);
-      return legacy;
-    }
-    return null;
-  }
-
-  function restore(){
-    const id=savedTab();
-    if(!id)return false;
-    const button=document.querySelector(`.tabs button[data-tab="${id}"]`);
-    if(!button)return false;
-    show(id);
-    return true;
-  }
-
-  /* Captura antes del onclick de app.js. Así el estado queda persistido
-     aunque otro módulo tenga su propio manejador de clic. */
-  document.addEventListener('click',e=>{
-    const b=e.target.closest('.tabs button[data-tab]');
-    if(b){
-      const id=b.dataset.tab;
-      if(validTab(id))localStorage.setItem(NAV_KEY,id);
-      return;
-    }
-    const logout=e.target.closest('#logoutBtn');
-    if(logout){
-      localStorage.removeItem(NAV_KEY);
-      localStorage.removeItem(LEGACY_KEY);
-    }
-  },true);
-
-  /* Restauración escalonada: algunos módulos crean pestañas después del
-     arranque de app.js. No se cambia nada si no existe un módulo guardado. */
-  const attempts=[0,150,400,800,1500,2500];
-  attempts.forEach(ms=>setTimeout(()=>restore(),ms));
-
-  if(window.MutationObserver){
-    const observer=new MutationObserver(()=>{
-      if(restore())observer.disconnect();
-    });
-    observer.observe(t,{childList:true,subtree:true});
-    setTimeout(()=>observer.disconnect(),3500);
-  }
-
-  /* Compatibilidad con B232.6 */
-  const logout=$('logoutBtn');
-  if(logout&&!logout.dataset.b2327Logout){
-    logout.dataset.b2327Logout='1';
-    logout.addEventListener('click',()=>{
-      localStorage.removeItem(NAV_KEY);
-      localStorage.removeItem(LEGACY_KEY);
-    });
-  }
+  function savedTab(){const v=localStorage.getItem(NAV_KEY);if(v&&validTab(v))return v;const legacy=localStorage.getItem(LEGACY_KEY);if(legacy&&validTab(legacy)){localStorage.setItem(NAV_KEY,legacy);return legacy}return null}
+  function restore(){const id=savedTab();if(!id)return false;const button=document.querySelector(`.tabs button[data-tab="${id}"]`);if(!button)return false;show(id);return true}
+  document.addEventListener('click',e=>{const b=e.target.closest('.tabs button[data-tab]');if(b){const id=b.dataset.tab;if(validTab(id))localStorage.setItem(NAV_KEY,id);return}const logout=e.target.closest('#logoutBtn');if(logout){localStorage.removeItem(NAV_KEY);localStorage.removeItem(LEGACY_KEY)}},true);
+  const attempts=[0,150,400,800,1500,2500];attempts.forEach(ms=>setTimeout(()=>restore(),ms));
+  if(window.MutationObserver){const observer=new MutationObserver(()=>{if(restore())observer.disconnect()});observer.observe(t,{childList:true,subtree:true});setTimeout(()=>observer.disconnect(),3500)}
+  const logout=$('logoutBtn');if(logout&&!logout.dataset.b2327Logout){logout.dataset.b2327Logout='1';logout.addEventListener('click',()=>{localStorage.removeItem(NAV_KEY);localStorage.removeItem(LEGACY_KEY)})}
 }
 async function safe(p,fb=[]){try{const r=await Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),7000))]);return r?.error?fb:(r?.data??fb)}catch{return fb}}
 async function loadOps(){const m=$('b219OpsMsg');if(!m)return;const c=db();if(!c){m.textContent='Conecta Supabase para consultar Operaciones.';return}m.textContent='Actualizando…';const [cl,banks,debtRows,inc,exp,genRows]=await Promise.all([safe(c.from('cierres_financieros').select('saldo_efectivo_actual').eq('activo',true).order('fecha_corte',{ascending:false}).limit(1)),safe(c.from('cuentas_bancarias').select('nombre_banco,nombre_cuenta,saldo_actual').eq('activa',true)),safe(c.from('v_deudas_resumen').select('acreedor,saldo_actual,proximo_vencimiento,estado').order('acreedor')),safe(c.from('movimientos').select('tipo,monto,fecha').eq('tipo','ingreso').gte('fecha',today())),safe(c.from('movimientos').select('tipo,monto,fecha').eq('tipo','gasto').gte('fecha',today())),safe(c.from('generacion_ingresos').select('monto_neto,estado_cobro').limit(100))]);const cash=Number(cl[0]?.saldo_efectivo_actual||0),bank=banks.reduce((s,x)=>s+Number(x.saldo_actual||0),0),liq=cash+bank,futureIn=inc.reduce((s,x)=>s+Number(x.monto||0),0),futureOut=exp.reduce((s,x)=>s+Number(x.monto||0),0),debt=debtRows.reduce((s,x)=>!['pagada','cancelada'].includes(String(x.estado).toLowerCase())?s+Number(x.saldo_actual||0):s,0),gen=genRows.filter(x=>x.estado_cobro!=='cancelado').reduce((s,x)=>s+Number(x.monto_neto||0),0);$('b219Liq').textContent=money(liq);$('b219Future').textContent=money(futureIn);$('b219Proj').textContent=money(liq+futureIn-futureOut);$('b219Debt').textContent=money(debt);$('b219Gen').textContent=money(gen);$('b219Cash').textContent=money(cash);$('b219Bank').textContent=money(bank);$('b219BankList').innerHTML=banks.map(x=>`<div class="b219-row"><span>${esc(x.nombre_banco)}<small>${esc(x.nombre_cuenta||'Cuenta')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin cuentas activas.</p>';$('b219DebtList').innerHTML=debtRows.filter(x=>!['pagada','cancelada'].includes(String(x.estado).toLowerCase())).slice(0,8).map(x=>`<div class="b219-row"><span>${esc(x.acreedor)}<small>Próximo: ${esc(x.proximo_vencimiento||'—')}</small></span><strong>${money(x.saldo_actual)}</strong></div>`).join('')||'<p class="muted">Sin deudas pendientes.</p>';m.textContent='Operaciones actualizado.'}
