@@ -17,6 +17,20 @@
 <link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.6">
 
 <title>Centro de Control Financiero · CCF-V5.0.1 + EXEC-DASH-V1.2.6</title>
+<style id="b23247-mobile-ux-css">
+@media (max-width:720px){
+.tabs{gap:6px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px!important}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button,button,input[type="button"],input[type="submit"]{min-height:44px;touch-action:manipulation}
+.tabs button{min-width:max-content;padding-left:12px!important;padding-right:12px!important}
+input,select,textarea{min-height:44px;font-size:16px!important}
+textarea{min-height:88px}
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#b23247-mobile-ux-panel{overflow:hidden}
+#b23247-mobile-ux-panel .b23247-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:380px){#b23247-mobile-ux-panel .b23247-grid{grid-template-columns:1fr!important}}
+</style>
 </head>
 
 <body>
@@ -128,7 +142,23 @@
         </div>
       </section>
 
-      <main id="financial-control" class="financial-control">
+<section id="b23247-mobile-ux-panel" class="panel" aria-label="UX móvil B232.47"
+style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+<div><div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.47 · UX MÓVIL</div>
+<div id="b23247-status" style="font-weight:800;font-size:18px;margin-top:4px;">ACTIVO</div></div>
+<span id="b23247-device" style="font-size:12px;color:#64748b;">Detectando pantalla…</span>
+</div>
+<div class="b23247-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Touch target</div><div style="font-weight:800;margin-top:3px;">44 px</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Campos</div><div style="font-weight:800;margin-top:3px;">16 px</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Navegación</div><div style="font-weight:800;margin-top:3px;">Táctil</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Tablas</div><div style="font-weight:800;margin-top:3px;">Scroll</div></div>
+</div>
+<div id="b23247-detail" style="margin-top:10px;font-size:12px;color:#64748b;">Mejoras táctiles activas sin modificar la lógica financiera.</div>
+</section>
+
+<main id="financial-control" class="financial-control">
 
         <header class="summary-header">
           <div>
@@ -1028,5 +1058,6 @@
 <script src="B232.43-rendimiento-ux.js?v=232.43"></script>
 <script src="B232.45-observabilidad-segura.js?v=232.45.3"></script>
 <script src="B232.46-mantenimiento-financiero.js?v=232.46.4"></script>
+<script src="B232.47-ux-movil.js?v=232.47.1"></script>
 </body>
 </html>
