@@ -1,0 +1,23 @@
+{
+  "version": "B232.44",
+  "status": "cierre_tecnico_controlado",
+  "validated_mobile": true,
+  "performance": {
+    "dom_interactive_ms": 397,
+    "load_ms": 567,
+    "scripts": 31
+  },
+  "financial_snapshot": {
+    "liquidity": 12996,
+    "debt_outstanding": 27719614,
+    "obligations_30d": 964000
+  },
+  "sprints_closed": [
+    "B232.39",
+    "B232.40",
+    "B232.41",
+    "B232.42.1",
+    "B232.43"
+  ],
+  "new_features_allowed_in_this_line": false
+}

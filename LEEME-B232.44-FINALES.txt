@@ -1,0 +1,16 @@
+B232.44 — PAQUETE FINAL DE QA Y CIERRE
+
+Este paquete contiene:
+- index.html: HTML COMPLETO FINAL de la línea validada.
+- B232.43-rendimiento-ux.js: último módulo técnico incorporado.
+- QA-FINAL-B232.44.md
+- ARQUITECTURA-FINAL-B232.44.md
+- INVENTARIO-SCRIPTS-B232.44.md
+- CHANGELOG-B232.44.md
+- QA-FINAL-B232.44.json
+
+No hay patch de index.html.
+El index.html incluido es el archivo completo listo para carga.
+
+B232.44 no agrega una funcionalidad financiera nueva.
+Su objetivo es cerrar QA y documentación.
