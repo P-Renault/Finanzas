@@ -1,55 +1,62 @@
-/* B232.58 · RELEASE FINAL · ACCESO A MÓDULOS */
+/* B232.59 · RELEASE CORRECTIVO · MÓDULOS REALES B2.19
+   No crea un segundo motor. Recupera las vistas originales B2.19 cuando
+   una capa anterior las haya sustituido por placeholders.
+*/
 (function(){
 'use strict';
-if(window.__B23258_RELEASE__) return;
-window.__B23258_RELEASE__=true;
-var VERSION='B232.58-RELEASE-MODULOS-ACCESO';
+if(window.__B23259_RELEASE__) return;
+window.__B23259_RELEASE__=true;
+var VERSION='B232.59-RELEASE-MODULOS-REALES';
 var $=function(id){return document.getElementById(id)};
-var money=function(n){return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0)};
-var today=function(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
-function db(){if(window.supabaseClient)return window.supabaseClient;var u=localStorage.getItem('sf_url'),k=localStorage.getItem('sf_key');if(u&&k&&window.supabase&&window.supabase.createClient){try{return window.supabase.createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}})}catch(e){console.error('[B232.57] Supabase',e)}}return null}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
-function safe(p,fb){return Promise.race([p,new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'))},7000)})]).then(function(r){return r&&r.error?fb:(r&&r.data!==undefined?r.data:fb)}).catch(function(){return fb})}
 function removeMore(){
-  ['b219MenuWrap','b232513MenuWrap'].forEach(function(x){var n=$(x);if(n)n.remove()});
+  ['b219MenuWrap','b232513MenuWrap'].forEach(function(id){var n=$(id);if(n)n.remove()});
   document.querySelectorAll('.b219-menu-wrap,.b219-menu,.b219-menu-btn').forEach(function(n){n.remove()});
   var t=document.querySelector('.tabs');
   if(t)t.querySelectorAll('button').forEach(function(b){if(!b.dataset.tab&&/^(más|mas)\b/i.test((b.textContent||'').trim()))b.remove()});
 }
-function addButton(t,id,label){var b=t.querySelector('button[data-tab="'+id+'"]');if(!b){b=document.createElement('button');b.type='button';b.dataset.tab=id;b.textContent=label;t.appendChild(b)}return b}
-function nav(){var t=document.querySelector('.tabs');if(!t)return false;removeMore();addButton(t,'ingresos','Motor Multifuente');addButton(t,'jornadas','Control de Jornada');['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion','ingresos','jornadas'].forEach(function(id){var b=t.querySelector('button[data-tab="'+id+'"]');if(b)t.appendChild(b)});return true}
-function isPlaceholder(s){if(!s)return false;var x=(s.textContent||'').replace(/\s+/g,' ').trim();return /^Motor Multifuente Módulo disponible mediante su integración financiera existente\.?$/.test(x)||/^Control de Jornada Módulo disponible mediante su integración operativa existente\.?$/.test(x)}
-function moduleHtml(){var app=$('app');if(!app)return;['ingresos','jornadas'].forEach(function(id){var s=$(id);if(isPlaceholder(s))s.remove()});var income=$('ingresos');if(!income){income=document.createElement('section');income.id='ingresos';income.className='tab hidden';income.innerHTML='<div class="card"><span class="muted">B2.19 · MOTOR MULTIFUENTE</span><h2>Generación de ingresos</h2><p class="muted">Una entrada financiera para múltiples actividades, sin mezclar generación con liquidez.</p><div class="b219-kpis"><article class="b219-kpi"><span>Generado neto</span><strong id="b23257Generated">$0</strong></article><article class="b219-kpi"><span>Cobrado</span><strong id="b23257Received">$0</strong></article><article class="b219-kpi"><span>Pendiente</span><strong id="b23257Pending">$0</strong></article></div></div><div class="card"><h3>Registrar generación</h3><form id="b23257IncomeForm" class="b219-form"><label>Fuente<select id="b23257Source"></select></label><label>Actividad<input id="b23257Activity" required placeholder="Conducción, desarrollo, venta…"></label><label>Cliente<input id="b23257Client"></label><label>Fecha de generación<input id="b23257Date" type="date" required></label><label>Monto bruto<input id="b23257Gross" type="number" min="0" step="1" value="0"></label><label>Costos<input id="b23257Cost" type="number" min="0" step="1" value="0"></label><label>Comisiones<input id="b23257Comm" type="number" min="0" step="1" value="0"></label><label>Estado<select id="b23257State"><option value="pendiente">Pendiente</option><option value="cobrado">Cobrado</option></select></label><label>Fecha de cobro<input id="b23257Collection" type="date"></label><label class="full">Notas<input id="b23257Notes"></label><button class="full" type="submit">Registrar generación</button></form><p id="b23257IncomeMsg" class="status"></p></div><div class="card"><h3>Últimas generaciones</h3><div id="b23257IncomeList"></div></div>';app.appendChild(income)}var jobs=$('jornadas');if(!jobs){jobs=document.createElement('section');jobs.id='jornadas';jobs.className='tab hidden';jobs.innerHTML='<div class="card"><span class="muted">B2.19 · PUENTE OPERACIONAL</span><h2>Control de Jornada</h2><p class="muted">El detalle de horas, km, combustible, viajes, bruto y comisión permanece en Control de Jornada. Finanzas recibe solamente el resultado financiero.</p><div class="b219-kpis"><article class="b219-kpi"><span>Resultados integrados</span><strong id="b23257JCount">0</strong></article><article class="b219-kpi"><span>Neto integrado</span><strong id="b23257JNet">$0</strong></article></div><div class="card"><h3>Integrar resultado de una jornada</h3><form id="b23257JForm" class="b219-form"><label>Fecha<input id="b23257JDate" type="date" required></label><label>Neto generado<input id="b23257JNetInput" type="number" min="0" step="1" required></label><label>Costos incluidos<input id="b23257JCost" type="number" min="0" step="1" value="0"></label><label>Estado<select id="b23257JState"><option value="cobrado">Cobrado</option><option value="pendiente">Pendiente</option></select></label><label class="full">Referencia<input id="b23257JRef" placeholder="Jornada Uber/inDrive"></label><button class="full" type="submit">Integrar resultado financiero</button></form><p id="b23257JMsg" class="status"></p></div></div><div class="card"><h3>Historial integrado</h3><div id="b23257JList"></div></div>';app.appendChild(jobs)}}
-async function loadIncome(){var c=db();if(!c)return;var f=await safe(c.from('fuentes_ingreso').select('*').eq('activa',true).order('nombre'),[]);var g=await safe(c.from('generacion_ingresos').select('*').order('fecha_generacion',{ascending:false}).limit(50),[]);var sel=$('b23257Source');if(sel)sel.innerHTML=f.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.nombre)+'</option>'}).join('');var gen=g.filter(function(x){return x.estado_cobro!=='cancelado'}).reduce(function(s,x){return s+Number(x.monto_neto||0)},0),rec=g.filter(function(x){return x.estado_cobro==='cobrado'}).reduce(function(s,x){return s+Number(x.monto_neto||0)},0);if($('b23257Generated'))$('b23257Generated').textContent=money(gen);if($('b23257Received'))$('b23257Received').textContent=money(rec);if($('b23257Pending'))$('b23257Pending').textContent=money(gen-rec);if($('b23257IncomeList'))$('b23257IncomeList').innerHTML=g.map(function(x){return '<div class="b219-row"><span>'+esc(x.actividad)+'<small>'+esc(x.fecha_generacion)+' · '+esc(x.estado_cobro)+'</small></span><strong>'+money(x.monto_neto)+'</strong></div>'}).join('')||'<p class="muted">Sin generaciones registradas.</p>'}
-async function loadJobs(){var c=db();if(!c)return;var f=await safe(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').maybeSingle(),null);var rows=f&&f.id?await safe(c.from('generacion_ingresos').select('*').eq('fuente_id',f.id).order('fecha_generacion',{ascending:false}).limit(30),[]):[];if($('b23257JCount'))$('b23257JCount').textContent=String(rows.length);if($('b23257JNet'))$('b23257JNet').textContent=money(rows.reduce(function(s,x){return s+Number(x.monto_neto||0)},0));if($('b23257JList'))$('b23257JList').innerHTML=rows.map(function(x){return '<div class="b219-row"><span>'+esc(x.fecha_generacion)+' · '+esc(x.actividad)+'<small>Resultado financiero integrado · '+esc(x.estado_cobro)+'</small></span><strong>'+money(x.monto_neto)+'</strong></div>'}).join('')||'<p class="muted">Sin resultados integrados todavía.</p>'}
-function wireForms(){var d=today();if($('b23257Date'))$('b23257Date').value=d;if($('b23257JDate'))$('b23257JDate').value=d;var fi=$('b23257IncomeForm');if(fi&&!fi.dataset.wired){fi.dataset.wired='1';fi.onsubmit=async function(e){e.preventDefault();var c=db(),m=$('b23257IncomeMsg');if(!c){m.textContent='Conecta Supabase.';return}var state=$('b23257State').value,p={fuente_id:Number($('b23257Source').value),actividad:$('b23257Activity').value.trim(),cliente:$('b23257Client').value.trim()||null,fecha_generacion:$('b23257Date').value,fecha_cobro:state==='cobrado'?($('b23257Collection').value||d):null,monto_bruto:+$('b23257Gross').value||0,costos:+$('b23257Cost').value||0,comisiones:+$('b23257Comm').value||0,estado_cobro:state,notas:$('b23257Notes').value.trim()||null};var r=await safe(c.from('generacion_ingresos').insert(p),null);m.textContent=r===null?'No se pudo registrar.':'Generación registrada.';if(r!==null){fi.reset();$('b23257Date').value=today();loadIncome()}}}var fj=$('b23257JForm');if(fj&&!fj.dataset.wired){fj.dataset.wired='1';fj.onsubmit=async function(e){e.preventDefault();var c=db(),m=$('b23257JMsg');if(!c){m.textContent='Conecta Supabase.';return}var f=await safe(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').maybeSingle(),null);if(!f){m.textContent='No existe la fuente Uber / inDrive.';return}var net=+$('b23257JNetInput').value||0,cost=+$('b23257JCost').value||0,state=$('b23257JState').value,p={fuente_id:f.id,actividad:'Resultado Control de Jornada',descripcion:$('b23257JRef').value.trim()||'Integración financiera de jornada',fecha_generacion:$('b23257JDate').value,monto_bruto:net+cost,costos:cost,comisiones:0,estado_cobro:state,fecha_cobro:state==='cobrado'?$('b23257JDate').value:null,notas:'Origen: Control de Jornada'};var r=await safe(c.from('generacion_ingresos').insert(p),null);m.textContent=r===null?'No se pudo integrar.':'Resultado integrado: '+money(net)+'.';if(r!==null){fj.reset();$('b23257JDate').value=today();loadJobs()}}}}
-function forceModule(id){
-  if(id!=='ingresos'&&id!=='jornadas')return false;
-  var s=$(id);
-  var expected=id==='ingresos'?'b23257IncomeForm':'b23257JForm';
-  if(!s || !$(expected)){ if(s)s.remove(); moduleHtml(); }
-  return !!$(id);
-}
-function show(id){
+function nav(){
   var t=document.querySelector('.tabs');if(!t)return false;
-  if(id==='ingresos'||id==='jornadas'){
-    forceModule(id);
-    document.querySelectorAll('.tab').forEach(function(s){s.classList.toggle('hidden',s.id!==id)});
-    document.querySelectorAll('.tabs button[data-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.tab===id)});
-    localStorage.setItem('cf_active_tab_v2',id); wireForms();
-    if(id==='ingresos')loadIncome();else loadJobs(); return true;
-  } return false;
+  removeMore();
+  [['ingresos','Motor Multifuente'],['jornadas','Control de Jornada']].forEach(function(x){
+    var b=t.querySelector('button[data-tab="'+x[0]+'"]');
+    if(!b){b=document.createElement('button');b.type='button';b.dataset.tab=x[0];b.textContent=x[1];t.appendChild(b)}
+  });
+  ['dashboard','movimientos','futuros','calendario','ahorro','deudas','cuentas','operaciones','planificacion','ingresos','jornadas'].forEach(function(id){var b=t.querySelector('button[data-tab="'+id+'"]');if(b)t.appendChild(b)});
+  return true;
 }
-function bindModuleAccess(){
-  if(window.__B23258_MODULE_ACCESS__)return; window.__B23258_MODULE_ACCESS__=true;
-  document.addEventListener('click',function(e){
-    var b=e.target.closest('.tabs button[data-tab="ingresos"],.tabs button[data-tab="jornadas"]'); if(!b)return;
-    var id=b.dataset.tab; e.preventDefault(); e.stopImmediatePropagation(); show(id);
-  },true);
+function placeholder(s){
+  if(!s)return false;
+  var x=(s.textContent||'').replace(/\s+/g,' ').trim();
+  return /^(Motor Multifuente Módulo disponible mediante su integración financiera existente\.?|Control de Jornada Módulo disponible mediante su integración operativa existente\.?)$/i.test(x);
 }
-function install(){var t=document.querySelector('.tabs');if(!t)return false;nav();moduleHtml();wireForms();bindModuleAccess();['ingresos','jornadas'].forEach(function(id){var b=t.querySelector('button[data-tab="'+id+'"]');if(b&&!b.dataset.b23257){b.dataset.b23257='1';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();show(id)})}});removeMore();return true}
-function footer(){var f=$('b23258-footer');if(!f){f=document.createElement('footer');f.id='b23258-footer';f.setAttribute('data-deploy-id',VERSION);f.style.cssText='margin:24px 10px 12px;padding:10px 12px;text-align:center;font:600 11px/1.4 system-ui,sans-serif;color:#64748b;border-top:1px solid #e5e7eb';f.textContent='Paquete desplegado: '+VERSION;document.body.appendChild(f)}else f.textContent='Paquete desplegado: '+VERSION}
-function boot(){if(install())footer();else setTimeout(boot,300)}
+var incomeHtml='<div class="card"><span class="muted">B2.19 · MOTOR MULTIFUENTE</span><h2>Generación de ingresos</h2><p class="muted">Una entrada financiera para múltiples actividades, sin mezclar generación con liquidez.</p><div class="b219-kpis"><article class="b219-kpi"><span>Generado neto</span><strong id="b219Generated">$0</strong></article><article class="b219-kpi"><span>Cobrado</span><strong id="b219Received">$0</strong></article><article class="b219-kpi"><span>Pendiente</span><strong id="b219Pending">$0</strong></article></div></div><div class="card"><h3>Registrar generación</h3><form id="b219IncomeForm" class="b219-form"><label>Fuente<select id="b219Source"></select></label><label>Actividad<input id="b219Activity" required placeholder="Conducción, formateo, desarrollo, venta…"></label><label>Cliente<input id="b219Client"></label><label>Fecha de generación<input id="b219Date" type="date" required></label><label>Monto bruto<input id="b219Gross" type="number" min="0" step="1" value="0"></label><label>Costos<input id="b219Cost" type="number" min="0" step="1" value="0"></label><label>Comisiones<input id="b219Comm" type="number" min="0" step="1" value="0"></label><label>Estado<select id="b219State"><option value="pendiente">Pendiente</option><option value="cobrado">Cobrado</option></select></label><label>Fecha de cobro<input id="b219Collection" type="date"></label><label class="full">Notas<input id="b219Notes"></label><button class="full" type="submit">Registrar generación</button></form><p id="b219IncomeMsg" class="status"></p></div><div class="card"><h3>Últimas generaciones</h3><div id="b219IncomeList"></div></div>';
+var jobsHtml='<div class="card"><span class="muted">B2.19 · PUENTE OPERACIONAL</span><h2>Control de Jornada</h2><p class="muted">El detalle de horas, km, combustible, viajes, bruto y comisión permanece en Control de Jornada. Finanzas recibe solamente el resultado financiero.</p><div class="b219-kpis"><article class="b219-kpi"><span>Resultados integrados</span><strong id="b219JCount">0</strong></article><article class="b219-kpi"><span>Neto integrado</span><strong id="b219JNet">$0</strong></article></div><div class="card"><h3>Integrar resultado de una jornada</h3><form id="b219JForm" class="b219-form"><label>Fecha<input id="b219JDate" type="date" required></label><label>Neto generado<input id="b219JNetInput" type="number" min="0" step="1" required></label><label>Costos incluidos<input id="b219JCost" type="number" min="0" step="1" value="0"></label><label>Estado<select id="b219JState"><option value="cobrado">Cobrado</option><option value="pendiente">Pendiente</option></select></label><label class="full">Referencia<input id="b219JRef" placeholder="Jornada Uber/inDrive"></label><button class="full" type="submit">Integrar resultado financiero</button></form><p id="b219JMsg" class="status"></p></div></div><div class="card"><h3>Historial integrado</h3><div id="b219JList"></div></div>';
+function ensureReal(id,html){
+  var app=$('app');if(!app)return false;
+  var s=$(id);
+  if(s && placeholder(s)){
+    s.innerHTML=html;
+    s.className='tab hidden';
+    s.setAttribute('data-b23259-real','1');
+    return true;
+  }
+  if(!s){
+    s=document.createElement('section');s.id=id;s.className='tab hidden';s.setAttribute('data-b23259-real','1');s.innerHTML=html;app.appendChild(s);return true;
+  }
+  return false;
+}
+function footer(){
+  var f=$('b23259-footer');
+  if(!f){f=document.createElement('footer');f.id='b23259-footer';f.setAttribute('data-deploy-id',VERSION);f.style.cssText='margin:24px 10px 12px;padding:10px 12px;text-align:center;font:600 11px/1.4 system-ui,sans-serif;color:#64748b;border-top:1px solid #e5e7eb';document.body.appendChild(f)}
+  f.textContent='Paquete desplegado: '+VERSION;
+}
+function repair(){
+  nav();
+  ensureReal('ingresos',incomeHtml);
+  ensureReal('jornadas',jobsHtml);
+  footer();
+}
+function boot(){repair();setTimeout(repair,300);setTimeout(repair,1000);setTimeout(repair,2500)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-setInterval(function(){removeMore();nav();bindModuleAccess();footer()},1500);
+setInterval(repair,300);
 })();
