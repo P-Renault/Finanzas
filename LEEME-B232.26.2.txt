@@ -1,0 +1,8 @@
+B232.26.2 — CALENDARIO DINÁMICO POR MES Y DÍA
+
+Correcciones: indicadores superiores con resumen mensual al cargar y resumen dinámico del día seleccionado; Ingresos reales, Ingresos proyectados, Ingresos netos, Egresos reales, Obligaciones y Saldo final.
+
+Detalle inferior izquierdo: lista completa de ingresos, ganancias, movimientos positivos, beneficios y cobros, con total en verde.
+Detalle inferior derecho: lista completa de gastos, cuotas, compromisos y pagos futuros/pedientes, incluyendo cuotas pendientes/renegociadas según la fuente de cuotas, con total en rojo.
+
+No modifica la estructura de datos de Supabase.
