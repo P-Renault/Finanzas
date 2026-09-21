@@ -1,9 +1,9 @@
-/* B232.57 · RELEASE CORRECTIVO FINAL · NAVEGACIÓN + MÓDULOS INTEGRADOS */
+/* B232.58 · RELEASE FINAL · ACCESO A MÓDULOS */
 (function(){
 'use strict';
-if(window.__B23257_RELEASE__) return;
-window.__B23257_RELEASE__=true;
-var VERSION='B232.57-RELEASE-CIERRE-NAV';
+if(window.__B23258_RELEASE__) return;
+window.__B23258_RELEASE__=true;
+var VERSION='B232.58-RELEASE-MODULOS-ACCESO';
 var $=function(id){return document.getElementById(id)};
 var money=function(n){return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0)};
 var today=function(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -23,10 +23,33 @@ function moduleHtml(){var app=$('app');if(!app)return;['ingresos','jornadas'].fo
 async function loadIncome(){var c=db();if(!c)return;var f=await safe(c.from('fuentes_ingreso').select('*').eq('activa',true).order('nombre'),[]);var g=await safe(c.from('generacion_ingresos').select('*').order('fecha_generacion',{ascending:false}).limit(50),[]);var sel=$('b23257Source');if(sel)sel.innerHTML=f.map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.nombre)+'</option>'}).join('');var gen=g.filter(function(x){return x.estado_cobro!=='cancelado'}).reduce(function(s,x){return s+Number(x.monto_neto||0)},0),rec=g.filter(function(x){return x.estado_cobro==='cobrado'}).reduce(function(s,x){return s+Number(x.monto_neto||0)},0);if($('b23257Generated'))$('b23257Generated').textContent=money(gen);if($('b23257Received'))$('b23257Received').textContent=money(rec);if($('b23257Pending'))$('b23257Pending').textContent=money(gen-rec);if($('b23257IncomeList'))$('b23257IncomeList').innerHTML=g.map(function(x){return '<div class="b219-row"><span>'+esc(x.actividad)+'<small>'+esc(x.fecha_generacion)+' · '+esc(x.estado_cobro)+'</small></span><strong>'+money(x.monto_neto)+'</strong></div>'}).join('')||'<p class="muted">Sin generaciones registradas.</p>'}
 async function loadJobs(){var c=db();if(!c)return;var f=await safe(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').maybeSingle(),null);var rows=f&&f.id?await safe(c.from('generacion_ingresos').select('*').eq('fuente_id',f.id).order('fecha_generacion',{ascending:false}).limit(30),[]):[];if($('b23257JCount'))$('b23257JCount').textContent=String(rows.length);if($('b23257JNet'))$('b23257JNet').textContent=money(rows.reduce(function(s,x){return s+Number(x.monto_neto||0)},0));if($('b23257JList'))$('b23257JList').innerHTML=rows.map(function(x){return '<div class="b219-row"><span>'+esc(x.fecha_generacion)+' · '+esc(x.actividad)+'<small>Resultado financiero integrado · '+esc(x.estado_cobro)+'</small></span><strong>'+money(x.monto_neto)+'</strong></div>'}).join('')||'<p class="muted">Sin resultados integrados todavía.</p>'}
 function wireForms(){var d=today();if($('b23257Date'))$('b23257Date').value=d;if($('b23257JDate'))$('b23257JDate').value=d;var fi=$('b23257IncomeForm');if(fi&&!fi.dataset.wired){fi.dataset.wired='1';fi.onsubmit=async function(e){e.preventDefault();var c=db(),m=$('b23257IncomeMsg');if(!c){m.textContent='Conecta Supabase.';return}var state=$('b23257State').value,p={fuente_id:Number($('b23257Source').value),actividad:$('b23257Activity').value.trim(),cliente:$('b23257Client').value.trim()||null,fecha_generacion:$('b23257Date').value,fecha_cobro:state==='cobrado'?($('b23257Collection').value||d):null,monto_bruto:+$('b23257Gross').value||0,costos:+$('b23257Cost').value||0,comisiones:+$('b23257Comm').value||0,estado_cobro:state,notas:$('b23257Notes').value.trim()||null};var r=await safe(c.from('generacion_ingresos').insert(p),null);m.textContent=r===null?'No se pudo registrar.':'Generación registrada.';if(r!==null){fi.reset();$('b23257Date').value=today();loadIncome()}}}var fj=$('b23257JForm');if(fj&&!fj.dataset.wired){fj.dataset.wired='1';fj.onsubmit=async function(e){e.preventDefault();var c=db(),m=$('b23257JMsg');if(!c){m.textContent='Conecta Supabase.';return}var f=await safe(c.from('fuentes_ingreso').select('id').eq('nombre','Uber / inDrive').maybeSingle(),null);if(!f){m.textContent='No existe la fuente Uber / inDrive.';return}var net=+$('b23257JNetInput').value||0,cost=+$('b23257JCost').value||0,state=$('b23257JState').value,p={fuente_id:f.id,actividad:'Resultado Control de Jornada',descripcion:$('b23257JRef').value.trim()||'Integración financiera de jornada',fecha_generacion:$('b23257JDate').value,monto_bruto:net+cost,costos:cost,comisiones:0,estado_cobro:state,fecha_cobro:state==='cobrado'?$('b23257JDate').value:null,notas:'Origen: Control de Jornada'};var r=await safe(c.from('generacion_ingresos').insert(p),null);m.textContent=r===null?'No se pudo integrar.':'Resultado integrado: '+money(net)+'.';if(r!==null){fj.reset();$('b23257JDate').value=today();loadJobs()}}}}
-function show(id){var t=document.querySelector('.tabs');if(!t)return false;if(id==='ingresos'||id==='jornadas'){moduleHtml();document.querySelectorAll('.tab').forEach(function(s){s.classList.toggle('hidden',s.id!==id)});document.querySelectorAll('.tabs button[data-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.tab===id)});localStorage.setItem('cf_active_tab_v2',id);wireForms();if(id==='ingresos')loadIncome();else loadJobs();return true}return false}
-function install(){var t=document.querySelector('.tabs');if(!t)return false;nav();moduleHtml();wireForms();['ingresos','jornadas'].forEach(function(id){var b=t.querySelector('button[data-tab="'+id+'"]');if(b&&!b.dataset.b23257){b.dataset.b23257='1';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();show(id)})}});removeMore();return true}
-function footer(){var f=$('b23257-footer');if(!f){f=document.createElement('footer');f.id='b23257-footer';f.setAttribute('data-deploy-id',VERSION);f.style.cssText='margin:24px 10px 12px;padding:10px 12px;text-align:center;font:600 11px/1.4 system-ui,sans-serif;color:#64748b;border-top:1px solid #e5e7eb';f.textContent='Paquete desplegado: '+VERSION;document.body.appendChild(f)}else f.textContent='Paquete desplegado: '+VERSION}
+function forceModule(id){
+  if(id!=='ingresos'&&id!=='jornadas')return false;
+  var s=$(id);
+  var expected=id==='ingresos'?'b23257IncomeForm':'b23257JForm';
+  if(!s || !$(expected)){ if(s)s.remove(); moduleHtml(); }
+  return !!$(id);
+}
+function show(id){
+  var t=document.querySelector('.tabs');if(!t)return false;
+  if(id==='ingresos'||id==='jornadas'){
+    forceModule(id);
+    document.querySelectorAll('.tab').forEach(function(s){s.classList.toggle('hidden',s.id!==id)});
+    document.querySelectorAll('.tabs button[data-tab]').forEach(function(b){b.classList.toggle('active',b.dataset.tab===id)});
+    localStorage.setItem('cf_active_tab_v2',id); wireForms();
+    if(id==='ingresos')loadIncome();else loadJobs(); return true;
+  } return false;
+}
+function bindModuleAccess(){
+  if(window.__B23258_MODULE_ACCESS__)return; window.__B23258_MODULE_ACCESS__=true;
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.tabs button[data-tab="ingresos"],.tabs button[data-tab="jornadas"]'); if(!b)return;
+    var id=b.dataset.tab; e.preventDefault(); e.stopImmediatePropagation(); show(id);
+  },true);
+}
+function install(){var t=document.querySelector('.tabs');if(!t)return false;nav();moduleHtml();wireForms();bindModuleAccess();['ingresos','jornadas'].forEach(function(id){var b=t.querySelector('button[data-tab="'+id+'"]');if(b&&!b.dataset.b23257){b.dataset.b23257='1';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();show(id)})}});removeMore();return true}
+function footer(){var f=$('b23258-footer');if(!f){f=document.createElement('footer');f.id='b23258-footer';f.setAttribute('data-deploy-id',VERSION);f.style.cssText='margin:24px 10px 12px;padding:10px 12px;text-align:center;font:600 11px/1.4 system-ui,sans-serif;color:#64748b;border-top:1px solid #e5e7eb';f.textContent='Paquete desplegado: '+VERSION;document.body.appendChild(f)}else f.textContent='Paquete desplegado: '+VERSION}
 function boot(){if(install())footer();else setTimeout(boot,300)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-setInterval(function(){removeMore();nav();footer()},1500);
+setInterval(function(){removeMore();nav();bindModuleAccess();footer()},1500);
 })();
