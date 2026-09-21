@@ -1,0 +1,12 @@
+B232.53 — CIERRE SPRINT CALENDARIO P2.1
+
+Incluye B232.52.3 (Operaciones restaurado) y B232.26.1 (Calendario Integral).
+
+B232.26.1 reemplaza funcionalmente la vista estática/legacy del calendario y deja un único propietario visual.
+Incluye: navegación mensual, Hoy, Actualizar, 6 KPIs, calendario 42 celdas, selección diaria, ingresos/egresos reales, ingresos futuros, gastos planificados, compromisos, cuotas de deuda, generación multifuente, saldo acumulado, flujo, proyección y detalle diario.
+
+Se eliminó el guard de polling del B232.26 original: no usa setInterval ni MutationObserver.
+
+index.html ya incorpora: B232.26.1-calendario-integral.js?v=232.26.1
+
+Despliegue: reemplazar los archivos del paquete y realizar recarga completa de GitHub Pages.
