@@ -1,0 +1,14 @@
+B232.52.3 — CORRECCIÓN FUNCIONAL DE OPERACIONES
+
+Corrige la regresión visual/funcional posterior a B232.52.2.
+
+Se restaura en Operaciones:
+- Cuentas con saldos.
+- Próximas obligaciones con fecha y monto.
+- Botón Actualizar Operaciones.
+
+Además, Operaciones deja de limitar obligaciones al horizonte de 30 días. Ese horizonte queda reservado para Planificación financiera.
+
+Se mantiene B232.52.2 como base segura para Planificación y se modifica únicamente renderOps().
+
+Cache busting: B232.52-planificacion-safe.js?v=232.52.3

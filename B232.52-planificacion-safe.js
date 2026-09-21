@@ -1,5 +1,5 @@
 /* ============================================================
-   B232.52.2 · PLANIFICACIÓN SAFE
+   B232.52.3 · PLANIFICACIÓN SAFE
    Reemplaza únicamente el módulo B232.31/232.32 defectuoso.
    - API compatible: B23232Planificacion.mount/render
    - Router compatible: CCFRouter.show/normalize/refreshModule
@@ -24,12 +24,12 @@ function db(){
   try{
     window.supabaseClient=window.supabase.createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}});
     return window.supabaseClient;
-  }catch(e){console.error('[B232.52.2] Supabase',e);return null}
+  }catch(e){console.error('[B232.52.3] Supabase',e);return null}
 }
 
 async function read(query,fallback=[]){
-  try{const r=await query;if(r.error){console.warn('[B232.52.2]',r.error.message);return fallback}return r.data||fallback}
-  catch(e){console.warn('[B232.52.2]',e);return fallback}
+  try{const r=await query;if(r.error){console.warn('[B232.52.3]',r.error.message);return fallback}return r.data||fallback}
+  catch(e){console.warn('[B232.52.3]',e);return fallback}
 }
 
 function styles(){
@@ -125,7 +125,7 @@ async function renderPlan(){
   box.innerHTML=`
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div><div class="muted" style="font-size:11px">B232.52.2 · PLANIFICACIÓN SEGURA</div>
+      <div><div class="muted" style="font-size:11px">B232.52.3 · PLANIFICACIÓN SEGURA</div>
       <h2>Planificación financiera</h2>
       <p class="muted">Escenario de 30 días basado en liquidez, ingresos futuros y obligaciones registradas.</p></div>
       <button type="button" id="b23252PlanRefresh">Actualizar Planificación</button>
@@ -165,25 +165,73 @@ async function renderPlan(){
 
 async function renderOps(){
   normalize('operaciones');
-  const c=db();if(!c)return;
-  const t=today(),end=addDays(t,29);
+  const c=db(); if(!c)return;
+
+  // Operaciones mantiene una vista global de cuentas y obligaciones.
+  // El horizonte de 30 días pertenece exclusivamente a Planificación.
   const [close,banks,inc,exp,comm,quota]=await Promise.all([
     read(c.from('cierres_financieros').select('saldo_efectivo_actual').eq('activo',true).order('fecha_corte',{ascending:false}).limit(1)),
-    read(c.from('cuentas_bancarias').select('saldo_actual').eq('activa',true)),
-    read(c.from('ingresos_futuros').select('monto').gte('fecha',t).lte('fecha',end)),
-    read(c.from('gastos_planificados').select('monto').gte('fecha',t).lte('fecha',end)),
-    read(c.from('compromisos').select('monto').eq('estado','pendiente').gte('fecha_vencimiento',t).lte('fecha_vencimiento',end)),
-    read(c.from('cuotas_deuda').select('monto').in('estado',['pendiente','vencida']).gte('fecha_vencimiento',t).lte('fecha_vencimiento',end))
+    read(c.from('cuentas_bancarias').select('nombre_banco,nombre_cuenta,tipo_cuenta,saldo_actual,activa').eq('activa',true).order('nombre_banco')),
+    read(c.from('ingresos_futuros').select('monto,fecha,concepto').gte('fecha',today())),
+    read(c.from('gastos_planificados').select('monto,fecha,concepto,categoria').gte('fecha',today())),
+    read(c.from('compromisos').select('monto,fecha_vencimiento,concepto,categoria,estado').eq('estado','pendiente').order('fecha_vencimiento',{ascending:true})),
+    read(c.from('cuotas_deuda').select('monto,fecha_vencimiento,numero_cuota,estado').in('estado',['pendiente','vencida']).order('fecha_vencimiento',{ascending:true}))
   ]);
-  const liq=Number(close[0]?.saldo_efectivo_actual||0)+banks.reduce((s,x)=>s+Number(x.saldo_actual||0),0);
+
+  const liquidity=Number(close[0]?.saldo_efectivo_actual||0)+banks.reduce((s,x)=>s+Number(x.saldo_actual||0),0);
   const future=inc.reduce((s,x)=>s+Number(x.monto||0),0);
-  const obligations=exp.reduce((s,x)=>s+Number(x.monto||0),0)+comm.reduce((s,x)=>s+Number(x.monto||0),0)+quota.reduce((s,x)=>s+Number(x.monto||0),0);
-  if($('f24Liq'))$('f24Liq').textContent=money(liq);
+  const obligations=
+    exp.reduce((s,x)=>s+Number(x.monto||0),0)+
+    comm.reduce((s,x)=>s+Number(x.monto||0),0)+
+    quota.reduce((s,x)=>s+Number(x.monto||0),0);
+  const projected=liquidity+future-obligations;
+
+  if($('f24Liq'))$('f24Liq').textContent=money(liquidity);
   if($('f24Future'))$('f24Future').textContent=money(future);
   if($('f24Oblig'))$('f24Oblig').textContent=money(obligations);
-  if($('f24Proj'))$('f24Proj').textContent=money(liq+future-obligations);
-}
+  if($('f24Proj'))$('f24Proj').textContent=money(projected);
 
+  const accountRows=banks.map(x=>`
+    <div class="b23252-row">
+      <span>${esc(x.nombre_banco||'Banco')}<small>${esc(x.nombre_cuenta||x.tipo_cuenta||'Cuenta')}</small></span>
+      <strong>${money(x.saldo_actual)}</strong>
+    </div>`).join('');
+
+  const obligationRows=[
+    ...comm.map(x=>({date:x.fecha_vencimiento,name:x.concepto||'Compromiso',amount:x.monto})),
+    ...quota.map(x=>({date:x.fecha_vencimiento,name:'Cuota de deuda',amount:x.monto}))
+  ].filter(x=>Number(x.amount||0)>0)
+   .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+
+  const obligationHtml=obligationRows.slice(0,30).map(x=>`
+    <div class="b23252-row">
+      <span>${esc(x.name)}<small>${esc(x.date||'')}</small></span>
+      <strong>${money(x.amount)}</strong>
+    </div>`).join('');
+
+  const host=$('operaciones');
+  if(host){
+    let grid=host.querySelector('.b23252-ops-grid');
+    if(!grid){
+      const card=host.querySelector('.card');
+      grid=document.createElement('div');
+      grid.className='b23252-grid b23252-ops-grid';
+      grid.innerHTML=`
+        <div class="card"><h2>Cuentas</h2><div id="f24Accounts"></div></div>
+        <div class="card"><h2>Próximas obligaciones</h2><div id="f24ObligList"></div></div>`;
+      if(card)card.insertAdjacentElement('afterend',grid);else host.appendChild(grid);
+
+      const actions=document.createElement('div');
+      actions.className='card b23252-ops-actions';
+      actions.innerHTML='<button type="button" id="f24OpsRefresh">Actualizar Operaciones</button>';
+      host.appendChild(actions);
+      $('f24OpsRefresh')?.addEventListener('click',()=>renderOps());
+    }
+    if($('f24Accounts'))$('f24Accounts').innerHTML=accountRows||'<p class="muted">Sin cuentas activas.</p>';
+    if($('f24ObligList'))$('f24ObligList').innerHTML=obligationHtml||'<p class="muted">Sin obligaciones próximas.</p>';
+  }
+  return true;
+}
 async function refreshModule(id){
   if(id==='planificacion')return renderPlan();
   if(id==='operaciones')return renderOps();
