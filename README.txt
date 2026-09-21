@@ -1,15 +1,17 @@
-B232.55 — MENÚ PRINCIPAL + MÓDULOS INTEGRADOS + IDENTIFICADOR
+B232.60 — RELEASE FINAL — INTEGRACIÓN REAL CON B232.23
 
-Instalación:
-1. Reemplazar el contenido de B232.54-menu-principal.js por B232.55-menu-principal-final.js, manteniendo el src existente; o cambiar el src de index.html al nuevo archivo.
-2. Recargar la aplicación.
+CAUSA CORREGIDA
+app.js captura los clics de .tabs en fase capture, ejecuta navigateTab() y, para ingresos/jornadas, llama window.b219Show(id). Las versiones anteriores no exponían correctamente ese contrato, por lo que se mantenía el placeholder.
 
-Correcciones:
-- elimina completamente Más y sus contenedores;
-- muestra Motor Multifuente y Control de Jornada directamente;
-- elimina los placeholders y monta vistas funcionales completas;
-- mantiene Supabase y la lógica financiera existente;
-- inserta el identificador visible: Paquete desplegado: B232.55-MENU-FINAL.
+SOLUCIÓN
+Esta versión define explícitamente window.b219Show(id), reemplaza los placeholders por las vistas reales, cablea formularios, carga Supabase y conserva la navegación existente.
 
-Validación estática: node --check OK.
-No se considera publicado hasta verificar el pie visible en la URL de producción.
+INSTALACIÓN
+Reemplazar ÚNICAMENTE B232.54-menu-principal.js.
+No agregar otro script. No modificar index.html ni Supabase.
+
+VALIDACIÓN
+- Motor Multifuente debe abrir Generación de ingresos.
+- Control de Jornada debe abrir su vista funcional.
+- Debe aparecer: Paquete desplegado: B232.60-RELEASE-MODULOS-REALES
+- No debe aparecer el texto de placeholder.
