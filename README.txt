@@ -1,17 +1,15 @@
-B232.54.1 — CORRECCIÓN FINAL DEL MENÚ PRINCIPAL
+B232.55 — MENÚ PRINCIPAL + MÓDULOS INTEGRADOS + IDENTIFICADOR
 
-Objetivo:
-- Eliminar completamente el botón "Más".
-- Mostrar directamente "Motor Multifuente" y "Control de Jornada".
-- Evitar que los placeholders de B232.51.3 impidan que B219 monte las vistas reales.
-- Mantener intacta la lógica financiera y Supabase.
+Instalación:
+1. Reemplazar el contenido de B232.54-menu-principal.js por B232.55-menu-principal-final.js, manteniendo el src existente; o cambiar el src de index.html al nuevo archivo.
+2. Recargar la aplicación.
 
-Archivo a reemplazar en la rama Punto-referencia:
-B232.54-menu-principal.js
+Correcciones:
+- elimina completamente Más y sus contenedores;
+- muestra Motor Multifuente y Control de Jornada directamente;
+- elimina los placeholders y monta vistas funcionales completas;
+- mantiene Supabase y la lógica financiera existente;
+- inserta el identificador visible: Paquete desplegado: B232.55-MENU-FINAL.
 
-Validación:
-- Sintaxis JavaScript comprobada con node --check.
-- SHA-256 del archivo: 352f45f39f0828135eb45c575055b6c2400aea5a615f4ffb0e2a0b0e448ff907
-
-Nota:
-La integración GitHub disponible en esta sesión permite lectura, pero la escritura devuelve HTTP 403 (Resource not accessible by integration). Por eso este paquete contiene la corrección lista para reemplazo manual.
+Validación estática: node --check OK.
+No se considera publicado hasta verificar el pie visible en la URL de producción.
