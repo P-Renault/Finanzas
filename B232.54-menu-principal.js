@@ -4,9 +4,9 @@
 */
 (function(){
 'use strict';
-if(window.__B23260_RELEASE__) return;
-window.__B23260_RELEASE__=true;
-var VERSION='B232.61-RELEASE-MODULOS-REALES-FINAL';
+if(window.__B23262_RELEASE__) return;
+window.__B23262_RELEASE__=true;
+var VERSION='B232.62-RELEASE-MODULOS-REALES-FINAL-SIN-BUCLE';
 var $=function(id){return document.getElementById(id)};
 var money=function(n){return new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0)};
 var today=function(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -53,6 +53,6 @@ window.b219Show=function(id){
 };
 function footer(){var f=$('b23260-footer');if(!f){f=document.createElement('footer');f.id='b23260-footer';f.style.cssText='margin:24px 10px 12px;padding:10px 12px;text-align:center;font:600 11px/1.4 system-ui,sans-serif;color:#64748b;border-top:1px solid #e5e7eb';document.body.appendChild(f)}f.textContent='Paquete desplegado: '+VERSION}
 function enforce(){nav();ensureReal('ingresos',incomeHtml);ensureReal('jornadas',jobsHtml);wire()}
-function boot(){enforce();footer();if(window.MutationObserver){var root=$('app')||document.body;new MutationObserver(function(){enforce()}).observe(root,{childList:true,subtree:true})}}
+function boot(){enforce();footer();if(window.MutationObserver){var root=$('app')||document.body;var busy=false;var mo=new MutationObserver(function(){if(busy)return;busy=true;mo.disconnect();try{var hasPlaceholder=isPlaceholder($('ingresos'))||isPlaceholder($('jornadas'));var missing=!$('ingresos')||!$('jornadas')||!document.querySelector('.tabs button[data-tab=\"ingresos\"]')||!document.querySelector('.tabs button[data-tab=\"jornadas\"]');if(hasPlaceholder||missing)enforce()}finally{busy=false;mo.observe(root,{childList:true,subtree:true})}});mo.observe(root,{childList:true,subtree:true})}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
