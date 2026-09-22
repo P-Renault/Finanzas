@@ -1,58 +1,41 @@
-B232.66 — ABONO DEUDA -> LIQUIDEZ REAL
-======================================
+B232.67 — CORRECCIÓN MOVIMIENTOS → LIQUIDEZ
 
-Hallazgo corregido
-------------------
-B231.3-abonos-parciales.js registra el movimiento, pago_deuda y saldo de deuda,
-pero no modifica cierres_financieros.saldo_efectivo_actual ni cuentas_bancarias.saldo_actual.
-B232.65 ya contenía la RPC transaccional registrar_pago_deuda_liquidez_v1, pero la UI de
-abonos no la estaba utilizando.
+DIAGNÓSTICO CONFIRMADO
+El movimiento ID 80 ($8.474) quedó:
+- medio_pago = NULL
+- cuenta_id = NULL
+- naturaleza = NULL
+- liquidez_aplicada = false
 
-Este paquete corrige exactamente ese puente sin reemplazar el módulo completo de Deudas.
+La causa es que app.js mantiene un handler legacy de movForm que inserta
+directamente en public.movimientos, sin usar el RPC B2.21.
 
-ARCHIVOS
---------
-1) B232.66-ABONO-LIQUIDEZ.js
-   Cargar DESPUÉS de b231.3-abonos-parciales.js.
-   Intercepta únicamente los botones data-b2313-abono="true" y registra el abono mediante
-   registrar_pago_deuda_liquidez_v1.
-
-2) B232.65_LIQUIDEZ_INTEGRACION.sql
-   Es el SQL transaccional requerido por la función de abono de deuda.
-   Si ya ejecutaste B232.65_LIQUIDEZ_INTEGRACION.sql, NO necesitas ejecutarlo nuevamente.
+SOLUCIÓN
+Este paquete instala un propietario de captura sobre movForm.
+Antes de que se ejecuten los handlers legacy:
+- intercepta el submit;
+- usa registrar_movimiento_liquidez_v1 para nuevos movimientos;
+- usa actualizar_movimiento_liquidez_v1 para ediciones;
+- aplica efectivo/cuenta bancaria;
+- aplica naturaleza;
+- impide doble registro;
+- conserva el comportamiento de fechas futuras.
 
 DESPLIEGUE
-----------
-En index.html, después de:
-<script src="b231.3-abonos-parciales.js?v=231.3"></script>
+Agregar en index.html, después de los módulos existentes:
 
-agregar:
-<script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66"></script>
+<script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
 
-No reemplaza B232.65-menu-principal.js.
+No reemplaza B232.65 ni B232.66.
 
-COMPORTAMIENTO
---------------
-- El usuario selecciona monto, medio de liquidez y fecha real.
-- Efectivo descuenta cierres_financieros.saldo_efectivo_actual.
-- Cuenta bancaria descuenta cuentas_bancarias.saldo_actual.
-- El mismo RPC registra movimiento + pago_deuda + reducción de deuda + cuota.
-- La operación es transaccional: si falla la validación, no queda el descuento parcial.
-- Un abono parcial deja la cuota pendiente.
-- No permite pagar más que el saldo restante de la cuota.
-- No permite fecha futura.
-
-VALIDACIÓN
-----------
-Antes: $27.346 de liquidez total en la captura de prueba.
-Para un abono de $7.000 en efectivo, el saldo esperado es $20.346,
-siempre que los $27.346 sean la liquidez vigente y no haya otra operación simultánea.
-
-Footer visible:
-B232.66-RELEASE-ABONO-LIQUIDEZ
+PRUEBA
+1. Crear un gasto nuevo de $1.000 en efectivo.
+2. Debe crearse un solo movimiento.
+3. liquidez_aplicada debe quedar true.
+4. saldo_efectivo_actual debe bajar exactamente $1.000.
+5. No debe aparecer un segundo movimiento.
+6. Footer visible: B232.67-RELEASE-MOVIMIENTOS-LIQUIDEZ
 
 IMPORTANTE
-----------
-Este paquete no publica en GitHub automáticamente.
-No se considera desplegado hasta que el script esté referenciado por index.html y
-la aplicación muestre el footer B232.66.
+El movimiento histórico ID 80 no se corrige automáticamente. Primero se valida
+el nuevo circuito para evitar doble descuento del gasto que ya existe.
