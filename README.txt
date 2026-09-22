@@ -1,83 +1,58 @@
-B232.65 — INTEGRACIÓN REAL DE LIQUIDEZ
-==============================================
+B232.66 — ABONO DEUDA -> LIQUIDEZ REAL
+======================================
 
-Objetivo
---------
-Cerrar el circuito financiero entre:
-1) Control de Jornada y liquidez.
-2) Deudas/pagos y liquidez.
+Hallazgo corregido
+------------------
+B231.3-abonos-parciales.js registra el movimiento, pago_deuda y saldo de deuda,
+pero no modifica cierres_financieros.saldo_efectivo_actual ni cuentas_bancarias.saldo_actual.
+B232.65 ya contenía la RPC transaccional registrar_pago_deuda_liquidez_v1, pero la UI de
+abonos no la estaba utilizando.
+
+Este paquete corrige exactamente ese puente sin reemplazar el módulo completo de Deudas.
 
 ARCHIVOS
 --------
-- B232.65-menu-principal.js
-  Reemplaza únicamente el archivo desplegado como B232.54-menu-principal.js
-  (el archivo que actualmente contiene el puente B2.19/B232.64).
-- B232.65_LIQUIDEZ_INTEGRACION.sql
-  Debe ejecutarse UNA vez en Supabase SQL Editor antes de probar el JS.
+1) B232.66-ABONO-LIQUIDEZ.js
+   Cargar DESPUÉS de b231.3-abonos-parciales.js.
+   Intercepta únicamente los botones data-b2313-abono="true" y registra el abono mediante
+   registrar_pago_deuda_liquidez_v1.
 
-ORDEN DE DESPLIEGUE
--------------------
-1. Ejecutar B232.65_LIQUIDEZ_INTEGRACION.sql en Supabase.
-2. Reemplazar B232.54-menu-principal.js por B232.65-menu-principal.js.
-3. Recargar la aplicación con caché actualizado.
-4. Verificar footer visible:
-   B232.65-RELEASE-INTEGRACION-LIQUIDEZ
+2) B232.65_LIQUIDEZ_INTEGRACION.sql
+   Es el SQL transaccional requerido por la función de abono de deuda.
+   Si ya ejecutaste B232.65_LIQUIDEZ_INTEGRACION.sql, NO necesitas ejecutarlo nuevamente.
+
+DESPLIEGUE
+----------
+En index.html, después de:
+<script src="b231.3-abonos-parciales.js?v=231.3"></script>
+
+agregar:
+<script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66"></script>
+
+No reemplaza B232.65-menu-principal.js.
 
 COMPORTAMIENTO
 --------------
-Control de Jornada:
-- Cobrado + fecha actual/pasada:
-  genera registro en generacion_ingresos,
-  crea movimiento de ingreso,
-  aumenta liquidez en efectivo o cuenta seleccionada.
-- Pendiente:
-  registra la generación sin aumentar liquidez.
-- Fecha futura:
-  no altera liquidez actual.
+- El usuario selecciona monto, medio de liquidez y fecha real.
+- Efectivo descuenta cierres_financieros.saldo_efectivo_actual.
+- Cuenta bancaria descuenta cuentas_bancarias.saldo_actual.
+- El mismo RPC registra movimiento + pago_deuda + reducción de deuda + cuota.
+- La operación es transaccional: si falla la validación, no queda el descuento parcial.
+- Un abono parcial deja la cuota pendiente.
+- No permite pagar más que el saldo restante de la cuota.
+- No permite fecha futura.
 
-Deudas:
-- Pago total de cuota:
-  crea pago_deuda + movimiento de gasto,
-  reduce saldo de deuda y liquidez.
-- Abono parcial:
-  crea pago_deuda + movimiento de gasto,
-  reduce saldo de deuda y liquidez,
-  mantiene la cuota pendiente hasta completar su saldo.
-- No permite pagar más que el saldo pendiente de la cuota.
-- No permite descontar liquidez dos veces dentro de una misma operación.
+VALIDACIÓN
+----------
+Antes: $27.346 de liquidez total en la captura de prueba.
+Para un abono de $7.000 en efectivo, el saldo esperado es $20.346,
+siempre que los $27.346 sean la liquidez vigente y no haya otra operación simultánea.
 
-VALIDACIÓN MÍNIMA
------------------
-A) Jornada:
-   1. Registrar una jornada cobrada de $10.000.
-   2. Elegir efectivo.
-   3. Confirmar que aparece en historial.
-   4. Confirmar que liquidez aumenta exactamente $10.000.
-   5. Repetir con una cuenta bancaria y verificar su saldo.
+Footer visible:
+B232.66-RELEASE-ABONO-LIQUIDEZ
 
-B) Jornada pendiente:
-   Registrar $10.000 como pendiente.
-   Confirmar que la liquidez NO cambia.
-
-C) Deuda:
-   Registrar/pagar una cuota de $10.000.
-   Confirmar que deuda disminuye $10.000 y liquidez disminuye $10.000.
-
-D) Abono:
-   En una cuota de $10.000, abonar $4.000.
-   Confirmar:
-   - deuda -$4.000
-   - liquidez -$4.000
-   - cuota permanece pendiente con $6.000 por pagar.
-
-E) Saldo insuficiente:
-   Intentar pagar más que la liquidez disponible.
-   Debe rechazar la operación sin dejar movimiento ni cambio parcial.
-
-NOTAS
------
-- El paquete NO publica en GitHub.
-- No requiere modificar index.html.
-- El footer visible identifica el despliegue.
-- La función SQL usa transacciones implícitas de PostgreSQL para que los cambios
-  de una misma llamada RPC sean atómicos.
+IMPORTANTE
+----------
+Este paquete no publica en GitHub automáticamente.
+No se considera desplegado hasta que el script esté referenciado por index.html y
+la aplicación muestre el footer B232.66.
