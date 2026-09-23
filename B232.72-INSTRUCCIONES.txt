@@ -1,0 +1,23 @@
+B232.72-RELEASE-AUTH-BRIDGE-FIX
+
+Instalación:
+1. Mantener B232.69 y B232.70.
+2. No es necesario mantener B232.71; esta versión lo reemplaza.
+3. Cargar DESPUÉS de B232.70:
+   <script src="B232.72-AUTH-BRIDGE-FIX.js?v=232.72"></script>
+4. No reemplazar app.js ni los módulos financieros.
+5. Recargar con caché limpia.
+
+Prueba:
+- Supabase Authentication: Confirm email = OFF.
+- Abrir https://p-renault.github.io/Finanzas
+- Crear la cuenta.
+- Si la cuenta se crea y existe sesión, debe abrir el Control Financiero.
+- Debe aparecer el identificador B232.72-RELEASE-AUTH-BRIDGE-FIX.
+
+Resultado esperado:
+Auth y el motor financiero utilizan el mismo cliente Supabase autenticado.
+No se crea un segundo cliente financiero con sesión independiente.
+
+Luego de validar la creación de cuenta, se configura SMTP + Site URL/Redirect URLs
+y se vuelve a activar Confirm email.
