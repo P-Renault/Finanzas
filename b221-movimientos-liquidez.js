@@ -5,18 +5,13 @@
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
 const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
-
-// B2.6-D.2: reutiliza el cliente autenticado existente y no crea un cliente paralelo.
 const getDb=()=>{
- const c=(window.B20_AUTH&&window.B20_AUTH.client)
-   ||window.db
-   ||window.supabaseClient
-   ||null;
+ const c=(window.B20_AUTH&&window.B20_AUTH.client)||window.db||window.supabaseClient||null;
  if(c){window.db=c;window.supabaseClient=c}
  return c;
 };
-
 let accounts=[];
+
 async function loadAccounts(){
  const c=getDb(); if(!c)return [];
  const r=await c.from('cuentas_bancarias').select('id,nombre_banco,nombre_cuenta,saldo_actual,activa').eq('activa',true).order('nombre_banco');
@@ -75,7 +70,10 @@ async function openEdit(s){
  $('movSubmit').textContent='Guardar cambios';$('movCancel').classList.remove('hidden');
  document.querySelector('[data-tab="movimientos"]')?.click();scrollTo({top:0,behavior:'smooth'});
 }
-function enhanceEdit(){window.editMovEncoded=openEdit}
+function enhanceEdit(){
+ const old=window.editMovEncoded;
+ window.editMovEncoded=openEdit;
+}
 async function refreshKPIs(){
  const c=getDb();if(!c)return;
  const [{data:mov},{data:payments}]=await Promise.all([

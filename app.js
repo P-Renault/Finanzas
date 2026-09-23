@@ -10,10 +10,9 @@ async function connect(){
   const url=$('supabaseUrl').value.trim(),key=$('supabaseKey').value.trim();
   if(!url||!key)return msg('configMsg','Completa ambos campos.');
   try{
-    // B2.6-D.2: reutiliza el cliente/sesión autenticada existente.
     db=(window.B20_AUTH&&window.B20_AUTH.client)
-      ? window.B20_AUTH.client
-      : (window.supabaseClient || window.supabase.createClient(url,key,{
+      ?window.B20_AUTH.client
+      :(window.supabaseClient||window.supabase.createClient(url,key,{
           auth:{persistSession:true,autoRefreshToken:true}
         }));
     window.db=db;
@@ -40,8 +39,6 @@ async function connect(){
 $('saveConfig').onclick=connect;
 $('logoutBtn').onclick=()=>{localStorage.removeItem('sf_url');localStorage.removeItem('sf_key');location.reload()};
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
-
-// ---------- Movimientos ----------
 $('movForm').onsubmit=async e=>{e.preventDefault();msg('movMsg','Guardando...');const id=$('movId').value,p={tipo:$('movTipo').value,fecha:$('movFecha').value,monto:Number($('movMonto').value),categoria:$('movCategoria').value.trim(),descripcion:$('movDescripcion').value.trim()};const r=id?await db.from('movimientos').update(p).eq('id',id):await db.from('movimientos').insert(p);if(r.error)return msg('movMsg',r.error.message);msg('movMsg',id?'Movimiento actualizado.':'Movimiento guardado.');resetMov();await refresh()};
 $('movCancel').onclick=resetMov;
 function resetMov(){$('movForm').reset();$('movId').value='';$('movFormTitle').textContent='Registrar movimiento';$('movSubmit').textContent='Guardar movimiento';$('movCancel').classList.add('hidden');$('movFecha').value=today()}
@@ -49,23 +46,17 @@ function encodeObj(r){return btoa(unescape(encodeURIComponent(JSON.stringify(r))
 function decodeObj(s){try{return JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){return null}}
 window.editMovEncoded=s=>{const r=decodeObj(s);if(!r)return;$('movId').value=r.id;$('movTipo').value=r.tipo;$('movFecha').value=r.fecha;$('movMonto').value=r.monto;$('movCategoria').value=r.categoria||'';$('movDescripcion').value=r.descripcion||'';$('movFormTitle').textContent='Editar movimiento';$('movSubmit').textContent='Guardar cambios';$('movCancel').classList.remove('hidden');document.querySelector('[data-tab="movimientos"]').click();scrollTo({top:0,behavior:'smooth'})};
 window.deleteMov=async id=>{if(!confirm('¿Eliminar este movimiento?'))return;const{error}=await db.from('movimientos').delete().eq('id',id);if(error)return alert(error.message);await refresh()};
-
-// ---------- Compromisos ----------
 $('futureForm').onsubmit=async e=>{e.preventDefault();msg('futureMsg','Guardando...');const id=$('futureId').value,p={concepto:$('futureConcepto').value.trim(),fecha_vencimiento:$('futureFecha').value,monto:Number($('futureMonto').value),categoria:$('futureCategoria').value.trim(),periodicidad:$('futureRecurrence').value,notas:$('futureNotas').value.trim()};const r=id?await db.from('compromisos').update(p).eq('id',id):await db.from('compromisos').insert({...p,estado:'pendiente'});if(r.error)return msg('futureMsg',r.error.message);msg('futureMsg',id?'Compromiso actualizado.':'Compromiso creado.');resetFuture();await refresh()};
 $('futureCancel').onclick=resetFuture;
 function resetFuture(){$('futureForm').reset();$('futureId').value='';$('futureFormTitle').textContent='Crear pago o compromiso futuro';$('futureSubmit').textContent='Crear compromiso';$('futureCancel').classList.add('hidden');$('futureFecha').value=today()}
 window.editFutureEncoded=s=>{const r=decodeObj(s);if(!r)return;$('futureId').value=r.id;$('futureConcepto').value=r.concepto||'';$('futureFecha').value=r.fecha_vencimiento;$('futureMonto').value=r.monto;$('futureCategoria').value=r.categoria||'';$('futureRecurrence').value=r.periodicidad||'unico';$('futureNotas').value=r.notas||'';$('futureFormTitle').textContent='Editar compromiso';$('futureSubmit').textContent='Guardar cambios';$('futureCancel').classList.remove('hidden');document.querySelector('[data-tab="futuros"]').click();scrollTo({top:0,behavior:'smooth'})};
 window.deleteFuture=async id=>{if(!confirm('¿Eliminar este compromiso?'))return;const{error}=await db.from('compromisos').delete().eq('id',id);if(error)return alert(error.message);await refresh()};
-window.markPaid=async id=>{const{error}=await db.from('compromisos').update({estado:'pagado'}).eq('id',id);if(error)return alert(error.message);await refresh()};
-
-// ---------- Ahorro ----------
+window.markPaid=async id=>{const{error}=await db.from('compromisos').update({estado:'pagado'}).eq('id',id);if(error)return alert(error.message)};
 $('savingForm').onsubmit=async e=>{e.preventDefault();msg('savingMsg','Guardando...');const id=$('savingId').value,p={tipo:$('savingTipo').value,fecha:$('savingFecha').value,monto:Number($('savingMonto').value),descripcion:$('savingDescripcion').value.trim()};const r=id?await db.from('ahorro').update(p).eq('id',id):await db.from('ahorro').insert(p);if(r.error)return msg('savingMsg',r.error.message);msg('savingMsg',id?'Registro actualizado.':'Movimiento de ahorro guardado.');resetSaving();await refresh()};
 $('savingCancel').onclick=resetSaving;
 function resetSaving(){$('savingForm').reset();$('savingId').value='';$('savingFormTitle').textContent='Fondo de ahorro';$('savingSubmit').textContent='Registrar';$('savingCancel').classList.add('hidden');$('savingFecha').value=today()}
 window.editSavingEncoded=s=>{const r=decodeObj(s);if(!r)return;$('savingId').value=r.id;$('savingTipo').value=r.tipo;$('savingFecha').value=r.fecha;$('savingMonto').value=r.monto;$('savingDescripcion').value=r.descripcion||'';$('savingFormTitle').textContent='Editar ahorro';$('savingSubmit').textContent='Guardar cambios';$('savingCancel').classList.remove('hidden');document.querySelector('[data-tab="ahorro"]').click();scrollTo({top:0,behavior:'smooth'})};
 window.deleteSaving=async id=>{if(!confirm('¿Eliminar este registro de ahorro?'))return;const{error}=await db.from('ahorro').delete().eq('id',id);if(error)return alert(error.message);await refresh()};
-
-// ---------- Calendario ----------
 let calendarMonth=new Date();
 let calendarSelectedDate=today();
 function ym(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
