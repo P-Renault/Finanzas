@@ -1,0 +1,27 @@
+B232.73-RELEASE-AUTH-CORE-BRIDGE
+
+PROBLEMA RESUELTO
+B232.72 intentaba asignar desde un overlay externo el binding `db` declarado como `let db` dentro de app.js. Eso provoca "db is not defined".
+
+INSTALACION
+1. Mantener B232.69 y B232.70.
+2. Eliminar cualquier referencia a B232.71-AUTH-BRIDGE.js y B232.72-AUTH-BRIDGE-FIX.js.
+3. Agregar B232.73-AUTH-CORE-BRIDGE.js DESPUES de B232.70 y de app.js.
+4. No modificar módulos financieros ni tablas Supabase.
+5. Publicar y recargar con limpieza de caché (o cambiar ?v=232.73).
+
+ORDEN ESPERADO
+app.js
+B232.69-AUTH.js
+B232.70-AUTH-FIX.js
+B232.73-AUTH-CORE-BRIDGE.js
+
+VALIDACION
+- Debe desaparecer el error "db is not defined".
+- Con sesión válida, debe ocultarse el login y aparecer el Control Financiero.
+- El pie visible debe mostrar B232.73-RELEASE-AUTH-CORE-BRIDGE.
+- El mismo cliente Auth persistente debe ser reutilizado por el motor financiero.
+- No se crean tablas ni se modifican datos por este paquete.
+
+SHA-256 JS: 31048583b6d6d31a7f382f2b053cd9a2bf96bcb4e88b92b6c400eed925757303
+SHA-256 ZIP: 7609159863675a69adf81d22758f02d50e522ae1512382faa98bebef9af87d78
