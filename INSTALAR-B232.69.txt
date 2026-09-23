@@ -1,0 +1,52 @@
+B232.69-RELEASE-AUTH-FUNDACION
+
+OBJETIVO
+Activar la fundación de autenticación sin modificar datos financieros, migraciones ni RLS.
+
+ARCHIVO A AGREGAR
+B232.69-AUTH.js
+
+ORDEN OBLIGATORIO EN index.html
+1. CDN de Supabase
+2. B232.69-AUTH.js
+3. app.js
+
+Ejemplo:
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="B232.69-AUTH.js?v=232.69"></script>
+<script src="app.js?v=232.23"></script>
+
+IMPORTANTE
+- No reemplazar app.js en esta etapa.
+- No ejecutar SQL.
+- No activar RLS todavía.
+- No migrar ni modificar registros existentes.
+- El publishable key queda embebido en el frontend; no usar service_role/sb_secret.
+- B232.69 elimina la dependencia de introducir URL/key manualmente.
+
+COMPORTAMIENTO
+- Sin sesión: muestra acceso/registro y oculta la aplicación financiera.
+- Con sesión existente: recupera sesión y abre la aplicación.
+- Login: Supabase Auth.
+- Registro: Supabase Auth por correo/contraseña.
+- Sesión: persistente en almacenamiento del navegador y con renovación automática.
+- Logout: cierre real de sesión Supabase.
+- Footer visible: B232.69-RELEASE-AUTH-FUNDACION.
+
+VALIDACIÓN
+A) Abrir en incógnito: debe aparecer Acceso al Control Financiero.
+B) Crear una cuenta de prueba.
+C) Si Supabase exige confirmación, confirmar correo.
+D) Iniciar sesión.
+E) Debe aparecer la aplicación financiera y el footer B232.69-RELEASE-AUTH-FUNDACION.
+F) Cerrar pestaña, abrir nuevamente: la sesión debe recuperarse si el navegador conserva los datos del sitio.
+G) Cerrar sesión: debe volver al acceso.
+H) Verificar que movimientos/deudas/liquidez existentes NO fueron modificados.
+
+LÍMITE
+B232.69 no resuelve todavía:
+- recuperación de contraseña (B232.70),
+- perfil/foto (B232.71),
+- vinculación de datos históricos (B232.72),
+- RLS por usuario (B232.73),
+- QA de cierre (B232.74).
