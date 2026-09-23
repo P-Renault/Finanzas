@@ -1,0 +1,33 @@
+B232.74 — AUTH SESSION PERSISTENCE
+
+OBJETIVO
+Persistir la sesión de Supabase en el navegador y activar renovación automática del token.
+No modifica tablas, datos, RLS, deudas, liquidez ni módulos financieros.
+
+ORDEN DE CARGA CRÍTICO
+Este archivo debe cargarse ANTES de B232.73-RELEASE-AUTH-CORE-BRIDGE.
+
+Ejemplo:
+<script src="B232.74-AUTH-SESSION-PERSISTENCE.js?v=232.74"></script>
+<script src="B232.73-RELEASE-AUTH-CORE-BRIDGE.js?v=232.73"></script>
+
+VALIDACIÓN
+1. Iniciar sesión correctamente.
+2. Confirmar que aparece el pie B232.74-RELEASE-AUTH-SESSION-PERSISTENCE.
+3. Recargar la página.
+4. La aplicación debe volver a abrir sin pedir login.
+5. Cerrar completamente el navegador y abrir nuevamente la URL.
+6. La sesión debe mantenerse.
+7. Entrar a Deudas y confirmar que siguen apareciendo:
+   Ver detalle / Editar / Eliminar / Registrar abono / Pagar próxima cuota.
+8. Ejecutar una consulta financiera normal.
+9. Cerrar sesión mediante el flujo disponible; la sesión local debe finalizar.
+
+ROLLBACK
+Eliminar únicamente la etiqueta <script> de B232.74 y volver a cargar la aplicación.
+No se requiere cambio de base de datos.
+
+NOTA
+El archivo fuerza persistSession=true y autoRefreshToken=true en los clientes Supabase
+creados después de su carga. Esto es intencional para compatibilidad con la arquitectura
+actual y B232.73.
