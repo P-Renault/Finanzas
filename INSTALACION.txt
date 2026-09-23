@@ -1,0 +1,40 @@
+B232.68-CCF-DEUDA-DUAL
+
+OBJETIVO
+Separar en el Centro de Control Financiero:
+- Deuda total pendiente: SUM(deudas.saldo_actual) de deudas vigentes.
+- Obligaciones programadas: mantiene el KPI existente y su cálculo de proyección.
+- Deuda no reflejada en cuotas: deuda total menos cuotas pendientes/vencidas/atrasadas.
+
+SEGURIDAD
+Este release es solo de lectura/presentación. NO modifica:
+- deudas
+- cuotas_deuda
+- pagos_deuda
+- movimientos
+- liquidez
+- cuentas_bancarias
+- cierres_financieros
+
+INSTALACIÓN
+1. Copiar B232.68-CCF-DEUDA-DUAL.js al repositorio.
+2. En index.html, después de:
+   <script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
+   agregar:
+   <script src="B232.68-CCF-DEUDA-DUAL.js?v=232.68"></script>
+3. Desplegar.
+4. Recargar con caché limpia si es necesario.
+
+VALIDACIÓN ESPERADA
+- KPI 'Deuda total pendiente': $28.547.614
+- KPI 'Obligaciones programadas': $23.955.614
+- KPI 'Deuda no reflejada en cuotas': $4.592.000
+- Saldo disponible real: $4.151
+- Ingresos proyectados: $1.378.884
+- Saldo proyectado: -$22.572.579
+- Brecha financiera: $23.951.463
+- La proyección NO debe cambiar por la incorporación de los nuevos KPI.
+- Debe aparecer al pie del Centro de Control: B232.68-CCF-DEUDA-DUAL
+
+ROLLBACK
+Eliminar la línea <script> de B232.68 del index.html y retirar el archivo JS. No hay cambios de datos que revertir.
