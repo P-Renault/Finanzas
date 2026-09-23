@@ -1,0 +1,51 @@
+B232.70-RELEASE-AUTH-FIX
+
+OBJETIVO
+Corregir el registro de cuentas de B232.69 para producción:
+https://p-renault.github.io/Finanzas
+
+CAMBIO CLAVE
+B232.69 enviaba emailRedirectTo automáticamente al ejecutar signUp().
+B232.70 NO envía emailRedirectTo hasta que la URL esté explícitamente permitida en Supabase.
+Supabase utilizará la Site URL configurada en Authentication -> URL Configuration.
+
+ORDEN EN index.html
+1. CDN Supabase
+2. B232.69-AUTH.js
+3. B232.70-AUTH-FIX.js
+4. app.js
+
+Ejemplo:
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="B232.69-AUTH.js?v=232.69"></script>
+<script src="B232.70-AUTH-FIX.js?v=232.70"></script>
+<script src="app.js?v=232.23"></script>
+
+IMPORTANTE
+- B232.70 es un puente correctivo sobre B232.69.
+- NO ejecutar SQL.
+- NO modificar movimientos, deudas, liquidez ni datos existentes.
+- NO activar RLS.
+- NO cambiar la publishable key.
+- La clave sb_publishable puede permanecer en frontend; nunca usar sb_secret/service_role.
+
+VALIDACIÓN
+1. Abrir https://p-renault.github.io/Finanzas en incógnito.
+2. Abrir Crear cuenta.
+3. Usar correo de prueba nuevo.
+4. Crear cuenta.
+5. Debe mostrar éxito o el error exacto devuelto por Supabase.
+6. Revisar Authentication -> Users: debe aparecer el usuario si signup fue exitoso.
+7. Si aparece el usuario pero no llega correo, revisar SMTP/Email Provider.
+8. Probar Iniciar sesión después de confirmar correo.
+9. Comprobar persistencia cerrando y reabriendo el navegador.
+
+CONFIGURACIÓN RECOMENDADA EN SUPABASE
+Authentication -> URL Configuration:
+Site URL: https://p-renault.github.io/Finanzas
+Redirect URL: https://p-renault.github.io/Finanzas
+
+Esta configuración permite posteriormente usar emailRedirectTo de forma segura.
+
+FOOTER VISIBLE
+B232.70-RELEASE-AUTH-FIX
