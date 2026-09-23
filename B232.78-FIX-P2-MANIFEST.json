@@ -1,0 +1,8 @@
+{
+  "release": "B232.78-FIX-P2",
+  "visible_identifier": "B232.78-FIX-P2",
+  "scope": "RPC ownership hardening",
+  "preserves_signatures": true,
+  "target_functions": 6,
+  "next_validation": "B232.79 isolation and regression tests"
+}
