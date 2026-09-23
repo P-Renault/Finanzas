@@ -1,33 +1,22 @@
 /*
   B232.73-RELEASE-AUTH-CORE-BRIDGE
+  CONSOLIDATED FIX — B232.75 GLOBAL AUTH CLIENT BRIDGE
 
-  Corrección de raíz del puente Auth -> motor financiero.
+  This file preserves the working Auth -> app bridge and additionally
+  forces every financial module to reuse the SAME authenticated Supabase
+  client. This prevents secondary clients created with persistSession:false
+  from losing auth.uid() and triggering RLS failures.
 
-  Diagnóstico B232.72:
-  El app.js declara `let db=null` como binding léxico. Un overlay externo
-  no puede garantizar la asignación de ese binding mediante `window.db`.
-  B232.72 intentaba asignarlo directamente y por eso aparece:
-  "El motor financiero no expone su cliente db: db is not defined".
-
-  Estrategia B232.73:
-  1) Reutiliza el mismo cliente Supabase Auth persistente de B232.70.
-  2) Conserva la función `connect()` original del app.js.
-  3) Intercepta SOLO durante esa ejecución `supabase.createClient()` para
-     que el app.js asigne su propio `db` al cliente Auth.
-  4) Restaura inmediatamente createClient para no alterar otros módulos.
-  5) Expone un nuevo window.connect que devuelve true al Auth controller.
-  6) No escribe datos, no cambia tablas, no cambia RLS y no crea un segundo
-     cliente financiero.
-
-  Dependencia de instalación:
-  - Mantener B232.69 y B232.70.
-  - Retirar B232.71 y B232.72.
-  - Cargar este archivo DESPUÉS de B232.70 y DESPUÉS de app.js.
+  Scope:
+  - Auth/session persistence: preserved.
+  - Calendar/data reads: preserved.
+  - All financial modules: unified on the authenticated client.
+  - No SQL, RLS, RPC or financial data changes.
 */
 (() => {
   'use strict';
 
-  const VERSION = 'B232.73-RELEASE-AUTH-CORE-BRIDGE';
+  const VERSION = 'B232.75-CONSOLIDATED-AUTH-CORE-BRIDGE';
   const SUPABASE_URL = 'https://xgxvdbgmwvncmfdcxgsf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_fJqOSLC7dhYKttuU1uAvcQ_AX-aH4PB';
 
@@ -52,7 +41,6 @@
     if (!badge) {
       badge = document.createElement('div');
       badge.id = 'b23273-bridge-badge';
-      badge.textContent = VERSION;
       badge.style.cssText =
         'position:fixed;bottom:0;left:0;right:0;z-index:99999;' +
         'padding:5px 8px;text-align:center;background:#f8fafc;' +
@@ -60,42 +48,121 @@
         'font:600 10px/1.2 system-ui,sans-serif;letter-spacing:.04em;';
       document.body.appendChild(badge);
     }
+    badge.textContent = VERSION;
   }
 
   function getClient() {
-    return window.__B23270_CLIENT__ ||
+    return window.__B23275_CLIENT__ ||
+           window.__B23270_CLIENT__ ||
            window.__B23269_CLIENT__ ||
+           window.__B23273_CLIENT__ ||
            window.supabaseClient ||
            null;
   }
 
+  function publishClient(client) {
+    if (!client) return null;
+    window.__B23275_CLIENT__ = client;
+    window.__B23273_CLIENT__ = client;
+    window.__B23270_CLIENT__ = client;
+    window.__B23269_CLIENT__ = client;
+    window.supabaseClient = client;
+    window.db = client;
+    return client;
+  }
+
+  /*
+   * CRITICAL FIX:
+   * Every later module may call window.supabase.createClient().
+   * For this project, return the already-authenticated client instead
+   * of creating a second client without the active Auth session.
+   */
+  function installGlobalClientBridge() {
+    if (!window.supabase?.createClient) return false;
+    if (window.__B23275_CREATECLIENT_PATCHED__) return true;
+
+    const originalCreateClient =
+      window.supabase.createClient.bind(window.supabase);
+
+    window.supabase.createClient = function(url, key, options) {
+      const normalized = String(url || '').replace(/\/+$/, '');
+      const shared = getClient();
+
+      if (shared && normalized === SUPABASE_URL) {
+        return publishClient(shared);
+      }
+
+      return originalCreateClient(url, key, options);
+    };
+
+    window.__B23275_ORIGINAL_CREATECLIENT__ = originalCreateClient;
+    window.__B23275_CREATECLIENT_PATCHED__ = true;
+    return true;
+  }
+
+  function installAuthCss() {
+    if (document.getElementById('b23275-auth-css')) return;
+    const style = document.createElement('style');
+    style.id = 'b23275-auth-css';
+    style.textContent = `
+      #b23269-auth-panel.hidden,
+      #configPanel.hidden {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function syncAuthUi() {
+    const client = getClient();
+    if (!client?.auth) return;
+
+    client.auth.getSession().then(({data}) => {
+      if (data?.session) {
+        document.getElementById('b23269-auth-panel')?.classList.add('hidden');
+        document.getElementById('configPanel')?.classList.add('hidden');
+        document.getElementById('logoutBtn')?.classList.remove('hidden');
+      }
+    }).catch(() => {});
+  }
+
   function ensureClient() {
     const existing = getClient();
-    if (existing) return existing;
+    if (existing) {
+      publishClient(existing);
+      return existing;
+    }
 
     if (!window.supabase?.createClient) {
       throw new Error('No se cargó la biblioteca de Supabase.');
     }
 
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
+    /*
+     * This is only a safety fallback. Normally B232.70 creates the
+     * authenticated client before this bridge is needed.
+     */
+    const client = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
       }
-    });
+    );
 
-    window.__B23273_CLIENT__ = client;
-    window.__B23270_CLIENT__ = client;
-    window.__B23269_CLIENT__ = client;
-    window.supabaseClient = client;
-    return client;
+    return publishClient(client);
   }
 
   async function waitForClient() {
     for (let i = 0; i < 100; i++) {
       const existing = getClient();
-      if (existing) return existing;
+      if (existing) {
+        publishClient(existing);
+        return existing;
+      }
 
       try {
         return ensureClient();
@@ -108,16 +175,15 @@
 
   async function boot() {
     try {
+      /*
+       * Install the permanent bridge BEFORE the dynamic financial modules
+       * are released by index.html.
+       */
+      installAuthCss();
+      installGlobalClientBridge();
+
       const client = await waitForClient();
 
-      // Capturamos el connect ORIGINAL del app.js antes de reemplazarlo.
-      const originalConnect = window.connect;
-      if (typeof originalConnect !== 'function') {
-        throw new Error('No se encontró connect() del motor financiero.');
-      }
-
-      // La configuración queda disponible para el app.js legacy, pero el
-      // cliente real siempre será el cliente Auth persistente de B232.70.
       try {
         localStorage.setItem('sf_url', SUPABASE_URL);
         localStorage.setItem('sf_key', SUPABASE_KEY);
@@ -128,9 +194,15 @@
       if (urlInput) urlInput.value = SUPABASE_URL;
       if (keyInput) keyInput.value = SUPABASE_KEY;
 
+      const originalConnect = window.connect;
+      if (typeof originalConnect !== 'function') {
+        throw new Error('No se encontró connect() del motor financiero.');
+      }
+
       async function connectThroughCore() {
         const authClient = await waitForClient();
         const supabaseApi = window.supabase;
+
         if (!supabaseApi || typeof supabaseApi.createClient !== 'function') {
           throw new Error('La biblioteca Supabase no está disponible.');
         }
@@ -138,9 +210,11 @@
         const originalCreateClient = supabaseApi.createClient;
         let restored = false;
 
-        // El app.js ejecutará:
-        //   db = window.supabase.createClient(...)
-        // y, por tanto, asignará SU PROPIO `db` léxico al cliente Auth.
+        /*
+         * During legacy connect(), app.js executes:
+         * db = window.supabase.createClient(...)
+         * so its lexical `db` receives the authenticated client.
+         */
         supabaseApi.createClient = function b23273ReuseAuthClient() {
           return authClient;
         };
@@ -149,16 +223,18 @@
           await originalConnect();
         } finally {
           if (!restored) {
+            /*
+             * Restore the GLOBAL bridge that was active before the
+             * temporary connect() interception.
+             */
             supabaseApi.createClient = originalCreateClient;
             restored = true;
           }
         }
 
-        window.supabaseClient = authClient;
-        window.__B23273_CLIENT__ = authClient;
-
-        // El connect legacy no devuelve un booleano en éxito. Para el
-        // controlador B232.70, esta capa devuelve explícitamente true.
+        publishClient(authClient);
+        installGlobalClientBridge();
+        syncAuthUi();
         return true;
       }
 
@@ -166,7 +242,7 @@
 
       markVisible();
 
-      const { data, error } = await client.auth.getSession();
+      const {data, error} = await client.auth.getSession();
       if (error) throw error;
 
       if (data?.session) {
@@ -176,17 +252,27 @@
       } else {
         status('Sin sesión activa. Inicia sesión o crea una cuenta.');
       }
+
+      syncAuthUi();
+
     } catch (e) {
-      console.error('[B232.73] boot:', e);
-      status('B232.73: no se pudo enlazar Auth → motor financiero: ' +
-        (e?.message || String(e)), true);
+      console.error('[B232.75] boot:', e);
+      status(
+        'B232.75: no se pudo enlazar Auth → motor financiero: ' +
+        (e?.message || String(e)),
+        true
+      );
       markVisible();
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot, { once: true });
+    document.addEventListener('DOMContentLoaded', boot, {once:true});
   } else {
     boot();
   }
+
+  console.info(
+    `[${VERSION}] cliente Auth único compartido por todos los módulos.`
+  );
 })();
