@@ -1,10 +1,12 @@
 /* FINANZAS B2.21 — Motor de Movimientos + Liquidez
-   B2.6-D.2: reutiliza el cliente autenticado existente.
+   Integra movimientos reales con efectivo/cuentas y separa gasto de pago de deuda.
 */
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
 const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+
+// B2.6-D.2: reutiliza el cliente autenticado existente y no crea un cliente paralelo.
 const getDb=()=>{
  const c=(window.B20_AUTH&&window.B20_AUTH.client)
    ||window.db
@@ -13,16 +15,92 @@ const getDb=()=>{
  if(c){window.db=c;window.supabaseClient=c}
  return c;
 };
+
 let accounts=[];
-async function loadAccounts(){const c=getDb();if(!c)return[];const r=await c.from('cuentas_bancarias').select('id,nombre_banco,nombre_cuenta,saldo_actual,activa').eq('activa',true).order('nombre_banco');accounts=r.error?[]:(r.data||[]);return accounts}
-function injectFields(){const form=$('movForm');if(!form||$('b221FinanceBox'))return;const box=document.createElement('div');box.id='b221FinanceBox';box.className='full';box.innerHTML=`<div class="b221-finance"><div><b>Impacto financiero</b><small>Define dónde sale o entra realmente el dinero.</small></div><label>Medio<select id="b221Medium"><option value="efectivo">Efectivo / caja</option><option value="cuenta_bancaria">Cuenta bancaria</option></select></label><label id="b221AccountWrap" style="display:none">Cuenta<select id="b221Account"></select></label><label>Naturaleza<select id="b221Nature"><option value="gasto">Gasto operativo</option><option value="ingreso">Ingreso real</option></select></label></div>`;form.querySelector('.form-actions')?.before(box);$('b221Medium').onchange=toggleAccount;$('movTipo').addEventListener('change',()=>{$('b221Nature').value=$('movTipo').value==='ingreso'?'ingreso':'gasto'})}
-function fillAccounts(selected=''){const s=$('b221Account');if(!s)return;s.innerHTML='<option value="">Seleccionar cuenta…</option>'+accounts.map(a=>`<option value="${a.id}">${a.nombre_banco} · ${a.nombre_cuenta} · ${money(a.saldo_actual)}</option>`).join('');if(selected)s.value=String(selected)}
+async function loadAccounts(){
+ const c=getDb(); if(!c)return [];
+ const r=await c.from('cuentas_bancarias').select('id,nombre_banco,nombre_cuenta,saldo_actual,activa').eq('activa',true).order('nombre_banco');
+ accounts=r.error?[]:(r.data||[]);
+ return accounts;
+}
+function injectFields(){
+ const form=$('movForm'); if(!form||$('b221FinanceBox'))return;
+ const box=document.createElement('div');box.id='b221FinanceBox';box.className='full';
+ box.innerHTML=`<div class="b221-finance"><div><b>Impacto financiero</b><small>Define dónde sale o entra realmente el dinero.</small></div>
+ <label>Medio<select id="b221Medium"><option value="efectivo">Efectivo / caja</option><option value="cuenta_bancaria">Cuenta bancaria</option></select></label>
+ <label id="b221AccountWrap" style="display:none">Cuenta<select id="b221Account"></select></label>
+ <label>Naturaleza<select id="b221Nature"><option value="gasto">Gasto operativo</option><option value="ingreso">Ingreso real</option></select></label></div>`;
+ form.querySelector('.form-actions')?.before(box);
+ $('b221Medium').onchange=toggleAccount;
+ $('b221Nature').onchange=()=>{ if($('movTipo')) $('b221Nature').value=$('movTipo').value; };
+ $('movTipo').addEventListener('change',()=>{$('b221Nature').value=$('movTipo').value==='ingreso'?'ingreso':'gasto'});
+}
+function fillAccounts(selected=''){
+ const s=$('b221Account');if(!s)return;
+ s.innerHTML='<option value="">Seleccionar cuenta…</option>'+accounts.map(a=>`<option value="${a.id}">${a.nombre_banco} · ${a.nombre_cuenta} · ${money(a.saldo_actual)}</option>`).join('');
+ if(selected)s.value=String(selected);
+}
 function toggleAccount(){const bank=$('b221Medium').value==='cuenta_bancaria';$('b221AccountWrap').style.display=bank?'flex':'none'}
-function getValues(){return{tipo:$('movTipo').value,fecha:$('movFecha').value,monto:Number($('movMonto').value),categoria:$('movCategoria').value.trim()||null,descripcion:$('movDescripcion').value.trim()||null,medio_pago:$('b221Medium').value,cuenta_id:$('b221Medium').value==='cuenta_bancaria'?Number($('b221Account').value):null,naturaleza:$('b221Nature').value}}
-async function saveMovement(e){e.preventDefault();const c=getDb();if(!c){$('movMsg').textContent='Conecta Supabase.';return}const id=$('movId').value,p=getValues();if(!p.monto||p.monto<=0){$('movMsg').textContent='Ingresa un monto válido.';return}if(p.medio_pago==='cuenta_bancaria'&&!p.cuenta_id){$('movMsg').textContent='Selecciona la cuenta bancaria.';return}$('movMsg').textContent='Aplicando movimiento y actualizando liquidez…';const rpc=id?await c.rpc('actualizar_movimiento_liquidez_v1',{p_movimiento_id:Number(id),p_tipo:p.tipo,p_fecha:p.fecha,p_monto:p.monto,p_categoria:p.categoria,p_descripcion:p.descripcion,p_medio_pago:p.medio_pago,p_cuenta_id:p.cuenta_id,p_naturaleza:p.naturaleza}):await c.rpc('registrar_movimiento_liquidez_v1',{p_tipo:p.tipo,p_fecha:p.fecha,p_monto:p.monto,p_categoria:p.categoria,p_descripcion:p.descripcion,p_medio_pago:p.medio_pago,p_cuenta_id:p.cuenta_id,p_naturaleza:p.naturaleza});if(rpc.error){$('movMsg').textContent=rpc.error.message;return}$('movMsg').textContent=id?'Movimiento y liquidez actualizados.':'Movimiento registrado y liquidez actualizada.';if(typeof window.resetMov==='function')window.resetMov();else{$('movForm').reset();$('movFecha').value=today()}await refresh()}
-async function openEdit(s){let r=null;try{r=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(_){return}if(!r)return;$('movId').value=r.id;$('movTipo').value=r.tipo;$('movFecha').value=r.fecha;$('movMonto').value=r.monto;$('movCategoria').value=r.categoria||'';$('movDescripcion').value=r.descripcion||'';await loadAccounts();fillAccounts(r.cuenta_id||'');$('b221Medium').value=r.medio_pago||'efectivo';toggleAccount();$('b221Nature').value=r.naturaleza||r.tipo;$('movFormTitle').textContent='Editar movimiento · liquidez';$('movSubmit').textContent='Guardar cambios';$('movCancel').classList.remove('hidden');document.querySelector('[data-tab="movimientos"]')?.click();scrollTo({top:0,behavior:'smooth'})}
+function getValues(){
+ return {
+  tipo:$('movTipo').value,fecha:$('movFecha').value,monto:Number($('movMonto').value),
+  categoria:$('movCategoria').value.trim()||null,descripcion:$('movDescripcion').value.trim()||null,
+  medio_pago:$('b221Medium').value,cuenta_id:$('b221Medium').value==='cuenta_bancaria'?Number($('b221Account').value):null,
+  naturaleza:$('b221Nature').value
+ };
+}
+async function saveMovement(e){
+ e.preventDefault();
+ const c=getDb();if(!c){$('movMsg').textContent='Conecta Supabase.';return}
+ const id=$('movId').value, p=getValues();
+ if(!p.monto||p.monto<=0){$('movMsg').textContent='Ingresa un monto válido.';return}
+ if(p.medio_pago==='cuenta_bancaria'&&!p.cuenta_id){$('movMsg').textContent='Selecciona la cuenta bancaria.';return}
+ $('movMsg').textContent='Aplicando movimiento y actualizando liquidez…';
+ const rpc=id
+  ? await c.rpc('actualizar_movimiento_liquidez_v1',{p_movimiento_id:Number(id),p_tipo:p.tipo,p_fecha:p.fecha,p_monto:p.monto,p_categoria:p.categoria,p_descripcion:p.descripcion,p_medio_pago:p.medio_pago,p_cuenta_id:p.cuenta_id,p_naturaleza:p.naturaleza})
+  : await c.rpc('registrar_movimiento_liquidez_v1',{p_tipo:p.tipo,p_fecha:p.fecha,p_monto:p.monto,p_categoria:p.categoria,p_descripcion:p.descripcion,p_medio_pago:p.medio_pago,p_cuenta_id:p.cuenta_id,p_naturaleza:p.naturaleza});
+ if(rpc.error){$('movMsg').textContent=rpc.error.message;return}
+ $('movMsg').textContent=id?'Movimiento y liquidez actualizados.':'Movimiento registrado y liquidez actualizada.';
+ if(typeof window.resetMov==='function')window.resetMov();else{$('movForm').reset();$('movFecha').value=today()}
+ await refresh();
+}
+async function openEdit(s){
+ let r=null;try{r=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(_){return;}if(!r)return;
+ $('movId').value=r.id;$('movTipo').value=r.tipo;$('movFecha').value=r.fecha;$('movMonto').value=r.monto;
+ $('movCategoria').value=r.categoria||'';$('movDescripcion').value=r.descripcion||'';
+ await loadAccounts();fillAccounts(r.cuenta_id||'');
+ $('b221Medium').value=r.medio_pago||'efectivo';toggleAccount();
+ $('b221Nature').value=r.naturaleza||r.tipo;
+ $('movFormTitle').textContent='Editar movimiento · liquidez';
+ $('movSubmit').textContent='Guardar cambios';$('movCancel').classList.remove('hidden');
+ document.querySelector('[data-tab="movimientos"]')?.click();scrollTo({top:0,behavior:'smooth'});
+}
 function enhanceEdit(){window.editMovEncoded=openEdit}
-async function refreshKPIs(){const c=getDb();if(!c)return;const[{data:mov},{data:payments}]=await Promise.all([c.from('movimientos').select('id,tipo,fecha,monto,naturaleza,liquidez_aplicada'),c.from('pagos_deuda').select('movimiento_id')]);const debtIds=new Set((payments||[]).map(x=>Number(x.movimiento_id)).filter(Boolean));const t=today(),prefix=t.slice(0,7),real=(mov||[]).filter(x=>x.fecha<=t),income=real.filter(x=>x.tipo==='ingreso'&&x.fecha.startsWith(prefix)).reduce((s,x)=>s+Number(x.monto),0),expense=real.filter(x=>x.tipo==='gasto'&&x.fecha.startsWith(prefix)&&!debtIds.has(Number(x.id))).reduce((s,x)=>s+Number(x.monto),0),debt=real.filter(x=>x.tipo==='gasto'&&x.fecha.startsWith(prefix)&&debtIds.has(Number(x.id))).reduce((s,x)=>s+Number(x.monto),0);let box=document.getElementById('b221DebtKpi');if(!box){const host=document.querySelector('#dashboard .cards');if(host){box=document.createElement('article');box.id='b221DebtKpi';box.className='metric';host.appendChild(box)}}if(box)box.innerHTML=`<span>Pagos de deuda del mes</span><strong>${money(debt)}</strong>`;const g=$('gastosMes');if(g)g.textContent=money(expense);const im=$('ingresosMes');if(im)im.textContent=money(income)}
-function boot(){injectFields();loadAccounts().then(()=>{fillAccounts();toggleAccount()});const form=$('movForm');if(form)form.onsubmit=saveMovement;enhanceEdit();[900,1800,3000].forEach(ms=>setTimeout(refreshKPIs,ms));const obs=new MutationObserver(()=>{injectFields();if(!$('b221Account')||!accounts.length)loadAccounts().then(()=>fillAccounts())});const root=$('movimientos');if(root)obs.observe(root,{childList:true,subtree:true})}
+async function refreshKPIs(){
+ const c=getDb();if(!c)return;
+ const [{data:mov},{data:payments}]=await Promise.all([
+   c.from('movimientos').select('id,tipo,fecha,monto,naturaleza,liquidez_aplicada'),
+   c.from('pagos_deuda').select('movimiento_id')
+ ]);
+ const debtIds=new Set((payments||[]).map(x=>Number(x.movimiento_id)).filter(Boolean));
+ const t=today(),prefix=t.slice(0,7);
+ const real=(mov||[]).filter(x=>x.fecha<=t);
+ const income=real.filter(x=>x.tipo==='ingreso'&&x.fecha.startsWith(prefix)).reduce((s,x)=>s+Number(x.monto),0);
+ const expense=real.filter(x=>x.tipo==='gasto'&&x.fecha.startsWith(prefix)&&!debtIds.has(Number(x.id))).reduce((s,x)=>s+Number(x.monto),0);
+ const debt=real.filter(x=>x.tipo==='gasto'&&x.fecha.startsWith(prefix)&&debtIds.has(Number(x.id))).reduce((s,x)=>s+Number(x.monto),0);
+ let box=document.getElementById('b221DebtKpi');
+ if(!box){const host=document.querySelector('#dashboard .cards');if(host){box=document.createElement('article');box.id='b221DebtKpi';box.className='metric';host.appendChild(box)}}
+ if(box)box.innerHTML=`<span>Pagos de deuda del mes</span><strong>${money(debt)}</strong>`;
+ const g=$('gastosMes');if(g)g.textContent=money(exp);
+ const im=$('ingresosMes');if(im)im.textContent=money(income);
+}
+function boot(){
+ injectFields();loadAccounts().then(()=>{fillAccounts();toggleAccount()});
+ const form=$('movForm');if(form){form.onsubmit=saveMovement}
+ enhanceEdit();
+ [900,1800,3000].forEach(ms=>setTimeout(refreshKPIs,ms));
+ const obs=new MutationObserver(()=>{injectFields();if(!$('b221Account')||!accounts.length)loadAccounts().then(()=>fillAccounts())});
+ const root=$('movimientos');if(root)obs.observe(root,{childList:true,subtree:true});
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,500),{once:true});else setTimeout(boot,500);
 })();
