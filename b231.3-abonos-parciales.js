@@ -141,7 +141,6 @@
       throw new Error('El abono no puede superar el saldo de ' + money(currentBalance) + '.');
     }
 
-    /* Obtener la próxima cuota pendiente, si existe. */
     const qr = await c
       .from('cuotas_deuda')
       .select('id,monto,numero_cuota,estado,fecha_vencimiento')
@@ -154,116 +153,45 @@
     if (qr.error) throw qr.error;
 
     const quota = qr.data || null;
-    const newBalance = currentBalance - amount;
-    let movementId = null;
-    let paymentId = null;
-
-    /* 1. Movimiento real: el abono es gasto, no ingreso ni transferencia. */
-    const mr = await c
-      .from('movimientos')
-      .insert({
-        tipo: 'gasto',
-        fecha: today(),
-        monto: amount,
-        categoria: 'Deuda',
-        descripcion: `${dr.data.acreedor || debt.acreedor} — ${description || 'Abono a deuda'}`
-      })
-      .select('id')
-      .single();
-
-    if (mr.error) throw mr.error;
-    movementId = mr.data.id;
-
-    try {
-      /* 2. Registrar el pago asociado a la próxima cuota cuando existe. */
-      if (quota) {
-        const pr = await c
-          .from('pagos_deuda')
-          .insert({
-            cuota_id: quota.id,
-            fecha_pago: today(),
-            monto: amount,
-            movimiento_id: movementId
-          })
-          .select('id')
-          .single();
-
-        if (pr.error) throw pr.error;
-        paymentId = pr.data.id;
-      }
-
-      /* 3. Actualizar saldo de la deuda. */
-      const ur = await c
-        .from('deudas')
-        .update({
-          saldo_actual: newBalance,
-          estado: newBalance === 0 ? 'pagada' : dr.data.estado
-        })
-        .eq('id', debt.id)
-        .eq('saldo_actual', currentBalance);
-
-      if (ur.error) throw ur.error;
-
-      /* 4. Si el abono cubre completamente la cuota, marcarla pagada. */
-      if (quota && amount >= Number(quota.monto || 0)) {
-        const qU = await c
-          .from('cuotas_deuda')
-          .update({
-            estado: 'pagada',
-            fecha_pago: today()
-          })
-          .eq('id', quota.id);
-
-        if (qU.error) throw qU.error;
-      }
-
-      /* 5. Verificación de persistencia. */
-      const verify = await c
-        .from('deudas')
-        .select('saldo_actual,estado')
-        .eq('id', debt.id)
-        .single();
-
-      if (verify.error) throw verify.error;
-
-      const persistedBalance = Number(verify.data.saldo_actual || 0);
-      if (Math.round(persistedBalance) !== Math.round(newBalance)) {
-        throw new Error(
-          `ERROR DE PERSISTENCIA: se esperaba ${money(newBalance)} y Supabase confirmó ${money(persistedBalance)}.`
-        );
-      }
-
-      return {
-        movementId,
-        paymentId,
-        quota,
-        saldo_anterior: currentBalance,
-        saldo_nuevo: newBalance,
-        pago_total: newBalance === 0
-      };
-
-    } catch (error) {
-      /* Compensación: evitar dejar un movimiento/pago huérfano. */
-      try {
-        if (paymentId) {
-          await c.from('pagos_deuda').delete().eq('id', paymentId);
-        }
-        await c
-          .from('deudas')
-          .update({ saldo_actual: currentBalance, estado: dr.data.estado })
-          .eq('id', debt.id);
-        if (quota && amount >= Number(quota.monto || 0)) {
-          await c
-            .from('cuotas_deuda')
-            .update({ estado: quota.estado, fecha_pago: null })
-            .eq('id', quota.id);
-        }
-        if (movementId) {
-          await c.from('movimientos').delete().eq('id', movementId);
-        }
-      } catch (_) {}
-      throw error;
+    if (!quota) {
+      throw new Error(
+        'La deuda no tiene una cuota pendiente o vencida disponible para registrar el abono.'
+      );
     }
+
+    /*
+     * B2.6-D.5:
+     * La persistencia financiera se realiza mediante el RPC transaccional
+     * registrar_pago_deuda_liquidez_v1. No se escriben directamente
+     * movimientos, pagos_deuda, deudas ni cuotas_deuda.
+     */
+    const result = await c.rpc('registrar_pago_deuda_liquidez_v1', {
+      p_cuota_id: Number(quota.id),
+      p_monto: Number(amount),
+      p_fecha: today(),
+      p_medio_pago: 'efectivo',
+      p_cuenta_id: null
+    });
+
+    if (result.error) throw result.error;
+
+    const data = result.data;
+    const payload = Array.isArray(data) ? (data[0] || {}) : (data || {});
+
+    const saldoNuevo = Number(
+      payload.saldo_nuevo ??
+      payload.saldo_actual ??
+      (currentBalance - Number(amount))
+    );
+
+    return {
+      movementId: payload.movimiento_id ?? payload.movementId ?? null,
+      paymentId: payload.pago_id ?? payload.paymentId ?? null,
+      quota,
+      saldo_anterior: currentBalance,
+      saldo_nuevo: saldoNuevo,
+      pago_total: saldoNuevo === 0
+    };
   }
 
   function open(debt) {
@@ -354,11 +282,8 @@
             : `Abono registrado correctamente. Nuevo saldo: ${money(result.saldo_nuevo)}.`
         );
 
-        /* Cerrar el modal después de persistir. */
         setTimeout(async () => {
           closeModal();
-
-          /* Refrescar la aplicación sin crear otra sesión ni otro cliente. */
           try {
             if (typeof window.refresh === 'function') {
               await window.refresh();
@@ -453,11 +378,6 @@
 
   window.B2313AbonosParciales = api;
 
-  /* ============================================================
-     B231.7 — UNIFICACIÓN DE ACCIONES DE DEUDA
-     Elimina botones de pago duplicados producidos por la doble
-     carga de B220/B220.1. No elimina la acción de abono.
-     ============================================================ */
   function dedupeAllPaymentButtons() {
     const candidates = Array.from(document.querySelectorAll('button')).filter(b => {
       const t = lower(b.textContent);
@@ -496,16 +416,6 @@
     });
   }
 
-  /*
-   * B231.7 — eliminación segura de deuda con historial.
-   *
-   * No se eliminan movimientos vinculados automáticamente. La razón
-   * es preservar la trazabilidad financiera y evitar que el trigger
-   * de conciliación B2.10 intente resolver un pago que ya fue borrado.
-   * El historial de movimiento queda intacto. Si la base de datos rechaza
-   * la eliminación por una dependencia histórica, la operación se detiene
-   * sin borrar información adicional.
-   */
   async function deleteDebtSafely(id) {
     if (!confirm(
       '¿Eliminar esta deuda, sus planes, cuotas y pagos asociados?\n\n' +
@@ -528,7 +438,6 @@
       if (qr.error) throw qr.error;
       const quotaIds = (qr.data || []).map(x => x.id).filter(Boolean);
 
-      /* Desvincular el movimiento antes de eliminar el pago. */
       if (quotaIds.length) {
         const pr = await c.from('pagos_deuda')
           .select('id,cuota_id,movimiento_id')
@@ -538,10 +447,6 @@
         const payments = pr.data || [];
         const paymentIds = payments.map(x => x.id).filter(Boolean);
 
-        /*
-         * Primero anulamos la referencia al movimiento. Esto evita que
-         * la eliminación del pago deje una referencia inconsistente.
-         */
         if (paymentIds.length) {
           const un = await c.from('pagos_deuda')
             .update({ movimiento_id:null })
