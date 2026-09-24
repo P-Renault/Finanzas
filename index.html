@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
+<link rel="stylesheet" href="B234-movimientos-futuros.css?v=234.1">
 <link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.6">
 
 <title>Centro de Control Financiero · CCF-V5.0.1 + EXEC-DASH-V1.2.6</title>
@@ -452,6 +453,60 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
             <strong id="kpi-gap">$0</strong>
           </article>
 
+        </section>
+
+        <!-- B234 · MOVIMIENTOS FUTUROS DEL MES -->
+        <section id="b234-future-movements" class="future-movements panel" aria-label="Resumen mensual y movimientos futuros">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">RESUMEN MENSUAL</p>
+              <h3>Ingresos, egresos y movimientos futuros</h3>
+            </div>
+            <span id="future-month-label">Mes en curso</span>
+          </div>
+
+          <div class="future-month-summary">
+            <div class="future-month-card future-month-income">
+              <span>Ingresos del mes</span>
+              <strong id="month-income-total">$0</strong>
+            </div>
+            <div class="future-month-card future-month-expense">
+              <span>Egresos del mes</span>
+              <strong id="month-expense-total">$0</strong>
+            </div>
+            <div class="future-month-card future-month-income">
+              <span>Ingresos futuros</span>
+              <strong id="future-income-total">$0</strong>
+            </div>
+            <div class="future-month-card future-month-expense">
+              <span>Egresos futuros</span>
+              <strong id="future-expense-total">$0</strong>
+            </div>
+          </div>
+
+          <div class="future-movement-grid">
+            <section class="future-movement-column future-income-block" aria-label="Ingresos futuros">
+              <div class="future-block-heading">
+                <div>
+                  <p class="eyebrow">INGRESOS</p>
+                  <h4>Ingresos futuros</h4>
+                </div>
+                <strong id="future-income-count">0</strong>
+              </div>
+              <div id="future-income-list" class="future-movement-list" aria-live="polite">Cargando...</div>
+            </section>
+
+            <section class="future-movement-column future-expense-block" aria-label="Egresos futuros">
+              <div class="future-block-heading">
+                <div>
+                  <p class="eyebrow">EGRESOS</p>
+                  <h4>Egresos futuros</h4>
+                </div>
+                <strong id="future-expense-count">0</strong>
+              </div>
+              <div id="future-expense-list" class="future-movement-list" aria-live="polite">Cargando...</div>
+            </section>
+          </div>
         </section>
 
         <!-- MARGEN DIARIO -->
@@ -1294,6 +1349,7 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 <script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
 <script src="B232.26.4-calendario-safe.js?v=232.26.4"></script>
 <script src="B232.34-resumen-integrado.js?v=232.34"></script>
+<script src="B234-movimientos-futuros.js?v=234.1"></script>
 <script src="B232.35-cierre-resumen-ejecutivo.js?v=232.35"></script>
 <script src="B232.39-IA-FINANCIERA-DATA-BRIDGE.js?v=232.39"></script>
 <script src="B232.40-correccion-planificacion.js?v=232.40"></script>
