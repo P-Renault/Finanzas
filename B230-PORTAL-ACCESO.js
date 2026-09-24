@@ -406,7 +406,12 @@
       else await new Promise(r=>setTimeout(r,700));
       portal?.remove();
       const app=appElement();
-      if(app) app.classList.remove('hidden');
+      if(app) {
+        // El portal oculta temporalmente #app con b230-hidden-app.
+        // Al entrar al sistema hay que retirar AMBOS bloqueos.
+        app.classList.remove('hidden');
+        app.classList.remove('b230-hidden-app');
+      }
       closeModal();
     } catch(e) {
       status(e?.message || 'No fue posible abrir el sistema.', true);
