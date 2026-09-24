@@ -14,8 +14,161 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
+<link rel="stylesheet" href="B234-movimientos-futuros.css?v=234.1">
+<link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.6">
 
-<title>Centro de Control Financiero · CCF-V5.0.0</title>
+<title>Centro de Control Financiero · CCF-V5.0.1 + EXEC-DASH-V1.2.6</title>
+<style id="b23247-mobile-ux-css">
+@media (max-width:720px){
+.tabs{gap:6px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px!important}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button,button,input[type="button"],input[type="submit"]{min-height:44px;touch-action:manipulation}
+.tabs button{min-width:max-content;padding-left:12px!important;padding-right:12px!important}
+input,select,textarea{min-height:44px;font-size:16px!important}
+textarea{min-height:88px}
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#b23247-mobile-ux-panel{overflow:hidden}
+#b23247-mobile-ux-panel .b23247-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:380px){#b23247-mobile-ux-panel .b23247-grid{grid-template-columns:1fr!important}}
+</style>
+
+<style id="b23248-qa-css">
+#b23248-qa-panel .b23248-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23248-qa-panel .b23248-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23248-qa-panel .b23248-label{
+  font-size:10px;
+  color:#64748b;
+}
+#b23248-qa-panel .b23248-value{
+  font-weight:800;
+  margin-top:3px;
+}
+@media(max-width:720px){
+  #b23248-qa-panel .b23248-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:380px){
+  #b23248-qa-panel .b23248-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+
+<style id="b23249-security-css">
+#b23249-security-panel .b23249-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23249-security-panel .b23249-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23249-security-panel .b23249-label{
+  font-size:10px;
+  color:#64748b;
+}
+#b23249-security-panel .b23249-value{
+  font-weight:800;
+  margin-top:3px;
+}
+@media(max-width:720px){
+  #b23249-security-panel .b23249-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){
+  #b23249-security-panel .b23249-grid{grid-template-columns:1fr}
+}
+</style>
+
+
+<style id="b23250-errors-css">
+#b23250-errors-panel .b23250-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23250-errors-panel .b23250-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23250-errors-panel .b23250-label{font-size:10px;color:#64748b}
+#b23250-errors-panel .b23250-value{font-weight:800;margin-top:3px}
+@media(max-width:720px){
+  #b23250-errors-panel .b23250-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){
+  #b23250-errors-panel .b23250-grid{grid-template-columns:1fr}
+}
+</style>
+
+
+<script id="b23251-early-runtime-capture">
+(function(){
+  'use strict';
+  if(window.__B23251EarlyErrors) return;
+  var max=40;
+  window.__B23251EarlyErrors=[];
+  function push(item){
+    if(window.__B23251EarlyErrors.length>=max) return;
+    window.__B23251EarlyErrors.push(item);
+  }
+  function isResource(target){
+    if(!target || !target.tagName) return false;
+    return ['script','link','img','iframe','audio','video','source','object','embed','track','input']
+      .indexOf(String(target.tagName).toLowerCase())>=0;
+  }
+  function url(target){
+    if(!target) return '';
+    try{return String(target.src||target.href||target.currentSrc||target.data||'');}
+    catch(e){return '';}
+  }
+  window.addEventListener('error',function(e){
+    var target=e.target;
+    var resource=isResource(target) &&
+      !(e.error||e.filename||e.lineno||e.colno||e.message);
+    push({
+      type:resource?'resource':'error',
+      message:String(e.message||((e.error&&e.error.message)||'Error')),
+      filename:String(e.filename||''),
+      line:Number(e.lineno||0),
+      column:Number(e.colno||0),
+      tag:target&&target.tagName?String(target.tagName).toLowerCase():'',
+      resourceUrl:url(target),
+      stack:e.error&&e.error.stack?String(e.error.stack):''
+    });
+  },true);
+  window.addEventListener('unhandledrejection',function(e){
+    var reason=e.reason;
+    push({
+      type:'unhandledrejection',
+      message:reason&&reason.message?String(reason.message):String(reason||'Promise rechazada'),
+      filename:reason&&(reason.fileName||reason.filename)?String(reason.fileName||reason.filename):'',
+      line:Number(reason&&(reason.lineNumber||reason.lineno)||0),
+      column:Number(reason&&(reason.columnNumber||reason.colno)||0),
+      tag:'',
+      resourceUrl:'',
+      stack:reason&&reason.stack?String(reason.stack):''
+    });
+  },true);
+})();
+</script>
+
 </head>
 
 <body>
@@ -67,6 +220,7 @@
       <button data-tab="cuentas">Cuentas</button>
       <button data-tab="operaciones">Operaciones</button>
       <button data-tab="planificacion">Planificación</button>
+      <button data-tab="presupuesto">Presupuesto</button>
     </nav>
 
     <!-- =========================================================
@@ -76,7 +230,179 @@
          ========================================================= -->
     <section id="dashboard" class="tab">
 
-      <main id="financial-control" class="financial-control">
+
+      <!-- =========================================================
+           B232.45 · OBSERVABILIDAD SEGURA
+           Panel estático dentro de #dashboard.
+           B232.43 puede anteponer su propio panel, pero no elimina
+           este nodo porque no se observa ni se reemplaza el padre.
+           ========================================================= -->
+      <section id="b23245-observability-panel"
+               class="panel"
+               aria-label="Observabilidad B232.45"
+               style="margin:12px 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;position:relative;z-index:2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.45 · OBSERVABILIDAD SEGURA</div>
+            <div id="b23245-status" style="font-weight:800;font-size:18px;margin-top:4px;">INICIALIZANDO</div>
+          </div>
+          <button type="button" id="b23245-audit"
+                  style="border:0;border-radius:10px;padding:9px 12px;cursor:pointer;">
+            Auditar ahora
+          </button>
+        </div>
+        <div id="b23245-metrics"
+             style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">
+        </div>
+        <div id="b23245-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+          Preparando auditoría...
+        </div>
+      
+</section>
+
+      <!-- =========================================================
+           B232.46 · MANTENIMIENTO FINANCIERO
+           Validación previa de entradas + protección contra doble envío.
+           No escribe en Supabase y no modifica los motores financieros.
+           ========================================================= -->
+      <section id="b23246-maintenance-panel"
+               class="panel"
+               aria-label="Mantenimiento financiero B232.46"
+               style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.46 · MANTENIMIENTO FINANCIERO</div>
+            <div id="b23246-status" style="font-weight:800;font-size:18px;margin-top:4px;">VALIDACIONES ACTIVAS</div>
+          </div>
+          <span id="b23246-summary" style="font-size:12px;color:#64748b;">0 incidencias</span>
+        </div>
+        <div id="b23246-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+          Montos, fechas y envíos duplicados se validan antes de la escritura.
+        </div>
+      </section>
+
+<section id="b23247-mobile-ux-panel" class="panel" aria-label="UX móvil B232.47"
+style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+<div><div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.47 · UX MÓVIL</div>
+<div id="b23247-status" style="font-weight:800;font-size:18px;margin-top:4px;">ACTIVO</div></div>
+<span id="b23247-device" style="font-size:12px;color:#64748b;">Detectando pantalla…</span>
+</div>
+<div class="b23247-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Touch target</div><div style="font-weight:800;margin-top:3px;">44 px</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Campos</div><div style="font-weight:800;margin-top:3px;">16 px</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Navegación</div><div style="font-weight:800;margin-top:3px;">Táctil</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Tablas</div><div style="font-weight:800;margin-top:3px;">Scroll</div></div>
+</div>
+<div id="b23247-detail" style="margin-top:10px;font-size:12px;color:#64748b;">Mejoras táctiles activas sin modificar la lógica financiera.</div>
+
+</section>
+
+<section id="b23248-qa-panel"
+  class="panel"
+  aria-label="Control de calidad B232.48"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.48.3 · QA RUNTIME</div>
+      <div id="b23248-status" style="font-weight:800;font-size:18px;margin-top:4px;">AUDITORÍA PENDIENTE</div>
+    </div>
+    <button id="b23248-run" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Auditar ahora
+    </button>
+  </div>
+
+  <div id="b23248-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Comprobación inicial pendiente.
+  </div>
+
+  <div class="b23248-grid">
+    <div class="b23248-item">
+      <div class="b23248-label">Secciones</div>
+      <div id="b23248-sections" class="b23248-value">—</div>
+    </div>
+    <div class="b23248-item">
+      <div class="b23248-label">Scripts</div>
+      <div id="b23248-scripts" class="b23248-value">—</div>
+    </div>
+    <div class="b23248-item">
+      <div class="b23248-label">IDs duplicados</div>
+      <div id="b23248-ids" class="b23248-value">—</div>
+    </div>
+    <div class="b23248-item">
+      <div class="b23248-label">Estados bloqueados</div>
+      <div id="b23248-loading" class="b23248-value">—</div>
+    </div>
+  </div>
+
+  <div id="b23248-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    Auditoría manual disponible. No modifica datos ni operaciones.
+  </div>
+
+</section>
+
+<section id="b23249-security-panel"
+  class="panel"
+  aria-label="Auditoría de seguridad B232.49"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.49 · SEGURIDAD CLIENTE</div>
+      <div id="b23249-status" style="font-weight:800;font-size:18px;margin-top:4px;">AUDITORÍA PENDIENTE</div>
+    </div>
+    <button id="b23249-run" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Auditar ahora
+    </button>
+  </div>
+  <div id="b23249-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Comprobación inicial pendiente.
+  </div>
+  <div class="b23249-grid">
+    <div class="b23249-item"><div class="b23249-label">HTTPS</div><div id="b23249-https" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Supabase</div><div id="b23249-supabase" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Scripts mixtos</div><div id="b23249-mixed" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Credenciales sensibles</div><div id="b23249-secret" class="b23249-value">—</div></div>
+  </div>
+  <div id="b23249-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    Auditoría de configuración del cliente. No modifica datos.
+  </div>
+
+</section>
+
+<section id="b23250-errors-panel"
+  class="panel"
+  aria-label="Diagnóstico runtime B232.51.4"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.51.4 · DIAGNÓSTICO RUNTIME</div>
+      <div id="b23250-status" style="font-weight:800;font-size:18px;margin-top:4px;">MONITOR ACTIVO</div>
+    </div>
+    <button id="b23250-clear" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Limpiar
+    </button>
+  </div>
+  <div id="b23250-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Clasifica por separado errores JavaScript, promesas rechazadas y fallos de carga de recursos.
+  </div>
+  <div class="b23250-grid">
+    <div class="b23250-item"><div class="b23250-label">Errores JS</div><div id="b23250-js" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Promesas rechazadas</div><div id="b23250-rejections" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Recursos con error</div><div id="b23250-resource" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Último evento</div><div id="b23250-last" class="b23250-value">Ninguno</div></div>
+    <div class="b23250-item"><div class="b23250-label">Archivo</div><div id="b23250-file" class="b23250-value">—</div></div>
+    <div class="b23250-item"><div class="b23250-label">Línea</div><div id="b23250-line" class="b23250-value">—</div></div>
+    <div class="b23250-item"><div class="b23250-label">Columna</div><div id="b23250-column" class="b23250-value">—</div></div>
+  </div>
+  <div id="b23250-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    No registra datos financieros ni contenido de formularios.
+  </div>
+</section>
+
+<main id="financial-control" class="financial-control">
 
         <header class="summary-header">
           <div>
@@ -127,6 +453,60 @@
             <strong id="kpi-gap">$0</strong>
           </article>
 
+        </section>
+
+        <!-- B234 · MOVIMIENTOS FUTUROS DEL MES -->
+        <section id="b234-future-movements" class="future-movements panel" aria-label="Resumen mensual y movimientos futuros">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">RESUMEN MENSUAL</p>
+              <h3>Ingresos, egresos y movimientos futuros</h3>
+            </div>
+            <span id="future-month-label">Mes en curso</span>
+          </div>
+
+          <div class="future-month-summary">
+            <div class="future-month-card future-month-income">
+              <span>Ingresos del mes</span>
+              <strong id="month-income-total">$0</strong>
+            </div>
+            <div class="future-month-card future-month-expense">
+              <span>Egresos del mes</span>
+              <strong id="month-expense-total">$0</strong>
+            </div>
+            <div class="future-month-card future-month-income">
+              <span>Ingresos futuros</span>
+              <strong id="future-income-total">$0</strong>
+            </div>
+            <div class="future-month-card future-month-expense">
+              <span>Egresos futuros</span>
+              <strong id="future-expense-total">$0</strong>
+            </div>
+          </div>
+
+          <div class="future-movement-grid">
+            <section class="future-movement-column future-income-block" aria-label="Ingresos futuros">
+              <div class="future-block-heading">
+                <div>
+                  <p class="eyebrow">INGRESOS</p>
+                  <h4>Ingresos futuros</h4>
+                </div>
+                <strong id="future-income-count">0</strong>
+              </div>
+              <div id="future-income-list" class="future-movement-list" aria-live="polite">Cargando...</div>
+            </section>
+
+            <section class="future-movement-column future-expense-block" aria-label="Egresos futuros">
+              <div class="future-block-heading">
+                <div>
+                  <p class="eyebrow">EGRESOS</p>
+                  <h4>Egresos futuros</h4>
+                </div>
+                <strong id="future-expense-count">0</strong>
+              </div>
+              <div id="future-expense-list" class="future-movement-list" aria-live="polite">Cargando...</div>
+            </section>
+          </div>
         </section>
 
         <!-- MARGEN DIARIO -->
@@ -217,9 +597,90 @@
 
         </section>
 
+
+        <!-- =========================================================
+             DASHBOARD EJECUTIVO — ANTICIPACIÓN Y APOYO DE DECISIONES
+             ========================================================= -->
+        <section class="executive-dashboard" id="executive-dashboard">
+          <div class="executive-head">
+            <div>
+              <p class="eyebrow">ANÁLISIS VISUAL</p>
+              <h2>Dashboard Ejecutivo</h2>
+              <p>Anticipación de liquidez, presión financiera y apoyo cuantitativo a decisiones.</p>
+            </div>
+            <span id="executive-risk-summary">Calculando...</span>
+          </div>
+
+          <div class="executive-insights">
+            <article><span>Lectura de liquidez</span><strong id="exec-liquidity-reading">Calculando...</strong></article>
+            <article><span>Presión de obligaciones</span><strong id="exec-obligation-reading">Calculando...</strong></article>
+            <article><span>Flujo próximo</span><strong id="exec-flow-reading">Calculando...</strong></article>
+            <article><span>Generación requerida</span><strong id="exec-generation-reading">Calculando...</strong></article>
+          </div>
+
+          <div class="executive-charts" id="executive-charts">
+            <article class="executive-chart">
+              <h3>Curva de liquidez</h3>
+              <p>Trayectoria del saldo proyectado y aproximación de la reserva mínima.</p>
+              <div id="chart-liquidity"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Ingresos vs egresos</h3>
+              <p>Comparación de los flujos previstos para anticipar presión de caja.</p>
+              <div id="chart-flow"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Composición de obligaciones</h3>
+              <p>Distribución del compromiso financiero por fuente.</p>
+              <div id="chart-obligations"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Velas financieras</h3>
+              <p>Variación semanal: apertura, máximo, mínimo y cierre de liquidez.</p>
+              <div id="chart-candles"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Ventana de riesgo</h3>
+              <p>Anticipación de la primera caída bajo la reserva mínima.</p>
+              <div id="chart-risk"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Brecha y recursos</h3>
+              <p>Recursos disponibles/asegurados frente a obligaciones cuantificadas.</p>
+              <div id="chart-gap"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Deudas del mes en curso</h3>
+              <p>Deudas con fecha de inicio o vencimiento dentro del mes actual.</p>
+              <div id="chart-debt-month"></div>
+            </article>
+
+            <article class="executive-chart">
+              <h3>Backlog de deudas</h3>
+              <p>Pendientes de negociación, pago y deudas sin fecha de inicio.</p>
+              <div id="chart-debt-planning"></div>
+            </article>
+          </div>
+        </section>
+
+        <div id="executive-chart-modal" class="executive-modal" aria-hidden="true">
+          <div class="executive-modal-card">
+            <button id="executive-chart-modal-close" type="button">Cerrar</button>
+            <h2 id="executive-chart-modal-title">Gráfico financiero</h2>
+            <div id="executive-chart-modal-body"></div>
+          </div>
+        </div>
+
       </main>
 
     </section>
+
 
     <!-- =========================================================
          MOVIMIENTOS
@@ -532,7 +993,8 @@
       <div class="card">
         <h2>Historial de ahorro</h2>
         <div id="ahorroLista"></div>
-      </div>
+</div>
+</div>
 
     </section>
 
@@ -548,7 +1010,7 @@
      CORE
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=220.2"></script>
+<script src="app.js?v=232.23"></script>
 
 <!-- =============================================================
      CARGA CONTROLADA DE MÓDULOS
@@ -564,13 +1026,9 @@
   var summaryLoaded = false;
 
   var legacyModules = [
-    'b219-arquitectura-navegacion.js?v=231.7-R4',
     'b220-motor-ejecucion-financiera.js?v=231.7-R4',
     'b220.2-puente-ejecucion.js?v=231.7-R4',
     'b221-movimientos-liquidez.js?v=231.7-R4',
-    'b222-centro-operaciones.js?v=231.7-R4',
-    'b223-centro-operaciones-planificacion-fix.js?v=231.7-R4',
-    'b224.1-planificacion-integrada.js?v=231.7-R4',
     'b227-ia-financiera.js?v=231.7-R4',
     'b229-movimientos-fondos.js?v=231.7-R4',
     'finanzas-v233.js?v=231.7-R4',
@@ -578,19 +1036,10 @@
     'b231.1-persistencia-deuda-sin-fecha.js?v=231.7-R4',
     'b231.2-deudas-fecha.js?v=231.7-R4',
     'b231.3-abonos-parciales.js?v=231.7-R4',
-    'b233-motor-presupuesto.js?v=233.0.2'
+    'b233-motor-presupuesto.js?v=233.20'
   ];
 
-  var summaryModules = [
-    'supabase_finanzas.js?v=5.0.1',
-    'motor_estado_financiero.js?v=5.0.0',
-    'motor_proyeccion_liquidez.js?v=5.0.0',
-    'motor_brecha.js?v=5.0.0',
-    'motor_margen_diario.js?v=5.0.0',
-    'motor_alertas.js?v=5.0.0',
-    'motor_acciones.js?v=5.0.0',
-    'resumen.js?v=5.0.0'
-  ];
+  var summaryModules = [];
 
   function loadOne(src) {
     return new Promise(function (resolve) {
@@ -897,5 +1346,31 @@
 
 <script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
   <script src="B232.68-CCF-DEUDA-DUAL.js?v=232.68"></script>
+<script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
+<script src="B232.26.4-calendario-safe.js?v=232.26.4"></script>
+<script src="B232.34-resumen-integrado.js?v=232.34"></script>
+<script src="B234-movimientos-futuros.js?v=234.1"></script>
+<script src="B232.35-cierre-resumen-ejecutivo.js?v=232.35"></script>
+<script src="B232.39-IA-FINANCIERA-DATA-BRIDGE.js?v=232.39"></script>
+<script src="B232.40-correccion-planificacion.js?v=232.40"></script>
+<script src="B232.41-integracion-regresion-final.js?v=232.41"></script>
+<script src="B232.42.1-reconciliacion-fuentes.js?v=232.42.2"></script>
+<script src="B232.43-rendimiento-ux.js?v=232.43"></script>
+<script src="B232.53.5-recalculo-integral.js?v=232.53.5"></script>
+<script src="B232.45-observabilidad-segura.js?v=232.45.3"></script>
+<script src="B232.46-mantenimiento-financiero.js?v=232.46.4"></script>
+<script src="B232.47-ux-movil.js?v=232.47.1"></script>
+<script src="B232.48.3-qa-runtime.js?v=232.48.3"></script>
+<script src="B232.49-security-audit.js?v=232.49.2"></script>
+<script src="B232.51.4-runtime-diagnostics.js?v=232.51.4"></script>
+<script src="B232.51.2-runtime-hardening.js?v=232.51.2"></script>
+<script src="B232.51.3-navigation-safe.js?v=232.51.3"></script>
+  <script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66"></script>
+  <script src="B232.65-menu-principal.js?v=232.65"></script>
+  <script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
+  <script src="B232.69-AUTH.js?v=232.69"></script>
+  <script src="B232.74-AUTH-SESSION-PERSISTENCE.js?v=232.74"></script>
+  <script src="B232.73-AUTH-CORE-BRIDGE.js?v=232.73"></script>
+<script src="app.js?v=232.23"></script>
 </body>
 </html>
