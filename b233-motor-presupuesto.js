@@ -433,7 +433,7 @@
       const t=String(r.tipo||'').toLowerCase();
       if((t==='ingreso'||t==='income')&&String(r.fecha)>today()) total+=movementAmount(r);
     }
-    for(const r of state.futureIncomes) total+=futureAmount(r);
+    for(const r of state.futureIncomes){ if(String(r.fecha||'')>=today()) total+=futureAmount(r); }
     return total;
   }
 
@@ -445,13 +445,14 @@
       if(t!=='ingreso'&&String(r.fecha)>today()) total+=movementAmount(r);
     }
     for(const r of state.futureExpenses){
+      if(String(r.fecha||r.fecha_vencimiento||'')<today()) continue;
       const amount=futureAmount(r);
       const label=r.concepto||r.descripcion||r.nombre||'Gasto planificado';
       const date=r.fecha||r.fecha_vencimiento||'';
       const key=normalizeKey(label,date,amount);
       if(!committedKeys.has(key)) total+=amount;
     }
-    for(const x of committed) if(x.date&&x.date>today()) total+=x.amount;
+    for(const x of committed) if(x.date&&x.date>=today()) total+=x.amount;
     return total;
   }
 
@@ -587,7 +588,7 @@
     }
     if(type==='EGRESO'){
       const committed=buildCommitted();
-      rows.push(...committed.filter(x=>x.date&&x.date>today()).map(x=>({source:x.source,id:x.id??'',date:x.date,label:x.label,amount:x.amount})));
+      rows.push(...committed.filter(x=>x.date&&x.date>=today()).map(x=>({source:x.source,id:x.id??'',date:x.date,label:x.label,amount:x.amount})));
     }
     return rows.filter(x=>Number(x.amount)>0);
   }
