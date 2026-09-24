@@ -1374,5 +1374,61 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
 <script src="B234-movimientos-futuros.js?v=234.2"></script>
 
 <script src="app.js?v=232.23"></script>
+
+<script>
+/* B2.25 INLINE FALLBACK — garantiza la integración con la pantalla B2.19 existente */
+(function(){
+'use strict';
+function startB225Fallback(){
+  if(document.getElementById('b225CrudFallback')) return;
+  var list=document.getElementById('b219IncomeList') || document.getElementById('b225Records');
+  if(!list) return;
+  var sf_url=localStorage.getItem('sf_url'), sf_key=localStorage.getItem('sf_key');
+  if(!sf_url || !sf_key || !window.supabase) return;
+  var client=window.supabase.createClient(sf_url,sf_key,{auth:{persistSession:false,autoRefreshToken:false}});
+  var marker=document.createElement('div');
+  marker.id='b225CrudFallback';
+  marker.innerHTML='<div style="margin-top:12px;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;font-size:12px"><b>B2.25 · CONTROL CRUD</b><div id="b225CrudFallbackList">Cargando controles…</div></div>';
+  list.parentNode.appendChild(marker);
+  async function render(){
+    var box=document.getElementById('b225CrudFallbackList');
+    if(!box)return;
+    var r=await client.from('generacion_ingresos').select('id,actividad,fecha_generacion,monto_bruto,costos,comisiones,monto_neto,estado_cobro,fecha_cobro').order('fecha_generacion',{ascending:false}).order('id',{ascending:false});
+    if(r.error){box.textContent='Error B2.25: '+r.error.message;return}
+    var rows=r.data||[];
+    box.innerHTML=rows.length?rows.map(function(x){
+      return '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #e5e7eb">'
+       +'<span>'+String(x.actividad||'Sin actividad').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})+' · $'+Number(x.monto_neto||0).toLocaleString('es-CL')+'</span>'
+       +'<span style="display:flex;gap:6px"><button type="button" data-b225-edit="'+x.id+'" style="border:0;border-radius:7px;padding:6px 9px;background:#e0f2fe">Editar</button>'
+       +'<button type="button" data-b225-del="'+x.id+'" style="border:0;border-radius:7px;padding:6px 9px;background:#fee2e2;color:#991b1b">Eliminar</button></span></div>';
+    }).join(''):'Sin registros.';
+    box.querySelectorAll('[data-b225-del]').forEach(function(b){b.onclick=async function(){
+      if(!confirm('¿Eliminar este registro de generación? Esta acción no se puede deshacer.'))return;
+      var q=await client.from('generacion_ingresos').delete().eq('id',b.dataset.b225Del);
+      if(q.error){alert('No se pudo eliminar: '+q.error.message);return}
+      render();
+    }});
+    box.querySelectorAll('[data-b225-edit]').forEach(function(b){b.onclick=async function(){
+      var row=rows.find(function(x){return String(x.id)===String(b.dataset.b225Edit)});
+      if(!row)return;
+      var bruto=prompt('Monto bruto',row.monto_bruto??0); if(bruto===null)return;
+      var costos=prompt('Costos',row.costos??0); if(costos===null)return;
+      var com=prompt('Comisiones',row.comisiones??0); if(com===null)return;
+      var estado=prompt('Estado: pendiente / cobrado / cancelado',row.estado_cobro||'pendiente'); if(estado===null)return;
+      estado=estado.toLowerCase().trim();
+      if(!['pendiente','cobrado','cancelado'].includes(estado)){alert('Estado no válido.');return}
+      var payload={monto_bruto:Number(bruto)||0,costos:Number(costos)||0,comisiones:Number(com)||0,estado_cobro:estado,fecha_cobro:estado==='cobrado'?(row.fecha_cobro||row.fecha_generacion):null};
+      var q=await client.from('generacion_ingresos').update(payload).eq('id',row.id);
+      if(q.error){alert('No se pudo guardar: '+q.error.message);return}
+      render();
+    }});
+  }
+  render();
+}
+var attempts=[500,1200,2500,4000,6000];
+attempts.forEach(function(ms){setTimeout(startB225Fallback,ms)});
+})();
+</script>
+
 </body>
 </html>
