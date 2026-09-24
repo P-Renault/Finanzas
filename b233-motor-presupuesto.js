@@ -1,6 +1,6 @@
 /* ============================================================
-   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.18
-   Versión: B233.0–B233.18
+   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.21
+   Versión: B233.0–B233.21
    Arquitectura: GitHub Pages + Supabase
    Regla: no modifica movimientos, deudas ni compromisos.
    ============================================================ */
@@ -40,7 +40,6 @@
   const ym = value => String(value || today()).slice(0,7);
 
   let client = null;
-  let budgetPromise = null;
   let state = {
     month: ym(today()),
     budget: null,
@@ -54,7 +53,7 @@
   };
 
   /*
-   * B233.18 — CLIENTE SUPABASE AUTENTICADO
+   * B233.21 — CLIENTE SUPABASE AUTENTICADO
    *
    * El módulo B233 no crea un cliente aislado con persistSession:false.
    * Primero reutiliza el cliente creado por B232.69/Auth, conservando
@@ -89,7 +88,7 @@
           }
         });
       } catch (e) {
-        console.error('[B233.18] Error creando cliente Supabase:', e);
+        console.error('[B233.21] Error creando cliente Supabase:', e);
         client = null;
       }
     }
@@ -343,63 +342,102 @@
     budgetPromise = (async () => {
       const periodo = ym(state.month);
       const c = db();
-      if (!c) { notify('No hay conexión autenticada con Supabase.', false); return null; }
-
-      // B233.20: recuperación atómica mediante RPC. Esta vía evita el problema
-      // de RLS + índice único global: el cliente puede no ver una fila existente
-      // y PostgreSQL rechaza igualmente un INSERT duplicado.
-      if (c.rpc) {
-        try {
-          const rpc = await c.rpc('b233_get_or_create_presupuesto', {
-            p_periodo: periodo,
-            p_nombre: `Presupuesto ${monthLabel(state.month)}`
-          });
-          if (!rpc.error && rpc.data) {
-            const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
-            if (row) {
-              state.budget = row;
-              notify('Presupuesto recuperado y sincronizado.');
-              return row;
-            }
-          }
-          if (rpc.error && rpc.error.code !== '42883') {
-            console.warn('[B233.20] RPC recuperación:', rpc.error.message);
-          }
-        } catch (e) {
-          console.warn('[B233.20] RPC no disponible:', e);
-        }
-      }
-
-      // Fallback para instalaciones que todavía no hayan aplicado la migración.
-      let lookup = await c.from('presupuestos').select('*').eq('periodo', periodo).maybeSingle();
-      if (lookup.data) { state.budget = lookup.data; return lookup.data; }
-      if (lookup.error && lookup.error.code !== 'PGRST116') {
-        notify(lookup.error.message || 'No se pudo leer el presupuesto.', false);
+      if (!c) {
+        notify('No hay conexión autenticada con Supabase.', false);
         return null;
       }
 
       const authClient = window.__B23269_CLIENT__ || window.supabaseClient || c;
-      if (!authClient?.auth?.getUser) { notify('Cliente Auth no disponible.', false); return null; }
-      const {data:userData,error:userError}=await authClient.auth.getUser();
-      const userId=userData?.user?.id;
-      if(userError||!userId){notify(userError?.message||'No se pudo obtener el usuario autenticado.',false);return null;}
-
-      const created=await c.from('presupuestos').insert({
-        user_id:userId, periodo, nombre:`Presupuesto ${monthLabel(state.month)}`, estado:'activo'
-      }).select('*').single();
-      if(!created.error&&created.data){state.budget=created.data;notify('Presupuesto creado y sincronizado.');return created.data;}
-
-      // Último intento: recuperar después de un conflicto de unicidad.
-      if(created.error?.code==='23505'||/duplicate key|presupuestos_periodo_uix/i.test(created.error?.message||'')){
-        const recovered=await c.from('presupuestos').select('*').eq('periodo',periodo).maybeSingle();
-        if(recovered.data){state.budget=recovered.data;notify('Presupuesto existente recuperado.');return recovered.data;}
+      if (!authClient?.auth?.getUser) {
+        notify('Cliente Auth no disponible.', false);
+        return null;
       }
 
-      notify(created.error?.message||'No se pudo crear o recuperar el presupuesto.',false);
+      const { data: userData, error: userError } = await authClient.auth.getUser();
+      const userId = userData?.user?.id;
+      if (userError || !userId) {
+        notify(userError?.message || 'No se pudo obtener el usuario autenticado.', false);
+        return null;
+      }
+
+      // PRIMERA VÍA: función atómica de Supabase. Esto evita la carrera
+      // buscar->insertar que provocaba presupuestos_periodo_uix.
+      try {
+        const rpc = await c.rpc('b233_get_or_create_presupuesto', {
+          p_periodo: periodo,
+          p_nombre: `Presupuesto ${monthLabel(state.month)}`
+        });
+        if (!rpc.error && rpc.data) {
+          const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+          if (row) {
+            state.budget = row;
+            return row;
+          }
+        }
+        // Si la función todavía no fue desplegada, continuamos con fallback.
+      } catch (e) {
+        console.warn('[B233] RPC de recuperación no disponible; usando fallback.', e);
+      }
+
+      // SEGUNDA VÍA: lectura directa antes de insertar.
+      let lookup;
+      try {
+        lookup = await c.from('presupuestos')
+          .select('*')
+          .eq('periodo', periodo)
+          .eq('user_id', userId)
+          .maybeSingle();
+      } catch (e) {
+        notify(e?.message || 'No se pudo consultar el presupuesto.', false);
+        return null;
+      }
+
+      if (lookup?.data) {
+        state.budget = lookup.data;
+        return lookup.data;
+      }
+
+      if (lookup?.error && lookup.error.code !== 'PGRST116') {
+        notify(lookup.error.message || 'No se pudo leer el presupuesto.', false);
+        return null;
+      }
+
+      // TERCERA VÍA: creación controlada. user_id explícito para RLS.
+      const created = await c.from('presupuestos').insert({
+        user_id: userId,
+        periodo,
+        nombre: `Presupuesto ${monthLabel(state.month)}`,
+        estado: 'activo'
+      }).select('*').single();
+
+      if (!created.error && created.data) {
+        state.budget = created.data;
+        notify('Presupuesto creado y sincronizado.');
+        return created.data;
+      }
+
+      // CUARTA VÍA: conflicto de unicidad -> recuperar, nunca mostrarlo como
+      // error final al usuario si la fila puede ser leída.
+      const duplicate = created?.error?.code === '23505' ||
+        String(created?.error?.message || '').toLowerCase().includes('duplicate key') ||
+        String(created?.error?.message || '').toLowerCase().includes('presupuestos_periodo_uix');
+
+      if (duplicate) {
+        const recovered = await c.from('presupuestos')
+          .select('*').eq('periodo', periodo).maybeSingle();
+        if (recovered.data) {
+          state.budget = recovered.data;
+          notify('Presupuesto existente recuperado.');
+          return recovered.data;
+        }
+      }
+
+      notify(created?.error?.message || 'No se pudo crear o recuperar el presupuesto.', false);
       return null;
     })();
 
-    try { return await budgetPromise; } finally { budgetPromise=null; }
+    try { return await budgetPromise; }
+    finally { budgetPromise = null; }
   }
 
   async function loadData() {
@@ -671,7 +709,7 @@
       : '<div class="b233-trace-ok">No se detectaron coincidencias exactas por descripción + fecha + monto dentro de las fuentes futuras consultadas.</div>';
 
     panel.innerHTML=`<div class="b233-trace">
-      <div class="b233-trace-head"><div><b>Trazabilidad B233.18</b><small class="muted">Cada total puede relacionarse con sus componentes de origen.</small></div><span class="b233-badge">LECTURA</span></div>
+      <div class="b233-trace-head"><div><b>Trazabilidad B233.21</b><small class="muted">Cada total puede relacionarse con sus componentes de origen.</small></div><span class="b233-badge">LECTURA</span></div>
       <div class="b233-trace-grid">
         <div class="b233-trace-box"><h4>Ingresos</h4>
           <div class="b233-trace-row"><span>Ejecutados</span><strong>${money(calc.execIncome)}</strong></div>
