@@ -343,67 +343,113 @@
     budgetPromise = (async () => {
       const periodo = ym(state.month);
       const c = db();
-
       if (!c) {
         notify('No hay conexión autenticada con Supabase.', false);
         return null;
       }
 
-      const lookup = await c
-        .from('presupuestos')
-        .select('*')
-        .eq('periodo', periodo)
-        .maybeSingle();
+      // 1) Recuperación directa: no se intenta insertar hasta confirmar
+      // que realmente no existe un presupuesto visible para el usuario.
+      let lookup;
+      try {
+        lookup = await c
+          .from('presupuestos')
+          .select('*')
+          .eq('periodo', periodo)
+          .maybeSingle();
+      } catch (e) {
+        notify(e?.message || 'No se pudo consultar el presupuesto.', false);
+        return null;
+      }
 
-      if (lookup.data) {
+      if (lookup?.data) {
         state.budget = lookup.data;
         return lookup.data;
       }
 
-      if (lookup.error && lookup.error.code !== 'PGRST116') {
-        notify(lookup.error.message || 'No se pudo consultar el presupuesto.', false);
+      // Un error distinto de "sin filas" no debe convertirse en "crear".
+      // Esto evita que RLS/errores de red provoquen falsos inserts.
+      if (lookup?.error && lookup.error.code !== 'PGRST116') {
+        notify(lookup.error.message || 'No se pudo leer el presupuesto.', false);
         return null;
       }
 
-      const authClient = window.__B23269_CLIENT__ || window.supabaseClient || c;
-      if (!authClient?.auth) {
-        notify('Cliente Auth no disponible para crear el presupuesto.', false);
+      // 2) Obtener el usuario autenticado para satisfacer RLS.
+      const authClient =
+        window.__B23269_CLIENT__ ||
+        window.supabaseClient ||
+        c;
+
+      if (!authClient?.auth?.getUser) {
+        notify('Cliente Auth no disponible para recuperar el presupuesto.', false);
         return null;
       }
 
       const { data: userData, error: userError } = await authClient.auth.getUser();
-      if (userError || !userData?.user?.id) {
+      const userId = userData?.user?.id;
+      if (userError || !userId) {
         notify(userError?.message || 'No se pudo obtener el usuario autenticado.', false);
         return null;
       }
 
-      const created = await c.from('presupuestos').insert({
-        user_id: userData.user.id,
-        periodo,
-        nombre: `Presupuesto ${monthLabel(state.month)}`,
-        estado: 'activo'
-      }).select('*').single();
+      // 3) Creación controlada. user_id es explícito para cumplir WITH CHECK.
+      const created = await c
+        .from('presupuestos')
+        .insert({
+          user_id: userId,
+          periodo,
+          nombre: `Presupuesto ${monthLabel(state.month)}`,
+          estado: 'activo'
+        })
+        .select('*')
+        .single();
 
       if (!created.error && created.data) {
         state.budget = created.data;
+        notify('Presupuesto creado y sincronizado.');
         return created.data;
       }
 
-      const duplicate = created.error?.code === '23505' ||
-        String(created.error?.message || '').toLowerCase().includes('presupuestos_periodo_uix') ||
-        String(created.error?.message || '').toLowerCase().includes('duplicate key');
+      // 4) Si otro intento/cliente lo creó primero, recuperar la fila en
+      // lugar de mostrar un error de clave duplicada al usuario.
+      const duplicate =
+        created?.error?.code === '23505' ||
+        String(created?.error?.message || '').toLowerCase().includes('duplicate key') ||
+        String(created?.error?.message || '').toLowerCase().includes('presupuestos_periodo_uix');
 
       if (duplicate) {
-        const recovered = await c.from('presupuestos')
-          .select('*').eq('periodo', periodo).maybeSingle();
+        const recovered = await c
+          .from('presupuestos')
+          .select('*')
+          .eq('periodo', periodo)
+          .eq('user_id', userId)
+          .maybeSingle();
+
         if (recovered.data) {
           state.budget = recovered.data;
           notify('Presupuesto existente recuperado.');
           return recovered.data;
         }
+
+        // Segundo intento sin user_id permite recuperar instalaciones en las
+        // que el índice es global pero la política expone la fila al usuario.
+        const recoveredGlobal = await c
+          .from('presupuestos')
+          .select('*')
+          .eq('periodo', periodo)
+          .maybeSingle();
+
+        if (recoveredGlobal.data) {
+          state.budget = recoveredGlobal.data;
+          notify('Presupuesto existente recuperado.');
+          return recoveredGlobal.data;
+        }
       }
 
-      notify(created.error?.message || 'No se pudo crear o recuperar el presupuesto.', false);
+      notify(
+        created?.error?.message || 'No se pudo crear o recuperar el presupuesto.',
+        false
+      );
       return null;
     })();
 
