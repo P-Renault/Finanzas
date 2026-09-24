@@ -1,6 +1,6 @@
 /* ============================================================
-   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.18
-   Versión: B233.0–B233.18
+   CONTROL FINANCIERO · B233 MOTOR DE PRESUPUESTO · B233.19
+   Versión: B233.0–B233.19
    Arquitectura: GitHub Pages + Supabase
    Regla: no modifica movimientos, deudas ni compromisos.
    ============================================================ */
@@ -88,7 +88,7 @@
           }
         });
       } catch (e) {
-        console.error('[B233.18] Error creando cliente Supabase:', e);
+        console.error('[B233.19] Error creando cliente Supabase:', e);
         client = null;
       }
     }
@@ -343,7 +343,26 @@
     if (!budget) {
       const c = db();
       if (!c) { notify('No hay conexión autenticada con Supabase.',false); return null; }
+      // B233.19: las políticas RLS de public.presupuestos exigen
+      // WITH CHECK (auth.uid() = user_id). El campo user_id no tiene
+      // default, por lo que debe enviarse explícitamente con el usuario
+      // autenticado. Nunca se toma de localStorage ni de una entrada del usuario.
+      const authClient = window.__B23269_CLIENT__ || window.supabaseClient || c;
+      if (!authClient?.auth) {
+        notify('Cliente Auth no disponible para crear el presupuesto.', false);
+        return null;
+      }
+
+      const { data: userData, error: userError } = await authClient.auth.getUser();
+      if (userError || !userData?.user?.id) {
+        notify(userError?.message || 'No se pudo obtener el usuario autenticado.', false);
+        return null;
+      }
+
+      const userId = userData.user.id;
+
       const r = await c.from('presupuestos').insert({
+        user_id: userId,
         periodo,
         nombre:`Presupuesto ${monthLabel(state.month)}`,
         estado:'activo'
