@@ -1,5 +1,5 @@
-/* CCF B2.31.2 — AUTH CLIENT BRIDGE
-   Corrige el flujo Crear cuenta/Iniciar sesión usando un único formulario.
+/* CCF B2.31.6 — AUTH CLIENT BRIDGE
+   Corrección segura del arranque de autenticación.
    No modifica tablas, SQL, RLS ni datos financieros.
 */
 (()=>{
@@ -68,7 +68,7 @@ function installClient(){
    };
    window.__CCF_AUTH_CREATECLIENT_PATCHED__=true;
  }
- try{localStorage.setItem('sf_url',SUPABASE_URL);localStorage.setItem('sf_key',SUPABASE_KEY)}catch(_){ }
+ try{localStorage.setItem('sf_url',SUPABASE_URL);localStorage.setItem('sf_key',SUPABASE_KEY)}catch(_){}
  return true;
 }
 async function waitClient(){for(let i=0;i<80;i++){if(installClient())return client;await sleep(100)}throw new Error('La biblioteca de Supabase no se cargó.')}
@@ -97,26 +97,16 @@ function installForms(){
  const logout=$('logoutBtn');if(logout&&!logout.dataset.ccfFinalAuth){logout.dataset.ccfFinalAuth='1';logout.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();try{await client?.auth?.signOut({scope:'local'})}finally{location.reload()}},true)}
 }
 async function boot(){
- hideLegacy();
- portal();
- installForms();
+ hideLegacy();portal();installForms();
  try{
   await waitClient();
   status('Acceso listo. Inicia sesión o crea una cuenta.');
-  const result=await Promise.race([
-   client.auth.getSession(),
-   new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tiempo de espera al verificar la sesión.')),8000))
-  ]);
+  const result=await Promise.race([client.auth.getSession(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tiempo de espera al verificar la sesión.')),8000))]);
   const {data,error}=result;
   if(error)throw error;
-  if(data?.session)await openApp();
-  else status('Sin sesión activa. Inicia sesión o crea una cuenta.');
- }catch(e){
-  console.error('[CCF B2.31.6] boot',e);
-  status('Acceso listo. Inicia sesión o crea una cuenta.',false);
- }
+  if(data?.session)await openApp();else status('Sin sesión activa. Inicia sesión o crea una cuenta.')
+ }catch(e){console.error('[CCF B2.31.6] boot',e);status('Acceso listo. Inicia sesión o crea una cuenta.',false)}
 }
-// B2.31.6: instala el cliente ANTES de que app.js ejecute connect() en DOMContentLoaded.
 try{installClient()}catch(e){console.warn('[CCF B2.31.6] preinstall',e)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
