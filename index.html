@@ -1063,7 +1063,68 @@
   <script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
 
 
-<footer id="ccf-release-footer" aria-label="Versión del sistema"><span>CCF · Último paquete: <strong>B2.30.12 · Corrección de acceso y despliegue</strong></span></footer>
-<style id="ccf-release-footer-style">#ccf-release-footer{margin:18px 10px 14px;padding:9px 10px;text-align:center;border-top:1px solid #e5e7eb;color:#64748b;font:600 10px/1.4 system-ui,sans-serif}#ccf-release-footer strong{color:#334155}</style>
+<!-- CCF · Limpieza de referencias técnicas de despliegue visibles -->
+<script id="ccf-ui-cleanup">
+(function(){
+  'use strict';
+  if(window.__CCF_UI_CLEANUP__) return;
+  window.__CCF_UI_CLEANUP__=true;
+
+  var ids=[
+    'b231-indicador-deudas',
+    'b23260-footer',
+    'b23266-footer',
+    'b23267-footer',
+    'b23268-footer',
+    'b23269-footer',
+    'b23273-bridge-badge',
+    'b23274Footer',
+    'ccf-release-footer'
+  ];
+
+  function removeTechnicalUi(root){
+    var scope=root&&root.querySelectorAll?root:document;
+    ids.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.remove();
+    });
+    scope.querySelectorAll('footer,div,span,p').forEach(function(el){
+      var t=(el.textContent||'').trim();
+      if(/^Paquete desplegado:/i.test(t)) el.remove();
+    });
+  }
+
+  function run(){ removeTechnicalUi(document); }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',run,{once:true});
+  }else{ run(); }
+
+  if(window.MutationObserver && document.body){
+    var observer=new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        m.addedNodes.forEach(function(node){
+          if(node.nodeType===1) removeTechnicalUi(node);
+        });
+      });
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+})();
+</script>
+
+<!-- CCF · Pie de producto -->
+<footer id="ccf-product-footer" aria-label="Producto desarrollado por Somos Software">
+  <div class="ccf-product-footer-inner">
+    <img src="somos-software-logo.jpg" alt="Somos Software · Innovación Digital" class="ccf-product-footer-logo">
+    <strong>Producto desarrollado por Somos Software</strong>
+  </div>
+</footer>
+<style id="ccf-product-footer-style">
+#ccf-product-footer{margin:22px 10px 18px;padding:16px 10px;text-align:center;border-top:1px solid #e5e7eb;color:#334155;font:600 11px/1.4 system-ui,sans-serif}
+.ccf-product-footer-inner{display:flex;flex-direction:column;align-items:center;gap:9px}
+.ccf-product-footer-logo{display:block;width:min(260px,72vw);max-height:86px;object-fit:contain}
+#ccf-product-footer strong{font-weight:700}
+</style>
 </body>
 </html>
