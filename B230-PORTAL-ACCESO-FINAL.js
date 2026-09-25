@@ -156,7 +156,7 @@
 
     // Intentamos seleccionar el modo en el formulario REAL del gate sin
     // implementar otra autenticación.
-    const text = mode === 'register' ? /crear|registr/i : /iniciar|sesión|login/i;
+    const text = mode === 'register' ? /crear|registr/i : /iniciar|sesión|login|ingresar|entrar/i;
     const buttons = Array.from(gate.querySelectorAll('button'));
     const target = buttons.find(b => text.test((b.textContent || '').trim()));
     if (target) target.click();
