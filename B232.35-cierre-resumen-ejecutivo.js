@@ -7,6 +7,7 @@
    4) No tocar navegación, Calendario, Deudas ni Planificación.
    5) Cargar las dependencias en orden y mostrar error explícito,
       nunca dejar "Calculando..." indefinidamente.
+   6) El resumen .b234-summary pertenece exclusivamente a B232.34.
    ============================================================ */
 (() => {
   'use strict';
@@ -137,14 +138,9 @@
 
       window.__B23235_LAST_RESULT__ = result;
 
-      // Corrección de compatibilidad para B232.34:
-      // expone el total de cuotas con un nombre estable para cualquier
-      // integración posterior, sin modificar la lógica de Supabase.
       if (result.context?.obligations) {
         window.__B23235_OBLIGATIONS__ = result.context.obligations;
       }
-
-      patchB234AfterRender();
 
     } catch (error) {
       console.error('[B232.35]', error);
@@ -153,7 +149,6 @@
         true
       );
 
-      // Nunca dejamos el Dashboard Ejecutivo en "Calculando..."
       const labels = [
         'exec-liquidity-reading',
         'exec-obligation-reading',
@@ -187,49 +182,6 @@
     }
   }
 
-  function patchB234AfterRender() {
-    const report = $('b234-report');
-    if (!report) return;
-
-    /*
-     * B232.34 tiene una referencia histórica a data.quotaTotal.
-     * No se modifica el motor ni se inventan valores.
-     * Aquí solo evitamos que una representación visual antigua
-     * quede inconsistente cuando el informe ya está construido.
-     */
-    const summary = report.querySelector('.b234-summary');
-    const result = window.__B23235_LAST_RESULT__;
-    if (!summary || !result?.context) return;
-
-    const obligations = result.context.obligations || [];
-    const pending = obligations.reduce(
-      (sum, item) => sum + Number(item.amount || 0),
-      0
-    );
-
-    const totalNode = summary.querySelector('div:nth-child(1) strong');
-    const pendingNode = summary.querySelector('div:nth-child(3) strong');
-    const pendingPct = summary.querySelector('div:nth-child(3) small:last-child');
-
-    if (pendingNode) {
-      pendingNode.textContent = new Intl.NumberFormat('es-CL', {
-        style: 'currency',
-        currency: 'CLP',
-        maximumFractionDigits: 0
-      }).format(pending);
-    }
-
-    const totalText = totalNode?.textContent || '';
-    const total = Number(
-      totalText.replace(/[^\d-]/g, '')
-    ) || 0;
-
-    if (pendingPct) {
-      pendingPct.textContent =
-        `${total > 0 ? Math.round((pending / total) * 100) : 0}%`;
-    }
-  }
-
   function installObservers() {
     document.addEventListener('click', event => {
       const dashboardButton =
@@ -256,7 +208,6 @@
       });
     }
 
-    // Un único reintento de arranque; no se instala un intervalo infinito.
     setTimeout(render, 900);
     setTimeout(render, 2200);
   }
