@@ -787,7 +787,7 @@
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js?v=232.23"></script>
-<script src="CCF-AUTH-BOOT-FINAL.js?v=231.2"></script>
+<script src="CCF-AUTH-BOOT-FINAL.js?v=231.5"></script>
 <script src="b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js?v=230.12"></script>
 <script src="b225-motor-multifuente.js?v=225.2"></script>
 
@@ -1129,7 +1129,15 @@
 <script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
 <script src="B232.26.4-calendario-safe.js?v=232.26.4"></script>
 <script src="B232.34-resumen-integrado.js?v=232.34"></script>
-<script src="CCF-B2.31.4-CORRECCION-PENDIENTES.js?v=231.4"></script>
+<script id="ccf-b2315-pending-fix">
+/* B2.31.5: Total gastos = Generados + Pendientes + Por realizar */
+(function(){'use strict';
+const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
+function parseMoney(v){return Number(String(v??'').replace(/[^0-9-]/g,''))||0}
+function fix(){const host=document.getElementById('b234-report');if(!host)return false;const boxes=host.querySelectorAll('.b234-summary>div');if(boxes.length<4)return false;const total=parseMoney(boxes[0].querySelector('strong')?.textContent);const generated=parseMoney(boxes[1].querySelector('strong')?.textContent);const future=parseMoney(boxes[3].querySelector('strong')?.textContent);const pending=Math.max(0,total-generated-future);const pct=total?Math.round(pending/total*100):0;const strong=boxes[2].querySelector('strong');const smalls=boxes[2].querySelectorAll('small');if(strong)strong.textContent=money(pending);if(smalls.length)smalls[smalls.length-1].textContent=pct+'%';return true}
+function install(){if(window.__CCF_B2315_PENDING__)return;window.__CCF_B2315_PENDING__=true;const run=()=>{try{fix()}catch(e){console.error('[CCF B2.31.5]',e)}};const dashboard=document.getElementById('dashboard');if(dashboard&&window.MutationObserver){new MutationObserver(run).observe(dashboard,{childList:true,subtree:true})}document.addEventListener('click',e=>{if(e.target.closest('[data-tab="dashboard"]')||e.target.closest('#b234Refresh')){setTimeout(run,50);setTimeout(run,250);setTimeout(run,800)}},true);[100,500,1200,2500,5000,10000,20000].forEach(ms=>setTimeout(run,ms));run()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,300),{once:true});else setTimeout(install,300)})();
+</script>
 <script src="B232.35-cierre-resumen-ejecutivo.js?v=232.35"></script>
 <script src="B232.39-IA-FINANCIERA-DATA-BRIDGE.js?v=232.39"></script>
 <script src="B232.40-correccion-planificacion.js?v=232.40"></script>
