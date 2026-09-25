@@ -166,6 +166,71 @@
          ========================================================= -->
     <section id="dashboard" class="tab">
 
+      <!-- CCF B2.30.15 · Resumen mensual de ingresos, egresos y movimientos futuros -->
+      <section id="b234-future-movements" class="future-movements ccf-monthly-summary" aria-label="Resumen mensual">
+        <div class="ccf-monthly-summary-head">
+          <div>
+            <p class="eyebrow">RESUMEN MENSUAL</p>
+            <h2>Ingresos, egresos y movimientos futuros</h2>
+          </div>
+          <strong id="future-month-label" class="ccf-month-label">—</strong>
+        </div>
+
+        <div class="ccf-monthly-kpis" aria-label="Totales mensuales">
+          <article class="ccf-monthly-kpi ccf-monthly-income">
+            <span>Ingresos del mes</span>
+            <strong id="month-income-total">$0</strong>
+          </article>
+          <article class="ccf-monthly-kpi ccf-monthly-expense">
+            <span>Egresos del mes</span>
+            <strong id="month-expense-total">$0</strong>
+          </article>
+          <article class="ccf-monthly-kpi ccf-monthly-income">
+            <span>Ingresos futuros</span>
+            <strong id="future-income-total">$0</strong>
+          </article>
+          <article class="ccf-monthly-kpi ccf-monthly-expense">
+            <span>Egresos futuros</span>
+            <strong id="future-expense-total">$0</strong>
+          </article>
+        </div>
+
+        <div class="future-movement-grid ccf-monthly-future-grid">
+          <article class="future-movement-column future-income-block">
+            <div class="future-block-heading">
+              <h3>Ingresos futuros</h3>
+              <strong id="future-income-count">0</strong>
+            </div>
+            <div id="future-income-list" class="future-movement-list"></div>
+          </article>
+
+          <article class="future-movement-column future-expense-block">
+            <div class="future-block-heading">
+              <h3>Egresos futuros</h3>
+              <strong id="future-expense-count">0</strong>
+            </div>
+            <div id="future-expense-list" class="future-movement-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <style id="ccf-monthly-summary-style">
+        .ccf-monthly-summary{max-width:1280px;margin:0 auto 18px;padding:24px 24px 22px;background:#fff;border:1px solid #dfe4e8;border-radius:16px;color:#17202a;box-shadow:0 1px 3px rgba(15,23,42,.03)}
+        .ccf-monthly-summary-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
+        .ccf-monthly-summary-head h2{margin:0;font-size:1.55rem}
+        .ccf-month-label{font-size:1.05rem;font-weight:500;white-space:nowrap;color:#17202a}
+        .ccf-monthly-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}
+        .ccf-monthly-kpi{min-width:0;padding:18px 20px;border:1px solid #dfe4e8;border-radius:16px}
+        .ccf-monthly-kpi span{display:block;color:#68737d;font-size:1rem}
+        .ccf-monthly-kpi strong{display:block;margin-top:6px;font-size:1.55rem;line-height:1.15}
+        .ccf-monthly-income{background:#e8f8f5;border-color:#b7e5dc}
+        .ccf-monthly-expense{background:#fdeeee;border-color:#f1c4c4}
+        .ccf-monthly-future-grid{gap:16px}
+        .ccf-monthly-future-grid .future-movement-column{min-height:190px}
+        @media(max-width:900px){.ccf-monthly-kpis{grid-template-columns:1fr 1fr}}
+        @media(max-width:700px){.ccf-monthly-summary{padding:18px 14px}.ccf-monthly-summary-head{align-items:flex-start}.ccf-monthly-summary-head h2{font-size:1.2rem}.ccf-monthly-kpis{gap:8px}.ccf-monthly-kpi{padding:14px}.ccf-monthly-kpi span{font-size:.82rem}.ccf-monthly-kpi strong{font-size:1.2rem}.ccf-month-label{font-size:.9rem}}
+        @media(max-width:560px){.ccf-monthly-summary-head{flex-direction:column;gap:4px}.ccf-monthly-kpis{grid-template-columns:1fr 1fr}.ccf-monthly-future-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+      </style>
 
       <main id="financial-control" class="financial-control">
 
