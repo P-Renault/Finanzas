@@ -1,34 +1,23 @@
-# CCF B2.30.11 — Reconstrucción final de despliegue
+CCF B2.30.14 — MANUAL DE USABILIDAD
 
-## Objetivo
-Restaurar el arranque del Centro de Control Financiero y volver a declarar explícitamente los motores que habían quedado fuera del `index.html` desplegado.
+Base: CCF B2.30.13 — Pie Somos Software.
 
-## Correcciones
-- Mantiene `app.js` una sola vez.
-- Integra explícitamente `b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js`.
-- Integra explícitamente `b225-motor-multifuente.js` con CRUD.
-- Mantiene el cargador controlado de B2.20, B2.21, B2.22, B2.27, B2.29, B2.31.x y B2.33.
-- Mantiene B232.68, planificación, calendario, resumen, movimientos futuros y autenticación.
-- Mantiene el arranque de emergencia B2.30.10.
-- No modifica SQL ni datos de Supabase.
-- No elimina ningún motor existente del repositorio.
-- Footer final: B2.30.10 · Release operacional.
+CAMBIO ÚNICO
+- Se agregó al menú superior el acceso “Descargar manual de usabilidad”.
+- El enlace apunta a `Manual_de_Usabilidad_CCF.pdf` incluido en este paquete.
+- En móvil el acceso ocupa el ancho disponible para facilitar su uso.
+- No se modifican motores financieros, autenticación, Supabase, SQL/RPC, cálculos ni navegación existente.
 
-## Despliegue
-Reemplazar solamente `index.html` en la rama `b233-presupuesto-desarrollo` y verificar que los archivos JS existentes del repositorio permanezcan intactos, especialmente:
+ARCHIVOS
+- `index.html` — menú superior con acceso al manual.
+- `Manual_de_Usabilidad_CCF.pdf` — manual funcional completo.
+- `README.md` — notas del paquete.
 
-`b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js`
-`b225-motor-multifuente.js`
-`b220-motor-ejecucion-financiera.js`
-`b220.2-puente-ejecucion.js`
-`b221-movimientos-liquidez.js`
-`b227-ia-financiera.js`
-`b229-movimientos-fondos.js`
-`b231.0-adaptador-deudas-v2.js`
-`b231.1-persistencia-deuda-sin-fecha.js`
-`b231.2-deudas-fecha.js`
-`b231.3-abonos-parciales.js`
-`b233-motor-presupuesto.js`
+DESPLIEGUE
+1. Reemplazar el `index.html` de la versión B2.30.13 por el incluido.
+2. Subir `Manual_de_Usabilidad_CCF.pdf` al mismo nivel raíz que `index.html`.
+3. Mantener el resto del sistema sin cambios.
+4. Verificar que el botón “Descargar manual de usabilidad” aparezca bajo el menú superior.
+5. Probar la descarga desde una sesión autenticada.
 
-## Importante
-La conexión disponible para GitHub permite lectura, pero las operaciones de escritura están devolviendo HTTP 403. Por eso este paquete debe cargarse manualmente en GitHub.
+Versión: B2.30.14 · Manual de Usabilidad
