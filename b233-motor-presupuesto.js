@@ -1,17 +1,18 @@
-/* B233 PRODUCCIÓN · CORRECCIÓN RLS · DROP-IN
- * Sustituye el loader anterior. Mantiene la arquitectura B233 original,
- * pero garantiza que los INSERT/UPSERT lleven auth.uid() como user_id.
- * No modifica ni desactiva políticas RLS.
+/* B233 PRODUCCIÓN · CORRECCIÓN DEFINITIVA USER+PERIODO
+ * Corrige la incompatibilidad entre RLS por usuario y la unicidad global por periodo.
+ * Este archivo es un drop-in temporal: carga el B233 base y aplica únicamente
+ * las correcciones de aislamiento por usuario.
  */
 (() => {
   'use strict';
-  if (window.__B233_PROD_RLS_FIX_V3__) return;
-  window.__B233_PROD_RLS_FIX_V3__ = true;
+  if (window.__B233_PROD_USER_PERIOD_FIX_V4__) return;
+  window.__B233_PROD_USER_PERIOD_FIX_V4__ = true;
 
-  const SOURCE = 'https://raw.githubusercontent.com/P-Renault/Finanzas/Backup/b233-motor-presupuesto.js?v=233.19-r2';
+  const SOURCE =
+    'https://raw.githubusercontent.com/P-Renault/Finanzas/Backup/b233-motor-presupuesto.js?v=233.18';
 
   const showError = err => {
-    console.error('[B233 RLS PRODUCCIÓN]', err);
+    console.error('[B233 USER+PERIOD FIX]', err);
     const msg = document.getElementById('b233Msg');
     if (msg) {
       msg.textContent = `Error inicializando Presupuesto: ${err?.message || err}`;
@@ -19,59 +20,82 @@
     }
   };
 
-  fetch(SOURCE, { cache: 'no-store' })
-    .then(response => {
-      if (!response.ok) throw new Error(`No se pudo cargar el motor B233 base (${response.status}).`);
-      return response.text();
+  fetch(SOURCE, {cache:'no-store'})
+    .then(r => {
+      if (!r.ok) throw new Error(`No se pudo cargar el B233 base (${r.status}).`);
+      return r.text();
     })
     .then(source => {
-      const budgetPattern = /const r = await c\.from\('presupuestos'\)\.insert\(\{\s*periodo,\s*nombre:`Presupuesto \$\{monthLabel\(state\.month\)\}`,\s*estado:'activo'\s*\}\)\.select\('\*'\)\.single\(\);/;
-      const budgetReplacement = `const userResult = await c.auth.getUser();
-      const userId = userResult?.data?.user?.id || null;
+      /*
+       * 1) El presupuesto pertenece al usuario autenticado.
+       *    La búsqueda debe usar user_id + periodo.
+       */
+      const findPattern =
+        /const periodo = ym\(state\.month\);\s*let budget = await safeSingle\('presupuestos', q => q\.select\('\*'\)\.eq\('periodo',periodo\)\.maybeSingle\(\)\);/;
 
-      if (!userId) {
-        notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);
-        return null;
+      const findReplacement = `const periodo = ym(state.month);
+    const authResult = await db().auth.getUser();
+    const userId = authResult?.data?.user?.id || null;
+
+    if (!userId) {
+      notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);
+      return null;
+    }
+
+    let budget = await safeSingle(
+      'presupuestos',
+      q => q.select('*')
+        .eq('periodo', periodo)
+        .eq('user_id', userId)
+        .maybeSingle()
+    );`;
+
+      if (!findPattern.test(source)) {
+        throw new Error('No se encontró el bloque de búsqueda del presupuesto.');
       }
+      source = source.replace(findPattern, findReplacement);
 
-      let r = await c.from('presupuestos').insert({
+      /*
+       * 2) La creación lleva explícitamente user_id.
+       *    Si existe por una carrera/concurrencia, se recupera por usuario+periodo.
+       */
+      const insertPattern =
+        /const r = await c\.from\('presupuestos'\)\.insert\(\{\s*periodo,\s*nombre:`Presupuesto \$\{monthLabel\(state\.month\)\}`,\s*estado:'activo'\s*\}\)\.select\('\*'\)\.single\(\);/;
+
+      const insertReplacement = `let r = await c.from('presupuestos').insert({
         periodo,
         nombre:\`Presupuesto \${monthLabel(state.month)}\`,
         estado:'activo',
         user_id:userId
       }).select('*').single();
 
-      /*
-       * presupuestos_periodo_uix es UNIQUE sobre periodo. Si ya existe,
-       * se recupera mediante SELECT sujeto a RLS en vez de repetir INSERT.
-       */
       if (r.error && r.error.code === '23505') {
         const existing = await c.from('presupuestos')
           .select('*')
           .eq('periodo', periodo)
+          .eq('user_id', userId)
           .maybeSingle();
 
-        if (existing.error) {
-          notify(\`Ya existe un presupuesto para \${monthLabel(state.month)}, pero no pudo recuperarse con la sesión actual: \${existing.error.message}\`, false);
-          return null;
+        if (!existing.error && existing.data) {
+          r = {error:null, data:existing.data};
         }
-
-        if (!existing.data) {
-          notify(\`Ya existe un presupuesto para \${monthLabel(state.month)}, pero no está disponible para el usuario autenticado. No se modifica RLS.\`, false);
-          return null;
-        }
-
-        r = { error: null, data: existing.data };
       }`;
 
-      if (!budgetPattern.test(source)) throw new Error('No se encontró el bloque de INSERT de presupuestos en B233.');
-      source = source.replace(budgetPattern, budgetReplacement);
+      if (!insertPattern.test(source)) {
+        throw new Error('No se encontró el bloque de inserción del presupuesto.');
+      }
+      source = source.replace(insertPattern, insertReplacement);
 
-      const linePattern = /const payload = \{presupuesto_id:state\.budget\.id,categoria,tipo,monto_plan:monto,prioridad,descripcion\};/;
-      const lineReplacement = `const userIdResult = await db().auth.getUser();
-    const userId = userIdResult?.data?.user?.id || null;
+      /*
+       * 3) Las líneas presupuestarias también quedan asociadas al usuario.
+       */
+      const linePattern =
+        /const payload = \{presupuesto_id:state\.budget\.id,categoria,tipo,monto_plan:monto,prioridad,descripcion\};/;
 
-    if (!userId) {
+      const lineReplacement = `const lineAuth = await db().auth.getUser();
+    const lineUserId = lineAuth?.data?.user?.id || null;
+
+    if (!lineUserId) {
       notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);
       return;
     }
@@ -83,13 +107,24 @@
       monto_plan:monto,
       prioridad,
       descripcion,
-      user_id:userId
+      user_id:lineUserId
     };`;
 
-      if (!linePattern.test(source)) throw new Error('No se encontró el bloque de líneas presupuestarias en B233.');
+      if (!linePattern.test(source)) {
+        throw new Error('No se encontró el bloque de líneas presupuestarias.');
+      }
       source = source.replace(linePattern, lineReplacement);
 
-      if (!source.includes('user_id:userId')) throw new Error('La corrección RLS no pudo ser inyectada en B233.');
+      if (!source.includes(".eq('user_id', userId)")) {
+        throw new Error('La búsqueda por usuario no quedó aplicada.');
+      }
+      if (!source.includes('user_id:userId')) {
+        throw new Error('El INSERT no quedó asociado al usuario.');
+      }
+      if (source.includes('presupuestos_periodo_uix')) {
+        throw new Error('No se debe incorporar la restricción antigua al JavaScript.');
+      }
+
       (0, eval)(source);
     })
     .catch(showError);
