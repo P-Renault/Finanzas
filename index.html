@@ -1144,5 +1144,34 @@
 }
 </style>
 
+
+<!-- CCF B2.30.6 · LIMPIEZA DE REFERENCIAS DE DESPLIEGUE -->
+<script id="ccf-deployment-cleanup">
+(function(){
+  'use strict';
+  function clean(){
+    var selectors = [
+      '#b23265-footer','#b23266-footer','#b23267-footer',
+      '#b23269-footer','#b23273-bridge-badge','#b23274Footer',
+      '[id*="release-footer"]'
+    ];
+    selectors.forEach(function(sel){
+      document.querySelectorAll(sel).forEach(function(el){ el.remove(); });
+    });
+    document.querySelectorAll('body *').forEach(function(el){
+      if(!el || el.id === 'ccf-global-footer') return;
+      var t=(el.textContent||'').trim();
+      if(t.indexOf('Paquete desplegado:')===0 || /RELEASE-(ABONO|INTEGRACION|AUTH|CORE|SESSION)/i.test(t)) {
+        if(el.children.length <= 3) el.remove();
+      }
+    });
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',clean); } else { clean(); }
+  if(window.MutationObserver){
+    new MutationObserver(function(){ clean(); }).observe(document.body,{childList:true,subtree:true});
+  }
+})();
+</script>
+
 </body>
 </html>
