@@ -1174,5 +1174,62 @@
 })();
 </script>
 
+
+<!-- CCF B2.30.9 · BOOT RECOVERY -->
+<script id="ccf-boot-recovery">
+(function(){
+  'use strict';
+  if(window.__CCF_BOOT_RECOVERY__) return;
+  window.__CCF_BOOT_RECOVERY__=true;
+
+  function getClient(){
+    var c=window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__||window.supabaseClient;
+    if(c&&c.auth) return c;
+    if(window.supabase&&window.supabase.createClient){
+      var url=localStorage.getItem('sf_url'), key=localStorage.getItem('sf_key');
+      if(url&&key){
+        try{
+          c=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true}});
+          window.supabaseClient=c;
+          return c;
+        }catch(e){console.error('[CCF B2.30.9] client',e);}
+      }
+    }
+    return null;
+  }
+
+  async function recover(){
+    var app=document.getElementById('app');
+    if(!app) return;
+    if(document.getElementById('b230-portal')) return;
+
+    var c=getClient();
+    if(!c) return;
+
+    try{
+      var result=await c.auth.getSession();
+      if(result&&result.data&&result.data.session){
+        var config=document.getElementById('configPanel');
+        if(config) config.classList.add('hidden');
+        app.classList.remove('hidden');
+        app.classList.remove('b230-hidden-app');
+        if(typeof window.connect==='function'){
+          try{ await window.connect(); }catch(e){ console.warn('[CCF B2.30.9] connect',e); }
+        }
+        if(typeof window.refresh==='function'){
+          try{ await window.refresh(); }catch(e){}
+        }
+        console.info('[CCF B2.30.9] Sistema recuperado mediante sesión activa.');
+      }
+    }catch(e){ console.error('[CCF B2.30.9] session',e); }
+  }
+
+  function start(){
+    [700,1500,2500,4000].forEach(function(ms){setTimeout(recover,ms);});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true});
+  else start();
+})();
+</script>
 </body>
 </html>
