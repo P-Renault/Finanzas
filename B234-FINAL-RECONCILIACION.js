@@ -1,9 +1,6 @@
 /* CCF B234 FINAL — RECONCILIACIÓN QUIRÚRGICA
-   Drop-in runtime layer. No writes to Supabase.
-   Corrects:
-   1) B234 monthly summary from its own category cards.
-   2) IA / Planning / Operations using one consistent 30-day obligation snapshot.
-   3) Avoids the invalid movimientos.movimiento_id column.
+   Versión corregida: el resumen .b234-summary pertenece exclusivamente
+   a B232.34. Este módulo solo alimenta IA, Planificación y Operaciones.
 */
 (() => {
   'use strict';
@@ -23,7 +20,6 @@
     d.setDate(d.getDate()+days);
     return d.toISOString().slice(0,10);
   };
-  const ym = s => String(s||'').slice(0,7);
   const db = () => window.supabaseClient || window.db || window.__db || null;
 
   async function read(p) {
@@ -38,9 +34,13 @@
   async function snapshot30() {
     const c = db();
     if (!c) return null;
+
     const t = today();
     const end = addDays(t,29);
-    const pending = v => !/pagad|cobrad|realiz|cancel|cerrad|liquid/i.test(String(v??'').trim().toLowerCase());
+    const pending = v =>
+      !/pagad|cobrad|realiz|cancel|cerrad|liquid/i.test(
+        String(v ?? '').trim().toLowerCase()
+      );
 
     const [futureRows,movements,planned,commitments,quotas] = await Promise.all([
       read(c.from('ingresos_futuros').select('*').gte('fecha',t).lte('fecha',end)),
@@ -51,19 +51,29 @@
     ]);
 
     const future = futureRows.data.filter(x=>pending(x.estado));
-    const linkedIds = new Set(future.map(x=>x.movimiento_id ?? x.movement_id ?? x.movimientoId).filter(v=>v!=null).map(String));
-    const programmedIncome = future.reduce((s,x)=>s+num(x.monto ?? x.monto_neto ?? x.valor ?? x.monto_bruto),0);
+    const linkedIds = new Set(
+      future.map(x=>x.movimiento_id ?? x.movement_id ?? x.movimientoId)
+        .filter(v=>v!=null).map(String)
+    );
+
+    const programmedIncome = future.reduce(
+      (s,x)=>s+num(x.monto ?? x.monto_neto ?? x.valor ?? x.monto_bruto),0
+    );
     const futureMovementIncome = movements.data
       .filter(x=>String(x.tipo||'').toLowerCase()==='ingreso')
       .filter(x=>!linkedIds.has(String(x.id)))
       .reduce((s,x)=>s+num(x.monto),0);
 
-    const plannedExpense = planned.data.filter(x=>pending(x.estado)).reduce((s,x)=>s+num(x.monto ?? x.valor),0);
-    const commitmentsTotal = commitments.data.filter(x=>pending(x.estado)).reduce((s,x)=>s+num(x.monto),0);
-    const quotasTotal = quotas.data.filter(x=>pending(x.estado)).reduce((s,x)=>s+num(x.monto ?? x.monto_cuota ?? x.valor),0);
+    const plannedExpense = planned.data.filter(x=>pending(x.estado))
+      .reduce((s,x)=>s+num(x.monto ?? x.valor),0);
+    const commitmentsTotal = commitments.data.filter(x=>pending(x.estado))
+      .reduce((s,x)=>s+num(x.monto),0);
+    const quotasTotal = quotas.data.filter(x=>pending(x.estado))
+      .reduce((s,x)=>s+num(x.monto ?? x.monto_cuota ?? x.valor),0);
 
     return {
-      start:t,end,
+      start:t,
+      end,
       programmedIncome,
       futureMovementIncome,
       futureIncome:programmedIncome+futureMovementIncome,
@@ -79,72 +89,53 @@
     if (el) el.textContent = money(value);
   }
 
-  function patchB234() {
-    const report = document.getElementById('b234-report');
-    if (!report) return false;
-    const summary = report.querySelector('.b234-summary');
-    const cards = [...report.querySelectorAll('.b234-cat')];
-    if (!summary || !cards.length) return false;
-
-    const parse = node => {
-      const value = Number(String(node?.textContent||'').replace(/[^\d-]/g,''));
-      return Number.isFinite(value) ? value : 0;
-    };
-    let generated=0,pending=0,future=0;
-    for (const card of cards) {
-      const lines = card.querySelectorAll('.b234-line');
-      generated += parse(lines[0]?.querySelector('span:last-child'));
-      pending += parse(lines[1]?.querySelector('span:last-child'));
-      future += parse(lines[2]?.querySelector('span:last-child'));
-    }
-    const total = generated + pending + future;
-    const strong = summary.querySelectorAll('div strong');
-    const small = summary.querySelectorAll('div small:last-child');
-    if (strong[0]) strong[0].textContent = money(total);
-    if (strong[1]) strong[1].textContent = money(generated);
-    if (strong[2]) strong[2].textContent = money(pending);
-    if (strong[3]) strong[3].textContent = money(future);
-    if (small[0]) small[0].textContent = `${total ? Math.round(generated/total*100) : 0}%`;
-    if (small[1]) small[1].textContent = `${total ? Math.round(pending/total*100) : 0}%`;
-    if (small[2]) small[2].textContent = `${total ? Math.round(future/total*100) : 0}%`;
-    return true;
-  }
-
   function patchOperations(s) {
     setText('f24Future', s.futureIncome);
     setText('f24Oblig', s.obligations30d);
     const status=document.getElementById('f24OpsStatus');
-    if(status) status.textContent=`Actualizado: ingresos futuros consolidados ${money(s.futureIncome)}, obligaciones 30 días ${money(s.obligations30d)}.`;
+    if(status) status.textContent =
+      `Actualizado: ingresos futuros consolidados ${money(s.futureIncome)}, obligaciones 30 días ${money(s.obligations30d)}.`;
   }
 
   function patchIA(s) {
     setText('b227In', s.futureIncome);
     setText('b227Out', s.obligations30d);
     const answer=document.getElementById('b227Answer');
-    if(answer) answer.textContent=`Datos reconciliados al ${s.start}. Ingresos futuros consolidados: ${money(s.futureIncome)}. Obligaciones próximos 30 días: ${money(s.obligations30d)}.`;
+    if(answer) answer.textContent =
+      `Datos reconciliados al ${s.start}. Ingresos futuros consolidados: ${money(s.futureIncome)}. Obligaciones próximos 30 días: ${money(s.obligations30d)}.`;
   }
 
   function patchPlan(s) {
     const host=document.getElementById('b216Content');
     if(!host) return;
+
     host.querySelectorAll('.b23224-kpi').forEach(k=>{
       const label=(k.querySelector('span')?.textContent||'').trim().toLowerCase();
       const strong=k.querySelector('strong');
       const small=k.querySelector('small');
       if(!strong) return;
-      if(label==='ingresos futuros'){strong.textContent=money(s.futureIncome);if(small)small.textContent='ingresos consolidados · próximos 30 días';}
-      if(label==='obligaciones'){strong.textContent=money(s.obligations30d);if(small)small.textContent='Planificados + compromisos + deuda · 30 días';}
+
+      if(label==='ingresos futuros'){
+        strong.textContent=money(s.futureIncome);
+        if(small) small.textContent='ingresos consolidados · próximos 30 días';
+      }
+
+      if(label==='obligaciones'){
+        strong.textContent=money(s.obligations30d);
+        if(small) small.textContent='Planificados + compromisos + deuda · 30 días';
+      }
     });
   }
 
   async function run() {
     try {
-      patchB234();
       const snap = await snapshot30();
       if (!snap) return;
+
       window.__CCF_B234_FINAL_SNAPSHOT__ = snap;
-      patchPlan(snap); patchIA(snap); patchOperations(snap);
-      patchB234();
+      patchPlan(snap);
+      patchIA(snap);
+      patchOperations(snap);
     } catch (e) {
       console.warn('[CCF B234 FINAL]', e);
     }
@@ -159,7 +150,9 @@
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', schedule, {once:true});
-  } else schedule();
+  } else {
+    schedule();
+  }
 
   document.addEventListener('click', e => {
     if (e.target.closest('[data-tab="dashboard"],[data-tab="planificacion"],[data-tab="operaciones"]')) {
