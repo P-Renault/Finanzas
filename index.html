@@ -14,11 +14,33 @@
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
-<link rel="stylesheet" href="B234-movimientos-futuros.css?v=234.1">
 <link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.6">
 
 <title>Centro de Control Financiero · CCF-V5.0.1 + EXEC-DASH-V1.2.6</title>
-<script id="b23251-early-runtime-capture">
+<style id="b23250-errors-css">
+#b23250-errors-panel .b23250-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23250-errors-panel .b23250-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23250-errors-panel .b23250-label{font-size:10px;color:#64748b}
+#b23250-errors-panel .b23250-value{font-weight:800;margin-top:3px}
+@media(max-width:720px){
+  #b23250-errors-panel .b23250-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){
+  #b23250-errors-panel .b23250-grid{grid-template-columns:1fr}
+}
+</style>
+
+
+<script id="ccf-early-runtime-capture">
 (function(){
   'use strict';
   if(window.__B23251EarlyErrors) return;
@@ -69,7 +91,6 @@
 })();
 </script>
 
-<meta name="ccf-release" content="B2.30.6 · Limpieza visual + Somos Software">
 </head>
 
 <body>
@@ -130,7 +151,9 @@
          Data -> Estado -> Liquidez -> Brecha -> Margen -> Alertas
          ========================================================= -->
     <section id="dashboard" class="tab">
-<main id="financial-control" class="financial-control">
+
+
+      <main id="financial-control" class="financial-control">
 
         <header class="summary-header">
           <div>
@@ -181,60 +204,6 @@
             <strong id="kpi-gap">$0</strong>
           </article>
 
-        </section>
-
-        <!-- B234 · MOVIMIENTOS FUTUROS DEL MES -->
-        <section id="b234-future-movements" class="future-movements panel" aria-label="Resumen mensual y movimientos futuros">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">RESUMEN MENSUAL</p>
-              <h3>Ingresos, egresos y movimientos futuros</h3>
-            </div>
-            <span id="future-month-label">Mes en curso</span>
-          </div>
-
-          <div class="future-month-summary">
-            <div class="future-month-card future-month-income">
-              <span>Ingresos del mes</span>
-              <strong id="month-income-total">$0</strong>
-            </div>
-            <div class="future-month-card future-month-expense">
-              <span>Egresos del mes</span>
-              <strong id="month-expense-total">$0</strong>
-            </div>
-            <div class="future-month-card future-month-income">
-              <span>Ingresos futuros</span>
-              <strong id="future-income-total">$0</strong>
-            </div>
-            <div class="future-month-card future-month-expense">
-              <span>Egresos futuros</span>
-              <strong id="future-expense-total">$0</strong>
-            </div>
-          </div>
-
-          <div class="future-movement-grid">
-            <section class="future-movement-column future-income-block" aria-label="Ingresos futuros">
-              <div class="future-block-heading">
-                <div>
-                  <p class="eyebrow">INGRESOS</p>
-                  <h4>Ingresos futuros</h4>
-                </div>
-                <strong id="future-income-count">0</strong>
-              </div>
-              <div id="future-income-list" class="future-movement-list" aria-live="polite">Cargando...</div>
-            </section>
-
-            <section class="future-movement-column future-expense-block" aria-label="Egresos futuros">
-              <div class="future-block-heading">
-                <div>
-                  <p class="eyebrow">EGRESOS</p>
-                  <h4>Egresos futuros</h4>
-                </div>
-                <strong id="future-expense-count">0</strong>
-              </div>
-              <div id="future-expense-list" class="future-movement-list" aria-live="polite">Cargando...</div>
-            </section>
-          </div>
         </section>
 
         <!-- MARGEN DIARIO -->
@@ -739,10 +708,9 @@
      ============================================================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js?v=232.23"></script>
-<!-- CCF B2.30.10 · MOTORES CORE RESTAURADOS -->
-<script src="b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js?v=230.4"></script>
+<script src="CCF-AUTH-BOOT-FINAL.js?v=230.12"></script>
+<script src="b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js?v=230.12"></script>
 <script src="b225-motor-multifuente.js?v=225.2"></script>
-
 
 <!-- =============================================================
      CARGA CONTROLADA DE MÓDULOS
@@ -1076,6 +1044,7 @@
 })();
 </script>
 
+<script src="B234-movimientos-futuros.js?v=234.1"></script>
 <script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
   <script src="B232.68-CCF-DEUDA-DUAL.js?v=232.68"></script>
 <script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
@@ -1092,146 +1061,9 @@
   <script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66"></script>
   <script src="B232.65-menu-principal.js?v=232.65"></script>
   <script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
-  <script src="B232.69-AUTH.js?v=232.69"></script>
-  <script src="B232.74-AUTH-SESSION-PERSISTENCE.js?v=232.74"></script>
-  <script src="B232.73-AUTH-CORE-BRIDGE.js?v=232.73"></script>
-<script src="B230-PORTAL-ACCESO.js?v=230.2"></script>
-<script src="B234-movimientos-futuros.js?v=234.2"></script>
 
 
-
-<footer id="ccf-global-footer" aria-label="Producto desarrollado por Somos Software">
-  <div class="ccf-footer-brand">
-    <img src="somos-software-logo.jpg" alt="Somos Software · Innovación Digital">
-    <div>
-      <strong>Producto desarrollado por Somos Software</strong>
-      <span>CCF · Centro de Control Financiero</span>
-    </div>
-  </div>
-</footer>
-<style id="ccf-global-footer-style">
-#ccf-global-footer{
-  margin:28px 12px 20px;
-  padding:14px 12px;
-  border-top:1px solid #e5e7eb;
-  background:#fff;
-  border-radius:12px;
-  text-align:center;
-  color:#334155;
-  font:600 12px/1.4 system-ui,sans-serif;
-}
-.ccf-footer-brand{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.ccf-footer-brand img{
-  width:118px;
-  max-width:38vw;
-  height:auto;
-  display:block;
-  object-fit:contain;
-}
-.ccf-footer-brand div{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
-.ccf-footer-brand strong{font-weight:800}
-.ccf-footer-brand span{font-size:10px;color:#64748b;font-weight:600}
-@media(max-width:480px){
-  #ccf-global-footer{margin:20px 8px 16px;padding:12px 8px}
-  .ccf-footer-brand{gap:8px}
-  .ccf-footer-brand img{width:105px}
-  .ccf-footer-brand strong{font-size:11px}
-}
-</style>
-
-
-<!-- CCF B2.30.6 · LIMPIEZA DE REFERENCIAS DE DESPLIEGUE -->
-<script id="ccf-deployment-cleanup">
-(function(){
-  'use strict';
-  function clean(){
-    var selectors = [
-      '#b23265-footer','#b23266-footer','#b23267-footer',
-      '#b23269-footer','#b23273-bridge-badge','#b23274Footer',
-      '[id*="release-footer"]'
-    ];
-    selectors.forEach(function(sel){
-      document.querySelectorAll(sel).forEach(function(el){ el.remove(); });
-    });
-    document.querySelectorAll('body *').forEach(function(el){
-      if(!el || el.id === 'ccf-global-footer') return;
-      var t=(el.textContent||'').trim();
-      if(t.indexOf('Paquete desplegado:')===0 || /RELEASE-(ABONO|INTEGRACION|AUTH|CORE|SESSION)/i.test(t)) {
-        if(el.children.length <= 3) el.remove();
-      }
-    });
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',clean); } else { clean(); }
-  if(window.MutationObserver){
-    new MutationObserver(function(){ clean(); }).observe(document.body,{childList:true,subtree:true});
-  }
-})();
-</script>
-
-
-
-
-<!-- CCF B2.30.10 · ARRANQUE DE EMERGENCIA DE DESPLIEGUE -->
-<script id="ccf-boot-emergency">
-(function(){
-  'use strict';
-  if(window.__CCF_B23010_BOOT__) return;
-  window.__CCF_B23010_BOOT__=true;
-
-  function reveal(){
-    var app=document.getElementById('app');
-    if(!app) return;
-    app.classList.remove('hidden');
-    app.classList.remove('b230-hidden-app');
-    app.style.removeProperty('display');
-    app.removeAttribute('aria-hidden');
-  }
-
-  async function connectIfPossible(){
-    if(typeof window.connect==='function'){
-      try{ await window.connect(); }catch(e){ console.warn('[CCF B2.30.10] connect:',e); }
-    }
-    if(typeof window.refresh==='function'){
-      try{ await window.refresh(); }catch(e){ console.warn('[CCF B2.30.10] refresh:',e); }
-    }
-  }
-
-  function boot(){
-    // Caso normal: B2.30 já abriu o portal/sistema.
-    if(document.getElementById('b230-portal')) return;
-
-    // Caso de fallo: o portal não carregou. Liberamos diretamente #app.
-    reveal();
-    connectIfPossible();
-  }
-
-  function schedule(){
-    // Primeiro damos tempo ao B2.30/Auth para iniciar normalmente.
-    setTimeout(boot, 1800);
-    setTimeout(boot, 3500);
-    setTimeout(boot, 5500);
-  }
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',schedule,{once:true});
-  }else{
-    schedule();
-  }
-})();
-</script>
-
-
-<footer id="ccf-release-footer" aria-label="Versión del sistema"><span>CCF · Último paquete: <strong>B2.30.10 · Release operacional</strong></span></footer>
+<footer id="ccf-release-footer" aria-label="Versión del sistema"><span>CCF · Último paquete: <strong>B2.30.12 · Corrección de acceso y despliegue</strong></span></footer>
 <style id="ccf-release-footer-style">#ccf-release-footer{margin:18px 10px 14px;padding:9px 10px;text-align:center;border-top:1px solid #e5e7eb;color:#64748b;font:600 10px/1.4 system-ui,sans-serif}#ccf-release-footer strong{color:#334155}</style>
 </body>
 </html>
