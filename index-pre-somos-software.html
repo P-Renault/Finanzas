@@ -678,9 +678,16 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
         </div>
 
       </main>
+<footer id="ccf-release-footer" aria-label="Versión del sistema">
+  <span>CCF · Último paquete: <strong>B2.30.3 · Release de producción</strong></span>
+</footer>
+<style id="ccf-release-footer-style">
+#ccf-release-footer{margin:24px 12px 16px;padding:10px 12px;text-align:center;border-top:1px solid #e5e7eb;color:#64748b;font:600 11px/1.4 system-ui,sans-serif}
+#ccf-release-footer strong{color:#334155}
+</style>
 
 
-</section>
+    </section>
 
 
     <!-- =========================================================
@@ -1005,52 +1012,6 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
     -->
 
   </section>
-
-<footer id="ccf-release-footer" aria-label="Información del producto">
-  <div class="ccf-release-brand">
-    <img src="somos-software.jpg" alt="Somos Software · Innovación Digital" loading="lazy">
-  </div>
-  <div class="ccf-release-product">Producto desarrollado por <strong>Somos Software</strong></div>
-  <div class="ccf-release-package">CCF · Último paquete: <strong>B2.30.3 · Release de producción</strong></div>
-</footer>
-<style id="ccf-release-footer-style">
-#ccf-release-footer{
-  width:100%;
-  box-sizing:border-box;
-  margin:24px 0 0;
-  padding:18px 12px 22px;
-  text-align:center;
-  border-top:1px solid #e5e7eb;
-  background:#fff;
-  color:#64748b;
-  font:600 11px/1.4 system-ui,sans-serif;
-}
-#ccf-release-footer .ccf-release-brand{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin-bottom:8px;
-}
-#ccf-release-footer .ccf-release-brand img{
-  display:block;
-  width:min(220px,70vw);
-  height:auto;
-  max-height:90px;
-  object-fit:contain;
-}
-#ccf-release-footer .ccf-release-product{
-  margin-bottom:5px;
-  color:#334155;
-}
-#ccf-release-footer .ccf-release-package{
-  color:#64748b;
-  font-size:10px;
-}
-#ccf-release-footer .ccf-release-product strong,
-#ccf-release-footer .ccf-release-package strong{
-  color:#334155;
-}
-</style>
 </main>
 
 <!-- =============================================================
@@ -1468,61 +1429,6 @@ style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;
     removeTechnicalFooters(document);
     observer.disconnect();
   }, 5000);
-})();
-</script>
-
-<!-- CCF RELEASE CLEANUP: elimina únicamente el indicador técnico legacy de B231.0. -->
-<script id="ccf-release-cleanup">
-(function () {
-  'use strict';
-
-  var LEGACY_TEXT = ['Deudas V2','adaptador B231.0 activo','compatibilidad estable'].join(' · ');
-
-  function removeLegacyBadge(root) {
-    if (!root || !root.querySelectorAll) return;
-
-    var nodes = root.querySelectorAll('*');
-    for (var i = 0; i < nodes.length; i++) {
-      var el = nodes[i];
-      var text = (el.textContent || '').replace(/\s+/g, ' ').trim();
-      if (text !== LEGACY_TEXT) continue;
-
-      var target = el;
-      for (var depth = 0; depth < 5 && target && target !== document.body; depth++) {
-        var style = window.getComputedStyle(target);
-        if (style.position === 'fixed' || style.position === 'absolute') {
-          target.remove();
-          break;
-        }
-        target = target.parentElement;
-      }
-
-      if (target === document.body || !target) {
-        el.remove();
-      }
-    }
-  }
-
-  function cleanup() {
-    removeLegacyBadge(document.body);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', cleanup, { once: true });
-  } else {
-    cleanup();
-  }
-
-  var observer = new MutationObserver(function (mutations) {
-    for (var i = 0; i < mutations.length; i++) {
-      if (mutations[i].addedNodes && mutations[i].addedNodes.length) {
-        cleanup();
-        break;
-      }
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 
