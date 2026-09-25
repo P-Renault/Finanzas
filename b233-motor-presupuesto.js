@@ -5,10 +5,10 @@
  */
 (() => {
   'use strict';
-  if (window.__B233_PROD_RLS_FIX_V2__) return;
-  window.__B233_PROD_RLS_FIX_V2__ = true;
+  if (window.__B233_PROD_RLS_FIX_V3__) return;
+  window.__B233_PROD_RLS_FIX_V3__ = true;
 
-  const SOURCE = 'https://raw.githubusercontent.com/P-Renault/Finanzas/Backup/b233-motor-presupuesto.js?v=233.19-r1';
+  const SOURCE = 'https://raw.githubusercontent.com/P-Renault/Finanzas/Backup/b233-motor-presupuesto.js?v=233.19-r2';
 
   const showError = err => {
     console.error('[B233 RLS PRODUCCIÓN]', err);
@@ -34,12 +34,35 @@
         return null;
       }
 
-      const r = await c.from('presupuestos').insert({
+      let r = await c.from('presupuestos').insert({
         periodo,
         nombre:\`Presupuesto \${monthLabel(state.month)}\`,
         estado:'activo',
         user_id:userId
-      }).select('*').single();`;
+      }).select('*').single();
+
+      /*
+       * presupuestos_periodo_uix es UNIQUE sobre periodo. Si ya existe,
+       * se recupera mediante SELECT sujeto a RLS en vez de repetir INSERT.
+       */
+      if (r.error && r.error.code === '23505') {
+        const existing = await c.from('presupuestos')
+          .select('*')
+          .eq('periodo', periodo)
+          .maybeSingle();
+
+        if (existing.error) {
+          notify(\`Ya existe un presupuesto para \${monthLabel(state.month)}, pero no pudo recuperarse con la sesión actual: \${existing.error.message}\`, false);
+          return null;
+        }
+
+        if (!existing.data) {
+          notify(\`Ya existe un presupuesto para \${monthLabel(state.month)}, pero no está disponible para el usuario autenticado. No se modifica RLS.\`, false);
+          return null;
+        }
+
+        r = { error: null, data: existing.data };
+      }`;
 
       if (!budgetPattern.test(source)) throw new Error('No se encontró el bloque de INSERT de presupuestos en B233.');
       source = source.replace(budgetPattern, budgetReplacement);
