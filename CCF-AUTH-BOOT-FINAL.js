@@ -1,4 +1,4 @@
-/* CCF B2.31.6 — AUTH CLIENT BRIDGE
+/* CCF B2.31.2 — AUTH CLIENT BRIDGE
    Corrige el flujo Crear cuenta/Iniciar sesión usando un único formulario.
    No modifica tablas, SQL, RLS ni datos financieros.
 */
@@ -100,9 +100,12 @@ function installForms(){
  $('ccf-auth-form')?.addEventListener('submit',e=>{e.preventDefault();submitAuth()});
  const logout=$('logoutBtn');if(logout&&!logout.dataset.ccfFinalAuth){logout.dataset.ccfFinalAuth='1';logout.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();try{await client?.auth?.signOut({scope:'local'})}finally{location.reload()}},true)}
 }
-async function boot(){hideLegacy();portal();installForms();try{await waitClient();status('Acceso listo. Inicia sesión o crea una cuenta.');const result=await Promise.race([client.auth.getSession(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tiempo de espera al verificar la sesión.')),8000))]);const {data,error}=result;if(error)throw error;if(data?.session)await openApp();else status('Sin sesión activa. Inicia sesión o crea una cuenta.')}catch(e){console.error('[CCF B2.31.6] boot',e);status('Acceso listo. Inicia sesión o crea una cuenta.',false)}}
-// B2.31.6: instala el cliente ANTES de que app.js ejecute connect() en DOMContentLoaded.
+async function boot(){hideLegacy();portal();installForms();status('Conectando con Supabase…');try{if(!client){if(!installClient())throw new Error('La biblioteca de Supabase no está disponible.')}const result=await Promise.race([client.auth.getSession(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Tiempo de espera al verificar la sesión.')),5000))]);const {data,error}=result||{};if(error)throw error;if(data?.session)await openApp();else status('Sin sesión activa. Inicia sesión o crea una cuenta.')}catch(e){console.error('[CCF B2.31.6] boot',e);status(e?.message==='Tiempo de espera al verificar la sesión.'?'Sesión no verificada. Puedes iniciar sesión.':(e?.message||'No fue posible inicializar el acceso.'),true)}}
+// B2.31.5: instala el cliente ANTES de que app.js ejecute connect() en DOMContentLoaded.
 // Así todos los módulos reutilizan la misma instancia y se evita el bloqueo por múltiples GoTrueClient.
-try{installClient()}catch(e){console.warn('[CCF B2.31.6] preinstall',e)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+try{installClient()}catch(e){console.warn('[CCF B2.31.5] preinstall',e)}
+// B2.31.6: el script se carga al final del body; no dependemos de DOMContentLoaded.
+// Esto evita que el portal quede en 'Inicializando acceso…' si otro módulo altera el ciclo DOM.
+if(document.readyState==='loading')setTimeout(boot,0);else boot();
+setTimeout(()=>{const gate=document.getElementById('ccf-auth-gate');const st=document.getElementById('ccf-auth-status');if(gate&&st&&/Inicializando acceso/.test(st.textContent||''))boot()},6000);
 })();
