@@ -1,4 +1,4 @@
-/* CCF B2.30.16 — AUTH MODE FIX
+/* CCF B2.31.2 — AUTH CLIENT BRIDGE
    Corrige el flujo Crear cuenta/Iniciar sesión usando un único formulario.
    No modifica tablas, SQL, RLS ni datos financieros.
 */
@@ -6,7 +6,7 @@
 'use strict';
 if(window.__CCF_B23016_AUTH_BOOT__)return;
 window.__CCF_B23016_AUTH_BOOT__=true;
-const VERSION='B2.30.16';
+const VERSION='B2.31.2';
 const SUPABASE_URL='https://xgxvdbgmwvncmfdcxgsf.supabase.co';
 const SUPABASE_KEY='sb_publishable_fJqOSLC7dhYKttuU1uAvcQ_AX-aH4PB';
 let client=null, mode='login';
@@ -60,6 +60,18 @@ function installClient(){
  if(!window.supabase?.createClient)return false;
  if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  window.supabaseClient=client;window.db=client;window.__db=client;window.__B23269_CLIENT__=client;window.__B23270_CLIENT__=client;window.__B23273_CLIENT__=client;
+ // B2.31.2: todos los módulos legacy deben reutilizar el cliente autenticado.
+ // Evita que createClient() cree sesiones paralelas sin JWT y active RLS como anon.
+ if(!window.__CCF_AUTH_CREATECLIENT_PATCHED__){
+   const originalCreateClient=window.supabase.createClient.bind(window.supabase);
+   window.supabase.createClient=function(url,key,options){
+     if(String(url||'')===SUPABASE_URL && String(key||'')===SUPABASE_KEY){
+       return client;
+     }
+     return originalCreateClient(url,key,options);
+   };
+   window.__CCF_AUTH_CREATECLIENT_PATCHED__=true;
+ }
  try{localStorage.setItem('sf_url',SUPABASE_URL);localStorage.setItem('sf_key',SUPABASE_KEY)}catch(_){ }
  return true;
 }
