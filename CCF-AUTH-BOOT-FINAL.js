@@ -59,7 +59,7 @@ function setMode(next){
 function installClient(){
  if(!window.supabase?.createClient)return false;
  if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- window.supabaseClient=client;window.__B23269_CLIENT__=client;window.__B23270_CLIENT__=client;window.__B23273_CLIENT__=client;
+ window.supabaseClient=client;window.db=client;window.__db=client;window.__B23269_CLIENT__=client;window.__B23270_CLIENT__=client;window.__B23273_CLIENT__=client;
  try{localStorage.setItem('sf_url',SUPABASE_URL);localStorage.setItem('sf_key',SUPABASE_KEY)}catch(_){ }
  return true;
 }
