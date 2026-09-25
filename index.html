@@ -1175,61 +1175,56 @@
 </script>
 
 
-<!-- CCF B2.30.9 · BOOT RECOVERY -->
-<script id="ccf-boot-recovery">
+
+
+<!-- CCF B2.30.10 · ARRANQUE DE EMERGENCIA DE DESPLIEGUE -->
+<script id="ccf-boot-emergency">
 (function(){
   'use strict';
-  if(window.__CCF_BOOT_RECOVERY__) return;
-  window.__CCF_BOOT_RECOVERY__=true;
+  if(window.__CCF_B23010_BOOT__) return;
+  window.__CCF_B23010_BOOT__=true;
 
-  function getClient(){
-    var c=window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__||window.supabaseClient;
-    if(c&&c.auth) return c;
-    if(window.supabase&&window.supabase.createClient){
-      var url=localStorage.getItem('sf_url'), key=localStorage.getItem('sf_key');
-      if(url&&key){
-        try{
-          c=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true}});
-          window.supabaseClient=c;
-          return c;
-        }catch(e){console.error('[CCF B2.30.9] client',e);}
-      }
-    }
-    return null;
-  }
-
-  async function recover(){
+  function reveal(){
     var app=document.getElementById('app');
     if(!app) return;
+    app.classList.remove('hidden');
+    app.classList.remove('b230-hidden-app');
+    app.style.removeProperty('display');
+    app.removeAttribute('aria-hidden');
+  }
+
+  async function connectIfPossible(){
+    if(typeof window.connect==='function'){
+      try{ await window.connect(); }catch(e){ console.warn('[CCF B2.30.10] connect:',e); }
+    }
+    if(typeof window.refresh==='function'){
+      try{ await window.refresh(); }catch(e){ console.warn('[CCF B2.30.10] refresh:',e); }
+    }
+  }
+
+  function boot(){
+    // Caso normal: B2.30 já abriu o portal/sistema.
     if(document.getElementById('b230-portal')) return;
 
-    var c=getClient();
-    if(!c) return;
-
-    try{
-      var result=await c.auth.getSession();
-      if(result&&result.data&&result.data.session){
-        var config=document.getElementById('configPanel');
-        if(config) config.classList.add('hidden');
-        app.classList.remove('hidden');
-        app.classList.remove('b230-hidden-app');
-        if(typeof window.connect==='function'){
-          try{ await window.connect(); }catch(e){ console.warn('[CCF B2.30.9] connect',e); }
-        }
-        if(typeof window.refresh==='function'){
-          try{ await window.refresh(); }catch(e){}
-        }
-        console.info('[CCF B2.30.9] Sistema recuperado mediante sesión activa.');
-      }
-    }catch(e){ console.error('[CCF B2.30.9] session',e); }
+    // Caso de fallo: o portal não carregou. Liberamos diretamente #app.
+    reveal();
+    connectIfPossible();
   }
 
-  function start(){
-    [700,1500,2500,4000].forEach(function(ms){setTimeout(recover,ms);});
+  function schedule(){
+    // Primeiro damos tempo ao B2.30/Auth para iniciar normalmente.
+    setTimeout(boot, 1800);
+    setTimeout(boot, 3500);
+    setTimeout(boot, 5500);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true});
-  else start();
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',schedule,{once:true});
+  }else{
+    schedule();
+  }
 })();
 </script>
+
 </body>
 </html>
