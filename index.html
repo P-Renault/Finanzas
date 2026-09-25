@@ -13,10 +13,88 @@
 <link rel="stylesheet" href="finanzas-v233.css?v=2521">
 <link rel="stylesheet" href="b221-movimientos-liquidez.css?v=221.0">
 <link rel="stylesheet" href="b233-presupuesto.css?v=233.0.2">
+<link rel="stylesheet" href="b240-presupuesto.css?v=240.1">
 <link rel="stylesheet" href="resumen.css?v=5.0.0">
 <link rel="stylesheet" href="dashboard-ejecutivo.css?v=1.2.6">
 
 <title>Centro de Control Financiero · CCF-V5.0.1 + EXEC-DASH-V1.2.6</title>
+<style id="b23247-mobile-ux-css">
+@media (max-width:720px){
+.tabs{gap:6px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px!important}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button,button,input[type="button"],input[type="submit"]{min-height:44px;touch-action:manipulation}
+.tabs button{min-width:max-content;padding-left:12px!important;padding-right:12px!important}
+input,select,textarea{min-height:44px;font-size:16px!important}
+textarea{min-height:88px}
+table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#b23247-mobile-ux-panel{overflow:hidden}
+#b23247-mobile-ux-panel .b23247-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media (max-width:380px){#b23247-mobile-ux-panel .b23247-grid{grid-template-columns:1fr!important}}
+</style>
+
+<style id="b23248-qa-css">
+#b23248-qa-panel .b23248-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23248-qa-panel .b23248-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23248-qa-panel .b23248-label{
+  font-size:10px;
+  color:#64748b;
+}
+#b23248-qa-panel .b23248-value{
+  font-weight:800;
+  margin-top:3px;
+}
+@media(max-width:720px){
+  #b23248-qa-panel .b23248-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:380px){
+  #b23248-qa-panel .b23248-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+
+<style id="b23249-security-css">
+#b23249-security-panel .b23249-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+#b23249-security-panel .b23249-item{
+  padding:10px;
+  border-radius:10px;
+  background:#f8fafc;
+}
+#b23249-security-panel .b23249-label{
+  font-size:10px;
+  color:#64748b;
+}
+#b23249-security-panel .b23249-value{
+  font-weight:800;
+  margin-top:3px;
+}
+@media(max-width:720px){
+  #b23249-security-panel .b23249-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){
+  #b23249-security-panel .b23249-grid{grid-template-columns:1fr}
+}
+</style>
+
+
 <style id="b23250-errors-css">
 #b23250-errors-panel .b23250-grid{
   display:grid;
@@ -40,7 +118,7 @@
 </style>
 
 
-<script id="ccf-early-runtime-capture">
+<script id="b23251-early-runtime-capture">
 (function(){
   'use strict';
   if(window.__B23251EarlyErrors) return;
@@ -145,20 +223,6 @@
       <button data-tab="presupuesto">Presupuesto</button>
     </nav>
 
-    <!-- CCF B2.30.14 · Manual de Usabilidad -->
-    <div class="ccf-manual-access" aria-label="Ayuda y documentación del sistema">
-      <a class="ccf-manual-button" href="Manual_de_Usabilidad_CCF.pdf" download="Manual_de_Usabilidad_CCF.pdf" aria-label="Descargar manual de usabilidad">
-        Descargar manual de usabilidad
-      </a>
-    </div>
-    <style id="ccf-manual-access-style">
-      .ccf-manual-access{display:flex;justify-content:flex-end;margin:8px 10px 14px}
-      .ccf-manual-button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:9px 14px;border-radius:9px;background:#172033;color:#fff;text-decoration:none;font:700 12px/1.2 system-ui,sans-serif;box-shadow:0 1px 2px rgba(15,23,42,.08)}
-      .ccf-manual-button:hover{filter:brightness(1.08)}
-      .ccf-manual-button:focus-visible{outline:3px solid rgba(59,130,246,.35);outline-offset:2px}
-      @media(max-width:640px){.ccf-manual-access{justify-content:stretch;margin:8px 10px 12px}.ccf-manual-button{width:100%}}
-    </style>
-
     <!-- =========================================================
          NUEVO RESUMEN
          Centro de Control Financiero
@@ -166,73 +230,179 @@
          ========================================================= -->
     <section id="dashboard" class="tab">
 
-      <!-- CCF B2.30.15 · Resumen mensual de ingresos, egresos y movimientos futuros -->
-      <section id="b234-future-movements" class="future-movements ccf-monthly-summary" aria-label="Resumen mensual">
-        <div class="ccf-monthly-summary-head">
+
+      <!-- =========================================================
+           B232.45 · OBSERVABILIDAD SEGURA
+           Panel estático dentro de #dashboard.
+           B232.43 puede anteponer su propio panel, pero no elimina
+           este nodo porque no se observa ni se reemplaza el padre.
+           ========================================================= -->
+      <section id="b23245-observability-panel"
+               class="panel"
+               aria-label="Observabilidad B232.45"
+               style="margin:12px 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;position:relative;z-index:2;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
           <div>
-            <p class="eyebrow">RESUMEN MENSUAL</p>
-            <h2>Ingresos, egresos y movimientos futuros</h2>
+            <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.45 · OBSERVABILIDAD SEGURA</div>
+            <div id="b23245-status" style="font-weight:800;font-size:18px;margin-top:4px;">INICIALIZANDO</div>
           </div>
-          <strong id="future-month-label" class="ccf-month-label">—</strong>
+          <button type="button" id="b23245-audit"
+                  style="border:0;border-radius:10px;padding:9px 12px;cursor:pointer;">
+            Auditar ahora
+          </button>
         </div>
-
-        <div class="ccf-monthly-kpis" aria-label="Totales mensuales">
-          <article class="ccf-monthly-kpi ccf-monthly-income">
-            <span>Ingresos del mes</span>
-            <strong id="month-income-total">$0</strong>
-          </article>
-          <article class="ccf-monthly-kpi ccf-monthly-expense">
-            <span>Egresos del mes</span>
-            <strong id="month-expense-total">$0</strong>
-          </article>
-          <article class="ccf-monthly-kpi ccf-monthly-income">
-            <span>Ingresos futuros</span>
-            <strong id="future-income-total">$0</strong>
-          </article>
-          <article class="ccf-monthly-kpi ccf-monthly-expense">
-            <span>Egresos futuros</span>
-            <strong id="future-expense-total">$0</strong>
-          </article>
+        <div id="b23245-metrics"
+             style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">
         </div>
+        <div id="b23245-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+          Preparando auditoría...
+        </div>
+      
+</section>
 
-        <div class="future-movement-grid ccf-monthly-future-grid">
-          <article class="future-movement-column future-income-block">
-            <div class="future-block-heading">
-              <h3>Ingresos futuros</h3>
-              <strong id="future-income-count">0</strong>
-            </div>
-            <div id="future-income-list" class="future-movement-list"></div>
-          </article>
-
-          <article class="future-movement-column future-expense-block">
-            <div class="future-block-heading">
-              <h3>Egresos futuros</h3>
-              <strong id="future-expense-count">0</strong>
-            </div>
-            <div id="future-expense-list" class="future-movement-list"></div>
-          </article>
+      <!-- =========================================================
+           B232.46 · MANTENIMIENTO FINANCIERO
+           Validación previa de entradas + protección contra doble envío.
+           No escribe en Supabase y no modifica los motores financieros.
+           ========================================================= -->
+      <section id="b23246-maintenance-panel"
+               class="panel"
+               aria-label="Mantenimiento financiero B232.46"
+               style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.46 · MANTENIMIENTO FINANCIERO</div>
+            <div id="b23246-status" style="font-weight:800;font-size:18px;margin-top:4px;">VALIDACIONES ACTIVAS</div>
+          </div>
+          <span id="b23246-summary" style="font-size:12px;color:#64748b;">0 incidencias</span>
+        </div>
+        <div id="b23246-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+          Montos, fechas y envíos duplicados se validan antes de la escritura.
         </div>
       </section>
 
-      <style id="ccf-monthly-summary-style">
-        .ccf-monthly-summary{max-width:1280px;margin:0 auto 18px;padding:24px 24px 22px;background:#fff;border:1px solid #dfe4e8;border-radius:16px;color:#17202a;box-shadow:0 1px 3px rgba(15,23,42,.03)}
-        .ccf-monthly-summary-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
-        .ccf-monthly-summary-head h2{margin:0;font-size:1.55rem}
-        .ccf-month-label{font-size:1.05rem;font-weight:500;white-space:nowrap;color:#17202a}
-        .ccf-monthly-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}
-        .ccf-monthly-kpi{min-width:0;padding:18px 20px;border:1px solid #dfe4e8;border-radius:16px}
-        .ccf-monthly-kpi span{display:block;color:#68737d;font-size:1rem}
-        .ccf-monthly-kpi strong{display:block;margin-top:6px;font-size:1.55rem;line-height:1.15}
-        .ccf-monthly-income{background:#e8f8f5;border-color:#b7e5dc}
-        .ccf-monthly-expense{background:#fdeeee;border-color:#f1c4c4}
-        .ccf-monthly-future-grid{gap:16px}
-        .ccf-monthly-future-grid .future-movement-column{min-height:190px}
-        @media(max-width:900px){.ccf-monthly-kpis{grid-template-columns:1fr 1fr}}
-        @media(max-width:700px){.ccf-monthly-summary{padding:18px 14px}.ccf-monthly-summary-head{align-items:flex-start}.ccf-monthly-summary-head h2{font-size:1.2rem}.ccf-monthly-kpis{gap:8px}.ccf-monthly-kpi{padding:14px}.ccf-monthly-kpi span{font-size:.82rem}.ccf-monthly-kpi strong{font-size:1.2rem}.ccf-month-label{font-size:.9rem}}
-        @media(max-width:560px){.ccf-monthly-summary-head{flex-direction:column;gap:4px}.ccf-monthly-kpis{grid-template-columns:1fr 1fr}.ccf-monthly-future-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
-      </style>
+<section id="b23247-mobile-ux-panel" class="panel" aria-label="UX móvil B232.47"
+style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;display:block;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+<div><div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.47 · UX MÓVIL</div>
+<div id="b23247-status" style="font-weight:800;font-size:18px;margin-top:4px;">ACTIVO</div></div>
+<span id="b23247-device" style="font-size:12px;color:#64748b;">Detectando pantalla…</span>
+</div>
+<div class="b23247-grid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;">
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Touch target</div><div style="font-weight:800;margin-top:3px;">44 px</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Campos</div><div style="font-weight:800;margin-top:3px;">16 px</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Navegación</div><div style="font-weight:800;margin-top:3px;">Táctil</div></div>
+<div style="padding:10px;border-radius:10px;background:#f8fafc;"><div style="font-size:10px;color:#64748b;">Tablas</div><div style="font-weight:800;margin-top:3px;">Scroll</div></div>
+</div>
+<div id="b23247-detail" style="margin-top:10px;font-size:12px;color:#64748b;">Mejoras táctiles activas sin modificar la lógica financiera.</div>
 
-      <main id="financial-control" class="financial-control">
+</section>
+
+<section id="b23248-qa-panel"
+  class="panel"
+  aria-label="Control de calidad B232.48"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.48.3 · QA RUNTIME</div>
+      <div id="b23248-status" style="font-weight:800;font-size:18px;margin-top:4px;">AUDITORÍA PENDIENTE</div>
+    </div>
+    <button id="b23248-run" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Auditar ahora
+    </button>
+  </div>
+
+  <div id="b23248-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Comprobación inicial pendiente.
+  </div>
+
+  <div class="b23248-grid">
+    <div class="b23248-item">
+      <div class="b23248-label">Secciones</div>
+      <div id="b23248-sections" class="b23248-value">—</div>
+    </div>
+    <div class="b23248-item">
+      <div class="b23248-label">Scripts</div>
+      <div id="b23248-scripts" class="b23248-value">—</div>
+    </div>
+    <div class="b23248-item">
+      <div class="b23248-label">IDs duplicados</div>
+      <div id="b23248-ids" class="b23248-value">—</div>
+    </div>
+    <div class="b23248-item">
+      <div class="b23248-label">Estados bloqueados</div>
+      <div id="b23248-loading" class="b23248-value">—</div>
+    </div>
+  </div>
+
+  <div id="b23248-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    Auditoría manual disponible. No modifica datos ni operaciones.
+  </div>
+
+</section>
+
+<section id="b23249-security-panel"
+  class="panel"
+  aria-label="Auditoría de seguridad B232.49"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.49 · SEGURIDAD CLIENTE</div>
+      <div id="b23249-status" style="font-weight:800;font-size:18px;margin-top:4px;">AUDITORÍA PENDIENTE</div>
+    </div>
+    <button id="b23249-run" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Auditar ahora
+    </button>
+  </div>
+  <div id="b23249-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Comprobación inicial pendiente.
+  </div>
+  <div class="b23249-grid">
+    <div class="b23249-item"><div class="b23249-label">HTTPS</div><div id="b23249-https" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Supabase</div><div id="b23249-supabase" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Scripts mixtos</div><div id="b23249-mixed" class="b23249-value">—</div></div>
+    <div class="b23249-item"><div class="b23249-label">Credenciales sensibles</div><div id="b23249-secret" class="b23249-value">—</div></div>
+  </div>
+  <div id="b23249-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    Auditoría de configuración del cliente. No modifica datos.
+  </div>
+
+</section>
+
+<section id="b23250-errors-panel"
+  class="panel"
+  aria-label="Diagnóstico runtime B232.51.4"
+  style="margin:0 0 16px;padding:14px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;letter-spacing:.06em;color:#64748b;">B232.51.4 · DIAGNÓSTICO RUNTIME</div>
+      <div id="b23250-status" style="font-weight:800;font-size:18px;margin-top:4px;">MONITOR ACTIVO</div>
+    </div>
+    <button id="b23250-clear" type="button"
+      style="min-height:44px;padding:10px 14px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:700;">
+      Limpiar
+    </button>
+  </div>
+  <div id="b23250-summary" style="margin-top:8px;font-size:12px;color:#64748b;">
+    Clasifica por separado errores JavaScript, promesas rechazadas y fallos de carga de recursos.
+  </div>
+  <div class="b23250-grid">
+    <div class="b23250-item"><div class="b23250-label">Errores JS</div><div id="b23250-js" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Promesas rechazadas</div><div id="b23250-rejections" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Recursos con error</div><div id="b23250-resource" class="b23250-value">0</div></div>
+    <div class="b23250-item"><div class="b23250-label">Último evento</div><div id="b23250-last" class="b23250-value">Ninguno</div></div>
+    <div class="b23250-item"><div class="b23250-label">Archivo</div><div id="b23250-file" class="b23250-value">—</div></div>
+    <div class="b23250-item"><div class="b23250-label">Línea</div><div id="b23250-line" class="b23250-value">—</div></div>
+    <div class="b23250-item"><div class="b23250-label">Columna</div><div id="b23250-column" class="b23250-value">—</div></div>
+  </div>
+  <div id="b23250-detail" style="margin-top:10px;font-size:12px;color:#64748b;">
+    No registra datos financieros ni contenido de formularios.
+  </div>
+</section>
+
+<main id="financial-control" class="financial-control">
 
         <header class="summary-header">
           <div>
@@ -774,6 +944,141 @@
 
     </section>
 
+    <!-- =========================================================
+         PRESUPUESTO — B240 · PRESUPUESTO INTEGRADO
+         Sección completa del módulo de presupuesto.
+         ========================================================= -->
+    <section id="presupuesto" class="tab hidden" aria-label="Presupuesto">
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <p class="eyebrow">B240 · PRESUPUESTO</p>
+            <h2>Presupuesto</h2>
+            <p class="muted">
+              Planificación de ingresos, gastos, obligaciones y margen disponible.
+            </p>
+          </div>
+          <div id="b240-presupuesto-status" class="status">
+            Módulo listo
+          </div>
+        </div>
+
+        <div id="b240-presupuesto-root">
+
+          <div class="grid2">
+            <label>
+              Período
+              <input id="b240-presupuesto-periodo" type="month">
+            </label>
+
+            <label>
+              Meta de ingreso
+              <input id="b240-presupuesto-meta" type="number" min="0" step="1"
+                     placeholder="0">
+            </label>
+
+            <label>
+              Ingresos asegurados
+              <input id="b240-presupuesto-ingresos-asegurados" type="number"
+                     min="0" step="1" placeholder="0">
+            </label>
+
+            <label>
+              Ingresos proyectados
+              <input id="b240-presupuesto-ingresos-proyectados" type="number"
+                     min="0" step="1" placeholder="0">
+            </label>
+
+            <label>
+              Gastos fijos
+              <input id="b240-presupuesto-gastos-fijos" type="number"
+                     min="0" step="1" placeholder="0">
+            </label>
+
+            <label>
+              Gastos variables
+              <input id="b240-presupuesto-gastos-variables" type="number"
+                     min="0" step="1" placeholder="0">
+            </label>
+
+            <label>
+              Deudas / compromisos
+              <input id="b240-presupuesto-deudas" type="number"
+                     min="0" step="1" placeholder="0">
+            </label>
+
+            <label>
+              Ahorro / reserva
+              <input id="b240-presupuesto-ahorro" type="number"
+                     min="0" step="1" placeholder="0">
+            </label>
+          </div>
+
+          <div class="form-actions" style="margin-top:16px;">
+            <button type="button" id="b240-presupuesto-calcular">
+              Calcular presupuesto
+            </button>
+            <button type="button" id="b240-presupuesto-limpiar" class="secondary">
+              Limpiar
+            </button>
+          </div>
+
+          <div class="kpi-grid" id="b240-presupuesto-kpis" style="margin-top:18px;">
+            <article class="kpi-card">
+              <span>Total ingresos</span>
+              <strong id="b240-presupuesto-total-ingresos">$0</strong>
+            </article>
+
+            <article class="kpi-card">
+              <span>Total egresos</span>
+              <strong id="b240-presupuesto-total-egresos">$0</strong>
+            </article>
+
+            <article class="kpi-card">
+              <span>Saldo presupuestado</span>
+              <strong id="b240-presupuesto-saldo">$0</strong>
+            </article>
+
+            <article class="kpi-card">
+              <span>Margen disponible</span>
+              <strong id="b240-presupuesto-margen">$0</strong>
+            </article>
+          </div>
+
+          <div class="panel" style="margin-top:18px;">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">DETALLE</p>
+                <h3>Distribución presupuestaria</h3>
+              </div>
+            </div>
+
+            <div id="b240-presupuesto-detalle" class="muted">
+              Ingresa los valores y calcula el presupuesto.
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:18px;">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">INTEGRACIÓN</p>
+                <h3>Estado del motor B240</h3>
+              </div>
+              <strong id="b240-presupuesto-integracion">ESPERANDO MOTOR</strong>
+            </div>
+
+            <div id="b240-presupuesto-integracion-detail" class="muted">
+              El loader B240 puede enlazar esta sección con el motor de presupuesto
+              sin eliminar el contenido de la pestaña.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
     <!--
       Los módulos Deudas, Cuentas, Operaciones y Planificación
       mantienen su integración dinámica existente.
@@ -785,15 +1090,12 @@
 <!-- =============================================================
      CORE
      ============================================================= -->
--<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
--<script src="app.js?v=232.23"></script>
--<script src="CCF-AUTH-BOOT-FINAL.js?v=231.6"></script>
-+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-+<script src="CCF-AUTH-BOOT-FINAL.js?v=231.6"></script>
-+<script src="app.js?v=232.23"></script>
-
-<script src="b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js?v=230.12"></script>
-<script src="b225-motor-multifuente.js?v=225.2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- AUTH must initialize before the financial app. -->
+<script src="B232.69-AUTH.js?v=232.69.1"></script>
+<script src="B232.74-AUTH-SESSION-PERSISTENCE.js?v=232.74.1"></script>
+<script src="B232.73-AUTH-CORE-BRIDGE.js?v=232.76.1"></script>
+<script src="app.js?v=232.23"></script>
 
 <!-- =============================================================
      CARGA CONTROLADA DE MÓDULOS
@@ -819,7 +1121,7 @@
     'b231.1-persistencia-deuda-sin-fecha.js?v=231.7-R4',
     'b231.2-deudas-fecha.js?v=231.7-R4',
     'b231.3-abonos-parciales.js?v=231.7-R4',
-    'b233-motor-presupuesto.js?v=233.20'
+    'b240-presupuesto-integrado-loader.js?v=240.1'
   ];
 
   var summaryModules = [];
@@ -1127,96 +1429,29 @@
 })();
 </script>
 
-<script src="B234-movimientos-futuros.js?v=234.1"></script>
 <script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
   <script src="B232.68-CCF-DEUDA-DUAL.js?v=232.68"></script>
 <script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
 <script src="B232.26.4-calendario-safe.js?v=232.26.4"></script>
 <script src="B232.34-resumen-integrado.js?v=232.34"></script>
-<script id="ccf-b2315-pending-fix">
-/* B2.31.5: Total gastos = Generados + Pendientes + Por realizar */
-(function(){'use strict';
-const money=n=>new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
-function parseMoney(v){return Number(String(v??'').replace(/[^0-9-]/g,''))||0}
-function fix(){const host=document.getElementById('b234-report');if(!host)return false;const boxes=host.querySelectorAll('.b234-summary>div');if(boxes.length<4)return false;const total=parseMoney(boxes[0].querySelector('strong')?.textContent);const generated=parseMoney(boxes[1].querySelector('strong')?.textContent);const future=parseMoney(boxes[3].querySelector('strong')?.textContent);const pending=Math.max(0,total-generated-future);const pct=total?Math.round(pending/total*100):0;const strong=boxes[2].querySelector('strong');const smalls=boxes[2].querySelectorAll('small');if(strong)strong.textContent=money(pending);if(smalls.length)smalls[smalls.length-1].textContent=pct+'%';return true}
-function install(){if(window.__CCF_B2315_PENDING__)return;window.__CCF_B2315_PENDING__=true;const run=()=>{try{fix()}catch(e){console.error('[CCF B2.31.5]',e)}};const dashboard=document.getElementById('dashboard');if(dashboard&&window.MutationObserver){new MutationObserver(run).observe(dashboard,{childList:true,subtree:true})}document.addEventListener('click',e=>{if(e.target.closest('[data-tab="dashboard"]')||e.target.closest('#b234Refresh')){setTimeout(run,50);setTimeout(run,250);setTimeout(run,800)}},true);[100,500,1200,2500,5000,10000,20000].forEach(ms=>setTimeout(run,ms));run()}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,300),{once:true});else setTimeout(install,300)})();
-</script>
 <script src="B232.35-cierre-resumen-ejecutivo.js?v=232.35"></script>
 <script src="B232.39-IA-FINANCIERA-DATA-BRIDGE.js?v=232.39"></script>
 <script src="B232.40-correccion-planificacion.js?v=232.40"></script>
 <script src="B232.41-integracion-regresion-final.js?v=232.41"></script>
 <script src="B232.42.1-reconciliacion-fuentes.js?v=232.42.2"></script>
+<script src="B232.43-rendimiento-ux.js?v=232.43"></script>
 <script src="B232.53.5-recalculo-integral.js?v=232.53.5"></script>
+<script src="B232.45-observabilidad-segura.js?v=232.45.3"></script>
+<script src="B232.46-mantenimiento-financiero.js?v=232.46.4"></script>
+<script src="B232.47-ux-movil.js?v=232.47.1"></script>
+<script src="B232.48.3-qa-runtime.js?v=232.48.3"></script>
+<script src="B232.49-security-audit.js?v=232.49.2"></script>
+<script src="B232.51.4-runtime-diagnostics.js?v=232.51.4"></script>
 <script src="B232.51.2-runtime-hardening.js?v=232.51.2"></script>
 <script src="B232.51.3-navigation-safe.js?v=232.51.3"></script>
   <script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66"></script>
   <script src="B232.65-menu-principal.js?v=232.65"></script>
   <script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
 
-
-<!-- CCF · Limpieza de referencias técnicas de despliegue visibles -->
-<script id="ccf-ui-cleanup">
-(function(){
-  'use strict';
-  if(window.__CCF_UI_CLEANUP__) return;
-  window.__CCF_UI_CLEANUP__=true;
-
-  var ids=[
-    'b231-indicador-deudas',
-    'b23260-footer',
-    'b23266-footer',
-    'b23267-footer',
-    'b23268-footer',
-    'b23269-footer',
-    'b23273-bridge-badge',
-    'b23274Footer',
-    'ccf-release-footer'
-  ];
-
-  function removeTechnicalUi(root){
-    var scope=root&&root.querySelectorAll?root:document;
-    ids.forEach(function(id){
-      var el=document.getElementById(id);
-      if(el) el.remove();
-    });
-    scope.querySelectorAll('footer,div,span,p').forEach(function(el){
-      var t=(el.textContent||'').trim();
-      if(/^Paquete desplegado:/i.test(t)) el.remove();
-    });
-  }
-
-  function run(){ removeTechnicalUi(document); }
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',run,{once:true});
-  }else{ run(); }
-
-  if(window.MutationObserver && document.body){
-    var observer=new MutationObserver(function(mutations){
-      mutations.forEach(function(m){
-        m.addedNodes.forEach(function(node){
-          if(node.nodeType===1) removeTechnicalUi(node);
-        });
-      });
-    });
-    observer.observe(document.body,{childList:true,subtree:true});
-  }
-})();
-</script>
-
-<!-- CCF · Pie de producto -->
-<footer id="ccf-product-footer" aria-label="Producto desarrollado por Somos Software">
-  <div class="ccf-product-footer-inner">
-    <img src="somos-software-logo.jpg" alt="Somos Software · Innovación Digital" class="ccf-product-footer-logo">
-    <strong>Producto desarrollado por Somos Software</strong>
-  </div>
-</footer>
-<style id="ccf-product-footer-style">
-#ccf-product-footer{margin:22px 10px 18px;padding:16px 10px;text-align:center;border-top:1px solid #e5e7eb;color:#334155;font:600 11px/1.4 system-ui,sans-serif}
-.ccf-product-footer-inner{display:flex;flex-direction:column;align-items:center;gap:9px}
-.ccf-product-footer-logo{display:block;width:min(260px,72vw);max-height:86px;object-fit:contain}
-#ccf-product-footer strong{font-weight:700}
-</style>
 </body>
 </html>
