@@ -1,17 +1,17 @@
-CCF B2.30.7 — FOOTER LIMPIO
+CCF B2.30.8 — REPARACIÓN DE CARGA
 
-Objetivo:
-Eliminar todas las referencias visuales de despliegue/implementación y conservar únicamente el pie de página institucional de Somos Software.
+Se detectó que B2.30.7 dejó el #app oculto porque el índice no incluía el portal B230 que controla la apertura autenticada del sistema.
 
-Se conserva:
-- Logo Somos Software.
-- Texto: “Producto desarrollado por Somos Software”.
-- Pie de página global para todos los módulos.
-- Lógica y funcionalidad financiera de los módulos.
+Corrección:
+- Se conserva el index de limpieza visual B2.30.7.
+- Se reincorpora B230-PORTAL-ACCESO.js.
+- Se mantiene el footer Somos Software.
+- No se modifica la lógica financiera.
+- No se reintroducen cuadros de auditoría ni referencias de despliegue.
 
-Se elimina/oculta:
-- “Paquete desplegado: ...”
-- Referencias RELEASE-...
-- Badges técnicos de B232.65/B232.66/B232.67/B232.69/B232.73/B232.74.
+Archivos:
+- index.html
+- B230-PORTAL-ACCESO.js
+- somos-software-logo.jpg
 
-No se modifican consultas, RPC, cálculos, movimientos, liquidez, deudas, presupuesto ni Motor Multifuente.
+Despliegue: reemplazar los archivos correspondientes y recargar con caché limpia.
