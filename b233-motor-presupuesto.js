@@ -1,38 +1,73 @@
-/* B233 RLS FIX - drop-in loader for Backup branch
- * Loads the canonical B233 module, injects auth.uid() into budget inserts,
- * then executes the corrected module. No RLS policy changes.
+/* B233 PRODUCCIÓN · CORRECCIÓN RLS · DROP-IN
+ * Sustituye el loader anterior. Mantiene la arquitectura B233 original,
+ * pero garantiza que los INSERT/UPSERT lleven auth.uid() como user_id.
+ * No modifica ni desactiva políticas RLS.
  */
 (() => {
   'use strict';
-  if (window.__B233_RLS_FIX__) return;
-  window.__B233_RLS_FIX__ = true;
+  if (window.__B233_PROD_RLS_FIX_V2__) return;
+  window.__B233_PROD_RLS_FIX_V2__ = true;
 
-  const SOURCE = 'https://raw.githubusercontent.com/P-Renault/Finanzas/Backup/b233-motor-presupuesto.js';
+  const SOURCE = 'https://raw.githubusercontent.com/P-Renault/Finanzas/Backup/b233-motor-presupuesto.js?v=233.19-r1';
+
+  const showError = err => {
+    console.error('[B233 RLS PRODUCCIÓN]', err);
+    const msg = document.getElementById('b233Msg');
+    if (msg) {
+      msg.textContent = `Error inicializando Presupuesto: ${err?.message || err}`;
+      msg.className = 'b233-msg error';
+    }
+  };
 
   fetch(SOURCE, { cache: 'no-store' })
-    .then(r => {
-      if (!r.ok) throw new Error(`No se pudo cargar B233 original (${r.status})`);
-      return r.text();
+    .then(response => {
+      if (!response.ok) throw new Error(`No se pudo cargar el motor B233 base (${response.status}).`);
+      return response.text();
     })
     .then(source => {
-      const oldBudget = `const r = await c.from('presupuestos').insert({\n        periodo,\n        nombre:\`Presupuesto \${monthLabel(state.month)}\`,\n        estado:'activo'\n      }).select('*').single();`;
-      const newBudget = `let userId = null;\n      try {\n        const session = await c.auth.getUser();\n        userId = session?.data?.user?.id || null;\n      } catch (e) {\n        console.warn('[B233] No se pudo obtener el usuario autenticado:', e);\n      }\n\n      if (!userId) {\n        notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);\n        return null;\n      }\n\n      const r = await c.from('presupuestos').insert({\n        periodo,\n        nombre:\`Presupuesto \${monthLabel(state.month)}\`,\n        estado:'activo',\n        user_id:userId\n      }).select('*').single();`;
+      const budgetPattern = /const r = await c\.from\('presupuestos'\)\.insert\(\{\s*periodo,\s*nombre:`Presupuesto \$\{monthLabel\(state\.month\)\}`,\s*estado:'activo'\s*\}\)\.select\('\*'\)\.single\(\);/;
+      const budgetReplacement = `const userResult = await c.auth.getUser();
+      const userId = userResult?.data?.user?.id || null;
 
-      const oldLine = `const payload = {presupuesto_id:state.budget.id,categoria,tipo,monto_plan:monto,prioridad,descripcion};`;
-      const newLine = `let userId = null;\n    try {\n      const session = await db().auth.getUser();\n      userId = session?.data?.user?.id || null;\n    } catch (e) {\n      console.warn('[B233] No se pudo obtener el usuario autenticado:', e);\n    }\n\n    if (!userId) {\n      notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);\n      return;\n    }\n\n    const payload = {\n      presupuesto_id:state.budget.id,\n      categoria,\n      tipo,\n      monto_plan:monto,\n      prioridad,\n      descripcion,\n      user_id:userId\n    };`;
+      if (!userId) {
+        notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);
+        return null;
+      }
 
-      if (!source.includes(oldBudget)) throw new Error('Bloque de creación de presupuesto no encontrado.');
-      if (!source.includes(oldLine)) throw new Error('Bloque de línea presupuestaria no encontrado.');
+      const r = await c.from('presupuestos').insert({
+        periodo,
+        nombre:\`Presupuesto \${monthLabel(state.month)}\`,
+        estado:'activo',
+        user_id:userId
+      }).select('*').single();`;
 
-      source = source.replace(oldBudget, newBudget).replace(oldLine, newLine);
+      if (!budgetPattern.test(source)) throw new Error('No se encontró el bloque de INSERT de presupuestos en B233.');
+      source = source.replace(budgetPattern, budgetReplacement);
+
+      const linePattern = /const payload = \{presupuesto_id:state\.budget\.id,categoria,tipo,monto_plan:monto,prioridad,descripcion\};/;
+      const lineReplacement = `const userIdResult = await db().auth.getUser();
+    const userId = userIdResult?.data?.user?.id || null;
+
+    if (!userId) {
+      notify('No se pudo identificar al usuario autenticado. Cierra sesión y vuelve a ingresar.', false);
+      return;
+    }
+
+    const payload = {
+      presupuesto_id:state.budget.id,
+      categoria,
+      tipo,
+      monto_plan:monto,
+      prioridad,
+      descripcion,
+      user_id:userId
+    };`;
+
+      if (!linePattern.test(source)) throw new Error('No se encontró el bloque de líneas presupuestarias en B233.');
+      source = source.replace(linePattern, lineReplacement);
+
+      if (!source.includes('user_id:userId')) throw new Error('La corrección RLS no pudo ser inyectada en B233.');
       (0, eval)(source);
     })
-    .catch(err => {
-      console.error('[B233 RLS FIX]', err);
-      const msg = document.getElementById('b233Msg');
-      if (msg) {
-        msg.textContent = `Error inicializando Presupuesto: ${err.message || err}`;
-        msg.className = 'b233-msg error';
-      }
-    });
+    .catch(showError);
 })();
