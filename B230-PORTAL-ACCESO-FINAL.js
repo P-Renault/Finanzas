@@ -1,6 +1,7 @@
 /* CCF B230 — PORTAL DE ACCESO / DELEGACIÓN SEGURA
    Corrección: este módulo NO autentica, NO crea cliente Supabase y NO crea
    una segunda puerta de acceso. CCF-AUTH-BOOT-FINAL.js es el único controlador.
+   CORRECCIÓN B230.1: el landing debe quedar sobre la capa inicial de autenticación.
 */
 (function () {
   'use strict';
@@ -16,7 +17,7 @@
     const s = document.createElement('style');
     s.id = 'ccf-b230-safe-style';
     s.textContent = `
-      #${ID}{position:fixed;inset:0;z-index:2147483000;overflow:auto;
+      #${ID}{position:fixed;inset:0;z-index:2147483647;overflow:auto;
         background:radial-gradient(circle at 78% 12%,rgba(22,136,232,.20),transparent 31%),
         linear-gradient(135deg,#050b14,#07111f 55%,#09192b);
         color:#eef6ff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -67,7 +68,6 @@
               <button class="b230-btn b230-primary" type="button" data-b230-open="login">Iniciar sesión</button>
             </div>
           </nav>
-
           <section class="b230-hero">
             <div>
               <div class="b230-kicker">CONTROL · LIQUIDEZ · PROYECCIÓN</div>
@@ -89,7 +89,6 @@
               </div>
             </div>
           </section>
-
           <section class="b230-section">
             <h2>Un flujo financiero integrado</h2>
             <p>Los módulos del CCF trabajan sobre la misma estructura de información para mantener trazabilidad entre registro, planificación y resultado.</p>
@@ -102,13 +101,11 @@
               <article class="b230-feature"><b>Cuentas y operaciones</b><p>Organiza fuentes de dinero y registra operaciones con trazabilidad.</p></article>
             </div>
           </section>
-
           <section class="b230-cta">
             <h2>Accede a tu Centro de Control Financiero</h2>
             <p>El botón de acceso abre la autenticación existente del sistema. Este portal no administra credenciales.</p>
             <button class="b230-btn b230-primary" type="button" data-b230-open="login">Iniciar sesión →</button>
           </section>
-
           <footer class="b230-footer">
             <strong>CCF · Centro de Control Financiero</strong><br>
             Producto desarrollado por Somos Software · Innovación Digital
@@ -123,9 +120,7 @@
     document.body.classList.remove('b230-portal-active');
   }
 
-  function findAuthGate() {
-    return document.getElementById('ccf-auth-gate');
-  }
+  function findAuthGate() { return document.getElementById('ccf-auth-gate'); }
 
   async function waitForGate(timeout=5000) {
     for (let i=0;i<timeout/100;i++) {
@@ -137,12 +132,8 @@
   }
 
   async function openExistingAuth(mode) {
-    const portal = document.getElementById(ID);
-    // La autenticación real es propiedad exclusiva de CCF-AUTH-BOOT-FINAL.js.
-    // Primero dejamos visible su gate; no simulamos ni duplicamos el login.
     const gate = await waitForGate();
     if (!gate) {
-      // Si el usuario ya tiene sesión, el boot de auth abrirá la aplicación.
       try {
         const c = window.supabaseClient || window.__B23273_CLIENT__ || window.__B23270_CLIENT__ || window.__B23269_CLIENT__;
         const session = c?.auth ? (await c.auth.getSession()).data?.session : null;
@@ -154,8 +145,6 @@
 
     removePortal();
 
-    // Intentamos seleccionar el modo en el formulario REAL del gate sin
-    // implementar otra autenticación.
     const text = mode === 'register' ? /crear|registr/i : /iniciar|sesión|login|ingresar|entrar/i;
     const buttons = Array.from(gate.querySelectorAll('button'));
     const target = buttons.find(b => text.test((b.textContent || '').trim()));
