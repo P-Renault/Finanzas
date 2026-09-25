@@ -1,6 +1,6 @@
-/* B234 — FIX ESTABLE DEL RESUMEN
-   Corrige exclusivamente Total/Generados/Pendientes/Por realizar.
-   Se mantiene activo porque B232.34 reconstruye la tarjeta periódicamente.
+/* B234.4 — RESUMEN ESTABLE
+   Corrección exclusiva de la tarjeta de resumen.
+   No modifica Supabase, datos, autenticación ni otros módulos.
 */
 (() => {
   'use strict';
@@ -8,12 +8,14 @@
   window.__CCF_B234_SUMMARY_STABLE__ = true;
 
   const money = n => new Intl.NumberFormat('es-CL', {
-    style:'currency', currency:'CLP', maximumFractionDigits:0
-  }).format(Math.round(Number(n)||0));
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0
+  }).format(Math.round(Number(n) || 0));
 
-  const value = el => {
-    const n = Number(String(el?.textContent || '').replace(/[^\d-]/g,''));
-    return Number.isFinite(n) ? Math.max(0,n) : 0;
+  const numberFrom = node => {
+    const n = Number(String(node?.textContent || '').replace(/[^\d-]/g, ''));
+    return Number.isFinite(n) ? n : 0;
   };
 
   function fix() {
@@ -25,67 +27,63 @@
     const pct = summary.querySelectorAll('div small:last-child');
     if (strong.length < 4) return false;
 
-    const total = value(strong[0]);
-    const generated = value(strong[1]);
-    const future = value(strong[3]);
-
-    // La conciliación del resumen debe ser estable:
+    // Usamos los valores que B232.34 acaba de renderizar.
+    // La única corrección es garantizar la identidad:
     // Total = Generados + Pendientes + Por realizar.
+    const total = Math.max(0, numberFrom(strong[0]));
+    const generated = Math.max(0, numberFrom(strong[1]));
+    const future = Math.max(0, numberFrom(strong[3]));
     const pending = Math.max(0, total - generated - future);
 
-    const vals = [total, generated, pending, future];
-    vals.forEach((v,i) => {
-      if (strong[i]) strong[i].textContent = money(v);
-    });
+    strong[0].textContent = money(total);
+    strong[1].textContent = money(generated);
+    strong[2].textContent = money(pending);
+    strong[3].textContent = money(future);
 
-    const percentages = [
-      total ? Math.round(generated / total * 100) : 0,
-      total ? Math.round(pending / total * 100) : 0,
-      total ? Math.round(future / total * 100) : 0
-    ];
-    percentages.forEach((p,i) => {
-      if (pct[i]) pct[i].textContent = `${p}%`;
-    });
+    if (pct[0]) pct[0].textContent = `${total ? Math.round(generated / total * 100) : 0}%`;
+    if (pct[1]) pct[1].textContent = `${total ? Math.round(pending / total * 100) : 0}%`;
+    if (pct[2]) pct[2].textContent = `${total ? Math.round(future / total * 100) : 0}%`;
     return true;
   }
 
-  let queued = false;
   function schedule() {
-    if (queued) return;
-    queued = true;
-    queueMicrotask(() => {
-      queued = false;
-      fix();
-    });
+    fix();
+    [100, 300, 700, 1200, 2000].forEach(ms => setTimeout(fix, ms));
   }
 
-  function install() {
-    fix();
-
+  function observe() {
     const dashboard = document.getElementById('dashboard');
-    if (dashboard) {
-      const observer = new MutationObserver(() => schedule());
-      observer.observe(dashboard, {childList:true, subtree:true});
-      window.__CCF_B234_SUMMARY_OBSERVER__ = observer;
+    if (!dashboard) {
+      setTimeout(observe, 500);
+      return;
     }
 
+    const observer = new MutationObserver(mutations => {
+      if (mutations.some(m => m.type === 'childList')) {
+        // B232.34 puede reconstruir #b234-report.
+        // Corregimos después de cada reconstrucción.
+        setTimeout(fix, 0);
+      }
+    });
+
+    observer.observe(dashboard, { childList: true, subtree: true });
+    schedule();
+  }
+
+  function boot() {
+    observe();
     document.addEventListener('click', event => {
-      if (event.target.closest('[data-tab="dashboard"],#b234Refresh')) {
-        setTimeout(fix, 50);
-        setTimeout(fix, 300);
+      if (event.target.closest('[data-tab="dashboard"], #b234Refresh')) {
+        schedule();
       }
     }, true);
-
-    // Refuerzos únicamente durante el arranque; el observer mantiene
-    // la corrección cuando B232.34 vuelve a reconstruir el informe.
-    [250,700,1500,3000].forEach(ms => setTimeout(fix,ms));
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', install, {once:true});
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
   } else {
-    install();
+    boot();
   }
 
-  window.CCFB234SummaryStable = {refresh:fix};
+  window.CCFB234SummaryStable = { refresh: fix };
 })();
