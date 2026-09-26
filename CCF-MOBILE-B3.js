@@ -1,0 +1,21 @@
+/* CCF MOBILE B3 — Mobile Shell aislado · B3.0.0 */
+(function(){
+'use strict';
+if(window.__CCF_MOBILE_B3__)return;
+window.__CCF_MOBILE_B3__=true;
+var ENABLED=true, BREAKPOINT=720;
+function mobile(){return matchMedia('(max-width:'+BREAKPOINT+'px)').matches}
+function disable(){ENABLED=false;document.getElementById('ccf-mobile-b3-root')?.remove();document.documentElement.classList.remove('ccf-mobile-b3-active');document.body.classList.remove('ccf-mobile-b3-active','ccf-mobile-b3-lock')}
+function go(tab){var b=document.querySelector('.tabs button[data-tab="'+tab+'"]');if(!b){console.warn('[CCF Mobile B3] Módulo no encontrado:',tab);return}b.click();sync();closeMore()}
+function current(){var b=document.querySelector('.tabs button.active[data-tab]');return b?b.dataset.tab:'dashboard'}
+var primary=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
+var icons={futuros:'◷',calendario:'▦',ahorro:'◎',operaciones:'⚙',planificacion:'◈',presupuesto:'▤'};
+function closeMore(){var x=document.querySelector('.ccf-mobile-b3-more');if(x)x.classList.remove('is-open');document.body.classList.remove('ccf-mobile-b3-lock')}
+function populate(){var g=document.querySelector('.ccf-mobile-b3-more-grid');if(!g)return;g.innerHTML='';document.querySelectorAll('.tabs button[data-tab]').forEach(function(t){if(primary.some(function(x){return x[0]===t.dataset.tab}))return;var b=document.createElement('button');b.type='button';b.className='ccf-mobile-b3-more-item';b.innerHTML='<span class="ccf-mobile-b3-more-icon">'+(icons[t.dataset.tab]||'•')+'</span><span>'+t.textContent.trim()+'</span>';b.onclick=function(){go(t.dataset.tab)};g.appendChild(b)})}
+function openMore(){populate();var x=document.querySelector('.ccf-mobile-b3-more');if(x){x.classList.add('is-open');document.body.classList.add('ccf-mobile-b3-lock')}}
+function sync(){if(!mobile())return;var c=current();document.querySelectorAll('.ccf-mobile-b3-nav-button[data-b3-tab]').forEach(function(b){b.classList.toggle('is-active',b.dataset.b3Tab===c)});populate()}
+function build(){if(document.getElementById('ccf-mobile-b3-root'))return;var r=document.createElement('div');r.id='ccf-mobile-b3-root';r.innerHTML='<nav class="ccf-mobile-b3-mobile-nav"><div class="ccf-mobile-b3-nav-items"></div></nav><div class="ccf-mobile-b3-more"><div class="ccf-mobile-b3-more-backdrop"></div><section class="ccf-mobile-b3-more-sheet"><div class="ccf-mobile-b3-handle"></div><header class="ccf-mobile-b3-more-head"><strong>Todos los módulos</strong><button type="button" class="ccf-mobile-b3-close">×</button></header><div class="ccf-mobile-b3-more-grid"></div></section></div>';document.body.appendChild(r);var n=r.querySelector('.ccf-mobile-b3-nav-items');primary.forEach(function(x){var b=document.createElement('button');b.type='button';b.className='ccf-mobile-b3-nav-button';b.dataset.b3Tab=x[0];b.innerHTML='<span class="ccf-mobile-b3-icon">'+x[2]+'</span><span>'+x[1]+'</span>';b.onclick=function(){go(x[0])};n.appendChild(b)});var m=document.createElement('button');m.type='button';m.className='ccf-mobile-b3-nav-button';m.innerHTML='<span class="ccf-mobile-b3-icon">•••</span><span>Más</span>';m.onclick=openMore;n.appendChild(m);r.querySelector('.ccf-mobile-b3-close').onclick=closeMore;r.querySelector('.ccf-mobile-b3-more-backdrop').onclick=closeMore}
+function install(){if(!mobile()||!ENABLED)return;document.documentElement.classList.add('ccf-mobile-b3-active');document.body.classList.add('ccf-mobile-b3-active');build();sync()}
+function boot(){try{if(!mobile())return;install();document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.tabs button[data-tab]'))setTimeout(sync,30)},true);window.addEventListener('resize',function(){clearTimeout(window.__CCF_B3_RESIZE__);window.__CCF_B3_RESIZE__=setTimeout(install,150)});window.CCFMobileB3={version:'B3.0.0',enabled:function(){return ENABLED&&mobile()},openMore:openMore,closeMore:closeMore,activateTab:go,disable:disable}}catch(e){console.error('[CCF Mobile B3]',e);disable()}}
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',boot,{once:true}):boot();
+})();
