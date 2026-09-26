@@ -1,17 +1,16 @@
 /* ============================================================
    B232.35 — CIERRE RESUMEN + DASHBOARD EJECUTIVO
-   Objetivo:
-   1) Restaurar el motor real del Centro de Control Financiero.
-   2) Restaurar los 8 gráficos del Dashboard Ejecutivo.
-   3) Mantener B232.34 sin reemplazarlo.
-   4) No tocar navegación, Calendario, Deudas ni Planificación.
-   5) Cargar las dependencias en orden y mostrar error explícito,
-      nunca dejar "Calculando..." indefinidamente.
+   CORRECCIÓN 2026-09-25
+   - B232.34 es la fuente autoritativa del cuadro:
+     Generados / Pendientes / Por realizar.
+   - Se elimina la sobrescritura posterior de .b234-summary.
+   - El motor ejecutivo continúa calculando sus propios indicadores.
+   - No se modifica Supabase, navegación, deudas ni planificación.
    ============================================================ */
 (() => {
   'use strict';
 
-  const VERSION = 'B232.35';
+  const VERSION = 'B232.35-FIX-RESUMEN-2026.09.25';
   if (window.__B23235_EXECUTIVE_CLOSURE__) return;
   window.__B23235_EXECUTIVE_CLOSURE__ = true;
 
@@ -137,14 +136,28 @@
 
       window.__B23235_LAST_RESULT__ = result;
 
-      // Corrección de compatibilidad para B232.34:
-      // expone el total de cuotas con un nombre estable para cualquier
-      // integración posterior, sin modificar la lógica de Supabase.
       if (result.context?.obligations) {
         window.__B23235_OBLIGATIONS__ = result.context.obligations;
       }
 
-      patchB234AfterRender();
+      /*
+       * CORRECCIÓN CLAVE:
+       * NO llamar a patchB234AfterRender().
+       *
+       * B232.34 construye .b234-summary con datos directos y además
+       * instala un MutationObserver para conservar:
+       *   - Total de gastos
+       *   - Generados
+       *   - Pendientes
+       *   - Por realizar
+       *
+       * La versión anterior de B232.35 sobrescribía "Pendientes" con
+       * context.obligations. Si esa lectura llegaba vacía por una
+       * diferencia temporal de sesión/carga, convertía el indicador
+       * visual en $0 aunque B232.34 ya hubiese leído las cuotas.
+       *
+       * B232.35 ahora deja ese cuadro exclusivamente a B232.34.
+       */
 
     } catch (error) {
       console.error('[B232.35]', error);
@@ -153,7 +166,6 @@
         true
       );
 
-      // Nunca dejamos el Dashboard Ejecutivo en "Calculando..."
       const labels = [
         'exec-liquidity-reading',
         'exec-obligation-reading',
@@ -187,49 +199,6 @@
     }
   }
 
-  function patchB234AfterRender() {
-    const report = $('b234-report');
-    if (!report) return;
-
-    /*
-     * B232.34 tiene una referencia histórica a data.quotaTotal.
-     * No se modifica el motor ni se inventan valores.
-     * Aquí solo evitamos que una representación visual antigua
-     * quede inconsistente cuando el informe ya está construido.
-     */
-    const summary = report.querySelector('.b234-summary');
-    const result = window.__B23235_LAST_RESULT__;
-    if (!summary || !result?.context) return;
-
-    const obligations = result.context.obligations || [];
-    const pending = obligations.reduce(
-      (sum, item) => sum + Number(item.amount || 0),
-      0
-    );
-
-    const totalNode = summary.querySelector('div:nth-child(1) strong');
-    const pendingNode = summary.querySelector('div:nth-child(3) strong');
-    const pendingPct = summary.querySelector('div:nth-child(3) small:last-child');
-
-    if (pendingNode) {
-      pendingNode.textContent = new Intl.NumberFormat('es-CL', {
-        style: 'currency',
-        currency: 'CLP',
-        maximumFractionDigits: 0
-      }).format(pending);
-    }
-
-    const totalText = totalNode?.textContent || '';
-    const total = Number(
-      totalText.replace(/[^\d-]/g, '')
-    ) || 0;
-
-    if (pendingPct) {
-      pendingPct.textContent =
-        `${total > 0 ? Math.round((pending / total) * 100) : 0}%`;
-    }
-  }
-
   function installObservers() {
     document.addEventListener('click', event => {
       const dashboardButton =
@@ -256,7 +225,6 @@
       });
     }
 
-    // Un único reintento de arranque; no se instala un intervalo infinito.
     setTimeout(render, 900);
     setTimeout(render, 2200);
   }
