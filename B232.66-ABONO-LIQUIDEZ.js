@@ -5,7 +5,8 @@
  *
  * Reglas:
  * - Permite abonos inferiores al valor original de la cuota.
- * - El máximo aplicable a la cuota actual es su saldo pendiente real.
+ * - El abono puede superar la cuota actual: el sistema distribuye el exceso en cuotas
+ *   posteriores, sin modificar sus montos nominales.
  * - Muestra monto original, pagado, pendiente y estado antes de registrar.
  * - Un abono parcial NO modifica las cuotas futuras.
  * - Completar el saldo pendiente marca la cuota como pagada mediante la RPC.
@@ -69,6 +70,15 @@ async function getCurrentQuota(c,debtId){
   return {quota:q.data,paid:paid,original:original,remaining:remaining};
 }
 
+async function getQuotaPlan(c,debtId){
+  var q=await c.from('cuotas_deuda').select('id,monto,numero_cuota,estado,fecha_vencimiento,fecha_pago').eq('deuda_id',debtId).in('estado',['pendiente','vencida','atrasada']).order('numero_cuota',{ascending:true});
+  if(q.error)throw q.error;
+  var rows=q.data||[], ids=rows.map(function(x){return x.id}), payments=[];
+  if(ids.length){var p=await c.from('pagos_deuda').select('cuota_id,monto').in('cuota_id',ids);if(p.error)throw p.error;payments=p.data||[]}
+  var paidBy={};payments.forEach(function(x){paidBy[x.cuota_id]=(paidBy[x.cuota_id]||0)+num(x.monto)});
+  return rows.map(function(x){var original=num(x.monto),paid=num(paidBy[x.id]||0);return {quota:x,original:original,paid:paid,remaining:Math.max(original-paid,0)}}).filter(function(x){return x.remaining>0});
+}
+
 async function loadAccounts(c){
   var r=await c.from('cuentas_bancarias').select('id,nombre_banco,nombre_cuenta,saldo_actual,activa').eq('activa',true).order('nombre_banco');
   if(r.error)throw r.error;
@@ -112,7 +122,7 @@ function show(debt,info,accounts){
   </div>\
   <div id="b23266fixStatus" class="b23266fix-status '+state+'">'+stateText+'. Un abono parcial no modifica las próximas cuotas.</div>\
   <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Monto del abono</label>\
-  <input id="b23266fixAmount" type="number" min="1" max="'+Math.min(num(debt.saldo_actual),q.remaining)+'" step="1" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:16px;margin-bottom:8px">\
+  <input id="b23266fixAmount" type="number" min="1" max="'+num(debt.saldo_actual)+'" step="1" inputmode="numeric" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:16px;margin-bottom:8px">\
   <div class="b23266fix-quick" id="b23266fixQuick"></div>\
   <div id="b23266fixPreview" style="display:none;margin-bottom:12px;padding:10px 12px;border-radius:9px;background:#f8fafc;color:#334155;font-size:12px;line-height:1.5"></div>\
   <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Medio de liquidez</label>\
@@ -124,7 +134,10 @@ function show(debt,info,accounts){
   overlay.appendChild(box);document.body.appendChild(overlay);
 
   var amount=$('b23266fixAmount'),preview=$('b23266fixPreview'),status=$('b23266fixStatus'),quick=$('b23266fixQuick');
-  var max=Math.min(num(debt.saldo_actual),q.remaining);
+  var max=num(debt.saldo_actual);
+  var quotaPlan=[q];
+  var planLoaded=false;
+  getQuotaPlan(db(),Number(debt.id)).then(function(plan){if(plan&&plan.length){quotaPlan=plan;planLoaded=true;updatePreview()}}).catch(function(e){console.warn('[B232.66 FIX] plan de cuotas',e)});
 
   if(q.paid>0 && q.remaining>0){
     var b=document.createElement('button');b.type='button';b.textContent='Completar cuota · '+money(q.remaining);b.onclick=function(){amount.value=String(q.remaining);updatePreview()};quick.appendChild(b);
@@ -134,21 +147,25 @@ function show(debt,info,accounts){
   }
 
   function msg(ok,t){var m=$('b23266fixMsg');m.style.display='block';m.style.background=ok?'#ecfdf5':'#fef2f2';m.style.color=ok?'#065f46':'#991b1b';m.textContent=t}
+  function buildDistribution(a){
+    var plan=quotaPlan||[q],left=a,parts=[];
+    for(var i=0;i<plan.length&&left>0;i++){var x=plan[i],take=Math.min(left,x.remaining);if(take>0){parts.push({quota:x.quota,amount:take,remainingAfter:x.remaining-take});left-=take}}
+    return {parts:parts,left:left};
+  }
   function updatePreview(){
     var a=num(amount.value||0);
     if(!a){preview.style.display='none';return}
     preview.style.display='block';
-    if(a>max){
-      preview.style.background='#fef2f2';preview.style.color='#991b1b';
-      preview.textContent='Máximo aplicable a la cuota actual: '+money(max)+'. El saldo pendiente real de esta cuota es '+money(q.remaining)+'.';
-      $('b23266fixConfirm').disabled=true;return;
-    }
-    var rest=Math.max(q.remaining-a,0),newDebt=Math.max(num(debt.saldo_actual)-a,0);
+    if(a>max){preview.style.background='#fef2f2';preview.style.color='#991b1b';preview.textContent='El abono no puede superar el saldo total de la deuda: '+money(max)+'.';$('b23266fixConfirm').disabled=true;return}
+    var d=buildDistribution(a);
+    if(d.left>0){preview.style.background='#fef2f2';preview.style.color='#991b1b';preview.textContent='No existen cuotas pendientes suficientes para distribuir '+money(a)+'.';$('b23266fixConfirm').disabled=true;return}
+    var first=d.parts[0],restFirst=first?first.remainingAfter:0;
+    var lines=d.parts.map(function(x){return 'Cuota '+String(x.quota.numero_cuota||'—')+': '+money(x.amount)}).join(' · ');
     preview.style.background='#f8fafc';preview.style.color='#334155';
-    preview.innerHTML='<b>Después del abono:</b> deuda '+money(newDebt)+' · cuota pendiente '+money(rest)+(rest===0?' · <b>la cuota quedará PAGADA</b>':' · <b>la cuota quedará PARCIAL</b>');
+    preview.innerHTML='<b>Distribución:</b> '+lines+'<br><b>Total:</b> '+money(a)+' · <b>Deuda después:</b> '+money(Math.max(num(debt.saldo_actual)-a,0));
     $('b23266fixConfirm').disabled=false;
-    status.className='b23266fix-status '+(rest===0?'paid':'partial');
-    status.textContent=rest===0?'Este pago completa la cuota actual. Las próximas cuotas permanecen sin cambios.':'Este pago es parcial. El saldo restante de la cuota se conserva y las próximas cuotas permanecen sin cambios.';
+    status.className='b23266fix-status '+(restFirst===0?'paid':'partial');
+    status.textContent=d.parts.length===1?(restFirst===0?'Este pago completa la cuota actual. Las próximas cuotas permanecen sin cambios.':'Este pago queda aplicado a la cuota actual; el saldo restante se conserva.'):'El abono supera el saldo de la cuota actual. Se completa esa cuota y el excedente se aplica a las siguientes, sin cambiar sus montos nominales.';
   }
 
   amount.addEventListener('input',updatePreview);
@@ -163,11 +180,15 @@ function show(debt,info,accounts){
     var c=db();if(!c)return msg(false,'No hay sesión Supabase autenticada.');
     btn.disabled=true;btn.textContent='Registrando…';
     try{
-      var r=await c.rpc('registrar_pago_deuda_liquidez_v1',{p_cuota_id:Number(q.quota.id),p_monto:a,p_fecha:date,p_medio_pago:medium,p_cuenta_id:accountId});
-      if(r.error)throw r.error;
-      var d=r.data||{};
-      var remainingAfter=num(d.saldo_cuota);
-      msg(true,remainingAfter===0?'Abono registrado y cuota completada.':'Abono parcial registrado. Pendiente de la cuota: '+money(remainingAfter)+'.');
+      if(!planLoaded){quotaPlan=await getQuotaPlan(c,Number(debt.id));planLoaded=true;updatePreview();}
+      var dist=buildDistribution(a);
+      if(dist.left>0)throw new Error('No hay cuotas pendientes suficientes para aplicar el abono completo.');
+      for(var i=0;i<dist.parts.length;i++){
+        var part=dist.parts[i];
+        var r=await c.rpc('registrar_pago_deuda_liquidez_v1',{p_cuota_id:Number(part.quota.id),p_monto:part.amount,p_fecha:date,p_medio_pago:medium,p_cuenta_id:accountId});
+        if(r.error)throw r.error;
+      }
+      msg(true,dist.parts.length===1?'Abono registrado correctamente.':'Abono registrado y distribuido en '+dist.parts.length+' cuotas. Las cuotas futuras mantienen sus montos nominales.');
       setTimeout(async function(){closeModal();if(typeof window.refresh==='function')await window.refresh();else location.reload()},450);
     }catch(e){console.error('[B232.66 FIX]',e);msg(false,(e&&e.message)||String(e));btn.disabled=false;btn.textContent='Registrar abono'}
   };
