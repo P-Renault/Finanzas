@@ -7,7 +7,7 @@ body.ccf-mobile-b3-active .container{max-width:100%;padding-left:10px;padding-ri
 body.ccf-mobile-b3-active .card,body.ccf-mobile-b3-active .panel,body.ccf-mobile-b3-active .kpi-card{border:1px solid #e2e8f0;box-shadow:0 8px 26px rgba(15,23,42,.07);border-radius:16px}
 body.ccf-mobile-b3-active .grid2{grid-template-columns:1fr!important}
 body.ccf-mobile-b3-active .form-actions{display:grid;grid-template-columns:1fr}
-#ccf-mobile-b3-root{display:none}
+#ccf-mobile-b3-root{display:block}
 .ccf-mobile-b3-mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;padding:6px 7px calc(6px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-top:1px solid #e2e8f0;box-shadow:0 -8px 28px rgba(15,23,42,.1)}
 .ccf-mobile-b3-nav-items{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
 .ccf-mobile-b3-nav-button{border:0;border-radius:13px;background:transparent;color:#64748b;min-height:54px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 9px/1.1 system-ui}
