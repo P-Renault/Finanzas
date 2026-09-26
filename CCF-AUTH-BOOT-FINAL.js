@@ -7,7 +7,7 @@
 if(window.__CCF_B23016_AUTH_BOOT__)return;
 window.__CCF_B23016_AUTH_BOOT__=true;
 const VERSION='B2.31.2';
-const SUPABASE_URL='https://xgxvdbgmwvncmfdcxgsf.supabase.co';
+const SUPABASE_URL='https://xgxvdbgmwvncmfdcxgsf4.supabase.co';
 const SUPABASE_KEY='sb_publishable_fJqOSLC7dhYKttuU1uAvcQ_AX-aH4PB';
 let client=null, mode='login';
 const $=id=>document.getElementById(id);
@@ -60,14 +60,10 @@ function installClient(){
  if(!window.supabase?.createClient)return false;
  if(!client)client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  window.supabaseClient=client;window.db=client;window.__db=client;window.__B23269_CLIENT__=client;window.__B23270_CLIENT__=client;window.__B23273_CLIENT__=client;
- // B2.31.2: todos los módulos legacy deben reutilizar el cliente autenticado.
- // Evita que createClient() cree sesiones paralelas sin JWT y active RLS como anon.
  if(!window.__CCF_AUTH_CREATECLIENT_PATCHED__){
    const originalCreateClient=window.supabase.createClient.bind(window.supabase);
    window.supabase.createClient=function(url,key,options){
-     if(String(url||'')===SUPABASE_URL && String(key||'')===SUPABASE_KEY){
-       return client;
-     }
+     if(String(url||'')===SUPABASE_URL && String(key||'')===SUPABASE_KEY)return client;
      return originalCreateClient(url,key,options);
    };
    window.__CCF_AUTH_CREATECLIENT_PATCHED__=true;
@@ -75,7 +71,27 @@ function installClient(){
  try{localStorage.setItem('sf_url',SUPABASE_URL);localStorage.setItem('sf_key',SUPABASE_KEY)}catch(_){ }
  return true;
 }
-async function waitClient(){for(let i=0;i<80;i++){if(installClient())return client;await sleep(100)}throw new Error('La biblioteca de Supabase no se cargó.')}
+function loadSupabaseScript(src){
+ return new Promise((resolve,reject)=>{
+  const existing=[...document.scripts].find(x=>x.src===src);
+  if(existing&&window.supabase?.createClient){resolve(true);return}
+  const script=document.createElement('script');script.src=src;script.async=true;
+  let done=false;
+  const finish=(ok,err)=>{if(done)return;done=true;clearTimeout(timer);ok?resolve(true):reject(err||new Error('No se pudo cargar Supabase.'))};
+  const timer=setTimeout(()=>finish(false,new Error('Tiempo de espera agotado cargando Supabase.')),7000);
+  script.onload=()=>window.supabase?.createClient?finish(true):finish(false,new Error('Supabase cargó sin createClient.'));
+  script.onerror=()=>finish(false,new Error('Falló la descarga de la biblioteca de Supabase.'));
+  document.head.appendChild(script);
+ });
+}
+async function waitClient(){
+ for(let i=0;i<30;i++){if(installClient())return client;await sleep(100)}
+ status('Cargando biblioteca de acceso…');
+ const urls=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js','https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'];
+ let last=null;
+ for(const url of urls){try{await loadSupabaseScript(url);if(installClient())return client}catch(e){last=e}}
+ throw new Error(last?.message||'La biblioteca de Supabase no se pudo cargar.')
+}
 async function openApp(){
  try{if(typeof window.connect==='function')await window.connect()}catch(e){console.warn('[CCF B2.30.16] connect',e)}
  revealApp();try{if(typeof window.refresh==='function')await window.refresh()}catch(e){console.warn('[CCF B2.30.16] refresh',e)}
@@ -100,6 +116,6 @@ function installForms(){
  $('ccf-auth-form')?.addEventListener('submit',e=>{e.preventDefault();submitAuth()});
  const logout=$('logoutBtn');if(logout&&!logout.dataset.ccfFinalAuth){logout.dataset.ccfFinalAuth='1';logout.addEventListener('click',async e=>{e.preventDefault();e.stopImmediatePropagation();try{await client?.auth?.signOut({scope:'local'})}finally{location.reload()}},true)}
 }
-async function boot(){hideLegacy();portal();installForms();try{await waitClient();const {data,error}=await client.auth.getSession();if(error)throw error;if(data?.session)await openApp();else status('Sin sesión activa. Inicia sesión o crea una cuenta.')}catch(e){console.error('[CCF B2.30.16] boot',e);status(e?.message||'No fue posible inicializar el acceso.',true)}}
+async function boot(){hideLegacy();portal();installForms();try{await waitClient();const {data,error}=await client.auth.getSession();if(error)throw error;if(data?.session)await openApp();else status('Sin sesión activa. Inicia sesión o crea una cuenta.')}catch(e){console.error('[CCF B2.31.2] boot',e);status(e?.message||'No fue posible inicializar el acceso.',true)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
