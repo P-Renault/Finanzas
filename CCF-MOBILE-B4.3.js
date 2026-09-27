@@ -117,7 +117,7 @@ function decorateMovementRows(){
                   /^\s*-\s*\$/.test(raw);
    const dateNode=row.querySelector('.row-main small, time, [data-date]');
    const date=(dateNode?.textContent||dateNode?.getAttribute?.('datetime')||'').trim();
-   if(negative)expense+=amount; else income+=amount;
+   if(negative)expense+=Math.abs(amount); else income+=Math.abs(amount);
 
    row.dataset.movType=negative?'gasto':'ingreso';
    row.dataset.movDate=date;
@@ -140,9 +140,11 @@ function adaptMovementsMobile(){
  const set=(sel,val)=>{const n=shell.querySelector(sel);if(n)n.textContent=val};
 
  if(data && Array.isArray(data.rows)){
-   set('[data-mov-income]',clp(data.income));
-   set('[data-mov-expense]',clp(data.expense));
-   set('[data-mov-balance]',clp(data.income-data.expense));
+   const income=Math.abs(data.income);
+   const expense=Math.abs(data.expense);
+   set('[data-mov-income]',clp(income));
+   set('[data-mov-expense]',clp(expense));
+   set('[data-mov-balance]',clp(income-expense));
    set('[data-mov-count]',String(data.rows.length));
  }
  refreshMovementView();
