@@ -6,13 +6,29 @@
 if(window.__CCF_MOBILE_B434__)return; window.__CCF_MOBILE_B434__=true;
 const BP=720,$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const app=()=>document.getElementById('app'), mobile=()=>matchMedia('(max-width:'+BP+'px)').matches;
+let authObserver=null, authTimer=null;
 const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CSS.escape(id)+'"]');
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
 let root=null,built=false,moved=[],observer=null,reportTimer=null;
 
-function ready(){return mobile()&&app()&&!app().classList.contains('hidden')&&!by('ccf-auth-gate')}
+function authGatePresent(){return !!by('ccf-auth-gate')}
+function markAuthReady(){if(!mobile()||authGatePresent()||!app()||app().classList.contains('hidden'))return false;document.body.classList.add('ccf-b43-auth-ready');return true}
+function authSync(){
+ if(!mobile()){document.body.classList.remove('ccf-b43-auth-ready');return false}
+ if(authGatePresent()||app()?.classList.contains('hidden')){document.body.classList.remove('ccf-b43-auth-ready');if(built)restore();return false}
+ return markAuthReady();
+}
+function installAuthGuard(){
+ authObserver?.disconnect();
+ authObserver=new MutationObserver(()=>{authSync();boot()});
+ authObserver.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+ clearInterval(authTimer);
+ authTimer=setInterval(()=>authSync(),250);
+ authSync();
+}
+function ready(){return mobile()&&app()&&!app().classList.contains('hidden')&&!authGatePresent()&&document.body.classList.contains('ccf-b43-auth-ready')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
 function mirrorAll(){[
 'future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap',
@@ -346,7 +362,8 @@ function observe(){
 }
 function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
-window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.addEventListener('resize',()=>setTimeout(()=>{authSync();boot()},100));window.addEventListener('orientationchange',()=>setTimeout(()=>{authSync();boot()},150));
+function start(){installAuthGuard();authSync();boot()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+window.CCFMobileB43={version:'4.3.4-stage1-auth-stable',refresh:()=>{authSync();mirrorAll();syncConsolidatedReport()},disable:restore};
 })();

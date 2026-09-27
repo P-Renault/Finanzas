@@ -1,5 +1,13 @@
 /* CCF MOBILE B4.3.4 — ETAPA 1 · CORRECCIÓN RESUMEN */
 @media(max-width:720px){
+/* AUTH STABLE: no mostrar legacy/landing mientras se resuelve la sesión.
+   B4.3 libera #app únicamente cuando la sesión ya dejó de mostrar el gate. */
+body:not(.ccf-b43-auth-ready) > #app{visibility:hidden!important}
+body:not(.ccf-b43-auth-ready) > #app *{visibility:hidden!important}
+body.ccf-b43-auth-ready > #app{visibility:visible!important}
+body:not(.ccf-b43-auth-ready) > :not(#app):not(#ccf-auth-gate):not(script):not(style){display:none!important}
+body.ccf-b43-auth-ready > :not(#app):not(script):not(style){display:none!important}
+#ccf-auth-gate{visibility:visible!important}
 /* AUTH-GATE SYNC: evita el parpadeo de la app durante la restauración de sesión.
    El contenido financiero solo se hace visible cuando el gate de autenticación
    ya fue retirado por el flujo de autenticación existente. */
