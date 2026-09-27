@@ -85,3 +85,72 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 #ccf-mobile-b43 .b434-final-info .b234-result strong{display:block!important;font-size:27px!important;line-height:1.1!important;margin:5px 0!important}
 #ccf-mobile-b43 .b434-final-info .b234-result p{display:block!important;font-size:12px!important;line-height:1.4!important;margin:7px 0 0!important}
 }
+
+@media(max-width:720px){
+  /* MENÚ PRINCIPAL — títulos y subtítulos legibles */
+  #ccf-mobile-b43 .b434-module{
+    color:#172033!important;
+    background:#fff!important;
+    border-color:#dfe5ec!important;
+  }
+  #ccf-mobile-b43 .b434-module span{
+    min-width:0;
+    display:block;
+  }
+  #ccf-mobile-b43 .b434-module strong{
+    display:block!important;
+    color:#172033!important;
+    font-size:11px!important;
+    line-height:1.25!important;
+    font-weight:800!important;
+    opacity:1!important;
+  }
+  #ccf-mobile-b43 .b434-module small{
+    display:block!important;
+    color:#64748b!important;
+    font-size:8px!important;
+    line-height:1.35!important;
+    margin-top:3px!important;
+    opacity:1!important;
+  }
+  #ccf-mobile-b43 .b434-module:active{
+    transform:scale(.985);
+  }
+
+  /* Adaptación transitoria de los módulos desktop seleccionados */
+  #ccf-mobile-b43 .b434-module-host{
+    display:none;
+    padding:10px;
+    box-sizing:border-box;
+    min-width:0;
+  }
+  #ccf-mobile-b43 .b434-module-host.open{
+    display:block!important;
+  }
+  #ccf-mobile-b43 .b434-module-host > .tab{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host > .tab > *{
+    max-width:100%!important;
+    box-sizing:border-box;
+  }
+  #ccf-mobile-b43 .b434-module-host .grid2{
+    grid-template-columns:1fr!important;
+  }
+  #ccf-mobile-b43 .b434-module-host input,
+  #ccf-mobile-b43 .b434-module-host select,
+  #ccf-mobile-b43 .b434-module-host textarea,
+  #ccf-mobile-b43 .b434-module-host button{
+    max-width:100%;
+    box-sizing:border-box;
+  }
+  #ccf-mobile-b43 .b434-module-host .card{
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+}

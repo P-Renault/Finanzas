@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -31,14 +31,87 @@ function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
 function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));document.body.classList.remove('b434-lock')}
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
-function navigate(id){closeAll();if(id==='dashboard'){nativeTab('dashboard');setActive('dashboard');return}if(nativeTab(id)){setActive(id);return}notice(META[id]?.[0]||id)}
+function restoreActiveModule(){
+ if(!activeModule)return;
+ const el=activeModule;
+ delete el.dataset.b434ModuleMoved;
+ if(moduleMarker?.parentNode)moduleMarker.parentNode.insertBefore(el,moduleMarker.nextSibling);
+ moduleMarker?.remove();
+ moduleMarker=null;
+ activeModule=null;
+}
+function moduleHost(){
+ return $('[data-module-host]',root);
+}
+function adaptDesktopModule(id){
+ const host=moduleHost();
+ if(!host)return false;
+ restoreActiveModule();
+ const section=by(id);
+ if(!section){
+   return false;
+ }
+ moduleMarker=document.createComment('CCF B4.3.4 module '+id);
+ section.parentNode?.insertBefore(moduleMarker,section);
+ section.classList.remove('hidden');
+ section.dataset.b434ModuleMoved='1';
+ host.replaceChildren(section);
+ activeModule=section;
+ host.classList.add('open');
+ return true;
+}
+function showModuleAfterNavigation(id){
+ if(id==='dashboard'){
+   restoreActiveModule();
+   const host=moduleHost();host?.classList.remove('open');
+   summary();
+   setActive('dashboard');
+   return true;
+ }
+ const ok=adaptDesktopModule(id);
+ if(ok){
+   const host=moduleHost();
+   host.querySelectorAll('.tab').forEach(s=>s.classList.remove('hidden'));
+   setActive(id);
+   return true;
+ }
+ return false;
+}
+function navigate(id){
+ closeAll();
+ if(id==='dashboard'){
+   nativeTab('dashboard');
+   showModuleAfterNavigation('dashboard');
+   return;
+ }
+ const native=nativeTab(id);
+ setTimeout(()=>{
+   if(showModuleAfterNavigation(id))return;
+   notice(META[id]?.[0]||id);
+ },120);
+ if(!native && !META[id])notice(id);
+}
 function openMore(){populateMore();$('.b434-overlay[data-overlay="more"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 function openProfile(){$('.b434-overlay[data-overlay="profile"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 
 function populateMore(){
  const g=$('[data-more-grid]',root);if(!g)return;g.innerHTML='';
- const ids=[...new Set([...$$('.tabs button[data-tab]').map(b=>b.dataset.tab),...Object.keys(META)])].filter(id=>id&&id!=='dashboard'&&!PRIMARY.some(x=>x[0]===id));
- ids.forEach(id=>{const m=META[id]||[id,'Módulo financiero','◉'];const b=document.createElement('button');b.className='b434-module';b.innerHTML='<b>'+esc(m[2])+'</b><span><strong>'+esc(m[0])+'</strong><small>'+esc(m[1])+'</small></span>';b.onclick=()=>navigate(id);g.appendChild(b)})
+ const tabIds=$$('.tabs button[data-tab]').map(b=>b.dataset.tab).filter(Boolean);
+ const ids=[...new Set([...tabIds,...Object.keys(META)])].filter(Boolean);
+ ids.forEach(id=>{
+   const m=(id==='dashboard'?['Resumen','Panel financiero','⌂']:
+            id==='movimientos'?['Movimientos','Ingresos, gastos e historial','↕']:
+            id==='deudas'?['Deudas','Obligaciones y vencimientos','▣']:
+            id==='cuentas'?['Cuentas','Saldos y liquidez','▤']:
+            META[id]||[id,'Módulo financiero','◉']);
+   const b=document.createElement('button');
+   b.type='button';
+   b.className='b434-module';
+   b.dataset.module=id;
+   b.innerHTML='<b>'+esc(m[2])+'</b><span><strong>'+esc(m[0])+'</strong><small>'+esc(m[1])+'</small></span>';
+   b.onclick=()=>navigate(id);
+   g.appendChild(b)
+ })
 }
 function openMoveForm(title){
  const form=by('movForm');if(!form){notice('Registro de movimientos');return}
@@ -200,20 +273,20 @@ function summary(){
 
 function build(){
  if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';
- root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="b434-bell">♧</button><button class="b434-avatar" data-profile>P</button></header><main data-content></main><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
+ root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="b434-bell">♧</button><button class="b434-avatar" data-profile>P</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
  <div class="b434-overlay" data-overlay="more"><div class="b434-backdrop" data-close></div><section><header><strong>Todos los módulos</strong><button data-close>×</button></header><div class="b434-module-grid" data-more-grid></div></section></div>
  <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();summary();
+ populateMore();summary();setActive('dashboard');
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
