@@ -85,6 +85,38 @@ function quick(type){
  const sel=by('movTipo');if(sel)sel.value=type==='income'?'ingreso':'gasto';
 }
 
+
+function syncConsolidatedReport(){
+  if(!root)return;
+  const host=$('[data-consolidated]',root);
+  const source=by('b234-report');
+  if(!host||!source)return;
+
+  const existing=host.querySelector('[data-b234-copy]');
+  const grid=source.querySelector('.b234-grid');
+  const totals=source.querySelector('.b234-summary');
+  const cards=[...source.querySelectorAll('.b234-card')];
+  const finalCard=cards.find(x=String(x.querySelector('h3')?.textContent||'').toLowerCase().includes('ingresos vs gastos del mes'));
+  if(!grid||!totals||!finalCard)return;
+
+  const fragment=document.createElement('div');
+  fragment.dataset.b234Copy='1';
+
+  const copy=(el)=>{
+    const c=el.cloneNode(true);
+    c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+    c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));
+    return c;
+  };
+
+  fragment.appendChild(copy(grid));
+  fragment.appendChild(copy(totals));
+  fragment.appendChild(copy(finalCard));
+
+  existing?.remove();
+  host.appendChild(fragment);
+}
+
 function summary(){
  const c=$('[data-content]',root);
  c.innerHTML=`
@@ -126,7 +158,8 @@ function summary(){
  <section class="b433-card"><header><div><strong>Análisis ejecutivo</strong><small>Anticipación de liquidez, presión financiera y apoyo cuantitativo</small></div><small class="b433-mirror" data-source="executive-risk-summary">—</small></header>
   <div class="b433-insights">${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b433-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div>
   <div class="b433-charts" data-exec></div>
- </section>`;
+ </section>
+ <section class="b433-consolidated" data-consolidated aria-label="Desglose consolidado de gastos"></section>`;
 
  // Move the real nodes, preserving their rendered charts and event listeners.
  const flow=by('chart-flow'); if(flow)moveReal('chart-flow',$('[data-flow]',c));
@@ -164,7 +197,7 @@ function build(){
 function observe(){
  if(observer)observer.disconnect();
  const ids=['future-month-label','month-income-total','month-expense-total','future-income-count','future-expense-count','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
- observer=new MutationObserver(()=>mirrorAll());
+ observer=new MutationObserver(()=>{ mirrorAll(); syncConsolidatedReport(); });
  ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
 function restore(){
