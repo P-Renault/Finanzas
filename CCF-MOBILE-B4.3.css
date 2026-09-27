@@ -403,3 +403,42 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     font-weight:800!important;
   }
 }
+
+/* RESUMEN MÓVIL · CORRECCIÓN DEFINITIVA FLUJO + RESUMEN DE GASTOS */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-summary-report{display:block!important;background:#fff!important;border:1px solid #dfe5ec!important;border-radius:18px!important;padding:13px!important;margin:12px 0!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report>header{display:block!important;margin:0 0 10px!important}
+  #ccf-mobile-b43 .b434-summary-report>header strong{display:block!important;color:#172033!important;font-size:16px!important;font-weight:800!important}
+  #ccf-mobile-b43 .b434-summary-report>header small{display:block!important;color:#64748b!important;font-size:9px!important;text-align:left!important;margin-top:4px!important}
+  #ccf-mobile-b43 .b434-report-subtitle{font-size:9px!important;color:#64748b!important;margin:0 0 8px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:0 0 9px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat{display:block!important;min-width:0!important;padding:10px!important;border:1px solid #e2e8f0!important;border-radius:13px!important;background:#fff!important;box-sizing:border-box!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat h4{font-size:11px!important;line-height:1.2!important;color:#172033!important;margin:0 0 5px!important;overflow-wrap:anywhere!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat strong{display:block!important;font-size:16px!important;color:#172033!important;margin-bottom:5px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-line{display:flex!important;justify-content:space-between!important;gap:5px!important;font-size:8px!important;color:#64748b!important;padding-top:3px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-line span{min-width:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important;margin:0 0 9px!important;border-radius:13px!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary>div{padding:10px!important;min-width:0!important;border-right:1px solid #fecdd3!important;border-bottom:1px solid #fecdd3!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary>div:nth-child(2n){border-right:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary>div:nth-child(3),#ccf-mobile-b43 .b434-summary-report .b234-summary>div:nth-child(4){border-bottom:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary strong{font-size:17px!important;color:#172033!important;display:block!important;margin-top:3px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary small{font-size:8px!important;color:#64748b!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info{display:block!important;width:100%!important;margin:0!important;padding:11px!important;border:1px solid #e2e8f0!important;border-radius:14px!important;background:#fff!important;box-sizing:border-box!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final{display:block!important;min-width:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-bars{display:grid!important;gap:9px!important;margin:0 0 11px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-bar-row{display:grid!important;grid-template-columns:92px 1fr 78px!important;align-items:center!important;gap:6px!important;margin:0!important;font-size:8px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-bar-row b{font-size:8px!important;color:#334155!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-bar-row strong{font-size:9px!important;text-align:right!important;color:#172033!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-track{height:9px!important;border-radius:99px!important;background:#e5e7eb!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-result{display:block!important;width:100%!important;box-sizing:border-box!important;padding:12px!important;border-radius:13px!important;min-height:0!important;background:#fff7ed!important;border:1px solid #fed7aa!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-result small{font-size:8px!important;color:#9a3412!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-result strong{display:block!important;font-size:25px!important;line-height:1.1!important;color:#b91c1c!important;margin:5px 0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-result b{display:block!important;font-size:11px!important;color:#9a3412!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-result p{font-size:9px!important;line-height:1.35!important;color:#7c2d12!important;margin:5px 0 0!important}
+  #ccf-mobile-b43 #chart-flow .mobile-flow-income{fill:#16a34a!important;stroke:#15803d!important;stroke-width:1.5!important}
+  #ccf-mobile-b43 #chart-flow .mobile-flow-expense{fill:#ef4444!important;stroke:#dc2626!important;stroke-width:1.5!important}
+  #ccf-mobile-b43 #chart-flow .mobile-flow-income-wick{stroke:#15803d!important;stroke-width:2.5!important}
+  #ccf-mobile-b43 #chart-flow .mobile-flow-expense-wick{stroke:#dc2626!important;stroke-width:2.5!important}
+  #ccf-mobile-b43 #chart-flow .chart-axis{fill:#64748b!important;font-size:10px!important}
+  #ccf-mobile-b43 #chart-flow .chart-title{fill:#334155!important;font-size:11px!important;font-weight:700!important}
+}

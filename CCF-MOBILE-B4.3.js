@@ -140,57 +140,35 @@ function quick(type){
 }
 
 function syncConsolidatedReport(){
- if(!root)return;
+ if(!root)return false;
  const host=$('[data-consolidated]',root),target=host?.querySelector('[data-b234-copy]'),source=by('b234-report');
- if(!host||!target||!source)return;
- const grid=source.querySelector('.b234-grid'),totals=source.querySelector('.b234-summary');
- const cards=[...source.querySelectorAll('.b234-card')];
- const finalCard=cards.find(x=>String(x.querySelector('h3')?.textContent||'').toLowerCase().includes('ingresos vs gastos del mes'));
- if(!grid||!totals||!finalCard)return;
- const fragment=document.createElement('div');
+ if(!host||!target||!source)return false;
  const copy=el=>{const c=el.cloneNode(true);c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));return c};
- const finalCopy=copy(finalCard);finalCopy.classList.add('b434-final-info');fragment.append(copy(grid),copy(totals),finalCopy);target.replaceChildren(fragment);
+ const grid=source.querySelector('.b234-grid'),totals=source.querySelector('.b234-summary'),final=source.querySelector('.b234-final');
+ if(!grid&&!totals&&!final)return false;
+ const fragment=document.createElement('div');
+ if(grid){const title=document.createElement('div');title.className='b434-report-subtitle';title.textContent='Distribución por categoría y estado';fragment.appendChild(title);fragment.appendChild(copy(grid));}
+ if(totals)fragment.appendChild(copy(totals));
+ if(final){const finalCopy=copy(final);finalCopy.classList.add('b434-final-info');fragment.appendChild(finalCopy);}
+ target.replaceChildren(fragment); return true;
 }
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
- const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');if(!source)return false;
+ const source=by('b234Chart')?.querySelector('svg');if(!source)return false;
+ const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,'');
+ const greenToken=s=>{s=norm(s);return s.includes('#16a34a')||s.includes('#15803d')||s.includes('rgb(22,163,74)')||s.includes('rgb(21,128,61)')||s.includes('green')};
+ const redToken=s=>{s=norm(s);return s.includes('#ef4444')||s.includes('#dc2626')||s.includes('rgb(239,68,68)')||s.includes('rgb(220,38,38)')||s.includes('red')};
  const sourceLines=[...source.querySelectorAll('line')];
- const lines=sourceLines.filter(l=>{const stroke=(l.getAttribute('stroke')||'').toLowerCase();return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)'});
+ const lines=sourceLines.map(l=>({el:l,style:[l.getAttribute('stroke'),l.getAttribute('style'),l.getAttribute('class')].filter(Boolean).join(' ')})).filter(x=>greenToken(x.style)||redToken(x.style));
  if(!lines.length)return false;
  const W=900,H=300,L=52,R=18,T=24,B=44,base=H-B,days=30,step=(W-L-R)/(days-1),NS='http://www.w3.org/2000/svg';
- const svg=document.createElementNS(NS,'svg');
- svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width','100%');svg.setAttribute('height','100%');
- svg.setAttribute('role','img');svg.setAttribute('aria-label','Flujo del mes con velas de ingresos y egresos');
- const grid=sourceLines.filter(l=>(l.getAttribute('stroke')||'').toLowerCase()==='#e5e7eb');
- grid.forEach(l=>{const g=l.cloneNode(true);g.setAttribute('stroke','#e6ebf0');g.setAttribute('stroke-width','1');svg.appendChild(g)});
- const labels=[...source.querySelectorAll('text')];
- const yLabels=labels.filter(t=>/^\$/.test(String(t.textContent||'').trim()));
- yLabels.forEach(t=>{const clone=t.cloneNode(true);clone.setAttribute('fill','#64748b');clone.setAttribute('font-size','11');svg.appendChild(clone)});
+ const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width','100%');svg.setAttribute('height','100%');svg.setAttribute('role','img');svg.setAttribute('aria-label','Flujo del mes: velas verdes de ingresos y velas rojas de egresos');
+ sourceLines.filter(l=>norm(l.getAttribute('stroke'))==='#e5e7eb'||norm(l.getAttribute('stroke'))==='#e6ebf0').forEach(l=>{const g=l.cloneNode(true);g.setAttribute('stroke','#e6ebf0');g.setAttribute('stroke-width','1');svg.appendChild(g)});
+ [...source.querySelectorAll('text')].filter(t=>/^\$/.test(String(t.textContent||'').trim())).forEach(t=>{const clone=t.cloneNode(true);clone.setAttribute('fill','#64748b');clone.setAttribute('font-size','11');svg.appendChild(clone)});
  const axis=document.createElementNS(NS,'g');axis.setAttribute('class','mobile-month-axis');
- for(let d=1;d<=days;d++)if(d===1||d===5||d===10||d===15||d===20||d===25||d===30){
-   const x=L+(d-1)*step,t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-15);t.setAttribute('text-anchor',d===1?'start':d===30?'end':'middle');t.setAttribute('class','chart-axis');t.textContent=String(d).padStart(2,'0');axis.appendChild(t);
- }
+ for(let d=1;d<=days;d++)if([1,5,10,15,20,25,30].includes(d)){const x=L+(d-1)*step,t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-15);t.setAttribute('text-anchor',d===1?'start':d===30?'end':'middle');t.setAttribute('class','chart-axis');t.textContent=String(d).padStart(2,'0');axis.appendChild(t)}
  svg.appendChild(axis);
- const candleData=[];
- lines.forEach(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   const green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)';
-   const x=Number(l.getAttribute('x1')),y1=Number(l.getAttribute('y1')),y2=Number(l.getAttribute('y2'));
-   if(!Number.isFinite(x)||!Number.isFinite(y1)||!Number.isFinite(y2))return;
-   const day=Math.round((x-L)/step)+1;if(day<1||day>days)return;
-   const top=Math.min(y1,y2),bottom=Math.max(y1,y2);
-   candleData.push({day,green,top,bottom,height:Math.max(3,bottom-top)});
- });
- candleData.forEach(c=>{
-   const x=L+(c.day-1)*step+(c.green?-5:5);
-   const bodyH=Math.max(10,Math.min(30,c.height*.22));
-   const bodyY=Math.max(T,c.top);
-   const wick=document.createElementNS(NS,'line');
-   wick.setAttribute('x1',x);wick.setAttribute('x2',x);wick.setAttribute('y1',Math.max(T,bodyY-8));wick.setAttribute('y2',base);
-   wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);
-   const body=document.createElementNS(NS,'rect');body.setAttribute('x',x-6);body.setAttribute('y',bodyY);body.setAttribute('width','12');body.setAttribute('height',bodyH);body.setAttribute('rx','2');
-   body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body);
- });
+ lines.forEach(({el,style})=>{const green=greenToken(style),x=Number(el.getAttribute('x1')),y1=Number(el.getAttribute('y1')),y2=Number(el.getAttribute('y2'));if(!Number.isFinite(x)||!Number.isFinite(y1)||!Number.isFinite(y2))return;const day=Math.max(1,Math.min(days,Math.round((x-L)/step)+1)),top=Math.min(y1,y2),bottom=Math.max(y1,y2),bodyH=Math.max(10,Math.min(34,Math.max(3,bottom-top)*.24)),bodyY=Math.max(T,top),cx=L+(day-1)*step+(green?-5:5);const wick=document.createElementNS(NS,'line');wick.setAttribute('x1',cx);wick.setAttribute('x2',cx);wick.setAttribute('y1',Math.max(T,bodyY-8));wick.setAttribute('y2',base);wick.setAttribute('class',green?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);const body=document.createElementNS(NS,'rect');body.setAttribute('x',cx-6);body.setAttribute('y',bodyY);body.setAttribute('width','12');body.setAttribute('height',bodyH);body.setAttribute('rx','2');body.setAttribute('class',green?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body)});
  const title=document.createElementNS(NS,'text');title.setAttribute('x',L);title.setAttribute('y','17');title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';svg.appendChild(title);
  host.replaceChildren(svg);return true;
 }
