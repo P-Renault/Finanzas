@@ -93,3 +93,36 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     height:auto!important;
   }
 }
+
+@media(max-width:720px){
+  /* FIX B4.3: el motor ejecutivo necesita un contenedor con dimensiones
+     para construir sus SVG. No se muestra el dashboard desktop; se deja
+     renderizar fuera de pantalla y sus nodos reales se trasladan al móvil. */
+  #app > .executive-dashboard{
+    display:block!important;
+    position:absolute!important;
+    left:-10000px!important;
+    top:0!important;
+    width:760px!important;
+    min-width:760px!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+    opacity:0!important;
+    overflow:visible!important;
+  }
+  #app > .executive-dashboard .executive-charts{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    width:760px!important;
+  }
+  #app > .executive-dashboard .executive-chart{
+    display:block!important;
+    min-height:300px!important;
+    width:auto!important;
+  }
+  #app > .executive-dashboard .executive-chart>div{
+    display:block!important;
+    width:100%!important;
+    height:250px!important;
+  }
+}
