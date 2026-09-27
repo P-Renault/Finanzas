@@ -69,54 +69,120 @@ function syncConsolidatedReport(){
    c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));
    return c;
  };
- fragment.append(copy(grid),copy(totals),copy(finalCard));
+ const finalCopy=copy(finalCard);
+ finalCopy.classList.add('b434-final-info');
+ fragment.append(copy(grid),copy(totals),finalCopy);
  target.replaceChildren(fragment);
 }
 
 
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
- const source=host.querySelector('svg');if(!source)return false;
- const income=[...source.querySelectorAll('rect.chart-income')];
- const expense=[...source.querySelectorAll('rect.chart-expense')];
- if(!income.length&&!expense.length)return false;
+ const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');
+ if(!source)return false;
+
+ const lines=[...source.querySelectorAll('line')].filter(l=>{
+   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
+   return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
+ });
+ if(!lines.length)return false;
+
+ const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
  const NS='http://www.w3.org/2000/svg';
  const svg=document.createElementNS(NS,'svg');
- svg.setAttribute('viewBox','0 0 760 300');svg.setAttribute('width','100%');svg.setAttribute('height','100%');svg.setAttribute('role','img');
- [...source.children].forEach(node=>{
-   const tag=node.tagName?.toLowerCase();
-   if(tag==='line'||tag==='text'){
-     const c=node.cloneNode(true);
-     if(tag==='text'&&String(c.textContent||'').trim()==='Ingresos vs egresos')return;
-     svg.appendChild(c);
-   }
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ svg.setAttribute('width','100%');
+ svg.setAttribute('height','100%');
+ svg.setAttribute('role','img');
+ svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
+
+ // Mantener escala mensual fija y sin desplazamiento.
+ const grid=[...source.querySelectorAll('line')].filter(l=>{
+   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
+   return stroke==='#e5e7eb';
  });
- const candle=(r,type)=>{
-   const x=Number(r.getAttribute('x')||0),y=Number(r.getAttribute('y')||0),w=Number(r.getAttribute('width')||0),h=Number(r.getAttribute('height')||0);
-   if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(w)||!Number.isFinite(h)||h<=0)return;
-   const cx=x+w/2,bw=Math.max(8,Math.min(12,w));
-   const body=document.createElementNS(NS,'rect');
-   body.setAttribute('x',cx-bw/2);body.setAttribute('y',y);body.setAttribute('width',bw);body.setAttribute('height',Math.max(5,h));body.setAttribute('rx','2.5');
-   body.setAttribute('class',type==='income'?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body);
+ grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
+
+ [...source.querySelectorAll('text')].forEach(t=>{
+   const clone=t.cloneNode(true);
+   const txt=String(t.textContent||'').trim();
+   // Se conservan las etiquetas de escala monetaria, pero se reemplazan
+   // las fechas por una secuencia mensual completa más legible.
+   if(/^\d{2}$/.test(txt))return;
+   svg.appendChild(clone);
+ });
+
+ const axis=document.createElementNS(NS,'g');
+ axis.setAttribute('class','mobile-month-axis');
+ for(let d=1;d<=days;d++){
+   if(d===1||d%3===0||d===days){
+     const x=L+(d-1)*step;
+     const t=document.createElementNS(NS,'text');
+     t.setAttribute('x',x);
+     t.setAttribute('y',H-12);
+     t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
+     t.setAttribute('class','chart-axis');
+     t.textContent=String(d).padStart(2,'0');
+     axis.appendChild(t);
+   }
+ }
+ svg.appendChild(axis);
+
+ const candleData=[];
+ lines.forEach(l=>{
+   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
+   const green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)';
+   const x=Number(l.getAttribute('x1'));
+   const y=Number(l.getAttribute('y1'));
+   if(!Number.isFinite(x)||!Number.isFinite(y))return;
+   const baseX=x+(green?4:-4);
+   const day=Math.round((baseX-L)/step)+1;
+   if(day<1||day>days)return;
+   const amountHeight=Math.max(2,base-y);
+   candleData.push({day,green,y,height:amountHeight});
+ });
+
+ // Una vela por tipo y por día. Si existen ambas, quedan lado a lado.
+ candleData.forEach(c=>{
+   const x=L+(c.day-1)*step+(c.green?-5:5);
+   const bodyH=Math.max(9,Math.min(18,c.height*0.12));
+   const bodyY=Math.max(T,c.y);
    const wick=document.createElementNS(NS,'line');
-   wick.setAttribute('x1',cx);wick.setAttribute('x2',cx);wick.setAttribute('y1',Math.max(0,y-5));wick.setAttribute('y2',y);
-   wick.setAttribute('class',type==='income'?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);
- };
- income.forEach(r=>candle(r,'income'));expense.forEach(r=>candle(r,'expense'));
- const title=document.createElementNS(NS,'text');title.setAttribute('x','44');title.setAttribute('y','17');title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';svg.appendChild(title);
- host.replaceChildren(svg);return true;
+   wick.setAttribute('x1',x);wick.setAttribute('x2',x);
+   wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);
+   wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');
+   svg.appendChild(wick);
+
+   const body=document.createElementNS(NS,'rect');
+   body.setAttribute('x',x-5);body.setAttribute('y',bodyY);
+   body.setAttribute('width','10');body.setAttribute('height',bodyH);
+   body.setAttribute('rx','2');
+   body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
+   svg.appendChild(body);
+ });
+
+ const title=document.createElementNS(NS,'text');
+ title.setAttribute('x',L);title.setAttribute('y','17');
+ title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';
+ svg.appendChild(title);
+
+ host.replaceChildren(svg);
+ return true;
 }
 function scheduleMobileFlowAdapt(){
  if(!mobile())return;
- [250,700,1400,2400].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));
+ [350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));
 }
-
 function scheduleReportSync(){
  clearTimeout(reportTimer);let tries=0;
- const attempt=()=>{syncConsolidatedReport();tries++;if(tries<12&&!by('b234-report'))reportTimer=setTimeout(attempt,300)};
- reportTimer=setTimeout(attempt,80);
+ const attempt=()=>{
+   syncConsolidatedReport();
+   adaptMobileFlowCandles();
+   tries++;
+   if(tries<20)reportTimer=setTimeout(attempt,300);
+ };
+ reportTimer=setTimeout(attempt,120);
 }
-
 function summary(){
  const c=$('[data-content]',root);c.innerHTML=`
  <section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>

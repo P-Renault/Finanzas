@@ -204,3 +204,95 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
  #ccf-mobile-b43 #chart-flow .mobile-flow-income-wick{stroke:#15803d!important;stroke-width:2!important}
  #ccf-mobile-b43 #chart-flow .mobile-flow-expense-wick{stroke:#dc2626!important;stroke-width:2!important}
 }
+
+/* B4.3 Etapa 1 — Flujo mensual estático y cuadro informativo consolidado */
+@media(max-width:720px){
+ #ccf-mobile-b43 .b434-real-chart{
+   overflow:hidden!important;
+   height:205px!important;
+   min-height:205px!important;
+ }
+ #ccf-mobile-b43 .b434-real-chart>#chart-flow{
+   width:100%!important;
+   height:195px!important;
+   min-height:195px!important;
+   overflow:hidden!important;
+ }
+ #ccf-mobile-b43 #chart-flow svg{
+   display:block!important;
+   width:100%!important;
+   height:195px!important;
+   max-width:100%!important;
+ }
+ #ccf-mobile-b43 #chart-flow .mobile-flow-income{
+   fill:#16a34a!important;
+   stroke:#15803d!important;
+   stroke-width:1.5!important;
+ }
+ #ccf-mobile-b43 #chart-flow .mobile-flow-expense{
+   fill:#ef4444!important;
+   stroke:#dc2626!important;
+   stroke-width:1.5!important;
+ }
+ #ccf-mobile-b43 #chart-flow .mobile-flow-income-wick{
+   stroke:#15803d!important;
+   stroke-width:2.5!important;
+ }
+ #ccf-mobile-b43 #chart-flow .mobile-flow-expense-wick{
+   stroke:#dc2626!important;
+   stroke-width:2.5!important;
+ }
+ #ccf-mobile-b43 .b434-final-info{
+   display:block!important;
+   width:100%!important;
+   box-sizing:border-box!important;
+   margin:0!important;
+   padding:12px!important;
+   border:1px solid #e4e7ec!important;
+   border-radius:14px!important;
+   background:#fff!important;
+   overflow:hidden!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-title{
+   display:block!important;
+   margin-bottom:10px!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-final{
+   display:grid!important;
+   grid-template-columns:1fr!important;
+   gap:12px!important;
+   min-width:0!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-bars{
+   width:100%!important;
+   min-width:0!important;
+   overflow:hidden!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-bar-row{
+   display:grid!important;
+   grid-template-columns:1fr!important;
+   gap:4px!important;
+   margin-bottom:9px!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-result{
+   display:block!important;
+   width:100%!important;
+   box-sizing:border-box!important;
+   min-height:150px!important;
+   padding:14px!important;
+   border-radius:12px!important;
+   overflow:visible!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-result strong{
+   display:block!important;
+   font-size:27px!important;
+   line-height:1.1!important;
+   margin:5px 0!important;
+ }
+ #ccf-mobile-b43 .b434-final-info .b234-result p{
+   display:block!important;
+   font-size:12px!important;
+   line-height:1.4!important;
+   margin:7px 0 0!important;
+ }
+}
