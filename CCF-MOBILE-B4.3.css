@@ -378,3 +378,45 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     overflow:hidden!important;
   }
 }
+
+
+/* B4.3 FINAL — FLUJO DEL MES: lienzo móvil fijo, sin desplazamiento */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-real-chart[data-flow],
+  #ccf-mobile-b43 [data-flow]{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:205px!important;
+    min-height:205px!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 [data-flow] #chart-flow{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:195px!important;
+    min-height:195px!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 [data-flow] #chart-flow svg{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    height:195px!important;
+    display:block!important;
+    overflow:hidden!important;
+  }
+  #ccf-mobile-b43 #chart-flow .mobile-flow-income{
+    fill:#16a34a!important;
+    stroke:#15803d!important;
+    opacity:1!important;
+  }
+  #ccf-mobile-b43 #chart-flow .mobile-flow-expense{
+    fill:#ef4444!important;
+    stroke:#dc2626!important;
+    opacity:1!important;
+  }
+}

@@ -77,16 +77,23 @@ function syncConsolidatedReport(){
 
 
 function adaptMobileFlowCandles(){
- const host=by('chart-flow');if(!host)return false;
+ const host=by('chart-flow');if(!host||!mobile())return false;
 
- // No sustituir una versión ya construida correctamente.
- if(host.dataset.b434Candles==='3')return true;
+ /*
+  * B4.3 — FLUJO MENSUAL ESTÁTICO
+  * Fuente única: SVG generado por B232.34.
+  * No se inventan datos ni se reconstruye el motor financiero.
+  *
+  * Correcciones:
+  * 1) no se bloquea después de un primer render incompleto;
+  * 2) se detectan líneas verdes y rojas por estilo real/computado;
+  * 3) la escala se obtiene del SVG fuente, no de coordenadas hard-codeadas;
+  * 4) la magnitud se calcula con y1/y2 de cada línea;
+  * 5) verde y rojo quedan lado a lado cuando corresponden al mismo día;
+  * 6) el resultado final siempre cabe en el ancho móvil y no hace scroll.
+  */
 
- // El flujo móvil debe tomar exclusivamente el gráfico diario consolidado
- // B232.34. Durante el arranque puede existir más de una instancia/rebuild,
- // por eso se prueban los contenedores equivalentes y se exige encontrar
- // datos de ambos colores antes de construir el gráfico.
- const sources=[
+ const holders=[
    by('b234Chart'),
    document.querySelector('#b234-report .b234-chart-wrap'),
    document.querySelector('.b234-report .b234-chart-wrap')
@@ -104,98 +111,79 @@ function adaptMobileFlowCandles(){
    try{
      const cs=getComputedStyle(node);
      vals.push(cs.stroke,cs.fill);
-   }catch(e){}
+   }catch(_){}
    const raw=vals.map(norm).join('|');
-   if(
-     raw.includes('#16a34a')||raw.includes('#15803d')||raw.includes('#22c55e')||
-     raw.includes('rgb(22,163,74)')||raw.includes('rgb(21,128,61)')||
-     raw.includes('rgb(34,197,94)')
-   )return 'green';
-   if(
-     raw.includes('#ef4444')||raw.includes('#dc2626')||raw.includes('#f43f5e')||
-     raw.includes('rgb(239,68,68)')||raw.includes('rgb(220,38,38)')||
-     raw.includes('rgb(244,63,94)')
-   )return 'red';
+
+   if(/#16a34a|#15803d|#22c55e|rgb\(22,163,74\)|rgb\(21,128,61\)|rgb\(34,197,94\)/.test(raw))
+     return 'green';
+   if(/#ef4444|#dc2626|#f43f5e|rgb\(239,68,68\)|rgb\(220,38,38\)|rgb\(244,63,94\)/.test(raw))
+     return 'red';
    return null;
  };
 
- let source=null,colored=[];
- for(const holder of sources){
+ let source=null, colored=[];
+ for(const holder of holders){
    const svg=holder.matches?.('svg')?holder:holder.querySelector?.('svg');
    if(!svg)continue;
+
    const found=[...svg.querySelectorAll('line')]
      .map(l=>({l,color:colorOf(l)}))
      .filter(x=>x.color);
-   const hasGreen=found.some(x=>x.color==='green');
-   const hasRed=found.some(x=>x.color==='red');
-   if(hasGreen&&hasRed){
-     source=svg;colored=found;break;
+
+   if(found.some(x=>x.color==='green') && found.some(x=>x.color==='red')){
+     source=svg;
+     colored=found;
+     break;
    }
  }
 
- // Nunca degradar silenciosamente a un gráfico rojo-only.
+ // Jamás mostrar una falsa versión "completa" si falta una serie.
  if(!source)return false;
 
  const NS='http://www.w3.org/2000/svg';
- const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B;
- const days=Number(window.CCFMobileB43?.flowDays)||30;
- const step=(W-L-R)/Math.max(1,days-1);
+ const vb=(source.getAttribute('viewBox')||'0 0 900 300').trim().split(/\s+/).map(Number);
+ const SW=Number.isFinite(vb[2])&&vb[2]>0?vb[2]:900;
+ const SH=Number.isFinite(vb[3])&&vb[3]>0?vb[3]:300;
 
- const svg=document.createElementNS(NS,'svg');
- svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
- svg.setAttribute('preserveAspectRatio','none');
- svg.setAttribute('role','img');
- svg.setAttribute('aria-label','Flujo mensual: vela verde para ingresos y vela roja para egresos');
+ const W=900,H=300,L=48,R=18,T=24,B=44,base=H-B;
+ const days=Math.max(1,Number(window.CCFMobileB43?.flowDays)||30);
 
- // Rejilla estática.
- for(let i=0;i<=4;i++){
-   const y=base-i*(base-T)/4;
-   const line=document.createElementNS(NS,'line');
-   line.setAttribute('x1',L);line.setAttribute('x2',W-R);
-   line.setAttribute('y1',y);line.setAttribute('y2',y);
-   line.setAttribute('stroke','#e5e7eb');line.setAttribute('stroke-width','1');
-   svg.appendChild(line);
- }
-
- // El gráfico original entrega la escala. Conservamos sus etiquetas
- // monetarias para que el móvil siga hablando el mismo idioma visual.
- [...source.querySelectorAll('text')].forEach(t=>{
-   const txt=String(t.textContent||'').trim();
-   if(/^\d{2}$/.test(txt)||/^\d{2}-\d{2}$/.test(txt))return;
-   const c=t.cloneNode(true);
-   c.removeAttribute('transform');
-   svg.appendChild(c);
- });
-
- // Cronología completa, comprimida dentro del ancho disponible.
- const axis=document.createElementNS(NS,'g');
- [1,5,10,15,20,25,days].filter((d,i,a)=>d>=1&&d<=days&&a.indexOf(d)===i).forEach(d=>{
-   const x=L+(d-1)*step;
-   const t=document.createElementNS(NS,'text');
-   t.setAttribute('x',x);t.setAttribute('y',H-14);
-   t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
-   t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');
-   t.setAttribute('font-weight','600');
-   t.textContent=String(d).padStart(2,'0');
-   axis.appendChild(t);
- });
- svg.appendChild(axis);
-
- // Reconstruir las dos series desde las líneas del motor.
- // Se conserva el máximo registrado para cada día/color.
- const daily=new Map();
+ /*
+  * Extraemos la geometría real del SVG fuente.
+  * xMin/xMax permiten funcionar aunque el motor cambie sus márgenes.
+  * La magnitud se toma de la longitud de la línea, no de una coordenada
+  * absoluta que podría cambiar con la escala.
+  */
+ const raw=[];
  colored.forEach(({l,color})=>{
-   const x0=Number(l.getAttribute('x1'));
-   const y0=Number(l.getAttribute('y1'));
-   if(!Number.isFinite(x0)||!Number.isFinite(y0))return;
+   const x1=Number(l.getAttribute('x1'));
+   const x2=Number(l.getAttribute('x2'));
+   const y1=Number(l.getAttribute('y1'));
+   const y2=Number(l.getAttribute('y2'));
+   if([x1,x2,y1,y2].every(Number.isFinite)){
+     raw.push({color,x1,x2,y1,y2,magnitude:Math.abs(y2-y1)});
+   }
+ });
+ if(!raw.some(x=>x.color==='green')||!raw.some(x=>x.color==='red'))return false;
 
-   const day=Math.round((x0-L)/step)+1;
-   if(day<1||day>days)return;
+ const xMin=Math.min(...raw.map(x=>Math.min(x.x1,x.x2)));
+ const xMax=Math.max(...raw.map(x=>Math.max(x.x1,x.x2)));
+ const spanX=Math.max(1,xMax-xMin);
 
-   const magnitude=Math.max(0,base-y0);
-   const key=`${day}-${color}`;
+ /*
+  * Agrupación cronológica.
+  * Se calcula el día desde la posición relativa de la fuente.
+  * Si varias líneas caen en el mismo día/color, se conserva la mayor.
+  */
+ const daily=new Map();
+ raw.forEach(item=>{
+   const x=(item.x1+item.x2)/2;
+   let day=Math.round(((x-xMin)/spanX)*(days-1))+1;
+   day=Math.max(1,Math.min(days,day));
+   const key=`${day}-${item.color}`;
    const old=daily.get(key);
-   if(!old||magnitude>old.magnitude)daily.set(key,{day,color,magnitude});
+   if(!old||item.magnitude>old.magnitude)
+     daily.set(key,{day,color:item.color,magnitude:item.magnitude});
  });
 
  const rows=[...daily.values()];
@@ -203,12 +191,65 @@ function adaptMobileFlowCandles(){
 
  const maxMag=Math.max(1,...rows.map(x=>x.magnitude));
 
+ const svg=document.createElementNS(NS,'svg');
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ svg.setAttribute('preserveAspectRatio','none');
+ svg.setAttribute('role','img');
+ svg.setAttribute('aria-label','Flujo mensual cronológico: verde ingresos y rojo egresos');
+
+ // Escala visual estática.
+ for(let i=0;i<=4;i++){
+   const y=T+(base-T)*i/4;
+   const line=document.createElementNS(NS,'line');
+   line.setAttribute('x1',L);line.setAttribute('x2',W-R);
+   line.setAttribute('y1',y);line.setAttribute('y2',y);
+   line.setAttribute('stroke','#e5e7eb');
+   line.setAttribute('stroke-width','1');
+   svg.appendChild(line);
+ }
+
+ // Cronología mensual fija.
+ const axis=document.createElementNS(NS,'g');
+ [1,5,10,15,20,25,days]
+   .filter((d,i,a)=>d>=1&&d<=days&&a.indexOf(d)===i)
+   .forEach(d=>{
+     const x=L+(d-1)*(W-L-R)/Math.max(1,days-1);
+     const t=document.createElementNS(NS,'text');
+     t.setAttribute('x',x);
+     t.setAttribute('y',H-14);
+     t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
+     t.setAttribute('fill','#64748b');
+     t.setAttribute('font-size','10');
+     t.setAttribute('font-weight','600');
+     t.textContent=String(d).padStart(2,'0');
+     axis.appendChild(t);
+   });
+ svg.appendChild(axis);
+
+ // Título.
+ const title=document.createElementNS(NS,'text');
+ title.setAttribute('x',L);
+ title.setAttribute('y',17);
+ title.setAttribute('fill','#334155');
+ title.setAttribute('font-size','12');
+ title.setAttribute('font-weight','700');
+ title.textContent='Ingresos vs egresos';
+ svg.appendChild(title);
+
+ /*
+  * Dos velas por fecha:
+  * verde a la izquierda = ingreso
+  * rojo a la derecha   = egreso
+  *
+  * La altura conserva la proporción relativa observada por el motor.
+  */
+ const step=(W-L-R)/Math.max(1,days-1);
  rows.sort((a,b)=>a.day-b.day||a.color.localeCompare(b.color)).forEach(item=>{
    const ratio=item.magnitude/maxMag;
-   const bodyH=Math.max(8,ratio*(base-T-8));
+   const bodyH=Math.max(9,ratio*(base-T-10));
    const bodyY=base-bodyH;
-   const x=L+(item.day-1)*step+(item.color==='green'?-5:5);
    const green=item.color==='green';
+   const x=L+(item.day-1)*step+(green?-5.5:5.5);
 
    const wick=document.createElementNS(NS,'line');
    wick.setAttribute('x1',x);wick.setAttribute('x2',x);
@@ -219,27 +260,22 @@ function adaptMobileFlowCandles(){
    svg.appendChild(wick);
 
    const body=document.createElementNS(NS,'rect');
-   body.setAttribute('x',x-4.5);body.setAttribute('y',bodyY);
-   body.setAttribute('width','9');body.setAttribute('height',bodyH);
-   body.setAttribute('rx','2.5');
+   body.setAttribute('x',x-4.5);
+   body.setAttribute('y',bodyY);
+   body.setAttribute('width','9');
+   body.setAttribute('height',bodyH);
+   body.setAttribute('rx','2');
    body.setAttribute('fill',green?'#16a34a':'#ef4444');
    body.setAttribute('stroke',green?'#15803d':'#dc2626');
    body.setAttribute('stroke-width','1.2');
    svg.appendChild(body);
  });
 
- const title=document.createElementNS(NS,'text');
- title.setAttribute('x',L);title.setAttribute('y','17');
- title.setAttribute('fill','#334155');title.setAttribute('font-size','12');
- title.setAttribute('font-weight','700');
- title.textContent='Ingresos vs egresos';
- svg.appendChild(title);
-
  host.replaceChildren(svg);
- host.dataset.b434Candles='3';
+ host.dataset.b434Candles='4';
+ host.dataset.b434SourceReady='both';
  return true;
 }
-
 
 function scheduleMobileFlowAdapt(){
  if(!mobile())return;
