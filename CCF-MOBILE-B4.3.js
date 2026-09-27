@@ -144,43 +144,77 @@ function syncConsolidatedReport(){
  const host=$('[data-consolidated]',root),target=host?.querySelector('[data-b234-copy]');
  const source=document.querySelector('.b234-report');
  if(!host||!target||!source)return false;
- const copy=el=>{const c=el.cloneNode(true);c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));return c};
- const grid=source.querySelector('.b234-grid'),totals=source.querySelector('.b234-summary'),final=source.querySelector('.b234-final');
+ const grid=source.querySelector('.b234-grid');
+ const totals=source.querySelector('.b234-summary');
+ const final=source.querySelector('.b234-final');
  if(!grid&&!totals&&!final)return false;
+ const copy=el=>{
+   const c=el.cloneNode(true);
+   c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+   c.querySelectorAll('script,button').forEach(n=>n.remove());
+   return c;
+ };
  const fragment=document.createElement('div');
- if(grid){const title=document.createElement('div');title.className='b434-report-subtitle';title.innerHTML='<strong>Distribución por categoría</strong><small>Generado · Pendiente · Por realizar</small>';fragment.appendChild(title);fragment.appendChild(copy(grid));}
- if(totals){const title=document.createElement('div');title.className='b434-report-subtitle b434-status-title';title.innerHTML='<strong>Estado de gastos</strong><small>Consolidado del período</small>';fragment.appendChild(title);fragment.appendChild(copy(totals));}
- if(final){const title=document.createElement('div');title.className='b434-report-subtitle b434-final-title';title.innerHTML='<strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada</small>';fragment.appendChild(title);const finalCopy=copy(final);finalCopy.classList.add('b434-final-info');fragment.appendChild(finalCopy);}
- target.replaceChildren(fragment); return true;
+ if(grid){
+   const title=document.createElement('div');title.className='b434-report-subtitle';
+   title.innerHTML='<strong>Distribución por categoría</strong><small>Generado · Pendiente · Por realizar</small>';
+   fragment.appendChild(title);fragment.appendChild(copy(grid));
+ }
+ if(totals){
+   const title=document.createElement('div');title.className='b434-report-subtitle b434-status-title';
+   title.innerHTML='<strong>Estado de gastos</strong><small>Consolidado del período</small>';
+   fragment.appendChild(title);fragment.appendChild(copy(totals));
+ }
+ if(final){
+   const title=document.createElement('div');title.className='b434-report-subtitle b434-final-title';
+   title.innerHTML='<strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada</small>';
+   fragment.appendChild(title);fragment.appendChild(copy(final));
+ }
+ target.replaceChildren(fragment);
+ host.classList.toggle('b434-report-ready',!!fragment.children.length);
+ return true;
+}
+function installReportObserver(){
+ if(window.__CCF_B434_REPORT_OBSERVER__)return;
+ const mo=new MutationObserver(()=>{
+   if(!root)return;
+   if(document.querySelector('.b234-report')){
+     syncConsolidatedReport();
+     adaptMobileFlowCandles();
+   }
+ });
+ mo.observe(document.body,{childList:true,subtree:true});
+ window.__CCF_B434_REPORT_OBSERVER__=mo;
 }
 function adaptMobileFlowCandles(){
- const host=$('[data-flow]',root);if(!host)return false;
- const source=document.querySelector('.b234-report #b234Chart svg');if(!source)return false;
- const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,'');
- const token=(el)=>[el.getAttribute('stroke'),el.getAttribute('style'),el.getAttribute('class'),getComputedStyle(el).stroke].filter(Boolean).join(' ');
- const isGreen=s=>/16a34a|15803d|rgb\(22,163,74\)|rgb\(21,128,61\)/i.test(s);
- const isRed=s=>/ef4444|dc2626|rgb\(239,68,68\)|rgb\(220,38,38\)/i.test(s);
- const lines=[...source.querySelectorAll('line')].map(el=>({el,style:token(el)})).filter(x=>isGreen(x.style)||isRed(x.style));
+ const host=$('[data-flow]',root);
+ const source=document.querySelector('.b234-report #b234Chart svg');
+ if(!host||!source)return false;
+ const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
+ const token=el=>[el.getAttribute('stroke')||'',el.getAttribute('class')||'',el.getAttribute('style')||'',getComputedStyle(el).stroke||''].join(' ').toLowerCase();
+ const isGreen=s=>/(#16a34a|#15803d|rgb\(22,\s*163,\s*74\)|rgb\(21,\s*128,\s*61\))/.test(s);
+ const isRed=s=>/(#ef4444|#dc2626|rgb\(239,\s*68,\s*68\)|rgb\(220,\s*38,\s*38\))/.test(s);
+ const lines=[...source.querySelectorAll('line')].map(el=>({el,x:(num(el.getAttribute('x1'))+num(el.getAttribute('x2')))/2,y1:num(el.getAttribute('y1')),y2:num(el.getAttribute('y2')),color:token(el)})).filter(x=>x.x!=null&&x.y1!=null&&x.y2!=null&&(isGreen(x.color)||isRed(x.color)));
  if(!lines.length)return false;
- const W=900,H=300,L=52,R=18,T=26,B=44,base=H-B,days=30,step=(W-L-R)/(days-1),NS='http://www.w3.org/2000/svg';
- const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width','100%');svg.setAttribute('height','100%');svg.setAttribute('role','img');svg.setAttribute('aria-label','Flujo del mes con velas de ingresos y egresos');
- [...source.querySelectorAll('line')].filter(l=>{const s=norm(l.getAttribute('stroke'));return s==='#e5e7eb'||s==='#e6ebf0'}).forEach(l=>{const g=l.cloneNode(true);g.setAttribute('stroke','#e6ebf0');g.setAttribute('stroke-width','1');svg.appendChild(g)});
- [...source.querySelectorAll('text')].filter(t=>/^\$/.test(String(t.textContent||'').trim())).forEach(t=>{const g=t.cloneNode(true);g.setAttribute('fill','#64748b');g.setAttribute('font-size','11');svg.appendChild(g)});
- const title=document.createElementNS(NS,'text');title.setAttribute('x',L);title.setAttribute('y','17');title.setAttribute('fill','#334155');title.setAttribute('font-size','11');title.setAttribute('font-weight','800');title.textContent='Ingresos vs egresos';svg.appendChild(title);
- const axis=document.createElementNS(NS,'g');
- [1,5,10,15,20,25,30].forEach(d=>{const x=L+(d-1)*step,t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-15);t.setAttribute('text-anchor',d===1?'start':d===30?'end':'middle');t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');t.textContent=String(d).padStart(2,'0');axis.appendChild(t)});svg.appendChild(axis);
- lines.forEach(({el,style})=>{
-   const green=isGreen(style),x=Number(el.getAttribute('x1')),y1=Number(el.getAttribute('y1')),y2=Number(el.getAttribute('y2'));
-   if(!Number.isFinite(x)||!Number.isFinite(y1)||!Number.isFinite(y2))return;
-   const day=Math.max(1,Math.min(days,Math.round((x-L)/step)+1)),top=Math.min(y1,y2),height=Math.max(8,Math.abs(y2-y1));
-   const cx=L+(day-1)*step+(green?-5:5),bodyH=Math.max(10,Math.min(22,height*.12)),bodyY=Math.max(T,top);
-   const wick=document.createElementNS(NS,'line');wick.setAttribute('x1',cx);wick.setAttribute('x2',cx);wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',Math.min(base,bodyY+height));wick.setAttribute('stroke',green?'#15803d':'#dc2626');wick.setAttribute('stroke-width','2.5');svg.appendChild(wick);
-   const body=document.createElementNS(NS,'rect');body.setAttribute('x',cx-5);body.setAttribute('y',bodyY);body.setAttribute('width','10');body.setAttribute('height',bodyH);body.setAttribute('rx','2');body.setAttribute('fill',green?'#16a34a':'#ef4444');body.setAttribute('stroke',green?'#15803d':'#dc2626');body.setAttribute('stroke-width','1.5');svg.appendChild(body);
+ const W=900,H=300,L=52,R=18,T=24,B=44,base=H-B,step=(W-L-R)/29,NS='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(NS,'svg');
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('preserveAspectRatio','none');svg.setAttribute('role','img');
+ svg.setAttribute('aria-label','Flujo del mes: velas de ingresos y egresos');svg.classList.add('b434-candles-svg');
+ [...source.querySelectorAll('line')].filter(l=>['#e5e7eb','#e6ebf0'].includes((l.getAttribute('stroke')||'').toLowerCase())).forEach(l=>{const g=l.cloneNode(true);g.setAttribute('stroke','#e6ebf0');g.setAttribute('stroke-width','1');svg.appendChild(g)});
+ [...source.querySelectorAll('text')].filter(t=>/^\$/.test((t.textContent||'').trim())).forEach(t=>{const g=t.cloneNode(true);g.setAttribute('fill','#64748b');g.setAttribute('font-size','11');svg.appendChild(g)});
+ const title=document.createElementNS(NS,'text');title.setAttribute('x',L);title.setAttribute('y','16');title.setAttribute('fill','#334155');title.setAttribute('font-size','11');title.setAttribute('font-weight','800');title.textContent='Ingresos vs egresos';svg.appendChild(title);
+ [1,5,10,15,20,25,30].forEach(day=>{const t=document.createElementNS(NS,'text'),x=L+(day-1)*step;t.setAttribute('x',x);t.setAttribute('y',H-14);t.setAttribute('text-anchor',day===1?'start':day===30?'end':'middle');t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');t.textContent=String(day).padStart(2,'0');svg.appendChild(t)});
+ lines.forEach(item=>{
+   const income=isGreen(item.color), top=Math.min(item.y1,item.y2), bottom=Math.max(item.y1,item.y2), range=Math.max(6,bottom-top);
+   const day=Math.max(1,Math.min(30,Math.round((item.x-L)/step)+1));
+   const cx=L+(day-1)*step+(income?-5:5), bodyH=Math.max(11,Math.min(24,range*.20)), bodyY=Math.max(T,Math.min(base-bodyH,top+range*.03));
+   const wick=document.createElementNS(NS,'line');wick.setAttribute('x1',cx);wick.setAttribute('x2',cx);wick.setAttribute('y1',Math.max(T,top-8));wick.setAttribute('y2',Math.min(base,bottom+2));wick.setAttribute('stroke',income?'#15803d':'#dc2626');wick.setAttribute('stroke-width','2.5');wick.setAttribute('stroke-linecap','round');wick.setAttribute('class',income?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);
+   const body=document.createElementNS(NS,'rect');body.setAttribute('x',cx-5);body.setAttribute('y',bodyY);body.setAttribute('width','10');body.setAttribute('height',bodyH);body.setAttribute('rx','2');body.setAttribute('fill',income?'#16a34a':'#ef4444');body.setAttribute('stroke',income?'#15803d':'#dc2626');body.setAttribute('stroke-width','1.5');body.setAttribute('class',income?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body);
  });
  host.replaceChildren(svg);return true;
 }
-function scheduleMobileFlowAdapt(){if(!mobile())return;[350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms))}
-function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<20)reportTimer=setTimeout(attempt,300)};reportTimer=setTimeout(attempt,120)}
+function scheduleMobileFlowAdapt(){if(!mobile())return;[120,300,600,1000,1800,3000,5000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms))}
+function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<50)reportTimer=setTimeout(attempt,250)};reportTimer=setTimeout(attempt,80)}
 
 function summary(){
  const c=$('[data-content]',root);c.innerHTML=`<section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
@@ -194,10 +228,10 @@ function summary(){
  <section class="b434-card"><header><strong>Proyección financiera</strong><small>90 días</small></header><div class="b434-real-table" data-projection></div></section>
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
  <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>`;
- scheduleMobileFlowAdapt();scheduleReportSync();setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);
+ installReportObserver();scheduleMobileFlowAdapt();scheduleReportSync();setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
- $$('[data-quick]',c).forEach(b=>b.onclick=()=>quick(b.dataset.quick));$('[data-period]',c).onclick=()=>notice('Selector de período');mirrorAll();scheduleReportSync();
+ $$('[data-quick]',c).forEach(b=>b.onclick=()=>quick(b.dataset.quick));$('[data-period]',c).onclick=()=>notice('Selector de período');mirrorAll();installReportObserver();scheduleReportSync();
 }
 
 function build(){

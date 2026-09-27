@@ -474,3 +474,23 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-result b{font-size:11px!important}
   #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-result p{font-size:9px!important;line-height:1.35!important;margin:5px 0 0!important}
 }
+
+/* B4.3 FINAL PATCH · RESUMEN MÓVIL · VELAS + B232.34 */
+@media(max-width:720px){
+  #ccf-mobile-b43 [data-flow]{
+    height:250px!important;min-height:250px!important;padding:0!important;overflow:hidden!important;
+    background:#f8fbff!important;border:1px solid #e5ebf2!important;border-radius:14px!important;
+  }
+  #ccf-mobile-b43 [data-flow] .b434-candles-svg{display:block!important;width:100%!important;height:100%!important;min-height:250px!important}
+  #ccf-mobile-b43 [data-flow] .mobile-flow-income{fill:#16a34a!important;stroke:#15803d!important}
+  #ccf-mobile-b43 [data-flow] .mobile-flow-expense{fill:#ef4444!important;stroke:#dc2626!important}
+  #ccf-mobile-b43 [data-flow] .mobile-flow-income-wick{stroke:#15803d!important;stroke-width:2.5!important}
+  #ccf-mobile-b43 [data-flow] .mobile-flow-expense-wick{stroke:#dc2626!important;stroke-width:2.5!important}
+  #ccf-mobile-b43 .b434-summary-report{display:block!important;min-height:120px!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b434-consolidated-body{display:block!important;width:100%!important;min-height:20px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat{display:block!important;visibility:visible!important;opacity:1!important;min-width:0!important;padding:10px!important;background:#fff!important;border:1px solid #e2e8f0!important;border-radius:13px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary{display:grid!important;grid-template-columns:1fr 1fr!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final{display:block!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-result{display:block!important;width:100%!important;box-sizing:border-box!important}
+}
