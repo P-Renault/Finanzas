@@ -54,16 +54,25 @@ function quick(type){
 }
 
 function syncConsolidatedReport(){
- if(!root)return;const host=$('[data-consolidated]',root),source=by('b234-report');if(!host||!source)return;
+ if(!root)return;
+ const host=$('[data-consolidated]',root),target=host?.querySelector('[data-b234-copy]'),source=by('b234-report');
+ if(!host||!target||!source)return;
  const grid=source.querySelector('.b234-grid'),totals=source.querySelector('.b234-summary');
  const cards=[...source.querySelectorAll('.b234-card')];
  const finalCard=cards.find(x=>String(x.querySelector('h3')?.textContent||'').toLowerCase().includes('ingresos vs gastos del mes'));
  if(!grid||!totals||!finalCard)return;
- const fragment=document.createElement('div');fragment.dataset.b234Copy='1';
- const copy=el=>{const c=el.cloneNode(true);c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));return c};
+
+ const fragment=document.createElement('div');
+ const copy=el=>{
+   const c=el.cloneNode(true);
+   c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+   c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));
+   return c;
+ };
  fragment.append(copy(grid),copy(totals),copy(finalCard));
- host.querySelector('[data-b234-copy]')?.remove();host.appendChild(fragment);
+ target.replaceChildren(fragment);
 }
+
 function scheduleReportSync(){
  clearTimeout(reportTimer);let tries=0;
  const attempt=()=>{syncConsolidatedReport();tries++;if(tries<12&&!by('b234-report'))reportTimer=setTimeout(attempt,300)};
@@ -96,8 +105,11 @@ function summary(){
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
  <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">
  ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>
- <section class="b434-consolidated" data-consolidated><header><strong>Desglose consolidado</strong><small>Ingresos y gastos del mes</small></header></section>`;
- const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);}
+ <section class="b434-consolidated" data-consolidated>
+  <header><div><strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada: reales + futuros + obligaciones + planificación.</small></div></header>
+  <div class="b434-consolidated-body" data-b234-copy></div>
+</section>`;
+ const flow=by('chart-flow');if(flow)moveReal('chart-flow',$('[data-flow]',c));
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
  ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});

@@ -95,34 +95,103 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 }
 
 @media(max-width:720px){
-  /* FIX B4.3: el motor ejecutivo necesita un contenedor con dimensiones
-     para construir sus SVG. No se muestra el dashboard desktop; se deja
-     renderizar fuera de pantalla y sus nodos reales se trasladan al móvil. */
-  #app > .executive-dashboard{
-    display:block!important;
-    position:absolute!important;
-    left:-10000px!important;
-    top:0!important;
-    width:760px!important;
-    min-width:760px!important;
-    visibility:hidden!important;
-    pointer-events:none!important;
-    opacity:0!important;
-    overflow:visible!important;
+  /* FLUJO DEL MES — adaptación visual del gráfico ejecutivo real */
+  #ccf-mobile-b43 [data-flow]{
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch;
+    min-height:205px!important;
+    padding:0!important;
   }
-  #app > .executive-dashboard .executive-charts{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    width:760px!important;
-  }
-  #app > .executive-dashboard .executive-chart{
-    display:block!important;
-    min-height:300px!important;
-    width:auto!important;
-  }
-  #app > .executive-dashboard .executive-chart>div{
-    display:block!important;
+  #ccf-mobile-b43 [data-flow] #chart-flow{
+    min-width:520px!important;
     width:100%!important;
-    height:250px!important;
+    min-height:195px!important;
+  }
+  #ccf-mobile-b43 [data-flow] #chart-flow svg{
+    min-width:520px!important;
+    width:100%!important;
+    height:auto!important;
+    display:block!important;
+  }
+  /* Ingresos: verde. Egresos: rojo. */
+  #ccf-mobile-b43 #chart-flow .chart-income{
+    fill:#16a34a!important;
+    stroke:#15803d!important;
+    opacity:.95!important;
+  }
+  #ccf-mobile-b43 #chart-flow .chart-expense{
+    fill:#ef4444!important;
+    stroke:#dc2626!important;
+    opacity:.95!important;
+  }
+}
+
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-consolidated{
+    background:#fff;
+    border:1px solid #e1e7ee;
+    border-radius:17px;
+    margin:12px 0 110px;
+    padding:12px;
+    box-shadow:0 2px 10px rgba(15,23,42,.045);
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  #ccf-mobile-b43 .b434-consolidated>header{
+    display:block!important;
+    margin:0 0 10px!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated>header strong{
+    display:block;
+    font-size:14px;
+  }
+  #ccf-mobile-b43 .b434-consolidated>header small{
+    display:block;
+    margin-top:3px;
+    text-align:left!important;
+    font-size:8px;
+    line-height:1.35;
+    color:#718096;
+  }
+  #ccf-mobile-b43 .b434-consolidated-body{
+    min-width:0;
+    overflow:hidden;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-grid{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin:0 0 9px!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-grid>*{
+    min-width:0!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-summary{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:0!important;
+    margin:0 0 9px!important;
+    overflow:hidden;
+    border-radius:13px;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-summary>*{
+    min-width:0!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-card{
+    margin:0!important;
+    min-width:0!important;
+    padding:11px!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-card h3{
+    font-size:13px!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-card p{
+    font-size:9px!important;
+  }
+  #ccf-mobile-b43 .b434-consolidated .b234-card svg,
+  #ccf-mobile-b43 .b434-consolidated .b234-card canvas{
+    max-width:100%!important;
+    height:auto!important;
   }
 }
