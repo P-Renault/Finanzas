@@ -442,3 +442,35 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #ccf-mobile-b43 #chart-flow .chart-axis{fill:#64748b!important;font-size:10px!important}
   #ccf-mobile-b43 #chart-flow .chart-title{fill:#334155!important;font-size:11px!important;font-weight:700!important}
 }
+
+/* RESUMEN MÓVIL — cuadro B232.34 integrado */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-summary-report{display:block!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b434-consolidated-body{display:block!important;min-width:0!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-report-subtitle{display:flex!important;flex-direction:column!important;gap:2px!important;margin:2px 0 8px!important}
+  #ccf-mobile-b43 .b434-report-subtitle strong{font-size:12px!important;color:#172033!important}
+  #ccf-mobile-b43 .b434-report-subtitle small{font-size:8px!important;color:#64748b!important;text-align:left!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:0 0 12px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat{display:block!important;min-width:0!important;margin:0!important;padding:10px!important;border:1px solid #e1e7ee!important;border-radius:13px!important;background:#fff!important;box-sizing:border-box!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat h4{margin:0 0 5px!important;font-size:11px!important;line-height:1.2!important;color:#172033!important;overflow-wrap:anywhere!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-cat strong{display:block!important;font-size:16px!important;color:#172033!important;line-height:1.2!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-line{display:flex!important;justify-content:space-between!important;gap:4px!important;padding-top:5px!important;font-size:8px!important;color:#64748b!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-line span:last-child{font-weight:700!important;color:#475569!important;white-space:nowrap!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-dot{width:7px!important;height:7px!important;margin-right:3px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important;margin:0 0 12px!important;border-radius:13px!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary>div{min-width:0!important;padding:10px!important;border-right:1px solid #fecdd3!important;border-bottom:1px solid #fecdd3!important;box-sizing:border-box!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary>div:nth-child(2n){border-right:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary>div:nth-last-child(-n+2){border-bottom:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary strong{font-size:16px!important;color:#172033!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-summary small{font-size:8px!important;color:#64748b!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info{display:block!important;width:100%!important;box-sizing:border-box!important;margin:0!important;padding:10px!important;border:1px solid #e1e7ee!important;border-radius:13px!important;background:#fff!important;overflow:hidden!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-bars{display:grid!important;gap:10px!important;margin-top:4px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-bar-row{display:grid!important;grid-template-columns:1fr!important;gap:4px!important;margin:0!important;font-size:9px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-bar-row>b{font-size:9px!important;color:#334155!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-track{height:10px!important;width:100%!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-bar-row>strong{font-size:11px!important;color:#172033!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-result{display:block!important;width:100%!important;box-sizing:border-box!important;margin-top:10px!important;padding:12px!important;border-radius:12px!important;min-height:0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-result strong{font-size:24px!important;line-height:1.1!important;margin:4px 0!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-result b{font-size:11px!important}
+  #ccf-mobile-b43 .b434-summary-report .b234-final-info .b234-result p{font-size:9px!important;line-height:1.35!important;margin:5px 0 0!important}
+}
