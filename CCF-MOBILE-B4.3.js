@@ -31,7 +31,13 @@ function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
 function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));document.body.classList.remove('b434-lock')}
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
-function navigate(id){closeAll();if(id==='dashboard'){nativeTab('dashboard');setActive('dashboard');return}if(nativeTab(id)){setActive(id);return}notice(META[id]?.[0]||id)}
+function navigate(id){
+ closeAll();
+ if(id==='dashboard'){showMobileView('summary');nativeTab('dashboard');setActive('dashboard');return}
+ if(id==='movimientos'){showMobileView('movimientos');nativeTab('movimientos');renderMobileMovimientos();setActive('movimientos');return}
+ if(nativeTab(id)){setActive(id);return}
+ notice(META[id]?.[0]||id)
+}
 function openMore(){populateMore();$('.b434-overlay[data-overlay="more"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 function openProfile(){$('.b434-overlay[data-overlay="profile"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 
@@ -52,6 +58,87 @@ function quick(type){
  openMoveForm(type==='income'?'Registrar ingreso':'Registrar gasto');
  const sel=by('movTipo');if(sel)sel.value=type==='income'?'ingreso':'gasto';
 }
+
+function showMobileView(view){
+ const summaryView=$('[data-mobile-view="summary"]',root);
+ const movView=$('[data-mobile-view="movimientos"]',root);
+ if(summaryView)summaryView.classList.toggle('active',view==='summary');
+ if(movView)movView.classList.toggle('active',view==='movimientos');
+ if(view==='movimientos')window.scrollTo({top:0,behavior:'instant'});
+ else window.scrollTo({top:0,behavior:'instant'});
+}
+
+function movementRows(){
+ const cache=window.__CCF_CACHE__||{mov:[]};
+ return Array.isArray(cache.mov)?cache.mov:[];
+}
+
+function formatCLP(v){
+ const n=Number(v)||0;
+ return '$'+Math.abs(n).toLocaleString('es-CL');
+}
+
+function renderMobileMovimientos(){
+ const view=$('[data-mobile-view="movimientos"]',root);
+ if(!view)return;
+ const rows=movementRows().slice().sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+ const query=String($('[data-mov-search]',view)?.value||'').trim().toLowerCase();
+ const filter=$('[data-mov-filter]',view)?.value||'todos';
+
+ const filtered=rows.filter(r=>{
+   const type=String(r.tipo||'').toLowerCase();
+   const hay=[r.fecha,r.categoria,r.descripcion,type,r.monto].map(x=>String(x??'').toLowerCase()).join(' ');
+   return (!query||hay.includes(query))&&(filter==='todos'||type===filter);
+ });
+
+ const list=$('[data-mov-list]',view);
+ const count=$('[data-mov-count]',view);
+ if(count)count.textContent=`${filtered.length} ${filtered.length===1?'movimiento':'movimientos'}`;
+
+ if(!list)return;
+ if(!filtered.length){
+   list.innerHTML='<div class="b434-mov-empty"><span>↕</span><strong>No hay movimientos</strong><small>Prueba otro filtro o registra un nuevo movimiento.</small></div>';
+   return;
+ }
+
+ list.innerHTML=filtered.map(r=>{
+   const ingreso=String(r.tipo||'').toLowerCase()==='ingreso';
+   const amount=Number(r.monto)||0;
+   const enc=typeof encodeObj==='function'?encodeObj(r):btoa(unescape(encodeURIComponent(JSON.stringify(r))));
+   return `<article class="b434-mov-item ${ingreso?'income':'expense'}">
+      <div class="b434-mov-icon">${ingreso?'↗':'↘'}</div>
+      <div class="b434-mov-main">
+        <strong>${esc(r.categoria||'Sin categoría')}</strong>
+        <span>${esc(r.descripcion||'Sin descripción')}</span>
+        <small>${esc(r.fecha||'')}</small>
+      </div>
+      <div class="b434-mov-right">
+        <strong>${ingreso?'+':'−'}${formatCLP(amount)}</strong>
+        <div>
+          <button type="button" data-mov-edit="${esc(enc)}">Editar</button>
+          <button type="button" class="danger" data-mov-delete="${Number(r.id)||0}">Borrar</button>
+        </div>
+      </div>
+   </article>`;
+ }).join('');
+
+ $$('[data-mov-edit]',view).forEach(b=>b.onclick=()=>{
+   if(window.editMovEncoded)window.editMovEncoded(b.dataset.movEdit);
+   else openMoveForm('Editar movimiento');
+ });
+ $$('[data-mov-delete]',view).forEach(b=>b.onclick=async()=>{
+   const id=Number(b.dataset.movDelete);
+   if(!id||!window.deleteMov)return;
+   await window.deleteMov(id);
+   renderMobileMovimientos();
+ });
+}
+
+function openMobileMovementForm(type){
+ openMoveForm(type==='ingreso'?'Registrar ingreso':'Registrar gasto');
+ const sel=by('movTipo');if(sel)sel.value=type;
+}
+
 
 function syncConsolidatedReport(){
  if(!root)return;
@@ -188,7 +275,7 @@ function scheduleReportSync(){
  reportTimer=setTimeout(attempt,120);
 }
 function summary(){
- const c=$('[data-content]',root);c.innerHTML=`
+ const c=$('[data-mobile-view="summary"]',root);c.innerHTML=`
  <section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
  <section class="b434-kpis">
   <article class="b434-kpi blue"><span>Liquidez actual</span><strong class="b434-mirror" data-source="kpi-real-balance">—</strong></article>
@@ -227,14 +314,44 @@ function summary(){
 
 function build(){
  if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';
- root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="b434-bell">♧</button><button class="b434-avatar" data-profile>P</button></header><main data-content></main><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
+ root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="b434-bell">♧</button><button class="b434-avatar" data-profile>P</button></header><main data-content>
+  <section class="b434-mobile-view active" data-mobile-view="summary"></section>
+  <section class="b434-mobile-view" data-mobile-view="movimientos">
+    <div class="b434-mov-head">
+      <div><span>MOVIMIENTOS</span><strong>Historial financiero</strong><small>Consulta, filtra y administra tus ingresos y egresos.</small></div>
+      <button type="button" data-mov-add>＋</button>
+    </div>
+    <div class="b434-mov-tools">
+      <label class="b434-search"><span>⌕</span><input type="search" data-mov-search placeholder="Buscar movimiento"></label>
+      <select data-mov-filter aria-label="Filtrar movimientos">
+        <option value="todos">Todos</option>
+        <option value="ingreso">Ingresos</option>
+        <option value="gasto">Egresos</option>
+      </select>
+    </div>
+    <div class="b434-mov-meta"><strong data-mov-count>0 movimientos</strong><button type="button" data-mov-refresh>Actualizar</button></div>
+    <div class="b434-mov-list" data-mov-list></div>
+    <button type="button" class="b434-mov-fab" data-mov-add>＋ Registrar movimiento</button>
+  </section>
+</main><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
  <div class="b434-overlay" data-overlay="more"><div class="b434-backdrop" data-close></div><section><header><strong>Todos los módulos</strong><button data-close>×</button></header><div class="b434-module-grid" data-more-grid></div></section></div>
  <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
- $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
+ $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));setActive('dashboard');$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
  populateMore();summary();
+ const movView=$('[data-mobile-view="movimientos"]',root);
+ if(movView){
+   $('[data-mov-search]',movView)?.addEventListener('input',renderMobileMovimientos);
+   $('[data-mov-filter]',movView)?.addEventListener('change',renderMobileMovimientos);
+   $('[data-mov-refresh]',movView)?.addEventListener('click',async()=>{
+     if(typeof window.refresh==='function')await window.refresh();
+     renderMobileMovimientos();
+   });
+   $$('[data-mov-add]',movView).forEach(b=>b.onclick=()=>openMobileMovementForm('ingreso'));
+ }
+ renderMobileMovimientos();
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
