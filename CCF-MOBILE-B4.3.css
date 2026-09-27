@@ -1,5 +1,10 @@
 /* CCF MOBILE B4.3.4 — ETAPA 1 · CORRECCIÓN RESUMEN */
 @media(max-width:720px){
+/* AUTH-GATE SYNC: evita el parpadeo de la app durante la restauración de sesión.
+   El contenido financiero solo se hace visible cuando el gate de autenticación
+   ya fue retirado por el flujo de autenticación existente. */
+#app:not(.hidden){visibility:hidden!important}
+body:not(:has(#ccf-auth-gate)) #app:not(.hidden){visibility:visible!important}
 :root{--m-navy:#071b34;--m-blue:#1688f8;--m-green:#10b981;--m-red:#ef4055;--m-bg:#f4f7fb;--m-card:#fff;--m-text:#172033;--m-muted:#718096;--m-line:#e1e7ee}
 html,body{margin:0!important;background:var(--m-bg)!important;color:var(--m-text)!important;overflow-x:hidden!important}body{padding-bottom:82px!important}
 #ccf-mobile-b43{display:block!important;position:relative!important;z-index:2147480000!important;min-height:100vh!important;background:var(--m-bg)!important;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}

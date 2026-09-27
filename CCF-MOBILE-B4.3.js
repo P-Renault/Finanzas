@@ -12,7 +12,7 @@ const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],p
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
 let root=null,built=false,moved=[],observer=null,reportTimer=null;
 
-function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
+function ready(){return mobile()&&app()&&!app().classList.contains('hidden')&&!by('ccf-auth-gate')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
 function mirrorAll(){[
 'future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap',
