@@ -75,18 +75,15 @@ function syncConsolidatedReport(){
  target.replaceChildren(fragment);
 }
 
-
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
  const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');
  if(!source)return false;
-
  const lines=[...source.querySelectorAll('line')].filter(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
    return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
  });
  if(!lines.length)return false;
-
  const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
  const NS='http://www.w3.org/2000/svg';
  const svg=document.createElementNS(NS,'svg');
@@ -95,23 +92,17 @@ function adaptMobileFlowCandles(){
  svg.setAttribute('height','100%');
  svg.setAttribute('role','img');
  svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
-
- // Mantener escala mensual fija y sin desplazamiento.
  const grid=[...source.querySelectorAll('line')].filter(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
    return stroke==='#e5e7eb';
  });
  grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
-
  [...source.querySelectorAll('text')].forEach(t=>{
    const clone=t.cloneNode(true);
    const txt=String(t.textContent||'').trim();
-   // Se conservan las etiquetas de escala monetaria, pero se reemplazan
-   // las fechas por una secuencia mensual completa más legible.
    if(/^\d{2}$/.test(txt))return;
    svg.appendChild(clone);
  });
-
  const axis=document.createElementNS(NS,'g');
  axis.setAttribute('class','mobile-month-axis');
  for(let d=1;d<=days;d++){
@@ -127,7 +118,6 @@ function adaptMobileFlowCandles(){
    }
  }
  svg.appendChild(axis);
-
  const candleData=[];
  lines.forEach(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
@@ -141,8 +131,6 @@ function adaptMobileFlowCandles(){
    const amountHeight=Math.max(2,base-y);
    candleData.push({day,green,y,height:amountHeight});
  });
-
- // Una vela por tipo y por día. Si existen ambas, quedan lado a lado.
  candleData.forEach(c=>{
    const x=L+(c.day-1)*step+(c.green?-5:5);
    const bodyH=Math.max(9,Math.min(18,c.height*0.12));
@@ -152,7 +140,6 @@ function adaptMobileFlowCandles(){
    wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);
    wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');
    svg.appendChild(wick);
-
    const body=document.createElementNS(NS,'rect');
    body.setAttribute('x',x-5);body.setAttribute('y',bodyY);
    body.setAttribute('width','10');body.setAttribute('height',bodyH);
@@ -160,27 +147,17 @@ function adaptMobileFlowCandles(){
    body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
    svg.appendChild(body);
  });
-
  const title=document.createElementNS(NS,'text');
  title.setAttribute('x',L);title.setAttribute('y','17');
  title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';
  svg.appendChild(title);
-
  host.replaceChildren(svg);
  return true;
 }
-function scheduleMobileFlowAdapt(){
- if(!mobile())return;
- [350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));
-}
+function scheduleMobileFlowAdapt(){if(!mobile())return;[350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));}
 function scheduleReportSync(){
  clearTimeout(reportTimer);let tries=0;
- const attempt=()=>{
-   syncConsolidatedReport();
-   adaptMobileFlowCandles();
-   tries++;
-   if(tries<20)reportTimer=setTimeout(attempt,300);
- };
+ const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<20)reportTimer=setTimeout(attempt,300);};
  reportTimer=setTimeout(attempt,120);
 }
 function summary(){
@@ -193,6 +170,10 @@ function summary(){
   <article class="b434-kpi navy"><span>Saldo proyectado</span><strong class="b434-mirror" data-source="kpi-projected-balance">—</strong></article>
  </section>
  <section class="b434-card"><header><div><strong>Flujo del mes</strong><small>Ingresos · Gastos · Saldo</small></div><div class="b434-flow-legend"><span><i class="income"></i>Ingresos</span><span><i class="expense"></i>Egresos</span></div></header><div class="b434-real-chart" data-flow></div></section>
+ <section class="b434-card b434-expense-summary" data-consolidated>
+  <header><div><strong>Resumen de gastos</strong><small>Distribución por categoría y estado</small></div></header>
+  <div class="b434-consolidated-body" data-b234-copy></div>
+ </section>
  <div class="b434-section-title">Accesos rápidos</div>
  <section class="b434-quick"><button data-quick="expense">＋<small>Registrar gasto</small></button><button data-quick="income">＋<small>Registrar ingreso</small></button><button data-quick="debt">◉<small>Ver deudas</small></button><button data-quick="plan">◇<small>Planificar</small></button></section>
  <section class="b434-card"><header><strong>Estado financiero</strong><small class="b434-mirror" data-source="summary-status-text">—</small></header><div class="b434-grid2">
@@ -208,11 +189,7 @@ function summary(){
  <section class="b434-card"><header><strong>Proyección financiera</strong><small>90 días</small></header><div class="b434-real-table" data-projection></div></section>
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
  <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">
- ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>
- <section class="b434-consolidated" data-consolidated>
-  <header><div><strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada: reales + futuros + obligaciones + planificación.</small></div></header>
-  <div class="b434-consolidated-body" data-b234-copy></div>
-</section>`;
+ ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>`;
  const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);scheduleMobileFlowAdapt();}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
