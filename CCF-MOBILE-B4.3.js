@@ -154,18 +154,43 @@ function syncConsolidatedReport(){
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
  const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');if(!source)return false;
- const lines=[...source.querySelectorAll('line')].filter(l=>{const stroke=(l.getAttribute('stroke')||'').toLowerCase();return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)'});
+ const sourceLines=[...source.querySelectorAll('line')];
+ const lines=sourceLines.filter(l=>{const stroke=(l.getAttribute('stroke')||'').toLowerCase();return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)'});
  if(!lines.length)return false;
- const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1),NS='http://www.w3.org/2000/svg';
- const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width','100%');svg.setAttribute('height','100%');svg.setAttribute('role','img');svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
- const grid=[...source.querySelectorAll('line')].filter(l=>(l.getAttribute('stroke')||'').toLowerCase()==='#e5e7eb');grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
- [...source.querySelectorAll('text')].forEach(t=>{const clone=t.cloneNode(true);if(/^\d{2}$/.test(String(t.textContent||'').trim()))return;svg.appendChild(clone)});
+ const W=900,H=300,L=52,R=18,T=24,B=44,base=H-B,days=30,step=(W-L-R)/(days-1),NS='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(NS,'svg');
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width','100%');svg.setAttribute('height','100%');
+ svg.setAttribute('role','img');svg.setAttribute('aria-label','Flujo del mes con velas de ingresos y egresos');
+ const grid=sourceLines.filter(l=>(l.getAttribute('stroke')||'').toLowerCase()==='#e5e7eb');
+ grid.forEach(l=>{const g=l.cloneNode(true);g.setAttribute('stroke','#e6ebf0');g.setAttribute('stroke-width','1');svg.appendChild(g)});
+ const labels=[...source.querySelectorAll('text')];
+ const yLabels=labels.filter(t=>/^\$/.test(String(t.textContent||'').trim()));
+ yLabels.forEach(t=>{const clone=t.cloneNode(true);clone.setAttribute('fill','#64748b');clone.setAttribute('font-size','11');svg.appendChild(clone)});
  const axis=document.createElementNS(NS,'g');axis.setAttribute('class','mobile-month-axis');
- for(let d=1;d<=days;d++)if(d===1||d%3===0||d===days){const x=L+(d-1)*step,t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-12);t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');t.setAttribute('class','chart-axis');t.textContent=String(d).padStart(2,'0');axis.appendChild(t)}
+ for(let d=1;d<=days;d++)if(d===1||d===5||d===10||d===15||d===20||d===25||d===30){
+   const x=L+(d-1)*step,t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-15);t.setAttribute('text-anchor',d===1?'start':d===30?'end':'middle');t.setAttribute('class','chart-axis');t.textContent=String(d).padStart(2,'0');axis.appendChild(t);
+ }
  svg.appendChild(axis);
  const candleData=[];
- lines.forEach(l=>{const stroke=(l.getAttribute('stroke')||'').toLowerCase(),green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)',x=Number(l.getAttribute('x1')),y=Number(l.getAttribute('y1'));if(!Number.isFinite(x)||!Number.isFinite(y))return;const baseX=x+(green?4:-4),day=Math.round((baseX-L)/step)+1;if(day<1||day>days)return;candleData.push({day,green,y,height:Math.max(2,base-y)})});
- candleData.forEach(c=>{const x=L+(c.day-1)*step+(c.green?-5:5),bodyH=Math.max(9,Math.min(18,c.height*.12)),bodyY=Math.max(T,c.y);const wick=document.createElementNS(NS,'line');wick.setAttribute('x1',x);wick.setAttribute('x2',x);wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);const body=document.createElementNS(NS,'rect');body.setAttribute('x',x-5);body.setAttribute('y',bodyY);body.setAttribute('width','10');body.setAttribute('height',bodyH);body.setAttribute('rx','2');body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body)});
+ lines.forEach(l=>{
+   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
+   const green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)';
+   const x=Number(l.getAttribute('x1')),y1=Number(l.getAttribute('y1')),y2=Number(l.getAttribute('y2'));
+   if(!Number.isFinite(x)||!Number.isFinite(y1)||!Number.isFinite(y2))return;
+   const day=Math.round((x-L)/step)+1;if(day<1||day>days)return;
+   const top=Math.min(y1,y2),bottom=Math.max(y1,y2);
+   candleData.push({day,green,top,bottom,height:Math.max(3,bottom-top)});
+ });
+ candleData.forEach(c=>{
+   const x=L+(c.day-1)*step+(c.green?-5:5);
+   const bodyH=Math.max(10,Math.min(30,c.height*.22));
+   const bodyY=Math.max(T,c.top);
+   const wick=document.createElementNS(NS,'line');
+   wick.setAttribute('x1',x);wick.setAttribute('x2',x);wick.setAttribute('y1',Math.max(T,bodyY-8));wick.setAttribute('y2',base);
+   wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);
+   const body=document.createElementNS(NS,'rect');body.setAttribute('x',x-6);body.setAttribute('y',bodyY);body.setAttribute('width','12');body.setAttribute('height',bodyH);body.setAttribute('rx','2');
+   body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body);
+ });
  const title=document.createElementNS(NS,'text');title.setAttribute('x',L);title.setAttribute('y','17');title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';svg.appendChild(title);
  host.replaceChildren(svg);return true;
 }
@@ -176,14 +201,14 @@ function summary(){
  const c=$('[data-content]',root);c.innerHTML=`<section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
  <section class="b434-kpis"><article class="b434-kpi blue"><span>Liquidez actual</span><strong class="b434-mirror" data-source="kpi-real-balance">—</strong></article><article class="b434-kpi green"><span>Ingresos del mes</span><strong class="b434-mirror" data-source="month-income-total">—</strong></article><article class="b434-kpi red"><span>Gastos del mes</span><strong class="b434-mirror" data-source="month-expense-total">—</strong></article><article class="b434-kpi navy"><span>Saldo proyectado</span><strong class="b434-mirror" data-source="kpi-projected-balance">—</strong></article></section>
  <section class="b434-card"><header><div><strong>Flujo del mes</strong><small>Ingresos · Gastos · Saldo</small></div><div class="b434-flow-legend"><span><i class="income"></i>Ingresos</span><span><i class="expense"></i>Egresos</span></div></header><div class="b434-real-chart" data-flow></div></section>
+ <section class="b434-card b434-summary-report" data-consolidated><header><div><strong>Resumen de gastos</strong><small>Distribución por categoría y estado</small></div></header><div class="b434-consolidated-body" data-b234-copy></div></section>
  <div class="b434-section-title">Accesos rápidos</div><section class="b434-quick"><button data-quick="expense">＋<small>Registrar gasto</small></button><button data-quick="income">＋<small>Registrar ingreso</small></button><button data-quick="debt">◉<small>Ver deudas</small></button><button data-quick="plan">◇<small>Planificar</small></button></section>
  <section class="b434-card"><header><strong>Estado financiero</strong><small class="b434-mirror" data-source="summary-status-text">—</small></header><div class="b434-grid2"><article><span>Ingresos asegurados</span><strong class="b434-mirror" data-source="kpi-assured">—</strong></article><article><span>Ingresos proyectados</span><strong class="b434-mirror" data-source="kpi-projected">—</strong></article><article><span>Egresos comprometidos</span><strong class="b434-mirror" data-source="kpi-committed">—</strong></article><article><span>Brecha financiera</span><strong class="b434-mirror" data-source="kpi-gap">—</strong></article></div></section>
  <section class="b434-card"><header><strong>Compromisos próximos</strong><small>Movimientos futuros</small></header><div class="b434-future"><article><header><b>Ingresos</b></header><div data-income-list></div></article><article><header><b>Egresos</b></header><div data-expense-list></div></article></div></section>
  <section class="b434-card"><header><strong>Control diario</strong><small class="b434-mirror" data-source="margin-status">—</small></header><div class="b434-margin"><article><span>Margen máximo</span><strong class="b434-mirror" data-source="margin-maximum">—</strong></article><article><span>Gastado</span><strong class="b434-mirror" data-source="margin-spent">—</strong></article><article><span>Margen restante</span><strong class="b434-mirror" data-source="margin-remaining">—</strong></article></div><div class="b434-progress"><i data-progress></i></div></section>
  <section class="b434-card"><header><strong>Proyección financiera</strong><small>90 días</small></header><div class="b434-real-table" data-projection></div></section>
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
- <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>
- <section class="b434-consolidated" data-consolidated><header><div><strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada: reales + futuros + obligaciones + planificación.</small></div></header><div class="b434-consolidated-body" data-b234-copy></div></section>`;
+ <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>`;
  const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);scheduleMobileFlowAdapt()}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
@@ -207,5 +232,5 @@ function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=nul
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-menu-reference',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.4-stage1-summary-flow',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
