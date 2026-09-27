@@ -139,10 +139,20 @@ function quick(type){
  const sel=by('movTipo');if(sel){sel.value=type==='income'?'ingreso':'gasto';sel.dispatchEvent(new Event('change',{bubbles:true}));}
 }
 
+function getB234Report(){return document.querySelector('.b234-report')||document.querySelector('#b234-report')||document.querySelector('[class~="b234-report"]')}
+function ensureB234Report(){
+ const existing=getB234Report(); if(existing)return existing;
+ const api=window.B23234Resumen, dash=document.getElementById('dashboard');
+ if(!api||typeof api.refresh!=='function'||!dash)return null;
+ const hidden=dash.classList.contains('hidden');
+ try{if(hidden)dash.classList.remove('hidden');api.refresh()}catch(e){console.warn('[CCF MOBILE] B232.34 refresh',e)}finally{if(hidden)dash.classList.add('hidden')}
+ return getB234Report();
+}
+
 function syncConsolidatedReport(){
  if(!root)return false;
  const host=$('[data-consolidated]',root),target=host?.querySelector('[data-b234-copy]');
- const source=document.querySelector('.b234-report')||document.querySelector('#b234-report')||document.querySelector('[class~="b234-report"]');
+ const source=ensureB234Report()||getB234Report();
  if(!host||!target||!source)return false;
  const grid=source.querySelector('.b234-grid');
  const totals=source.querySelector('.b234-summary');
@@ -178,18 +188,18 @@ function installReportObserver(){
  if(window.__CCF_B434_REPORT_OBSERVER__)return;
  const mo=new MutationObserver(()=>{
    if(!root)return;
-   if(document.querySelector('.b234-report')||document.querySelector('#b234-report')){
-     syncConsolidatedReport();
-     adaptMobileFlowCandles();
-   }
+   ensureB234Report();
+   syncConsolidatedReport();
+   adaptMobileFlowCandles();
  });
  mo.observe(document.body,{childList:true,subtree:true});
  window.__CCF_B434_REPORT_OBSERVER__=mo;
 }
 function adaptMobileFlowCandles(){
  const host=$('[data-flow]',root);
- const source=document.querySelector('#b234Chart .b234-svg')||document.querySelector('#b234Chart svg')||document.querySelector('.b234-report .b234-svg');
- if(!host||!source)return false;
+ if(!host)return false;
+ const source=document.querySelector('#b234Chart .b234-svg')||document.querySelector('#b234Chart svg')||document.querySelector('.b234-report .b234-svg')||document.querySelector('#chart-flow svg');
+ if(!source){ensureB234Report();return false;}
  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
  const token=el=>[el.getAttribute('stroke')||'',el.getAttribute('class')||'',el.getAttribute('style')||'',getComputedStyle(el).stroke||''].join(' ').toLowerCase();
  const isGreen=s=>/(#16a34a|#15803d|rgb\(22,\s*163,\s*74\)|rgb\(21,\s*128,\s*61\))/.test(s);
@@ -214,7 +224,7 @@ function adaptMobileFlowCandles(){
  host.replaceChildren(svg);return true;
 }
 function scheduleMobileFlowAdapt(){if(!mobile())return;[100,250,500,900,1500,2500,4000,6000,9000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms))}
-function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<80)reportTimer=setTimeout(attempt,250)};reportTimer=setTimeout(attempt,80)}
+function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{ensureB234Report();syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<80)reportTimer=setTimeout(attempt,250)};reportTimer=setTimeout(attempt,80)}
 
 function summary(){
  const c=$('[data-content]',root);c.innerHTML=`<section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
