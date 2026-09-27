@@ -142,7 +142,7 @@ function quick(type){
 function syncConsolidatedReport(){
  if(!root)return false;
  const host=$('[data-consolidated]',root),target=host?.querySelector('[data-b234-copy]');
- const source=document.querySelector('.b234-report');
+ const source=document.querySelector('.b234-report')||document.querySelector('#b234-report')||document.querySelector('[class~="b234-report"]');
  if(!host||!target||!source)return false;
  const grid=source.querySelector('.b234-grid');
  const totals=source.querySelector('.b234-summary');
@@ -171,14 +171,14 @@ function syncConsolidatedReport(){
    fragment.appendChild(title);fragment.appendChild(copy(final));
  }
  target.replaceChildren(fragment);
- host.classList.toggle('b434-report-ready',!!fragment.children.length);
+ host.classList.toggle('b434-report-ready',!!fragment.children.length); if(fragment.children.length) target.style.display='block';
  return true;
 }
 function installReportObserver(){
  if(window.__CCF_B434_REPORT_OBSERVER__)return;
  const mo=new MutationObserver(()=>{
    if(!root)return;
-   if(document.querySelector('.b234-report')){
+   if(document.querySelector('.b234-report')||document.querySelector('#b234-report')){
      syncConsolidatedReport();
      adaptMobileFlowCandles();
    }
@@ -188,7 +188,7 @@ function installReportObserver(){
 }
 function adaptMobileFlowCandles(){
  const host=$('[data-flow]',root);
- const source=document.querySelector('.b234-report #b234Chart svg');
+ const source=document.querySelector('#b234Chart .b234-svg')||document.querySelector('#b234Chart svg')||document.querySelector('.b234-report .b234-svg');
  if(!host||!source)return false;
  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null};
  const token=el=>[el.getAttribute('stroke')||'',el.getAttribute('class')||'',el.getAttribute('style')||'',getComputedStyle(el).stroke||''].join(' ').toLowerCase();
@@ -213,8 +213,8 @@ function adaptMobileFlowCandles(){
  });
  host.replaceChildren(svg);return true;
 }
-function scheduleMobileFlowAdapt(){if(!mobile())return;[120,300,600,1000,1800,3000,5000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms))}
-function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<50)reportTimer=setTimeout(attempt,250)};reportTimer=setTimeout(attempt,80)}
+function scheduleMobileFlowAdapt(){if(!mobile())return;[100,250,500,900,1500,2500,4000,6000,9000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms))}
+function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<80)reportTimer=setTimeout(attempt,250)};reportTimer=setTimeout(attempt,80)}
 
 function summary(){
  const c=$('[data-content]',root);c.innerHTML=`<section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>

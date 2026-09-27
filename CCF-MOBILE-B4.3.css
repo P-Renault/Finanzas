@@ -494,3 +494,14 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #ccf-mobile-b43 .b434-summary-report .b234-final{display:block!important}
   #ccf-mobile-b43 .b434-summary-report .b234-result{display:block!important;width:100%!important;box-sizing:border-box!important}
 }
+
+/* FINAL MOBILE RESUMEN - never hide populated B232.34 report */
+@media(max-width:720px){
+ #ccf-mobile-b43 .b434-summary-report.b434-report-ready{display:block!important;min-height:0!important}
+ #ccf-mobile-b43 .b434-summary-report.b434-report-ready .b434-consolidated-body{display:block!important;visibility:visible!important;opacity:1!important}
+ #ccf-mobile-b43 .b434-summary-report.b434-report-ready .b234-grid,
+ #ccf-mobile-b43 .b434-summary-report.b434-report-ready .b234-summary,
+ #ccf-mobile-b43 .b434-summary-report.b434-report-ready .b234-final{visibility:visible!important;opacity:1!important}
+ #ccf-mobile-b43 [data-flow]{min-height:250px!important;height:250px!important}
+ #ccf-mobile-b43 [data-flow] svg.b434-candles-svg{visibility:visible!important;opacity:1!important}
+}
