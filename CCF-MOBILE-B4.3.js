@@ -1,87 +1,81 @@
-/* CCF MOBILE B4.3 — ETAPA 1 · MENÚ + RESUMEN
-   Basado en B4.3. Integra solamente la navegación móvil y el módulo Resumen.
-   No crea Supabase clients. No modifica auth, SQL, RLS ni cálculos financieros.
-   Desktop (>720px) permanece en su interfaz actual.
+/* CCF MOBILE B4.3.2 — ETAPA 1 SAFE
+   Solo Menú + Resumen. Fail-safe: no toca nada mientras #app no esté visible.
 */
 (()=>{'use strict';
-if(window.__CCF_MOBILE_B43_STAGE1__)return;window.__CCF_MOBILE_B43_STAGE1__=true;
-const BP=720;
-const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
-const app=()=>$('#app'), mobile=()=>matchMedia('(max-width:'+BP+'px)').matches;
-const native=id=>document.getElementById(id);
+if(window.__CCF_MOBILE_B432_SAFE__)return;window.__CCF_MOBILE_B432_SAFE__=true;
+const BP=720,$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const app=()=>$('#app'), mobile=()=>window.matchMedia('(max-width:'+BP+'px)').matches;
+const el=id=>document.getElementById(id);
 const tab=id=>$('.tabs button[data-tab="'+CSS.escape(id)+'"]');
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const text=id=>native(id)?.textContent?.trim()||'—';
-const META={
- dashboard:['Resumen','Vista general e indicadores clave','⌂'],
- movimientos:['Movimientos','Registro de ingresos y gastos','↕'],
- deudas:['Deudas','Saldos, cuotas, abonos y pagos','▣'],
- cuentas:['Cuentas','Gestión de cuentas y saldos','▤'],
- presupuesto:['Presupuesto','Plan, ejecución, comprometido y proyección','◒'],
- planificacion:['Planificación','Escenario de 30 días','◈'],
- futuros:['Pagos futuros','Compromisos y vencimientos','◷'],
- calendario:['Calendario','Vista mensual e integración','▦'],
- ahorro:['Ahorro','Aportes e historial','◎'],
- operaciones:['Operaciones','Liquidez y operaciones financieras','⇄'],
- ingresos:['Motor Multifuente','Generación y control de ingresos','↗'],
- jornadas:['Control de Jornada','Resultado financiero integrado','◷'],
- 'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']
-};
+const META={dashboard:['Resumen','Vista general e indicadores clave','⌂'],movimientos:['Movimientos','Registro y control de transacciones','↕'],deudas:['Deudas','Control y seguimiento de obligaciones','▣'],cuentas:['Cuentas','Gestión de cuentas y saldos','▤'],presupuesto:['Presupuesto','Planificación vs. ejecutado','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y recordatorios','◷'],calendario:['Calendario','Vista mensual e integración','▦'],ahorro:['Ahorro','Metas y control del ahorro','◎'],operaciones:['Operaciones','Registro rápido y utilidades','⇄'],ingresos:['Motor Multifuente','Generación y control de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero integrado','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,current='dashboard',moved=[],observer=null,rendering=false;
+let root=null,built=false,active='dashboard',observer=null;
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
-function hideLegacy(){['.topbar','.tabs','.ccf-manual-access','#ccf-product-footer'].forEach(s=>$(s)?.classList.add('b43-stage1-hidden'));$$('.tab').forEach(x=>x.classList.add('b43-stage1-native-hidden'))}
-function showLegacy(){restoreMoved();$$('.b43-stage1-hidden').forEach(x=>x.classList.remove('b43-stage1-hidden'));$$('.b43-stage1-native-hidden').forEach(x=>x.classList.remove('b43-stage1-native-hidden'))}
-function moveNode(id,host){const el=native(id);if(!el||!host||moved.some(x=>x.el===el))return el||null;const marker=document.createComment('B4.3 Stage1 '+id);el.parentNode?.insertBefore(marker,el);el.classList.remove('hidden','b43-stage1-native-hidden');host.appendChild(el);moved.push({el,marker});return el}
-function restoreMoved(){for(const x of moved.slice().reverse()){if(x.marker.parentNode)x.marker.parentNode.insertBefore(x.el,x.marker.nextSibling);x.marker.remove()}moved=[]}
-function fireTab(id){const b=tab(id);if(b){try{b.click();}catch(e){}return true}return false}
-function openNativeForm(id,title){const src=native(id);if(!src)return false;const form=src.closest('form')||src;const layer=$('.b43-stage1-form',root),slot=$('.b43-stage1-form-slot',root);if(!layer||!slot)return false;
- const marker=document.createComment('B4.3 Stage1 form '+id);form.parentNode.insertBefore(marker,form);form.classList.remove('hidden');slot.appendChild(form);form.dataset.stage1Moved='1';
- const titleEl=$('[data-stage1-form-title]',root);if(titleEl)titleEl.textContent=title||'Registrar';layer.classList.add('open');document.body.classList.add('b43-stage1-lock');return true}
-function closeForm(){const layer=$('.b43-stage1-form',root);if(!layer)return;layer.classList.remove('open');document.body.classList.remove('b43-stage1-lock');const form=layer.querySelector('form[data-stage1-moved="1"]');if(form){delete form.dataset.stage1Moved;const marker=[...document.createTreeWalker(document.body,NodeFilter.SHOW_COMMENT)].find(n=>n.nodeValue==='B4.3 Stage1 form '+(form.id||''));if(marker?.parentNode)marker.parentNode.insertBefore(form,marker.nextSibling);marker?.remove()}}
-function navigate(id){if(id==='dashboard'){current='dashboard';localStorage.setItem('cf_active_tab_v2','dashboard');fireTab('dashboard');renderSummary();closeSheets();return}
- // Etapa 1: el menú queda construido, pero la integración funcional de módulos secundarios se hará secuencialmente.
- closeSheets();showIntegrationNotice(META[id]?.[0]||id);}
-function showIntegrationNotice(name){const layer=$('.b43-stage1-notice',root);if(!layer)return;layer.querySelector('[data-notice-name]').textContent=name;layer.classList.add('open');document.body.classList.add('b43-stage1-lock')}
-function closeNotice(){const x=$('.b43-stage1-notice',root);x?.classList.remove('open');if(!$('.b43-stage1-form.open')&&!$('.b43-stage1-sheet.open'))document.body.classList.remove('b43-stage1-lock')}
-function closeSheets(){closeNotice();$$('.b43-stage1-sheet.open',root).forEach(x=>x.classList.remove('open'));if(!$('.b43-stage1-form.open'))document.body.classList.remove('b43-stage1-lock')}
-function openMore(){closeForm();closeNotice();populateMore();$('.b43-stage1-sheet[data-sheet="more"]',root)?.classList.add('open');document.body.classList.add('b43-stage1-lock')}
-function openProfile(){closeForm();closeNotice();$('.b43-stage1-sheet[data-sheet="profile"]',root)?.classList.add('open');document.body.classList.add('b43-stage1-lock')}
-function populateMore(){const g=$('.b43-stage1-grid',root);if(!g)return;g.innerHTML='';const ids=[...new Set([...$$('.tabs button[data-tab]').map(b=>b.dataset.tab),'presupuesto','planificacion','futuros','calendario','ahorro','operaciones','ingresos','jornadas','ia-financiera'])];ids.filter(id=>id&&id!=='dashboard'&&id!=='movimientos'&&id!=='deudas'&&id!=='cuentas').forEach(id=>{const m=META[id]||[id,'Módulo financiero','◉'];const b=document.createElement('button');b.className='b43-stage1-module';b.innerHTML='<b>'+esc(m[2])+'</b><span><strong>'+esc(m[0])+'</strong><small>'+esc(m[1])+'</small></span>';b.onclick=()=>navigate(id);g.appendChild(b)})}
-function card(label,id,cls=''){return '<article class="b43-stage1-kpi '+cls+'"><span>'+esc(label)+'</span><strong data-mirror="'+id+'">'+esc(text(id))+'</strong></article>'}
-function mirror(id){const src=native(id);if(!src)return;$$('[data-mirror="'+id+'"]',root).forEach(x=>{x.textContent=src.textContent?.trim()||'—'})}
-function mirrorAll(){['month-income-total','month-expense-total','future-income-total','future-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','margin-status','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'].forEach(mirror)}
-function summaryShell(){const h=$('.b43-stage1-content',root);h.innerHTML=`
- <section class="b43-stage1-month"><div><span>PERÍODO</span><strong data-mirror="future-month-label">${esc(text('future-month-label'))}</strong></div><button data-period>⌄</button></section>
- <section class="b43-stage1-kpis">${card('Liquidez actual','kpi-real-balance','blue')}${card('Ingresos del mes','month-income-total','green')}${card('Gastos del mes','month-expense-total','red')}${card('Saldo proyectado','kpi-projected-balance','navy')}</section>
- <section class="b43-stage1-card"><div class="b43-stage1-head"><strong>Flujo del mes</strong><span>Ingresos · Gastos · Saldo</span></div><div class="b43-stage1-chart" data-flow-host></div></section>
- <div class="b43-stage1-section-title">Accesos rápidos</div><section class="b43-stage1-quick"><button data-quick="expense"><b>＋</b><small>Registrar gasto</small></button><button data-quick="income"><b>＋</b><small>Registrar ingreso</small></button><button data-quick="debt"><b>◉</b><small>Ver deudas</small></button><button data-quick="plan"><b>◈</b><small>Planificar</small></button></section>
- <section class="b43-stage1-card"><div class="b43-stage1-head"><strong>Estado financiero</strong><span data-mirror="summary-status-text">${esc(text('summary-status-text'))}</span></div><div class="b43-stage1-grid2">${card('Ingresos asegurados','kpi-assured')}${card('Ingresos proyectados','kpi-projected')}${card('Egresos comprometidos','kpi-committed')}${card('Brecha financiera','kpi-gap')}</div></section>
- <section class="b43-stage1-card"><div class="b43-stage1-head"><strong>Compromisos próximos</strong><span>Ingresos y egresos futuros</span></div><div class="b43-stage1-future"><div><header><b>Ingresos</b><span data-mirror="future-income-count">0</span></header><div data-future-income></div></div><div><header><b>Egresos</b><span data-mirror="future-expense-count">0</span></header><div data-future-expense></div></div></div></section>
- <section class="b43-stage1-card"><div class="b43-stage1-head"><strong>Control diario</strong><span data-mirror="margin-status">${esc(text('margin-status'))}</span></div><div class="b43-stage1-margin"><div><span>Margen máximo</span><b data-mirror="margin-maximum">${esc(text('margin-maximum'))}</b></div><div><span>Gastado</span><b data-mirror="margin-spent">${esc(text('margin-spent'))}</b></div><div><span>Margen restante</span><b data-mirror="margin-remaining">${esc(text('margin-remaining'))}</b></div></div><div class="b43-stage1-progress"><i data-progress></i></div><div class="b43-stage1-meta"><span data-mirror="margin-percent">${esc(text('margin-percent'))}</span><span data-mirror="margin-projection">${esc(text('margin-projection'))}</span></div></section>
- <section class="b43-stage1-card"><div class="b43-stage1-head"><strong>Proyección financiera</strong><span>90 días</span></div><div class="b43-stage1-table" data-projection></div></section>
- <section class="b43-stage1-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next-need></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
- <section class="b43-stage1-card"><div class="b43-stage1-head"><div><strong>Análisis ejecutivo</strong><small>Liquidez, presión financiera y brecha</small></div><span data-mirror="executive-risk-summary">${esc(text('executive-risk-summary'))}</span></div><div class="b43-stage1-insights">${['exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'].map((id,i)=>`<div><span>${['Liquidez','Obligaciones','Flujo próximo','Generación requerida'][i]}</span><b data-mirror="${id}">${esc(text(id))}</b></div>`).join('')}</div><div class="b43-stage1-charts" data-exec-charts></div></section>`;
- const flow=native('chart-flow');if(flow)moveNode('chart-flow',$('[data-flow-host]',h));
- const fi=native('future-income-list');if(fi)moveNode('future-income-list',$('[data-future-income]',h));
- const fe=native('future-expense-list');if(fe)moveNode('future-expense-list',$('[data-future-expense]',h));
- const pt=native('projection-table');if(pt)moveNode('projection-table',$('[data-projection]',h));
- const nn=native('next-need');if(nn)moveNode('next-need',$('[data-next-need]',h));
- const pa=native('priority-actions');if(pa)moveNode('priority-actions',$('[data-priority]',h));
- const charts=$('#executive-charts');const host=$('[data-exec-charts]',h);if(charts&&host){for(const article of [...charts.children]){const chart=article.querySelector('[id^="chart-"]');if(!chart)continue;const box=document.createElement('article');box.className='b43-stage1-exec-chart';const title=article.querySelector('h3')?.textContent||'Análisis';const desc=article.querySelector('p')?.textContent||'';box.innerHTML='<strong>'+esc(title)+'</strong><small>'+esc(desc)+'</small>';host.appendChild(box);moveNode(chart,box)}}
- const prog=native('margin-progress');if(prog){const update=()=>{const w=prog.style.width||'0%';$('[data-progress]',h).style.width=w};update();}
- $$('[data-quick]',h).forEach(b=>b.onclick=()=>{if(b.dataset.quick==='debt'){navigate('deudas');return}if(b.dataset.quick==='plan'){navigate('planificacion');return}openNativeForm('movForm',b.dataset.quick==='income'?'Registrar ingreso':'Registrar gasto')});
- $('[data-period]',h).onclick=()=>{const sel=[...$$('select')].find(x=>[...x.options].some(o=>/20\d\d/.test(o.textContent)));if(sel){sel.focus();sel.click()}else{showIntegrationNotice('Selector de período')}};
+function value(id,f='—'){return el(id)?.textContent?.trim()||f}
+function clickTab(id){const b=tab(id);if(!b)return false; b.click(); return true}
+function mirror(root,id){const source=el(id);if(!source)return;$$('[data-mirror="'+id+'"]',root).forEach(n=>n.textContent=source.textContent?.trim()||'—')}
+function mirrorAll(){if(!root)return;['month-income-total','month-expense-total','future-income-total','future-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','margin-status','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading','future-month-label','future-income-count','future-expense-count'].forEach(id=>mirror(root,id))}
+function cloneInto(host,id){const source=el(id);if(!source||!host)return;const clone=source.cloneNode(true);clone.removeAttribute('id');clone.dataset.ccfMobileClone=id;host.appendChild(clone)}
+function renderSummary(){
+ if(!root||!ready())return;
+ const c=$('.ccf432-content',root); if(!c)return;
+ c.innerHTML=`
+ <div class="ccf432-period"><div><small>PERÍODO</small><strong data-mirror="future-month-label">${esc(value('future-month-label'))}</strong></div><span>⌄</span></div>
+ <section class="ccf432-kpis">
+  <article class="blue"><small>Liquidez actual</small><strong data-mirror="kpi-real-balance">${esc(value('kpi-real-balance'))}</strong></article>
+  <article class="green"><small>Ingresos del mes</small><strong data-mirror="month-income-total">${esc(value('month-income-total'))}</strong></article>
+  <article class="red"><small>Gastos del mes</small><strong data-mirror="month-expense-total">${esc(value('month-expense-total'))}</strong></article>
+  <article class="navy"><small>Saldo proyectado</small><strong data-mirror="kpi-projected-balance">${esc(value('kpi-projected-balance'))}</strong></article>
+ </section>
+ <section class="ccf432-card"><header><b>Flujo del mes</b><span>Ingresos · Gastos · Saldo</span></header><div class="ccf432-live" data-chart></div></section>
+ <h3 class="ccf432-section">Accesos rápidos</h3>
+ <section class="ccf432-quick"><button data-q="movimientos"><b>＋</b><small>Registrar gasto</small></button><button data-q="movimientos"><b>＋</b><small>Registrar ingreso</small></button><button data-q="deudas"><b>◉</b><small>Ver deudas</small></button><button data-q="planificacion"><b>◈</b><small>Planificar</small></button></section>
+ <section class="ccf432-card"><header><b>Estado financiero</b><span data-mirror="summary-status-text">${esc(value('summary-status-text'))}</span></header>
+  <div class="ccf432-grid2">
+   ${kpi('Ingresos asegurados','kpi-assured')} ${kpi('Ingresos proyectados','kpi-projected')}
+   ${kpi('Egresos comprometidos','kpi-committed')} ${kpi('Brecha financiera','kpi-gap')}
+  </div>
+ </section>
+ <section class="ccf432-card"><header><b>Compromisos próximos</b><span>Movimientos futuros</span></header><div class="ccf432-grid2"><div class="ccf432-sub"><b>Ingresos</b><div data-future="future-income-list"></div></div><div class="ccf432-sub"><b>Egresos</b><div data-future="future-expense-list"></div></div></div></section>
+ <section class="ccf432-card"><header><b>Control diario</b><span data-mirror="margin-status">${esc(value('margin-status'))}</span></header><div class="ccf432-grid3">${kpi('Margen máximo','margin-maximum')}${kpi('Gastado','margin-spent')}${kpi('Margen restante','margin-remaining')}</div><div class="ccf432-progress"><i></i></div><div class="ccf432-meta"><span data-mirror="margin-percent">${esc(value('margin-percent'))}</span><span data-mirror="margin-projection">${esc(value('margin-projection'))}</span></div></section>
+ <section class="ccf432-card"><header><b>Proyección financiera</b><span>90 días</span></header><div class="ccf432-scroll" data-projection></div></section>
+ <section class="ccf432-grid2 ccf432-decisions"><article><small>PRÓXIMA NECESIDAD</small><div data-copy="next-need"></div></article><article><small>ACCIONES PRIORITARIAS</small><div data-copy="priority-actions"></div></article></section>
+ <section class="ccf432-card"><header><b>Análisis ejecutivo</b><span data-mirror="executive-risk-summary">${esc(value('executive-risk-summary'))}</span></header><div class="ccf432-grid2">${ins('Liquidez','exec-liquidity-reading')}${ins('Obligaciones','exec-obligation-reading')}${ins('Flujo próximo','exec-flow-reading')}${ins('Generación requerida','exec-generation-reading')}</div><div class="ccf432-chartgrid" data-exec></div></section>`;
+ const flow=el('chart-flow'); if(flow) cloneInto($('[data-chart]',c),'chart-flow');
+ ['future-income-list','future-expense-list'].forEach(id=>{const h=$(`[data-future="${id}"]`,c);if(h)cloneInto(h,id)});
+ ['next-need','priority-actions'].forEach(id=>{const h=$(`[data-copy="${id}"]`,c);const s=el(id);if(h&&s)h.innerHTML=s.innerHTML});
+ const p=el('projection-table');if(p){const h=$('[data-projection]',c);h.innerHTML=p.innerHTML}
+ const charts=$('#executive-charts'),eh=$('[data-exec]',c);if(charts&&eh){[...charts.children].forEach(a=>{const src=a.querySelector('[id^="chart-"]');if(!src)return;const box=document.createElement('article');box.innerHTML='<b>'+esc(a.querySelector('h3')?.textContent||'Análisis')+'</b><small>'+esc(a.querySelector('p')?.textContent||'')+'</small>';const cloned=src.cloneNode(true);cloned.removeAttribute('id');box.appendChild(cloned);eh.appendChild(box)})}
+ const prog=el('margin-progress');if(prog)$('.ccf432-progress i',c).style.width=prog.style.width||'0%';
+ $$('[data-q]',c).forEach(b=>b.onclick=()=>{const id=b.dataset.q;clickTab(id);});
  mirrorAll();
 }
-function renderSummary(){if(!built||rendering||!ready())return;rendering=true;restoreMoved();summaryShell();const ht=$('[data-stage1-header-title]',root);if(ht)ht.textContent='Resumen';hideLegacy();rendering=false}
-function build(){if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';root.innerHTML=`<header class="b43-stage1-header"><button class="b43-stage1-logo" data-home>CCF</button><div><strong data-stage1-header-title>Resumen</strong><small>Centro de Control Financiero</small></div><button class="b43-stage1-bell" aria-label="Notificaciones">♧</button><button class="b43-stage1-avatar" data-profile>P</button></header><main class="b43-stage1-content"></main><nav class="b43-stage1-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav><div class="b43-stage1-sheet" data-sheet="more"><div class="b43-stage1-backdrop"></div><section><i></i><header><div><strong>Todos los módulos</strong><small>Integración móvil por etapas</small></div><button data-close>×</button></header><div class="b43-stage1-grid"></div></section></div><div class="b43-stage1-sheet" data-sheet="profile"><div class="b43-stage1-backdrop"></div><section><i></i><header><div class="b43-stage1-avatar big">P</div><div><strong>Mi perfil</strong><small>Sesión activa</small></div><button data-close>×</button></header><div class="b43-stage1-profile">Sesión autenticada</div><button class="b43-stage1-primary" data-close>Continuar</button><button class="b43-stage1-danger" data-logout>Cerrar sesión</button></section></div><div class="b43-stage1-form"><div class="b43-stage1-backdrop"></div><section><header><strong data-stage1-form-title>Registrar</strong><button data-form-close>×</button></header><div class="b43-stage1-form-slot"></div></section></div><div class="b43-stage1-notice"><div class="b43-stage1-backdrop"></div><section><strong>Integración progresiva</strong><p>El módulo <b data-notice-name>—</b> queda reservado para la siguiente etapa. Esta versión integra únicamente Menú + Resumen.</p><button data-close-notice>Entendido</button></section></div>`;app().prepend(root);
- $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$$('[data-more]',root).forEach(b=>b.onclick=openMore);$('[data-home]',root).onclick=()=>navigate('dashboard');$('[data-profile]',root).onclick=openProfile;$$('[data-close],.b43-stage1-backdrop',root).forEach(b=>b.onclick=closeSheets);$('[data-close-notice]',root).onclick=closeNotice;$('[data-form-close]',root).onclick=closeForm;$('[data-logout]',root).onclick=()=>{closeSheets();native('logoutBtn')?.click()};populateMore();renderSummary();
+function kpi(label,id){return `<div class="ccf432-mini"><small>${esc(label)}</small><strong data-mirror="${id}">${esc(value(id))}</strong></div>`}
+function ins(label,id){return `<div class="ccf432-mini"><small>${esc(label)}</small><strong data-mirror="${id}">${esc(value(id))}</strong></div>`}
+function build(){
+ if(built||!ready())return;
+ root=document.createElement('div');root.id='ccf-mobile-b43';root.innerHTML=`
+ <header class="ccf432-header"><button class="ccf432-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="ccf432-bell">♧</button><button class="ccf432-avatar" data-profile>P</button></header>
+ <main class="ccf432-content"></main>
+ <nav class="ccf432-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
+ <div class="ccf432-sheet" data-sheet="more"><div class="ccf432-backdrop"></div><section><i></i><header><div><b>Todos los módulos</b><small>Acceso móvil</small></div><button data-close>×</button></header><div class="ccf432-modules"></div></section></div>
+ <div class="ccf432-sheet" data-sheet="profile"><div class="ccf432-backdrop"></div><section><i></i><header><div><b>Mi perfil</b><small>Sesión autenticada</small></div><button data-close>×</button></header><p class="ccf432-profile">Sesión activa</p><button data-close>Continuar</button><button data-logout>Cerrar sesión</button></section></div>`;
+ app().prepend(root);built=true;
+ $$('[data-nav]',root).forEach(b=>b.onclick=()=>{closeSheets();if(b.dataset.nav==='dashboard')renderSummary();else clickTab(b.dataset.nav)});
+ $('[data-home]',root).onclick=()=>{closeSheets();renderSummary();clickTab('dashboard')};
+ $('[data-more]',root).onclick=()=>{populateMore();$('.ccf432-sheet[data-sheet="more"]',root).classList.add('open')};
+ $('[data-profile]',root).onclick=()=>$('.ccf432-sheet[data-sheet="profile"]',root).classList.add('open');
+ $$('[data-close],.ccf432-backdrop',root).forEach(b=>b.onclick=closeSheets);
+ $('[data-logout]',root).onclick=()=>el('logoutBtn')?.click();
+ populateMore();renderSummary();activateLegacy();
 }
-function observe(){if(observer)observer.disconnect();let timer=null;observer=new MutationObserver(()=>{if(!ready()||rendering)return;clearTimeout(timer);timer=setTimeout(()=>{mirrorAll();const p=native('margin-progress');const pi=$('[data-progress]',root);if(p&&pi)pi.style.width=p.style.width||'0%'},120)});const ids=['month-income-total','month-expense-total','future-income-total','future-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','margin-status','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];ids.map(native).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));}
-function restore(){if(observer)observer.disconnect();observer=null;closeSheets();closeForm();restoreMoved();root?.remove();root=null;showLegacy();document.body.classList.remove('b43-stage1-lock');built=false}
-function boot(){if(!mobile()){restore();return}if(!ready()){setTimeout(boot,250);return}if(!built)build();hideLegacy();observe()}
-window.addEventListener('resize',()=>setTimeout(boot,180));window.addEventListener('orientationchange',()=>setTimeout(boot,220));
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3-stage1-menu-summary',activate:navigate,refresh:renderSummary,disable:restore};
+function populateMore(){const g=$('.ccf432-modules',root);if(!g)return;g.innerHTML='';const ids=[...new Set($$('.tabs button[data-tab]').map(b=>b.dataset.tab).concat(['presupuesto','planificacion','futuros','calendario','ahorro','operaciones','ingresos','jornadas','ia-financiera']))];ids.filter(id=>!PRIMARY.some(x=>x[0]===id)).forEach(id=>{const m=META[id]||[id,'Módulo financiero','◉'];const b=document.createElement('button');b.innerHTML='<b>'+m[2]+'</b><span><strong>'+esc(m[0])+'</strong><small>'+esc(m[1])+'</small></span>';b.onclick=()=>{closeSheets();clickTab(id)};g.appendChild(b)})}
+function activateLegacy(){if(!root||!ready())return;['.topbar','.tabs','.ccf-manual-access','#ccf-product-footer'].forEach(s=>$(s)?.classList.add('ccf432-hide'));$$('.tab').forEach(s=>s.classList.add('ccf432-hide-tab'))}
+function closeSheets(){$$('.ccf432-sheet.open',root).forEach(x=>x.classList.remove('open'))}
+function observe(){if(observer)observer.disconnect();observer=new MutationObserver(()=>{if(ready())mirrorAll()});['month-income-total','month-expense-total','future-income-total','future-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','margin-status','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'].map(el).filter(Boolean).forEach(x=>observer.observe(x,{childList:true,subtree:true,characterData:true,attributes:true}))}
+function restore(){if(observer)observer.disconnect();observer=null;root?.remove();root=null;built=false;$$('.ccf432-hide').forEach(x=>x.classList.remove('ccf432-hide'));$$('.ccf432-hide-tab').forEach(x=>x.classList.remove('ccf432-hide-tab'))}
+function boot(){if(!mobile()){if(built)restore();return}if(!ready())return;if(!built)build();mirrorAll()}
+window.addEventListener('resize',()=>setTimeout(boot,150));document.addEventListener('DOMContentLoaded',boot,{once:true});if(document.readyState!=='loading')boot();
+window.CCFMobileB43={version:'4.3.2-safe-stage1',disable:restore,refresh:renderSummary};
 })();
