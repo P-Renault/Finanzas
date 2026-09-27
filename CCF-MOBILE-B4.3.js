@@ -47,7 +47,15 @@ function adaptDesktopModule(id){
  const host=moduleHost();
  if(!host)return false;
  restoreActiveModule();
- const section=by(id);
+ let section=by(id);
+
+ // Planificación/Operaciones son módulos dinámicos con router propietario.
+ // Se solicita su montaje antes de intentar mover la sección real.
+ if(!section && (id==='planificacion'||id==='operaciones') &&
+    window.CCFRouter && typeof window.CCFRouter.show==='function'){
+   try{ window.CCFRouter.show(id); }catch(e){ console.warn('[CCF MOBILE] router',e); }
+   section=by(id);
+ }
  if(!section){
    return false;
  }
@@ -91,10 +99,14 @@ function navigate(id){
    return;
  }
  const native=nativeTab(id);
- setTimeout(()=>{
+ let attempts=0;
+ const mount=()=>{
+   attempts++;
    if(showModuleAfterNavigation(id))return;
+   if(attempts<10){setTimeout(mount,180);return}
    notice(META[id]?.[0]||id);
- },120);
+ };
+ setTimeout(mount,120);
  if(!native && !META[id])notice(id);
 }
 function openMore(){populateMore();$('.b434-overlay[data-overlay="more"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
@@ -126,10 +138,13 @@ function openMoveForm(title){
  overlay.querySelector('[data-form-title]').textContent=title;overlay.classList.add('open');document.body.classList.add('b434-lock')
 }
 function quick(type){
- if(type==='debt'){if(!nativeTab('deudas'))notice('Deudas');else setActive('deudas');return}
- if(type==='plan'){if(!nativeTab('planificacion'))notice('Planificación');return}
+ if(type==='debt'){navigate('deudas');return}
+ if(type==='plan'){navigate('planificacion');return}
  openMoveForm(type==='income'?'Registrar ingreso':'Registrar gasto');
- const sel=by('movTipo');if(sel)sel.value=type==='income'?'ingreso':'gasto';
+ const sel=by('movTipo');
+ if(sel)sel.value=type==='income'?'ingreso':'gasto';
+ const form=by('movForm');
+ if(form)form.classList.add('b434-quick-form');
 }
 
 function syncConsolidatedReport(){

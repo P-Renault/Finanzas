@@ -215,3 +215,245 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     display:none!important;
   }
 }
+
+@media(max-width:720px){
+  /* ==========================================================
+     CAMBIO 4 — ACCIONES RÁPIDAS
+     ========================================================== */
+
+  /* Formulario de gasto/ingreso: experiencia móvil real,
+     reutilizando #movForm y sus handlers originales. */
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"]>section{
+    max-height:92vh!important;
+    padding:0 0 calc(18px + env(safe-area-inset-bottom))!important;
+    overflow:auto!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"]>section>header{
+    position:sticky!important;
+    top:0!important;
+    z-index:3!important;
+    margin:0!important;
+    padding:14px 16px!important;
+    background:#fff!important;
+    border-bottom:1px solid #e6ebf0!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movForm{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+    padding:16px!important;
+    margin:0!important;
+    background:#fff!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movForm label{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:6px!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    color:#334155!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movForm input,
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movForm select{
+    width:100%!important;
+    min-height:46px!important;
+    box-sizing:border-box!important;
+    border:1px solid #d9e1ea!important;
+    border-radius:12px!important;
+    background:#f8fafc!important;
+    padding:10px 12px!important;
+    font-size:15px!important;
+    color:#172033!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movForm .form-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    margin-top:4px!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movForm button{
+    width:100%!important;
+    min-height:46px!important;
+    border-radius:12px!important;
+  }
+  #ccf-mobile-b43 .b434-overlay[data-overlay="form"] #movMsg{
+    margin:0 16px 8px!important;
+  }
+
+  /* DEUDAS — tarjetas, KPIs y formulario en una columna. */
+  #ccf-mobile-b43 .b434-module-host #deudas{
+    display:block!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .section-title{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    gap:4px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .section-title h2{
+    margin:2px 0!important;
+    font-size:20px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .cards.two{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+    margin:10px 0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .metric{
+    min-width:0!important;
+    padding:12px!important;
+    border-radius:14px!important;
+    background:#f8fafc!important;
+    border:1px solid #e3e8ef!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .metric span{
+    display:block!important;
+    font-size:9px!important;
+    color:#64748b!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .metric strong{
+    display:block!important;
+    margin-top:5px!important;
+    font-size:15px!important;
+    overflow-wrap:anywhere!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas #deudaForm{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:11px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas #deudaForm label{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:5px!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    color:#334155!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas #deudaForm input,
+  #ccf-mobile-b43 .b434-module-host #deudas #deudaForm select{
+    width:100%!important;
+    min-height:44px!important;
+    border:1px solid #d9e1ea!important;
+    border-radius:11px!important;
+    background:#f8fafc!important;
+    padding:9px 11px!important;
+    box-sizing:border-box!important;
+    font-size:14px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas #deudaForm .form-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas #deudaForm button{
+    width:100%!important;
+    min-height:44px!important;
+    border-radius:11px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas #deudasLista{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .debt-card{
+    display:grid!important;
+    gap:9px!important;
+    padding:13px!important;
+    border:1px solid #e1e7ee!important;
+    border-radius:15px!important;
+    background:#fff!important;
+    box-shadow:0 2px 8px rgba(15,23,42,.04)!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .debt-card-main h3{
+    margin:5px 0 2px!important;
+    font-size:15px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .debt-card-main p{
+    margin:0!important;
+    color:#64748b!important;
+    font-size:10px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .debt-card-values{
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    padding:9px!important;
+    border-radius:11px!important;
+    background:#f8fafc!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .debt-card-values strong{
+    font-size:17px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .debt-card-meta{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:4px!important;
+    color:#64748b!important;
+    font-size:9px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .form-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:7px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #deudas .form-actions button:last-child{
+    grid-column:1/-1;
+  }
+
+  /* PLANIFICACIÓN — cuadros informativos y escenario. */
+  #ccf-mobile-b43 .b434-module-host #planificacion{
+    display:block!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpis{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi{
+    min-width:0!important;
+    padding:12px!important;
+    border-radius:13px!important;
+    background:#f8fafc!important;
+    border:1px solid #e3e8ef!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi span,
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi small{
+    display:block!important;
+    font-size:9px!important;
+    color:#64748b!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi strong{
+    display:block!important;
+    margin-top:5px!important;
+    font-size:15px!important;
+    overflow-wrap:anywhere!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-grid{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    padding:10px 0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row span{
+    min-width:0!important;
+    font-size:11px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row strong{
+    flex:0 0 auto!important;
+    font-size:12px!important;
+    text-align:right!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-status{
+    font-size:11px!important;
+    line-height:1.5!important;
+  }
+}
