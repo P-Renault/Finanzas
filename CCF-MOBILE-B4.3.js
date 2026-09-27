@@ -26,6 +26,56 @@ function moveReal(id,host){
  const marker=document.createComment('CCF B4.3.4 '+id);el.parentNode?.insertBefore(marker,el);host.appendChild(el);
  el.dataset.b434Moved='1';moved.push({el,marker});return el;
 }
+
+function enhanceMobileFlowChart(){
+ const chart=by('chart-flow');
+ if(!chart)return;
+ const svg=chart.querySelector('svg');
+ if(!svg)return;
+
+ /* La fuente sigue siendo el gráfico real del Dashboard Ejecutivo.
+    Aquí solo adaptamos su representación para móvil. */
+ svg.querySelectorAll('.b434-flow-wick').forEach(n=>n.remove());
+
+ const rects=[...svg.querySelectorAll('rect.chart-income,rect.chart-expense')];
+ if(!rects.length)return;
+
+ const ns='http://www.w3.org/2000/svg';
+ const baseY=Math.max(...rects.map(r=>Number(r.getAttribute('y')||0)+Number(r.getAttribute('height')||0)));
+ const makeLine=(x,y1,y2,cls)=>{
+   const l=document.createElementNS(ns,'line');
+   l.setAttribute('x1',x);l.setAttribute('x2',x);
+   l.setAttribute('y1',Math.min(y1,y2));l.setAttribute('y2',Math.max(y1,y2));
+   l.setAttribute('class','b434-flow-wick '+cls);
+   return l;
+ };
+
+ rects.forEach(r=>{
+   const x=Number(r.getAttribute('x')||0);
+   const y=Number(r.getAttribute('y')||0);
+   const w=Number(r.getAttribute('width')||0);
+   const h=Number(r.getAttribute('height')||0);
+   if(!Number.isFinite(x)||!Number.isFinite(y)||!h)return;
+
+   const cls=r.classList.contains('chart-income')?'income':'expense';
+   const cx=x+w/2;
+   const top=Math.max(0,y-7);
+
+   /* Cuerpo de vela: estrecho, pero mantiene exactamente la magnitud original. */
+   r.setAttribute('width',Math.max(7,Math.min(11,w)));
+   r.setAttribute('x',cx-Math.max(7,Math.min(11,w))/2);
+   r.setAttribute('rx','2');
+   r.classList.add('b434-flow-candle');
+
+   /* Mecha superior e inferior para que visualmente se lea como vela. */
+   const upper=makeLine(cx,top,y,'income'===cls?'income':'expense');
+   const lower=makeLine(cx,baseY,baseY+4,'income'===cls?'income':'expense');
+
+   r.parentNode.insertBefore(upper,r);
+   r.parentNode.insertBefore(lower,r.nextSibling);
+ });
+}
+
 function restoreReal(){for(const x of moved.slice().reverse()){delete x.el.dataset.b434Moved;if(x.marker.parentNode)x.marker.parentNode.insertBefore(x.el,x.marker.nextSibling);x.marker.remove()}moved=[]}
 function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
 function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));document.body.classList.remove('b434-lock')}
@@ -97,7 +147,7 @@ function summary(){
  <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">
  ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>
  <section class="b434-consolidated" data-consolidated><header><strong>Desglose consolidado</strong><small>Ingresos y gastos del mes</small></header></section>`;
- const flow=by('chart-flow');if(flow)moveReal('chart-flow',$('[data-flow]',c));
+ const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(enhanceMobileFlowChart,80);setTimeout(enhanceMobileFlowChart,450);}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
  ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
@@ -118,7 +168,9 @@ function build(){
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
- observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
+ observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport();if(mobile())enhanceMobileFlowChart()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
+ const flow=by('chart-flow');if(flow)observer.observe(flow,{childList:true,subtree:true,attributes:true,attributeFilter:['class','width','height','x','y']});
+ enhanceMobileFlowChart();
 }
 function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
