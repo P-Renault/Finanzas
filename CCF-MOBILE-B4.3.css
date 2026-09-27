@@ -776,3 +776,58 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     color:#334155!important;
   }
 }
+
+/* CCF MOBILE B4.3 — MOVIMIENTOS · ACCIONES INLINE — DISEÑO FINAL */
+@media (max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .row{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .row-main{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .row-right{
+    flex:0 0 auto!important;
+    min-width:0!important;
+    width:auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    gap:7px!important;
+    text-align:right!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .row-right>strong{
+    display:block!important;
+    width:100%!important;
+    text-align:right!important;
+    white-space:nowrap!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .actions{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:8px!important;
+    width:auto!important;
+    margin:0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .actions button{
+    width:auto!important;
+    min-width:58px!important;
+    min-height:34px!important;
+    padding:7px 10px!important;
+    margin:0!important;
+    border-radius:9px!important;
+    font-size:9px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #movimientos #movimientosLista .actions .danger{
+    background:#dc2626!important;
+    color:#fff!important;
+  }
+}
