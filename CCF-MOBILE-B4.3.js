@@ -73,6 +73,44 @@ function syncConsolidatedReport(){
  target.replaceChildren(fragment);
 }
 
+
+function adaptMobileFlowCandles(){
+ const host=by('chart-flow');if(!host)return false;
+ const source=host.querySelector('svg');if(!source)return false;
+ const income=[...source.querySelectorAll('rect.chart-income')];
+ const expense=[...source.querySelectorAll('rect.chart-expense')];
+ if(!income.length&&!expense.length)return false;
+ const NS='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(NS,'svg');
+ svg.setAttribute('viewBox','0 0 760 300');svg.setAttribute('width','100%');svg.setAttribute('height','100%');svg.setAttribute('role','img');
+ [...source.children].forEach(node=>{
+   const tag=node.tagName?.toLowerCase();
+   if(tag==='line'||tag==='text'){
+     const c=node.cloneNode(true);
+     if(tag==='text'&&String(c.textContent||'').trim()==='Ingresos vs egresos')return;
+     svg.appendChild(c);
+   }
+ });
+ const candle=(r,type)=>{
+   const x=Number(r.getAttribute('x')||0),y=Number(r.getAttribute('y')||0),w=Number(r.getAttribute('width')||0),h=Number(r.getAttribute('height')||0);
+   if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(w)||!Number.isFinite(h)||h<=0)return;
+   const cx=x+w/2,bw=Math.max(8,Math.min(12,w));
+   const body=document.createElementNS(NS,'rect');
+   body.setAttribute('x',cx-bw/2);body.setAttribute('y',y);body.setAttribute('width',bw);body.setAttribute('height',Math.max(5,h));body.setAttribute('rx','2.5');
+   body.setAttribute('class',type==='income'?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body);
+   const wick=document.createElementNS(NS,'line');
+   wick.setAttribute('x1',cx);wick.setAttribute('x2',cx);wick.setAttribute('y1',Math.max(0,y-5));wick.setAttribute('y2',y);
+   wick.setAttribute('class',type==='income'?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);
+ };
+ income.forEach(r=>candle(r,'income'));expense.forEach(r=>candle(r,'expense'));
+ const title=document.createElementNS(NS,'text');title.setAttribute('x','44');title.setAttribute('y','17');title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';svg.appendChild(title);
+ host.replaceChildren(svg);return true;
+}
+function scheduleMobileFlowAdapt(){
+ if(!mobile())return;
+ [250,700,1400,2400].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));
+}
+
 function scheduleReportSync(){
  clearTimeout(reportTimer);let tries=0;
  const attempt=()=>{syncConsolidatedReport();tries++;if(tries<12&&!by('b234-report'))reportTimer=setTimeout(attempt,300)};
@@ -109,7 +147,7 @@ function summary(){
   <header><div><strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada: reales + futuros + obligaciones + planificación.</small></div></header>
   <div class="b434-consolidated-body" data-b234-copy></div>
 </section>`;
- const flow=by('chart-flow');if(flow)moveReal('chart-flow',$('[data-flow]',c));
+ const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);scheduleMobileFlowAdapt();}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
  ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
