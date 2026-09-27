@@ -61,17 +61,23 @@ function adaptDesktopModule(id){
  return true;
 }
 function showModuleAfterNavigation(id){
+ const content=$('[data-content]',root);
+ const host=moduleHost();
  if(id==='dashboard'){
    restoreActiveModule();
-   const host=moduleHost();host?.classList.remove('open');
+   host?.classList.remove('open');
+   content?.classList.remove('b434-view-hidden');
    summary();
    setActive('dashboard');
    return true;
  }
  const ok=adaptDesktopModule(id);
  if(ok){
-   const host=moduleHost();
-   host.querySelectorAll('.tab').forEach(s=>s.classList.remove('hidden'));
+   // REDIRECCIÓN REAL: el Resumen móvil deja de estar visible.
+   // El módulo seleccionado ocupa la vista de contenido completa.
+   content?.classList.add('b434-view-hidden');
+   host?.classList.add('open');
+   host?.setAttribute('data-active-module',id);
    setActive(id);
    return true;
  }

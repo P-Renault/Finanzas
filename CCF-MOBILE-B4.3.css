@@ -154,3 +154,64 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     margin-right:0!important;
   }
 }
+
+@media(max-width:720px){
+  /* CAMBIO 3 — navegación de módulo: no mostrar el Resumen debajo */
+  #ccf-mobile-b43 main[data-content].b434-view-hidden{
+    display:none!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host{
+    display:none!important;
+    width:100%!important;
+    min-height:calc(100vh - 64px)!important;
+    padding:10px 10px 94px!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+    background:var(--m-bg)!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host.open{
+    display:block!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host[data-active-module] > .tab{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* El módulo escritorio adaptado ocupa la pantalla móvil, no una sección
+     adicional al final del Resumen. */
+  #ccf-mobile-b43 .b434-module-host > .tab > *{
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host .card{
+    margin:0 0 10px!important;
+    border-radius:16px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host .grid2{
+    grid-template-columns:1fr!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host input,
+  #ccf-mobile-b43 .b434-module-host select,
+  #ccf-mobile-b43 .b434-module-host textarea,
+  #ccf-mobile-b43 .b434-module-host button{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host .tabs,
+  #ccf-mobile-b43 .b434-module-host .topbar{
+    display:none!important;
+  }
+}
