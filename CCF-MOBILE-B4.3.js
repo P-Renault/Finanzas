@@ -48,96 +48,129 @@ function movementMoney(text){
  const n=String(text||'').replace(/[^\d-]/g,'');
  return Number(n)||0;
 }
-function adaptMovementsMobile(){
- const section=by('movimientos');
- if(!section)return false;
- section.classList.add('b434-movements-mobile');
+function buildMovementsMobileShell(host,section){
+ let shell=host.querySelector('[data-b434-movements-shell]');
+ if(shell)return shell;
+ shell=document.createElement('section');
+ shell.className='b434-movements-shell';
+ shell.dataset.b434MovementsShell='1';
+ shell.innerHTML=`
+   <div class="b434-mov-head">
+     <span class="b434-eyebrow">CONTROL FINANCIERO</span>
+     <h2>Movimientos</h2>
+     <p>Registra, consulta y administra tus ingresos y gastos.</p>
+   </div>
+   <div class="b434-mov-kpis">
+     <article><span>Ingresos</span><strong data-mov-income>$0</strong></article>
+     <article><span>Gastos</span><strong data-mov-expense>$0</strong></article>
+     <article><span>Balance</span><strong data-mov-balance>$0</strong></article>
+     <article><span>Movimientos</span><strong data-mov-count>0</strong></article>
+   </div>
+   <div class="b434-mov-actions">
+     <button type="button" data-mov-action="income">＋ Ingreso</button>
+     <button type="button" data-mov-action="expense">＋ Gasto</button>
+   </div>
+   <div class="b434-mov-filter">
+     <input type="search" data-mov-search placeholder="Buscar categoría o descripción…">
+     <select data-mov-type>
+       <option value="all">Todos</option>
+       <option value="ingreso">Ingresos</option>
+       <option value="gasto">Gastos</option>
+     </select>
+     <select data-mov-period>
+       <option value="all">Todo el período</option>
+       <option value="month">Mes actual</option>
+       <option value="future">Futuros</option>
+     </select>
+   </div>`;
+ host.insertBefore(shell,section);
 
- let toolbar=section.querySelector('[data-b434-movements]');
- if(!toolbar){
-   const first=section.firstElementChild;
-   toolbar=document.createElement('div');
-   toolbar.className='b434-movements-tools';
-   toolbar.dataset.b434Movements='1';
-   toolbar.innerHTML=`
-     <div class="b434-mov-head">
-       <div><span class="b434-eyebrow">CONTROL FINANCIERO</span><h2>Movimientos</h2><p>Registra, consulta y administra tus ingresos y gastos.</p></div>
-     </div>
-     <div class="b434-mov-kpis">
-       <article><span>Ingresos</span><strong data-mov-income>$0</strong></article>
-       <article><span>Gastos</span><strong data-mov-expense>$0</strong></article>
-       <article><span>Balance</span><strong data-mov-balance>$0</strong></article>
-       <article><span>Movimientos</span><strong data-mov-count>0</strong></article>
-     </div>
-     <div class="b434-mov-actions">
-       <button type="button" data-mov-action="income">＋ Ingreso</button>
-       <button type="button" data-mov-action="expense">＋ Gasto</button>
-     </div>
-     <div class="b434-mov-filter">
-       <input type="search" data-mov-search placeholder="Buscar categoría o descripción…">
-       <select data-mov-type><option value="all">Todos</option><option value="ingreso">Ingresos</option><option value="gasto">Gastos</option></select>
-       <select data-mov-period><option value="all">Todo el período</option><option value="month">Mes actual</option><option value="future">Futuros</option></select>
-     </div>`;
-   section.insertBefore(toolbar,first);
-   toolbar.querySelector('[data-mov-action="income"]').onclick=()=>{
-     openMoveForm('Registrar ingreso');
-     const s=by('movTipo');if(s)s.value='ingreso';
-   };
-   toolbar.querySelector('[data-mov-action="expense"]').onclick=()=>{
-     openMoveForm('Registrar gasto');
-     const s=by('movTipo');if(s)s.value='gasto';
-   };
-   toolbar.querySelector('[data-mov-search]').addEventListener('input',refreshMovementView);
-   toolbar.querySelector('[data-mov-type]').addEventListener('change',refreshMovementView);
-   toolbar.querySelector('[data-mov-period]').addEventListener('change',refreshMovementView);
- }
-
+ shell.querySelector('[data-mov-action="income"]').onclick=()=>{
+   openMoveForm('Registrar ingreso');
+   const s=by('movTipo');if(s)s.value='ingreso';
+ };
+ shell.querySelector('[data-mov-action="expense"]').onclick=()=>{
+   openMoveForm('Registrar gasto');
+   const s=by('movTipo');if(s)s.value='gasto';
+ };
+ shell.querySelector('[data-mov-search]').addEventListener('input',refreshMovementView);
+ shell.querySelector('[data-mov-type]').addEventListener('change',refreshMovementView);
+ shell.querySelector('[data-mov-period]').addEventListener('change',refreshMovementView);
+ return shell;
+}
+function decorateMovementRows(){
  const list=by('movimientosLista');
- if(!list)return true;
-
- list.classList.add('b434-movement-list');
+ if(!list)return [];
  const rows=[...list.querySelectorAll('.row')];
+ const today=new Date().toISOString().slice(0,10);
  const now=new Date();
  const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
- let income=0,expense=0,count=0;
+ let income=0,expense=0;
+
  rows.forEach(row=>{
    const text=row.textContent||'';
-   const amountNode=row.querySelector('.row-right strong');
-   const amount=movementMoney(amountNode?.textContent);
-   const negative=amountNode?.classList.contains('negative') || /\bGasto\b/i.test(text);
-   const date=row.querySelector('.row-main small')?.textContent?.trim()||'';
-   if(!negative)income+=amount; else expense+=amount;
-   count++;
+   const amountNode=row.querySelector('.row-right strong, .row-right b, strong');
+   const raw=amountNode?.textContent||'';
+   const amount=movementMoney(raw);
+   const negative=amountNode?.classList.contains('negative') ||
+                  /\bGasto\b/i.test(text) ||
+                  /^\s*-\s*\$/.test(raw);
+   const dateNode=row.querySelector('.row-main small, time, [data-date]');
+   const date=(dateNode?.textContent||dateNode?.getAttribute?.('datetime')||'').trim();
+   if(negative)expense+=amount; else income+=amount;
+
    row.dataset.movType=negative?'gasto':'ingreso';
    row.dataset.movDate=date;
    row.dataset.movSearch=text.toLowerCase();
+   row.dataset.movCurrent=(date.startsWith(ym)||date.includes(`${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`))?'1':'0';
+   row.dataset.movFuture=(date>today)?'1':'0';
    row.classList.add('b434-movement-card');
-   if(date.startsWith(ym)) row.dataset.movCurrent='1'; else row.dataset.movCurrent='0';
-   row.dataset.movFuture=(date>new Date().toISOString().slice(0,10))?'1':'0';
  });
- const set=(sel,val)=>{const n=section.querySelector(sel);if(n)n.textContent=val};
+ return {rows,income,expense};
+}
+function adaptMovementsMobile(){
+ const section=by('movimientos');
+ const host=moduleHost();
+ if(!section||!host)return false;
+ section.classList.add('b434-movements-mobile');
+
+ const shell=buildMovementsMobileShell(host,section);
+ const data=decorateMovementRows();
  const clp=n=>'$'+Math.round(n).toLocaleString('es-CL');
- set('[data-mov-income]',clp(income));
- set('[data-mov-expense]',clp(expense));
- set('[data-mov-balance]',clp(income-expense));
- set('[data-mov-count]',String(count));
+ const set=(sel,val)=>{const n=shell.querySelector(sel);if(n)n.textContent=val};
+
+ if(data && Array.isArray(data.rows)){
+   set('[data-mov-income]',clp(data.income));
+   set('[data-mov-expense]',clp(data.expense));
+   set('[data-mov-balance]',clp(data.income-data.expense));
+   set('[data-mov-count]',String(data.rows.length));
+ }
  refreshMovementView();
  return true;
 }
 function refreshMovementView(){
  const section=by('movimientos');if(!section)return;
  const list=by('movimientosLista');if(!list)return;
- const toolbar=section.querySelector('[data-b434-movements]');if(!toolbar)return;
- const q=(toolbar.querySelector('[data-mov-search]')?.value||'').trim().toLowerCase();
- const type=toolbar.querySelector('[data-mov-type]')?.value||'all';
- const period=toolbar.querySelector('[data-mov-period]')?.value||'all';
+ const host=moduleHost();
+ const shell=host?.querySelector('[data-b434-movements-shell]');
+ if(!shell)return;
+
+ decorateMovementRows();
+
+ const q=(shell.querySelector('[data-mov-search]')?.value||'').trim().toLowerCase();
+ const type=shell.querySelector('[data-mov-type]')?.value||'all';
+ const period=shell.querySelector('[data-mov-period]')?.value||'all';
+
  [...list.querySelectorAll('.row')].forEach(row=>{
    const matchesSearch=!q||(row.dataset.movSearch||'').includes(q);
    const matchesType=type==='all'||row.dataset.movType===type;
-   const matchesPeriod=period==='all'||(period==='month'&&row.dataset.movCurrent==='1')||(period==='future'&&row.dataset.movFuture==='1');
+   const matchesPeriod=period==='all' ||
+     (period==='month'&&row.dataset.movCurrent==='1') ||
+     (period==='future'&&row.dataset.movFuture==='1');
    row.style.display=matchesSearch&&matchesType&&matchesPeriod?'':'none';
  });
 }
+
 function adaptDesktopModule(id){
  const host=moduleHost();
  if(!host)return false;
@@ -181,8 +214,10 @@ function showModuleAfterNavigation(id){
    host?.setAttribute('data-active-module',id);
    if(id==='movimientos'){
      adaptMovementsMobile();
-     setTimeout(adaptMovementsMobile,350);
-     setTimeout(adaptMovementsMobile,1000);
+     setTimeout(adaptMovementsMobile,250);
+     setTimeout(adaptMovementsMobile,700);
+     setTimeout(adaptMovementsMobile,1500);
+     setTimeout(adaptMovementsMobile,2500);
    }
    setActive(id);
    return true;
