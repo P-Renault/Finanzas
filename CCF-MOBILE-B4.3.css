@@ -296,3 +296,42 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
    margin:7px 0 0!important;
  }
 }
+
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-real-chart{
+    overflow:hidden!important;
+    height:205px!important;
+    min-height:205px!important;
+  }
+  #ccf-mobile-b43 .b434-real-chart>#chart-flow{
+    width:100%!important;
+    height:195px!important;
+    min-height:195px!important;
+    overflow:hidden!important;
+  }
+  #ccf-mobile-b43 #chart-flow svg{
+    display:block!important;
+    width:100%!important;
+    height:195px!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+  #ccf-mobile-b43 #chart-flow .mobile-flow-income{
+    fill:#16a34a!important;
+    stroke:#15803d!important;
+    stroke-width:1.5!important;
+  }
+  #ccf-mobile-b43 #chart-flow .mobile-flow-expense{
+    fill:#ef4444!important;
+    stroke:#dc2626!important;
+    stroke-width:1.5!important;
+  }
+  #ccf-mobile-b43 #chart-flow .mobile-flow-income-wick{
+    stroke:#15803d!important;
+    stroke-width:2!important;
+  }
+  #ccf-mobile-b43 #chart-flow .mobile-flow-expense-wick{
+    stroke:#dc2626!important;
+    stroke-width:2!important;
+  }
+}

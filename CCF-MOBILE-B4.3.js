@@ -78,97 +78,101 @@ function syncConsolidatedReport(){
 
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
- const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');
+ if(host.dataset.b434Candles==='1')return true;
+
+ // Siempre tomar como fuente prioritaria el SVG ejecutivo original.
+ // Nunca usar el SVG ya transformado como nueva fuente de datos.
+ const source=by('b234Chart')?.querySelector('svg');
  if(!source)return false;
 
- const lines=[...source.querySelectorAll('line')].filter(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
- });
- if(!lines.length)return false;
+ const colorOf=l=>{
+   const raw=(l.getAttribute('stroke')||l.style?.stroke||'').toLowerCase().replace(/\s+/g,'');
+   if(raw==='#16a34a'||raw==='rgb(22,163,74)')return 'green';
+   if(raw==='#ef4444'||raw==='rgb(239,68,68)')return 'red';
+   return null;
+ };
+ const sourceLines=[...source.querySelectorAll('line')];
+ const colored=sourceLines.map(l=>({l,color:colorOf(l)})).filter(x=>x.color);
+ if(!colored.length)return false;
 
- const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
- const NS='http://www.w3.org/2000/svg';
+ const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30;
+ const step=(W-L-R)/(days-1), NS='http://www.w3.org/2000/svg';
  const svg=document.createElementNS(NS,'svg');
  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
- svg.setAttribute('width','100%');
- svg.setAttribute('height','100%');
+ svg.setAttribute('preserveAspectRatio','none');
  svg.setAttribute('role','img');
- svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
+ svg.setAttribute('aria-label','Flujo mensual: verde ingresos y rojo egresos');
 
- // Mantener escala mensual fija y sin desplazamiento.
- const grid=[...source.querySelectorAll('line')].filter(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return stroke==='#e5e7eb';
- });
- grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
+ // Rejilla original del ejecutivo.
+ sourceLines.filter(l=>(l.getAttribute('stroke')||'').toLowerCase()==='#e5e7eb')
+   .forEach(l=>svg.appendChild(l.cloneNode(true)));
 
+ // Escala monetaria original.
  [...source.querySelectorAll('text')].forEach(t=>{
-   const clone=t.cloneNode(true);
    const txt=String(t.textContent||'').trim();
-   // Se conservan las etiquetas de escala monetaria, pero se reemplazan
-   // las fechas por una secuencia mensual completa más legible.
-   if(/^\d{2}$/.test(txt))return;
-   svg.appendChild(clone);
+   if(/^\d{2}$/.test(txt)||/^\d{2}-\d{2}$/.test(txt))return;
+   svg.appendChild(t.cloneNode(true));
  });
 
+ // Cronología fija: 01, 05, 10, 15, 20, 25, 30.
  const axis=document.createElementNS(NS,'g');
- axis.setAttribute('class','mobile-month-axis');
- for(let d=1;d<=days;d++){
-   if(d===1||d%3===0||d===days){
-     const x=L+(d-1)*step;
-     const t=document.createElementNS(NS,'text');
-     t.setAttribute('x',x);
-     t.setAttribute('y',H-12);
-     t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
-     t.setAttribute('class','chart-axis');
-     t.textContent=String(d).padStart(2,'0');
-     axis.appendChild(t);
-   }
- }
+ [1,5,10,15,20,25,30].forEach(d=>{
+   const x=L+(d-1)*step;
+   const t=document.createElementNS(NS,'text');
+   t.setAttribute('x',x);t.setAttribute('y',H-14);
+   t.setAttribute('text-anchor',d===1?'start':d===30?'end':'middle');
+   t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');
+   t.textContent=String(d).padStart(2,'0');
+   axis.appendChild(t);
+ });
  svg.appendChild(axis);
 
- const candleData=[];
- lines.forEach(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   const green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)';
-   const x=Number(l.getAttribute('x1'));
-   const y=Number(l.getAttribute('y1'));
-   if(!Number.isFinite(x)||!Number.isFinite(y))return;
-   const baseX=x+(green?4:-4);
-   const day=Math.round((baseX-L)/step)+1;
+ // Se conserva la magnitud original de cada línea y se convierten
+ // en velas compactas. Si coinciden ingresos y egresos en un día,
+ // quedan lado a lado para permitir el contraste.
+ const seen=new Set();
+ colored.forEach(({l,color})=>{
+   const x0=Number(l.getAttribute('x1'));
+   const y0=Number(l.getAttribute('y1'));
+   const x1=Number(l.getAttribute('x2'));
+   if(!Number.isFinite(x0)||!Number.isFinite(y0)||!Number.isFinite(x1))return;
+   const day=Math.round((x0-L)/step)+1;
    if(day<1||day>days)return;
-   const amountHeight=Math.max(2,base-y);
-   candleData.push({day,green,y,height:amountHeight});
- });
 
- // Una vela por tipo y por día. Si existen ambas, quedan lado a lado.
- candleData.forEach(c=>{
-   const x=L+(c.day-1)*step+(c.green?-5:5);
-   const bodyH=Math.max(9,Math.min(18,c.height*0.12));
-   const bodyY=Math.max(T,c.y);
+   const key=`${day}-${color}`;
+   if(seen.has(key))return;
+   seen.add(key);
+
+   const amountHeight=Math.max(2,base-y0);
+   const x=L+(day-1)*step+(color==='green'?-5:5);
+   const bodyH=Math.max(8,Math.min(92,amountHeight));
+   const bodyY=Math.max(T,base-bodyH);
+
    const wick=document.createElementNS(NS,'line');
    wick.setAttribute('x1',x);wick.setAttribute('x2',x);
-   wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);
-   wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');
+   wick.setAttribute('y1',Math.max(T,bodyY-6));wick.setAttribute('y2',Math.min(base,bodyY+bodyH+6));
+   wick.setAttribute('class',color==='green'?'mobile-flow-income-wick':'mobile-flow-expense-wick');
    svg.appendChild(wick);
 
    const body=document.createElementNS(NS,'rect');
-   body.setAttribute('x',x-5);body.setAttribute('y',bodyY);
-   body.setAttribute('width','10');body.setAttribute('height',bodyH);
+   body.setAttribute('x',x-4);body.setAttribute('y',bodyY);
+   body.setAttribute('width','8');body.setAttribute('height',bodyH);
    body.setAttribute('rx','2');
-   body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
+   body.setAttribute('class',color==='green'?'mobile-flow-income':'mobile-flow-expense');
    svg.appendChild(body);
  });
 
  const title=document.createElementNS(NS,'text');
  title.setAttribute('x',L);title.setAttribute('y','17');
- title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';
+ title.setAttribute('fill','#334155');title.setAttribute('font-size','12');
+ title.setAttribute('font-weight','700');title.textContent='Ingresos vs egresos';
  svg.appendChild(title);
 
  host.replaceChildren(svg);
+ host.dataset.b434Candles='1';
  return true;
 }
+
 function scheduleMobileFlowAdapt(){
  if(!mobile())return;
  [350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));
