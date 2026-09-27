@@ -1,5 +1,5 @@
-/* CCF MOBILE B4.3.4 — ETAPA 1 · CORRECCIÓN RESUMEN
-   Solo presentación móvil. No crea Supabase ni modifica autenticación.
+/* CCF MOBILE B4.3.4 — ETAPA 2 · MOVIMIENTOS
+   Solo presentación/interacción móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
 (()=>{'use strict';
@@ -40,17 +40,63 @@ function populateMore(){
  const ids=[...new Set([...$$('.tabs button[data-tab]').map(b=>b.dataset.tab),...Object.keys(META)])].filter(id=>id&&id!=='dashboard'&&!PRIMARY.some(x=>x[0]===id));
  ids.forEach(id=>{const m=META[id]||[id,'Módulo financiero','◉'];const b=document.createElement('button');b.className='b434-module';b.innerHTML='<b>'+esc(m[2])+'</b><span><strong>'+esc(m[0])+'</strong><small>'+esc(m[1])+'</small></span>';b.onclick=()=>navigate(id);g.appendChild(b)})
 }
+
+function prepareMobileMoveForm(form){
+ if(!form||form.dataset.b434MobileForm==='1')return;
+ form.dataset.b434MobileForm='1';
+ form.classList.add('b434-mobile-form');
+ const labels=[...form.querySelectorAll('label')];
+ labels.forEach(label=>{
+   label.classList.add('b434-form-field');
+   const control=label.querySelector('input,select,textarea');
+   if(control)control.dataset.mobileField='1';
+   if(control?.id==='movTipo'){
+     label.classList.add('b434-form-type-field');
+     const select=control;
+     select.classList.add('b434-native-type');
+     const chooser=document.createElement('div');
+     chooser.className='b434-type-chooser';
+     [['ingreso','Ingreso','＋'],['gasto','Gasto','−']].forEach(([value,text,icon])=>{
+       const b=document.createElement('button');
+       b.type='button';b.className='b434-type-choice';b.dataset.value=value;
+       b.innerHTML='<span>'+icon+'</span><strong>'+text+'</strong>';
+       b.onclick=()=>{
+         select.value=value;
+         select.dispatchEvent(new Event('change',{bubbles:true}));
+         chooser.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.value===value));
+       };
+       chooser.appendChild(b);
+     });
+     label.appendChild(chooser);
+     const sync=()=>chooser.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.value===select.value));
+     select.addEventListener('change',sync);
+     sync();
+   }
+ });
+ const amount=by('movMonto');
+ if(amount)amount.classList.add('b434-amount-input');
+ const intro=document.createElement('div');
+ intro.className='b434-form-intro';
+ intro.innerHTML='<span>REGISTRO RÁPIDO</span><strong>Ingresa los datos del movimiento</strong><small>Los datos se guardan mediante el mismo formulario y lógica financiera existente.</small>';
+ form.prepend(intro);
+ const actions=form.querySelector('.form-actions');
+ if(actions)actions.classList.add('b434-form-actions');
+}
 function openMoveForm(title){
  const form=by('movForm');if(!form){notice('Registro de movimientos');return}
  const overlay=$('.b434-overlay[data-overlay="form"]',root),slot=$('[data-form-slot]',root);if(!overlay||!slot)return;
  if(form.dataset.b434Moved!=='1'){const marker=document.createComment('CCF B4.3.4 movForm');form.parentNode.insertBefore(marker,form);slot.appendChild(form);form.dataset.b434Moved='1';moved.push({el:form,marker})}
- overlay.querySelector('[data-form-title]').textContent=title;overlay.classList.add('open');document.body.classList.add('b434-lock')
+ prepareMobileMoveForm(form);
+ overlay.classList.add('b434-form-sheet');
+ overlay.querySelector('[data-form-title]').textContent=title;
+ overlay.classList.add('open');document.body.classList.add('b434-lock');
+ setTimeout(()=>{const first=form.querySelector('#movMonto,#movFecha,#movCategoria');first?.focus()},180);
 }
 function quick(type){
  if(type==='debt'){if(!nativeTab('deudas'))notice('Deudas');else setActive('deudas');return}
  if(type==='plan'){if(!nativeTab('planificacion'))notice('Planificación');return}
  openMoveForm(type==='income'?'Registrar ingreso':'Registrar gasto');
- const sel=by('movTipo');if(sel)sel.value=type==='income'?'ingreso':'gasto';
+ const sel=by('movTipo');if(sel){sel.value=type==='income'?'ingreso':'gasto';sel.dispatchEvent(new Event('change',{bubbles:true}));}
 }
 
 function syncConsolidatedReport(){
@@ -61,164 +107,47 @@ function syncConsolidatedReport(){
  const cards=[...source.querySelectorAll('.b234-card')];
  const finalCard=cards.find(x=>String(x.querySelector('h3')?.textContent||'').toLowerCase().includes('ingresos vs gastos del mes'));
  if(!grid||!totals||!finalCard)return;
-
  const fragment=document.createElement('div');
- const copy=el=>{
-   const c=el.cloneNode(true);
-   c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
-   c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));
-   return c;
- };
- const finalCopy=copy(finalCard);
- finalCopy.classList.add('b434-final-info');
- fragment.append(copy(grid),copy(totals),finalCopy);
- target.replaceChildren(fragment);
+ const copy=el=>{const c=el.cloneNode(true);c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));c.querySelectorAll('[data-b234-observer]').forEach(n=>n.removeAttribute('data-b234-observer'));return c};
+ const finalCopy=copy(finalCard);finalCopy.classList.add('b434-final-info');fragment.append(copy(grid),copy(totals),finalCopy);target.replaceChildren(fragment);
 }
-
-
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
- const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');
- if(!source)return false;
-
- const lines=[...source.querySelectorAll('line')].filter(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
- });
+ const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');if(!source)return false;
+ const lines=[...source.querySelectorAll('line')].filter(l=>{const stroke=(l.getAttribute('stroke')||'').toLowerCase();return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)'});
  if(!lines.length)return false;
-
- const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
- const NS='http://www.w3.org/2000/svg';
- const svg=document.createElementNS(NS,'svg');
- svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
- svg.setAttribute('width','100%');
- svg.setAttribute('height','100%');
- svg.setAttribute('role','img');
- svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
-
- // Mantener escala mensual fija y sin desplazamiento.
- const grid=[...source.querySelectorAll('line')].filter(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return stroke==='#e5e7eb';
- });
- grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
-
- [...source.querySelectorAll('text')].forEach(t=>{
-   const clone=t.cloneNode(true);
-   const txt=String(t.textContent||'').trim();
-   // Se conservan las etiquetas de escala monetaria, pero se reemplazan
-   // las fechas por una secuencia mensual completa más legible.
-   if(/^\d{2}$/.test(txt))return;
-   svg.appendChild(clone);
- });
-
- const axis=document.createElementNS(NS,'g');
- axis.setAttribute('class','mobile-month-axis');
- for(let d=1;d<=days;d++){
-   if(d===1||d%3===0||d===days){
-     const x=L+(d-1)*step;
-     const t=document.createElementNS(NS,'text');
-     t.setAttribute('x',x);
-     t.setAttribute('y',H-12);
-     t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
-     t.setAttribute('class','chart-axis');
-     t.textContent=String(d).padStart(2,'0');
-     axis.appendChild(t);
-   }
- }
+ const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1),NS='http://www.w3.org/2000/svg';
+ const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.setAttribute('width','100%');svg.setAttribute('height','100%');svg.setAttribute('role','img');svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
+ const grid=[...source.querySelectorAll('line')].filter(l=>(l.getAttribute('stroke')||'').toLowerCase()==='#e5e7eb');grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
+ [...source.querySelectorAll('text')].forEach(t=>{const clone=t.cloneNode(true);if(/^\d{2}$/.test(String(t.textContent||'').trim()))return;svg.appendChild(clone)});
+ const axis=document.createElementNS(NS,'g');axis.setAttribute('class','mobile-month-axis');
+ for(let d=1;d<=days;d++)if(d===1||d%3===0||d===days){const x=L+(d-1)*step,t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-12);t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');t.setAttribute('class','chart-axis');t.textContent=String(d).padStart(2,'0');axis.appendChild(t)}
  svg.appendChild(axis);
-
  const candleData=[];
- lines.forEach(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   const green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)';
-   const x=Number(l.getAttribute('x1'));
-   const y=Number(l.getAttribute('y1'));
-   if(!Number.isFinite(x)||!Number.isFinite(y))return;
-   const baseX=x+(green?4:-4);
-   const day=Math.round((baseX-L)/step)+1;
-   if(day<1||day>days)return;
-   const amountHeight=Math.max(2,base-y);
-   candleData.push({day,green,y,height:amountHeight});
- });
-
- // Una vela por tipo y por día. Si existen ambas, quedan lado a lado.
- candleData.forEach(c=>{
-   const x=L+(c.day-1)*step+(c.green?-5:5);
-   const bodyH=Math.max(9,Math.min(18,c.height*0.12));
-   const bodyY=Math.max(T,c.y);
-   const wick=document.createElementNS(NS,'line');
-   wick.setAttribute('x1',x);wick.setAttribute('x2',x);
-   wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);
-   wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');
-   svg.appendChild(wick);
-
-   const body=document.createElementNS(NS,'rect');
-   body.setAttribute('x',x-5);body.setAttribute('y',bodyY);
-   body.setAttribute('width','10');body.setAttribute('height',bodyH);
-   body.setAttribute('rx','2');
-   body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
-   svg.appendChild(body);
- });
-
- const title=document.createElementNS(NS,'text');
- title.setAttribute('x',L);title.setAttribute('y','17');
- title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';
- svg.appendChild(title);
-
- host.replaceChildren(svg);
- return true;
+ lines.forEach(l=>{const stroke=(l.getAttribute('stroke')||'').toLowerCase(),green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)',x=Number(l.getAttribute('x1')),y=Number(l.getAttribute('y1'));if(!Number.isFinite(x)||!Number.isFinite(y))return;const baseX=x+(green?4:-4),day=Math.round((baseX-L)/step)+1;if(day<1||day>days)return;candleData.push({day,green,y,height:Math.max(2,base-y)})});
+ candleData.forEach(c=>{const x=L+(c.day-1)*step+(c.green?-5:5),bodyH=Math.max(9,Math.min(18,c.height*.12)),bodyY=Math.max(T,c.y);const wick=document.createElementNS(NS,'line');wick.setAttribute('x1',x);wick.setAttribute('x2',x);wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');svg.appendChild(wick);const body=document.createElementNS(NS,'rect');body.setAttribute('x',x-5);body.setAttribute('y',bodyY);body.setAttribute('width','10');body.setAttribute('height',bodyH);body.setAttribute('rx','2');body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');svg.appendChild(body)});
+ const title=document.createElementNS(NS,'text');title.setAttribute('x',L);title.setAttribute('y','17');title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';svg.appendChild(title);
+ host.replaceChildren(svg);return true;
 }
-function scheduleMobileFlowAdapt(){
- if(!mobile())return;
- [350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));
-}
-function scheduleReportSync(){
- clearTimeout(reportTimer);let tries=0;
- const attempt=()=>{
-   syncConsolidatedReport();
-   adaptMobileFlowCandles();
-   tries++;
-   if(tries<20)reportTimer=setTimeout(attempt,300);
- };
- reportTimer=setTimeout(attempt,120);
-}
+function scheduleMobileFlowAdapt(){if(!mobile())return;[350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms))}
+function scheduleReportSync(){clearTimeout(reportTimer);let tries=0;const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<20)reportTimer=setTimeout(attempt,300)};reportTimer=setTimeout(attempt,120)}
+
 function summary(){
- const c=$('[data-content]',root);c.innerHTML=`
- <section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
- <section class="b434-kpis">
-  <article class="b434-kpi blue"><span>Liquidez actual</span><strong class="b434-mirror" data-source="kpi-real-balance">—</strong></article>
-  <article class="b434-kpi green"><span>Ingresos del mes</span><strong class="b434-mirror" data-source="month-income-total">—</strong></article>
-  <article class="b434-kpi red"><span>Gastos del mes</span><strong class="b434-mirror" data-source="month-expense-total">—</strong></article>
-  <article class="b434-kpi navy"><span>Saldo proyectado</span><strong class="b434-mirror" data-source="kpi-projected-balance">—</strong></article>
- </section>
+ const c=$('[data-content]',root);c.innerHTML=`<section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
+ <section class="b434-kpis"><article class="b434-kpi blue"><span>Liquidez actual</span><strong class="b434-mirror" data-source="kpi-real-balance">—</strong></article><article class="b434-kpi green"><span>Ingresos del mes</span><strong class="b434-mirror" data-source="month-income-total">—</strong></article><article class="b434-kpi red"><span>Gastos del mes</span><strong class="b434-mirror" data-source="month-expense-total">—</strong></article><article class="b434-kpi navy"><span>Saldo proyectado</span><strong class="b434-mirror" data-source="kpi-projected-balance">—</strong></article></section>
  <section class="b434-card"><header><div><strong>Flujo del mes</strong><small>Ingresos · Gastos · Saldo</small></div><div class="b434-flow-legend"><span><i class="income"></i>Ingresos</span><span><i class="expense"></i>Egresos</span></div></header><div class="b434-real-chart" data-flow></div></section>
- <div class="b434-section-title">Accesos rápidos</div>
- <section class="b434-quick"><button data-quick="expense">＋<small>Registrar gasto</small></button><button data-quick="income">＋<small>Registrar ingreso</small></button><button data-quick="debt">◉<small>Ver deudas</small></button><button data-quick="plan">◇<small>Planificar</small></button></section>
- <section class="b434-card"><header><strong>Estado financiero</strong><small class="b434-mirror" data-source="summary-status-text">—</small></header><div class="b434-grid2">
-  <article><span>Ingresos asegurados</span><strong class="b434-mirror" data-source="kpi-assured">—</strong></article><article><span>Ingresos proyectados</span><strong class="b434-mirror" data-source="kpi-projected">—</strong></article>
-  <article><span>Egresos comprometidos</span><strong class="b434-mirror" data-source="kpi-committed">—</strong></article><article><span>Brecha financiera</span><strong class="b434-mirror" data-source="kpi-gap">—</strong></article>
- </div></section>
- <section class="b434-card"><header><strong>Compromisos próximos</strong><small>Movimientos futuros</small></header><div class="b434-future">
-  <article><header><b>Ingresos</b></header><div data-income-list></div></article><article><header><b>Egresos</b></header><div data-expense-list></div></article>
- </div></section>
- <section class="b434-card"><header><strong>Control diario</strong><small class="b434-mirror" data-source="margin-status">—</small></header><div class="b434-margin">
-  <article><span>Margen máximo</span><strong class="b434-mirror" data-source="margin-maximum">—</strong></article><article><span>Gastado</span><strong class="b434-mirror" data-source="margin-spent">—</strong></article><article><span>Margen restante</span><strong class="b434-mirror" data-source="margin-remaining">—</strong></article>
- </div><div class="b434-progress"><i data-progress></i></div></section>
+ <div class="b434-section-title">Accesos rápidos</div><section class="b434-quick"><button data-quick="expense">＋<small>Registrar gasto</small></button><button data-quick="income">＋<small>Registrar ingreso</small></button><button data-quick="debt">◉<small>Ver deudas</small></button><button data-quick="plan">◇<small>Planificar</small></button></section>
+ <section class="b434-card"><header><strong>Estado financiero</strong><small class="b434-mirror" data-source="summary-status-text">—</small></header><div class="b434-grid2"><article><span>Ingresos asegurados</span><strong class="b434-mirror" data-source="kpi-assured">—</strong></article><article><span>Ingresos proyectados</span><strong class="b434-mirror" data-source="kpi-projected">—</strong></article><article><span>Egresos comprometidos</span><strong class="b434-mirror" data-source="kpi-committed">—</strong></article><article><span>Brecha financiera</span><strong class="b434-mirror" data-source="kpi-gap">—</strong></article></div></section>
+ <section class="b434-card"><header><strong>Compromisos próximos</strong><small>Movimientos futuros</small></header><div class="b434-future"><article><header><b>Ingresos</b></header><div data-income-list></div></article><article><header><b>Egresos</b></header><div data-expense-list></div></article></div></section>
+ <section class="b434-card"><header><strong>Control diario</strong><small class="b434-mirror" data-source="margin-status">—</small></header><div class="b434-margin"><article><span>Margen máximo</span><strong class="b434-mirror" data-source="margin-maximum">—</strong></article><article><span>Gastado</span><strong class="b434-mirror" data-source="margin-spent">—</strong></article><article><span>Margen restante</span><strong class="b434-mirror" data-source="margin-remaining">—</strong></article></div><div class="b434-progress"><i data-progress></i></div></section>
  <section class="b434-card"><header><strong>Proyección financiera</strong><small>90 días</small></header><div class="b434-real-table" data-projection></div></section>
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
- <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">
- ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>
- <section class="b434-consolidated" data-consolidated>
-  <header><div><strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada: reales + futuros + obligaciones + planificación.</small></div></header>
-  <div class="b434-consolidated-body" data-b234-copy></div>
-</section>`;
- const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);scheduleMobileFlowAdapt();}
+ <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>
+ <section class="b434-consolidated" data-consolidated><header><div><strong>Ingresos vs Gastos del mes</strong><small>Comparación consolidada: reales + futuros + obligaciones + planificación.</small></div></header><div class="b434-consolidated-body" data-b234-copy></div></section>`;
+ const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);scheduleMobileFlowAdapt()}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
- const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
- ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
- $$('[data-quick]',c).forEach(b=>b.onclick=()=>quick(b.dataset.quick));$('[data-period]',c).onclick=()=>notice('Selector de período');
- mirrorAll();scheduleReportSync();
+ const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
+ $$('[data-quick]',c).forEach(b=>b.onclick=()=>quick(b.dataset.quick));$('[data-period]',c).onclick=()=>notice('Selector de período');mirrorAll();scheduleReportSync();
 }
 
 function build(){
@@ -228,9 +157,7 @@ function build(){
  <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
- app().prepend(root);
- $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();summary();
+ app().prepend(root);$$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();populateMore();summary();
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
@@ -240,5 +167,5 @@ function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=nul
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.4-stage2-movimientos',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
