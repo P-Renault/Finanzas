@@ -93,30 +93,3 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     height:auto!important;
   }
 }
-
-@media(max-width:720px){
-  /* Flujo mensual móvil: vela verde / vela roja.
-     La geometría de los datos proviene del gráfico real del escritorio. */
-  #ccf-mobile-b43 #chart-flow .chart-income,
-  #ccf-mobile-b43 #chart-flow .b434-flow-candle{
-    fill:#16a34a!important;
-    stroke:#16a34a!important;
-    opacity:1!important;
-  }
-  #ccf-mobile-b43 #chart-flow .chart-expense,
-  #ccf-mobile-b43 #chart-flow .b434-flow-candle{
-    opacity:1!important;
-  }
-  #ccf-mobile-b43 #chart-flow rect.chart-expense{
-    fill:#ef4444!important;
-    stroke:#ef4444!important;
-  }
-  #ccf-mobile-b43 #chart-flow .b434-flow-wick.income{
-    stroke:#15803d!important;
-    stroke-width:2!important;
-  }
-  #ccf-mobile-b43 #chart-flow .b434-flow-wick.expense{
-    stroke:#dc2626!important;
-    stroke-width:2!important;
-  }
-}
