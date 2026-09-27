@@ -306,8 +306,11 @@ function syncConsolidatedReport(){
 
 function adaptMobileFlowCandles(){
  const host=by('chart-flow');if(!host)return false;
- const source=by('b234Chart')?.querySelector('svg') || host.querySelector('svg');
- if(!source)return false;
+ /* B232.34 debe ser la única fuente del gráfico. Nunca reconstruir
+    desde un SVG anterior/incompleto de #chart-flow. */
+ const report=by('b234-report');
+ const source=by('b234Chart')?.querySelector('svg');
+ if(!report||!source)return false;
  const lines=[...source.querySelectorAll('line')].filter(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
    return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
@@ -383,11 +386,27 @@ function adaptMobileFlowCandles(){
  host.replaceChildren(svg);
  return true;
 }
-function scheduleMobileFlowAdapt(){if(!mobile())return;[350,900,1800,3000].forEach(ms=>setTimeout(adaptMobileFlowCandles,ms));}
+function refreshNativeSummaryData(){
+ if(!mobile()||typeof window.B23234Resumen?.refresh!=='function')return;
+ try{window.B23234Resumen.refresh();}catch(e){console.warn('[CCF MOBILE] B232.34 refresh',e);}
+}
+function scheduleMobileFlowAdapt(){
+ if(!mobile())return;
+ [450,1000,1800,3000].forEach(ms=>setTimeout(()=>{
+   refreshNativeSummaryData();
+   adaptMobileFlowCandles();
+ },ms));
+}
 function scheduleReportSync(){
  clearTimeout(reportTimer);let tries=0;
- const attempt=()=>{syncConsolidatedReport();adaptMobileFlowCandles();tries++;if(tries<20)reportTimer=setTimeout(attempt,300);};
- reportTimer=setTimeout(attempt,120);
+ const attempt=()=>{
+   refreshNativeSummaryData();
+   syncConsolidatedReport();
+   adaptMobileFlowCandles();
+   tries++;
+   if(tries<20)reportTimer=setTimeout(attempt,300);
+ };
+ reportTimer=setTimeout(attempt,180);
 }
 function summary(){
  const c=$('[data-content]',root);c.innerHTML=`
@@ -419,7 +438,7 @@ function summary(){
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
  <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">
  ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>`;
- const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);scheduleMobileFlowAdapt();}
+ const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);refreshNativeSummaryData();scheduleMobileFlowAdapt();}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
  ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
@@ -436,7 +455,7 @@ function build(){
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();summary();setActive('dashboard');
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
