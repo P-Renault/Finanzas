@@ -26,3 +26,70 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 .b434-lock{overflow:hidden!important}
 }
 @media(min-width:721px){#ccf-mobile-b43{display:none!important}}
+
+@media(max-width:720px){
+  /* Flujo del mes: misma semántica visual del escritorio.
+     Verde = ingreso / rojo = egreso. */
+  #ccf-mobile-b43 .b434-flow-legend{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:9px;
+    flex-wrap:wrap;
+    font-size:8px;
+    color:#64748b;
+    white-space:nowrap;
+  }
+  #ccf-mobile-b43 .b434-flow-legend span{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  #ccf-mobile-b43 .b434-flow-legend i{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    display:inline-block;
+  }
+  #ccf-mobile-b43 .b434-flow-legend i.income{background:#16a34a}
+  #ccf-mobile-b43 .b434-flow-legend i.expense{background:#ef4444}
+
+  /* Barras del flujo real. No se recalcula el dato; solo se restaura
+     su indicador cromático para móvil. */
+  #ccf-mobile-b43 #chart-flow .chart-income{
+    fill:#16a34a!important;
+    stroke:#16a34a!important;
+    opacity:.9!important;
+  }
+  #ccf-mobile-b43 #chart-flow .chart-expense{
+    fill:#ef4444!important;
+    stroke:#ef4444!important;
+    opacity:.9!important;
+  }
+
+  /* Velas del Dashboard Ejecutivo: conservar la estructura desktop,
+     diferenciando claramente subida/ingreso y bajada/egreso. */
+  #ccf-mobile-b43 #chart-candles .candle-up{
+    fill:#16a34a!important;
+    stroke:#16a34a!important;
+    opacity:1!important;
+  }
+  #ccf-mobile-b43 #chart-candles .candle-down{
+    fill:#ef4444!important;
+    stroke:#ef4444!important;
+    opacity:1!important;
+  }
+  #ccf-mobile-b43 #chart-candles .candle-wick{
+    stroke:#475569!important;
+    stroke-width:2!important;
+    opacity:1!important;
+  }
+  #ccf-mobile-b43 #chart-candles{
+    min-height:175px!important;
+  }
+  #ccf-mobile-b43 #chart-candles svg{
+    min-width:430px!important;
+    width:100%!important;
+    height:auto!important;
+  }
+}
