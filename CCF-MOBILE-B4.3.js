@@ -214,6 +214,11 @@ function showModuleAfterNavigation(id){
    content?.classList.add('b434-view-hidden');
    host?.classList.add('open');
    host?.setAttribute('data-active-module',id);
+   if(id==='calendario'){
+     adaptB232261CalendarMobile();
+     setTimeout(adaptB232261CalendarMobile,180);
+     setTimeout(adaptB232261CalendarMobile,600);
+   }
    if(id==='movimientos'){
      adaptMovementsMobile();
      setTimeout(adaptMovementsMobile,250);
@@ -280,6 +285,112 @@ function quick(type){
  if(sel)sel.value=type==='income'?'ingreso':'gasto';
  const form=by('movForm');
  if(form)form.classList.add('b434-quick-form');
+}
+
+function adaptB232261CalendarMobile(){
+ if(!mobile())return false;
+ const section=by('calendario');
+ if(!section)return false;
+ const grids=$$('.b232261-grid.b232261-week',section);
+ if(!grids.length)return false;
+ let applied=false;
+ grids.forEach(grid=>{
+   const children=[...grid.children];
+   /* B232.26.4 real renderer: 7 weekday headers + 42 day cells. */
+   if(children.length<49)return;
+   const card=grid.closest('.b232261-card');
+   const scroll=grid.closest('.b232261-scroll');
+   [card,scroll,grid].filter(Boolean).forEach(el=>{
+     el.style.setProperty('width','100%','important');
+     el.style.setProperty('max-width','100%','important');
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('inline-size','100%','important');
+     el.style.setProperty('min-inline-size','0','important');
+     el.style.setProperty('max-inline-size','100%','important');
+     el.style.setProperty('box-sizing','border-box','important');
+     el.style.setProperty('overflow','hidden','important');
+   });
+
+   /* One real monthly grid: 7 columns x (1 header + 6 weeks). */
+   grid.style.setProperty('display','grid','important');
+   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
+   grid.style.setProperty('grid-template-rows','32px repeat(6,minmax(68px,auto))','important');
+   grid.style.setProperty('grid-auto-flow','row','important');
+   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
+   grid.style.setProperty('grid-auto-rows','68px','important');
+   grid.style.setProperty('gap','0','important');
+
+   children.forEach((el,index)=>{
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('min-inline-size','0','important');
+     el.style.setProperty('max-width','100%','important');
+     el.style.setProperty('max-inline-size','100%','important');
+     el.style.setProperty('box-sizing','border-box','important');
+     el.style.setProperty('overflow','hidden','important');
+     if(index<7){
+       el.style.setProperty('width','100%','important');
+       el.style.setProperty('height','32px','important');
+       el.style.setProperty('min-height','32px','important');
+       el.style.setProperty('max-height','32px','important');
+       el.style.setProperty('padding','6px 1px','important');
+       el.style.setProperty('font-size','8px','important');
+       el.style.setProperty('line-height','1','important');
+       el.style.setProperty('text-align','center','important');
+       el.style.setProperty('white-space','nowrap','important');
+     }else{
+       el.style.setProperty('width','100%','important');
+       el.style.setProperty('height','auto','important');
+       el.style.setProperty('min-height','68px','important');
+       el.style.setProperty('max-height','none','important');
+       el.style.setProperty('padding','4px 3px','important');
+     }
+   });
+
+   $$('.b232261-day',grid).forEach(day=>{
+     day.classList.add('b434-b232261-mobile-day');
+     day.style.setProperty('width','100%','important');
+     day.style.setProperty('min-width','0','important');
+     day.style.setProperty('max-width','100%','important');
+     day.style.setProperty('min-inline-size','0','important');
+     day.style.setProperty('max-inline-size','100%','important');
+     day.style.setProperty('height','auto','important');
+     day.style.setProperty('min-height','68px','important');
+     day.style.setProperty('max-height','none','important');
+     day.style.setProperty('padding','4px 3px','important');
+     day.style.setProperty('box-sizing','border-box','important');
+     day.style.setProperty('overflow','hidden','important');
+     const top=$('.b232261-day-top',day);
+     if(top){
+       top.style.setProperty('width','100%','important');
+       top.style.setProperty('min-width','0','important');
+       top.style.setProperty('min-inline-size','0','important');
+       top.style.setProperty('max-width','100%','important');
+       top.style.setProperty('max-inline-size','100%','important');
+       top.style.setProperty('overflow','hidden','important');
+     }
+     $$('.b232261-event,.b232261-mini,.b232261-more',day).forEach(el=>{
+       el.style.setProperty('display','block','important');
+       el.style.setProperty('width','100%','important');
+       el.style.setProperty('min-width','0','important');
+       el.style.setProperty('max-width','100%','important');
+       el.style.setProperty('min-inline-size','0','important');
+       el.style.setProperty('max-inline-size','100%','important');
+       el.style.setProperty('box-sizing','border-box','important');
+       el.style.setProperty('font-size','5px','important');
+       el.style.setProperty('line-height','1.05','important');
+       el.style.setProperty('padding','1px 2px','important');
+       el.style.setProperty('margin-top','1px','important');
+       el.style.setProperty('white-space','nowrap','important');
+       el.style.setProperty('overflow','hidden','important');
+       el.style.setProperty('text-overflow','ellipsis','important');
+     });
+   });
+   applied=true;
+ });
+ return applied;
+}
+function observeB232261CalendarMobile(){
+ calendarObserver?.disconnect();if(!mobile())return;adaptB232261CalendarMobile();const host=moduleHost();if(!host)return;calendarObserver=new MutationObserver(()=>{if(mobile())adaptB232261CalendarMobile()});calendarObserver.observe(host,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});[100,300,700,1200,2000].forEach(ms=>setTimeout(adaptB232261CalendarMobile,ms))
 }
 
 function syncConsolidatedReport(){
@@ -455,15 +566,15 @@ function build(){
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();observeB232261CalendarMobile();setActive('dashboard');
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
-window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
+window.addEventListener('resize',()=>setTimeout(()=>{boot();adaptB232261CalendarMobile()},100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
