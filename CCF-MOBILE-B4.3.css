@@ -1734,3 +1734,127 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     overflow:hidden!important;
   }
 }
+
+/* ==========================================================
+   CCF MOBILE B4.3 — PLANIFICACIÓN · ESCENARIO 30 DÍAS V1
+   Adaptación exclusivamente visual/responsive.
+   No modifica JS, lógica financiera, Supabase ni navegación.
+   ========================================================== */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #planificacion{
+    width:100%!important;
+    min-width:0!important;
+    overflow:visible!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #planificacion h2,
+  #ccf-mobile-b43 .b434-module-host #planificacion h3,
+  #ccf-mobile-b43 .b434-module-host #planificacion h4,
+  #ccf-mobile-b43 .b434-module-host #planificacion p{
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* KPIs: saldo proyectado, días cubiertos y riesgo. */
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpis{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;
+    margin:8px 0 10px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi{
+    min-height:78px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    box-sizing:border-box!important;
+    box-shadow:0 2px 9px rgba(15,23,42,.035)!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi:last-child{
+    grid-column:1/-1!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi strong{
+    line-height:1.15!important;
+  }
+
+  /* Escenario de 30 días: una columna, sin compresión horizontal. */
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-grid{
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row{
+    min-width:0!important;
+    box-sizing:border-box!important;
+    border-bottom:1px solid #edf1f5!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row:last-child{
+    border-bottom:0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row span{
+    flex:1 1 auto!important;
+    overflow-wrap:anywhere!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row strong{
+    max-width:52%!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Estado / lectura del escenario. */
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-status{
+    box-sizing:border-box!important;
+    width:100%!important;
+    padding:11px 12px!important;
+    border-radius:12px!important;
+    background:#f8fafc!important;
+    border:1px solid #e3e8ef!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Gráfico de liquidez si el motor lo inserta en Planificación. */
+  #ccf-mobile-b43 .b434-module-host #planificacion canvas,
+  #ccf-mobile-b43 .b434-module-host #planificacion svg{
+    max-width:100%!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion [class*="chart"],
+  #ccf-mobile-b43 .b434-module-host #planificacion [id*="chart"]{
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+
+  /* Formularios/controles: nada debe desbordar el viewport. */
+  #ccf-mobile-b43 .b434-module-host #planificacion input,
+  #ccf-mobile-b43 .b434-module-host #planificacion select,
+  #ccf-mobile-b43 .b434-module-host #planificacion textarea,
+  #ccf-mobile-b43 .b434-module-host #planificacion button{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .form-actions{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:7px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .form-actions button:last-child{
+    grid-column:1/-1;
+  }
+}
+
+@media(max-width:390px){
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpis{
+    grid-template-columns:1fr!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-kpi:last-child{
+    grid-column:auto!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+    gap:4px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #planificacion .b23252-row strong{
+    max-width:100%!important;
+    text-align:left!important;
+  }
+}
