@@ -214,11 +214,6 @@ function showModuleAfterNavigation(id){
    content?.classList.add('b434-view-hidden');
    host?.classList.add('open');
    host?.setAttribute('data-active-module',id);
-   if(id==='calendario'){
-     adaptB232261CalendarMobile();
-     setTimeout(adaptB232261CalendarMobile,180);
-     setTimeout(adaptB232261CalendarMobile,600);
-   }
    if(id==='movimientos'){
      adaptMovementsMobile();
      setTimeout(adaptMovementsMobile,250);
@@ -285,57 +280,6 @@ function quick(type){
  if(sel)sel.value=type==='income'?'ingreso':'gasto';
  const form=by('movForm');
  if(form)form.classList.add('b434-quick-form');
-}
-
-function adaptB232261CalendarMobile(){
- if(!mobile())return;
- $$('.b232261-grid').forEach(grid=>{
-   if(grid.dataset.b434MobileDone==='1')return;
-   const card=grid.closest('.b232261-card'); if(!card)return;
-   grid.dataset.b434MobileDone='1';
-   const head=card.querySelector('.b232261-head');
-   const title=head?.querySelector('h2');
-   const actions=head?.querySelector('.b232261-actions');
-   const kpis=card.querySelector('.b232261-kpis');
-   const scroll=grid.closest('.b232261-scroll');
-   card.style.setProperty('width','100%','important');card.style.setProperty('max-width','100%','important');card.style.setProperty('min-width','0','important');card.style.setProperty('box-sizing','border-box','important');card.style.setProperty('overflow','hidden','important');
-   if(scroll){scroll.style.setProperty('width','100%','important');scroll.style.setProperty('max-width','100%','important');scroll.style.setProperty('min-width','0','important');scroll.style.setProperty('overflow','hidden','important');scroll.style.setProperty('box-sizing','border-box','important')}
-
-   let header=card.querySelector('.b434-calendar-mobile-header');
-   if(!header){
-     header=document.createElement('div');header.className='b434-calendar-mobile-header';
-     header.innerHTML='<div class="b434-calendar-mobile-title"><strong>Calendario financiero</strong><span>Visualiza ingresos, gastos, obligaciones y saldo por día</span></div><div class="b434-calendar-mobile-nav"><button type="button" class="b434-calendar-mobile-arrow" data-cal-prev aria-label="Mes anterior">‹</button><strong class="b434-calendar-mobile-month"></strong><button type="button" class="b434-calendar-mobile-arrow" data-cal-next aria-label="Mes siguiente">›</button><button type="button" class="b434-calendar-mobile-today" data-cal-today>Hoy</button></div>';
-     card.insertBefore(header,kpis||scroll||head||null);
-   }
-   const month=header.querySelector('.b434-calendar-mobile-month'); if(month)month.textContent=title?.textContent?.trim()||'Calendario';
-   const bind=(sel,id)=>{const b=header.querySelector(sel),src=by(id);if(b&&src&&b.dataset.bound!=='1'){b.dataset.bound='1';b.onclick=()=>src.click()}};
-   bind('[data-cal-prev]','b232261Prev');bind('[data-cal-next]','b232261Next');bind('[data-cal-today]','b232261Today');
-   if(actions)actions.style.setProperty('display','none','important');if(head)head.style.setProperty('display','none','important');
-
-   if(kpis){const all=[...kpis.querySelectorAll('.b232261-kpi')];const wanted=[all[0],all[3],all[4],all[1]].filter(Boolean);wanted.forEach(x=>kpis.appendChild(x));all.filter(x=>!wanted.includes(x)).forEach(x=>x.style.setProperty('display','none','important'))}
-
-   grid.style.setProperty('display','grid','important');grid.style.setProperty('width','100%','important');grid.style.setProperty('max-width','100%','important');grid.style.setProperty('min-width','0','important');grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');grid.style.setProperty('grid-auto-flow','row','important');grid.style.setProperty('box-sizing','border-box','important');
-   [...grid.querySelectorAll(':scope > div')].slice(0,7).forEach((el,i)=>{el.style.setProperty('min-width','0','important');el.style.setProperty('width','auto','important');el.style.setProperty('max-width','100%','important');el.style.setProperty('box-sizing','border-box','important');el.style.setProperty('overflow','hidden','important');el.textContent=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'][i]})
-
-   $$('.b232261-day',grid).forEach(day=>{
-     day.style.setProperty('width','auto','important');day.style.setProperty('min-width','0','important');day.style.setProperty('max-width','100%','important');day.style.setProperty('min-height','88px','important');day.style.setProperty('height','88px','important');day.style.setProperty('max-height','88px','important');day.style.setProperty('padding','5px 3px','important');day.style.setProperty('box-sizing','border-box','important');day.style.setProperty('overflow','hidden','important');day.classList.add('b434-b232261-mobile-day');
-     $$('.b232261-event,.b232261-mini,.b232261-more',day).forEach(el=>el.style.setProperty('display','none','important'));
-     if(!day.querySelector('.b434-calendar-day-summary')){
-       const summary=document.createElement('div');summary.className='b434-calendar-day-summary';let inc=0,out=0,debt=false,other=false;
-       $$('.b232261-event',day).forEach(ev=>{const a=Number(String(ev.textContent||'').replace(/[^0-9]/g,''))||0;if(ev.classList.contains('b232261-real-in')||ev.classList.contains('b232261-plan-in')||ev.classList.contains('b232261-gen'))inc+=a;if(ev.classList.contains('b232261-real-out')||ev.classList.contains('b232261-plan-out')||ev.classList.contains('b232261-debt'))out+=a;if(ev.classList.contains('b232261-debt'))debt=true;if(ev.classList.contains('b232261-plan-in')||ev.classList.contains('b232261-gen'))other=true});
-       summary.innerHTML=(inc?'<span class="b434-day-amount income">$'+inc.toLocaleString('es-CL')+'</span>':'')+(out?'<span class="b434-day-amount expense">$'+out.toLocaleString('es-CL')+'</span>':'')+(!inc&&!out?'<span class="b434-day-empty">—</span>':'')+'<span class="b434-day-dots">'+(inc?'<i class="income"></i>':'')+(out?'<i class="expense"></i>':'')+(debt?'<i class="debt"></i>':'')+(other?'<i class="gen"></i>':'')+'</span>';
-       day.appendChild(summary);
-     }
-   });
-
-   const native=card.querySelector('.b232261-detail');
-   if(native){native.style.setProperty('display','none','important');let detail=card.querySelector('.b434-mobile-day-detail');
-     if(!detail){detail=document.createElement('section');detail.className='b434-mobile-day-detail';const foot=native.nextElementSibling?.textContent||'';const scope=card.querySelector('.b232261-scope span')?.textContent?.trim()||'';const pos=native.querySelector('.b232261-positive-box .b232261-detail-total strong')?.textContent?.trim()||'$0';const neg=native.querySelector('.b232261-negative-box .b232261-detail-total strong')?.textContent?.trim()||'$0';const rows=[...native.querySelectorAll('.b232261-row')];const bal=(foot.match(/Saldo final proyectado:\s*([^·]+)/i)?.[1]||foot.match(/Saldo acumulado real:\s*([^·]+)/i)?.[1]||'$0').trim();detail.innerHTML='<div class="b434-mobile-detail-head"><span class="b434-detail-calendar-icon">▦</span><strong>Día seleccionado'+(scope?' · '+esc(scope):'')+'</strong></div><div class="b434-mobile-detail-kpis"><article class="income"><strong>'+esc(pos)+'</strong><span>Ingresos</span></article><article class="expense"><strong>'+esc(neg)+'</strong><span>Gastos y obligaciones</span></article><article class="debt"><strong>'+rows.length+'</strong><span>Movimientos</span></article><article class="balance"><strong>'+esc(bal)+'</strong><span>Saldo proyectado</span></article></div><div class="b434-mobile-detail-list"></div>';const list=detail.querySelector('.b434-mobile-detail-list');rows.slice(0,8).forEach(r=>list.appendChild(r.cloneNode(true)));if(!rows.length)list.innerHTML='<div class="b434-day-empty-detail">Sin movimientos registrados para este día.</div>';card.appendChild(detail)}
-   }
- });
-}
-function observeB232261CalendarMobile(){
- calendarObserver?.disconnect();if(!mobile())return;adaptB232261CalendarMobile();calendarObserver=new MutationObserver(()=>{if(mobile())adaptB232261CalendarMobile()});calendarObserver.observe(document.body,{childList:true,subtree:true})
 }
 
 function syncConsolidatedReport(){
@@ -511,15 +455,15 @@ function build(){
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();observeB232261CalendarMobile();setActive('dashboard');
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
-window.addEventListener('resize',()=>setTimeout(()=>{boot();adaptB232261CalendarMobile()},100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
+window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
