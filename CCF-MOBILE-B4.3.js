@@ -213,6 +213,11 @@ function showModuleAfterNavigation(id){
    host?.classList.remove('open');
    content?.classList.remove('b434-view-hidden');
    summary();
+   setTimeout(()=>{
+     const r=refreshExecutiveSummary();
+     if(r?.then)r.then(()=>{syncConsolidatedReport();adaptMobileFlowCandles()}).catch(e=>console.warn('[CCF MOBILE] B232.35 navigation refresh',e));
+     else {syncConsolidatedReport();adaptMobileFlowCandles()}
+   },120);
    setActive('dashboard');
    return true;
  }
@@ -505,13 +510,19 @@ function adaptMobileFlowCandles(){
  return true;
 }
 function refreshNativeSummaryData(){
- if(!mobile()||typeof window.B23234Resumen?.refresh!=='function')return;
- try{window.B23234Resumen.refresh();}catch(e){console.warn('[CCF MOBILE] B232.34 refresh',e);}
+ if(!mobile()||typeof window.B23234Resumen?.refresh!=='function')return null;
+ try{return window.B23234Resumen.refresh();}catch(e){console.warn('[CCF MOBILE] B232.34 refresh',e);return null;}
+}
+function refreshExecutiveSummary(){
+ if(!mobile()||typeof window.B23235ResumenEjecutivo?.refresh!=='function')return null;
+ try{return window.B23235ResumenEjecutivo.refresh();}catch(e){console.warn('[CCF MOBILE] B232.35 refresh',e);return null;}
 }
 function scheduleMobileFlowAdapt(){
  if(!mobile())return;
- [450,1000,1800,3000].forEach(ms=>setTimeout(()=>{
+ [250,650,1100,1800,3000].forEach(ms=>setTimeout(async()=>{
    refreshNativeSummaryData();
+   const r=refreshExecutiveSummary();
+   if(r?.then){try{await r}catch(e){console.warn('[CCF MOBILE] B232.35 async refresh',e)}}
    adaptMobileFlowCandles();
  },ms));
 }
@@ -519,6 +530,7 @@ function scheduleReportSync(){
  clearTimeout(reportTimer);let tries=0;
  const attempt=()=>{
    refreshNativeSummaryData();
+   refreshExecutiveSummary();
    syncConsolidatedReport();
    adaptMobileFlowCandles();
    tries++;
