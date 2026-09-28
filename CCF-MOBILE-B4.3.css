@@ -3601,3 +3601,83 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     padding:1px!important;
   }
 }
+
+/* CCF MOBILE B4.3 — CALENDARIO V17 — MES COMPLETO DENTRO DE LA TARJETA
+   Solo presentación de la caja/calendario. Mantiene intacta la lógica B232.26.4. */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* La cabecera semanal y los días deben compartir exactamente el mismo ancho. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid:not(.b232261-week){
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid:not(.b232261-week){
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-template-rows:repeat(6,minmax(0,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;
+    grid-auto-flow:row!important;
+    gap:0!important;
+  }
+
+  /* 7 columnas reales: ningún día puede conservar ancho de escritorio. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* Días de meses anterior/siguiente: reservan su posición para conservar
+     DOM-LUN-MAR... pero no se muestran como parte del mes actual. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day.out{
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+
+  /* La tarjeta debe contener todas las filas del mes sin scroll horizontal. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
+    min-width:0!important;
+    max-width:100%!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+}
+
+@media(max-width:390px){
+  /* 6 filas máximas para cubrir cualquier mes de 30/31 días. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid:not(.b232261-week){
+    grid-template-rows:repeat(6,minmax(0,1fr))!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    min-height:76px!important;
+    height:76px!important;
+    max-height:76px!important;
+    padding:4px 2px!important;
+  }
+}
