@@ -3681,3 +3681,145 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     padding:4px 2px!important;
   }
 }
+
+/* CCF MOBILE B4.3 — CALENDARIO V18
+   SOLO CAJA VISUAL: MES COMPLETO DENTRO DE LA TARJETA
+   7 columnas x 6 filas (42 posiciones del calendario).
+   No modifica datos, navegación ni lógica B232.26.4. */
+@media (max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    inline-size:100%!important;
+    min-inline-size:0!important;
+    max-inline-size:100%!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week{
+    display:grid!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    inline-size:100%!important;
+    min-inline-size:0!important;
+    max-inline-size:100%!important;
+    box-sizing:border-box!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-template-rows:30px repeat(6,minmax(58px,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;
+    grid-auto-rows:minmax(58px,1fr)!important;
+    grid-auto-flow:row!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week>*{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-inline-size:0!important;
+    max-inline-size:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week>div:not(.b232261-day){
+    min-height:30px!important;
+    height:30px!important;
+    padding:7px 1px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week>.b232261-day{
+    width:auto!important;
+    min-width:0!important;
+    min-inline-size:0!important;
+    max-width:100%!important;
+    min-height:58px!important;
+    height:auto!important;
+    max-height:none!important;
+    padding:4px 3px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    border-radius:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
+    font-size:9px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
+    font-size:5px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    margin-top:1px!important;
+    padding:1px 2px!important;
+    font-size:5px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    margin-top:1px!important;
+    font-size:5px!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+}
+
+@media (max-width:390px){
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week{
+    grid-template-rows:27px repeat(6,minmax(52px,1fr))!important;
+    grid-auto-rows:minmax(52px,1fr)!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week>div:not(.b232261-day){
+    min-height:27px!important;
+    height:27px!important;
+    font-size:7px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week>.b232261-day{
+    min-height:52px!important;
+    padding:3px 2px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
+    font-size:8px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{
+    font-size:4.5px!important;
+  }
+}
