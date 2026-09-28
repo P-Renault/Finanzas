@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,calendarObserver=null,reportTimer=null,activeModule=null,moduleMarker=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -198,47 +198,6 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
-function adaptCalendarMobile(){
- const section=by('calendario');
- if(!section||!mobile())return false;
- const apply=()=>{
-   if(!section||!mobile())return;
-   const card=section.querySelector('.b232261-card');
-   const scroll=section.querySelector('.b232261-scroll');
-   const grids=section.querySelectorAll('.b232261-grid');
-   if(card){
-     card.style.width='100%';card.style.maxWidth='100%';card.style.minWidth='0';
-     card.style.boxSizing='border-box';card.style.overflow='hidden';card.style.padding='8px';
-   }
-   if(scroll){
-     scroll.style.width='100%';scroll.style.maxWidth='100%';scroll.style.minWidth='0';
-     scroll.style.boxSizing='border-box';scroll.style.overflow='hidden';
-   }
-   grids.forEach(grid=>{
-     grid.style.width='100%';grid.style.maxWidth='100%';grid.style.minWidth='0';
-     grid.style.boxSizing='border-box';grid.style.gridTemplateColumns='repeat(7,minmax(0,1fr))';
-     grid.style.gridAutoColumns='minmax(0,1fr)';grid.style.gridAutoFlow='row';
-   });
-   section.querySelectorAll('.b232261-day').forEach(day=>{
-     day.style.width='auto';day.style.minWidth='0';day.style.maxWidth='100%';
-     day.style.minHeight='88px';day.style.height='88px';day.style.maxHeight='88px';
-     day.style.padding='3px 2px';day.style.boxSizing='border-box';day.style.overflow='hidden';
-   });
-   section.querySelectorAll('.b232261-event,.b232261-mini,.b232261-more').forEach(el=>{
-     el.style.maxWidth='100%';el.style.minWidth='0';el.style.boxSizing='border-box';
-     el.style.overflow='hidden';el.style.textOverflow='ellipsis';el.style.whiteSpace='nowrap';
-   });
- };
- apply();
- let tries=0;
- const timer=setInterval(()=>{apply();if(++tries>=12)clearInterval(timer)},100);
- if(section.__b434CalendarObserver)section.__b434CalendarObserver.disconnect();
- const observer=new MutationObserver(()=>apply());
- observer.observe(section,{childList:true,subtree:true});
- section.__b434CalendarObserver=observer;
- return true;
-}
-
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
@@ -255,18 +214,13 @@ function showModuleAfterNavigation(id){
    content?.classList.add('b434-view-hidden');
    host?.classList.add('open');
    host?.setAttribute('data-active-module',id);
+   adaptB232261CalendarMobile();
    if(id==='movimientos'){
      adaptMovementsMobile();
      setTimeout(adaptMovementsMobile,250);
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
-   }
-   if(id==='calendario'){
-     adaptCalendarMobile();
-     setTimeout(adaptCalendarMobile,180);
-     setTimeout(adaptCalendarMobile,700);
-     setTimeout(adaptCalendarMobile,1500);
    }
    setActive(id);
    return true;
@@ -327,6 +281,78 @@ function quick(type){
  if(sel)sel.value=type==='income'?'ingreso':'gasto';
  const form=by('movForm');
  if(form)form.classList.add('b434-quick-form');
+}
+
+
+function adaptB232261CalendarMobile(){
+ if(!mobile())return;
+ const grids=$$('.b232261-grid');
+ grids.forEach(grid=>{
+   grid.classList.add('b434-b232261-mobile-calendar');
+   grid.style.setProperty('display','grid','important');
+   grid.style.setProperty('width','100%','important');
+   grid.style.setProperty('max-width','100%','important');
+   grid.style.setProperty('min-width','0','important');
+   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
+   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
+   grid.style.setProperty('grid-auto-flow','row','important');
+   grid.style.setProperty('box-sizing','border-box','important');
+
+   const scroll=grid.closest('.b232261-scroll');
+   if(scroll){
+     scroll.classList.add('b434-b232261-mobile-calendar-scroll');
+     scroll.style.setProperty('width','100%','important');
+     scroll.style.setProperty('max-width','100%','important');
+     scroll.style.setProperty('min-width','0','important');
+     scroll.style.setProperty('overflow-x','hidden','important');
+     scroll.style.setProperty('overflow-y','visible','important');
+     scroll.style.setProperty('box-sizing','border-box','important');
+   }
+
+   const card=grid.closest('.b232261-card');
+   if(card){
+     card.classList.add('b434-b232261-mobile-calendar-card');
+     card.style.setProperty('width','100%','important');
+     card.style.setProperty('max-width','100%','important');
+     card.style.setProperty('min-width','0','important');
+     card.style.setProperty('box-sizing','border-box','important');
+     card.style.setProperty('overflow','hidden','important');
+   }
+
+   $$('.b232261-day',grid).forEach(day=>{
+     day.classList.add('b434-b232261-mobile-day');
+     day.style.setProperty('width','auto','important');
+     day.style.setProperty('min-width','0','important');
+     day.style.setProperty('max-width','100%','important');
+     day.style.setProperty('min-height','92px','important');
+     day.style.setProperty('height','92px','important');
+     day.style.setProperty('max-height','92px','important');
+     day.style.setProperty('padding','4px 2px','important');
+     day.style.setProperty('box-sizing','border-box','important');
+     day.style.setProperty('overflow','hidden','important');
+   });
+   $$('.b232261-event,.b232261-mini,.b232261-more',grid).forEach(el=>{
+     el.style.setProperty('width','100%','important');
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('max-width','100%','important');
+     el.style.setProperty('box-sizing','border-box','important');
+     el.style.setProperty('overflow','hidden','important');
+     el.style.setProperty('text-overflow','ellipsis','important');
+     el.style.setProperty('white-space','nowrap','important');
+   });
+ });
+}
+function observeB232261CalendarMobile(){
+ calendarObserver?.disconnect();
+ if(!mobile())return;
+ adaptB232261CalendarMobile();
+ const target=document.body;
+ if(!target)return;
+ calendarObserver=new MutationObserver(()=>{
+   if(!mobile())return;
+   adaptB232261CalendarMobile();
+ });
+ calendarObserver.observe(target,{childList:true,subtree:true});
 }
 
 function syncConsolidatedReport(){
@@ -502,15 +528,15 @@ function build(){
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();observeB232261CalendarMobile();setActive('dashboard');
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;const cal=by('calendario');cal?.__b434CalendarObserver?.disconnect();if(cal)delete cal.__b434CalendarObserver;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
-window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
+window.addEventListener('resize',()=>setTimeout(()=>{boot();adaptB232261CalendarMobile()},100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
