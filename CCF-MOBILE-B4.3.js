@@ -198,49 +198,6 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
-function adaptCalendarMobile(){
- const section=by('calendario');
- if(!section||!mobile())return false;
- section.classList.add('b434-calendar-mobile');
- const grid=section.querySelector('.b232261-grid');
- if(grid){
-   grid.classList.add('b434-calendar-grid-mobile');
-   const children=[...grid.children];
-   const weekdayPattern=/^(DOM|LUN|MAR|MIÉ|MIE|JUE|VIE|SÁB|SAB|SUN|MON|TUE|WED|THU|FRI|SAT)$/i;
-   const hasHeader=children.length>=7 && children.slice(0,7).every(n=>weekdayPattern.test((n.textContent||'').trim()));
-   if(hasHeader)grid.dataset.b434GridHeader='1';else delete grid.dataset.b434GridHeader;
-   children.forEach(n=>n.classList.add('b434-calendar-day-mobile'));
- }
- if(grid&&calendarObserver!==null){calendarObserver.disconnect();calendarObserver=null}
- if(grid&&window.MutationObserver){
-   calendarObserver=new MutationObserver(()=>{
-     if(!section.classList.contains('hidden')){
-       grid.classList.add('b434-calendar-grid-mobile');
-       [...grid.children].forEach(n=>n.classList.add('b434-calendar-day-mobile'));
-     }
-   });
-   calendarObserver.observe(grid,{childList:true,subtree:true});
- }
- return !!grid;
-}
-function refreshCalendarMobile(){
- if(!mobile())return null;
- const section=by('calendario');
- if(!section)return null;
- try{
-   const loader=window.B232Calendario&&typeof window.B232Calendario.load==='function'
-     ? window.B232Calendario.load()
-     : null;
-   if(loader&&typeof loader.then==='function'){
-     return loader.then(()=>adaptCalendarMobile()).catch(e=>{console.warn('[CCF MOBILE] B232 calendar load',e);adaptCalendarMobile();return false;});
-   }
- }catch(e){console.warn('[CCF MOBILE] B232 calendar load',e)}
- return adaptCalendarMobile();
-}
-function scheduleCalendarMobile(){
- if(!mobile())return;
- [80,300,700,1400,2400].forEach(ms=>setTimeout(()=>refreshCalendarMobile(),ms));
-}
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
@@ -265,7 +222,6 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,2500);
    }
    if(id==='calendario'){
-     adaptCalendarMobile();
      scheduleCalendarMobile();
    }
    setActive(id);
@@ -327,6 +283,106 @@ function quick(type){
  if(sel)sel.value=type==='income'?'ingreso':'gasto';
  const form=by('movForm');
  if(form)form.classList.add('b434-quick-form');
+}
+
+function forceCalendarMobile(){
+ if(!mobile())return false;
+ const section=by('calendario');
+ if(!section)return false;
+ section.classList.add('b434-calendar-mobile-force');
+ section.style.setProperty('width','100%','important');
+ section.style.setProperty('max-width','100%','important');
+ section.style.setProperty('min-width','0','important');
+ section.style.setProperty('box-sizing','border-box','important');
+ section.style.setProperty('overflow-x','hidden','important');
+ const grids=[...section.querySelectorAll('.b232261-grid')];
+ if(!grids.length)return false;
+ const weekday=/^(DOM|LUN|MAR|MIÉ|MIE|JUE|VIE|SÁB|SAB|SUN|MON|TUE|WED|THU|FRI|SAT)$/i;
+ grids.forEach(grid=>{
+   /* El renderer nativo fija min-width:770px. La adaptación se aplica
+      directamente al nodo real, sin depender de clases auxiliares. */
+   let parent=grid.parentElement;
+   while(parent&&parent!==section){
+     parent.style.setProperty('width','100%','important');
+     parent.style.setProperty('max-width','100%','important');
+     parent.style.setProperty('min-width','0','important');
+     parent.style.setProperty('min-inline-size','0','important');
+     parent.style.setProperty('max-inline-size','100%','important');
+     parent.style.setProperty('box-sizing','border-box','important');
+     parent.style.setProperty('overflow-x','hidden','important');
+     parent=parent.parentElement;
+   }
+   grid.classList.add('b434-calendar-grid-force');
+   grid.style.setProperty('display','grid','important');
+   grid.style.setProperty('width','100%','important');
+   grid.style.setProperty('max-width','100%','important');
+   grid.style.setProperty('min-width','0','important');
+   grid.style.setProperty('inline-size','100%','important');
+   grid.style.setProperty('min-inline-size','0','important');
+   grid.style.setProperty('max-inline-size','100%','important');
+   grid.style.setProperty('box-sizing','border-box','important');
+   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
+   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
+   grid.style.setProperty('grid-auto-flow','row','important');
+   grid.style.setProperty('gap','0','important');
+   grid.style.setProperty('overflow','hidden','important');
+   const children=[...grid.children];
+   const hasWeekHead=children.length>=7 && children.slice(0,7).every(n=>weekday.test((n.textContent||'').trim()));
+   if(hasWeekHead){
+     grid.style.setProperty('grid-template-rows','30px repeat(6,minmax(72px,1fr))','important');
+   }else{
+     grid.style.removeProperty('grid-template-rows');
+   }
+   children.forEach((el,i)=>{
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('width','auto','important');
+     el.style.setProperty('max-width','100%','important');
+     el.style.setProperty('min-inline-size','0','important');
+     el.style.setProperty('max-inline-size','100%','important');
+     el.style.setProperty('box-sizing','border-box','important');
+     el.style.setProperty('overflow','hidden','important');
+     el.style.setProperty('overflow-wrap','anywhere','important');
+     if(hasWeekHead&&i<7){
+       el.style.setProperty('height','30px','important');
+       el.style.setProperty('min-height','30px','important');
+       el.style.setProperty('max-height','30px','important');
+       el.style.setProperty('padding','6px 1px','important');
+       el.style.setProperty('font-size','8px','important');
+       el.style.setProperty('line-height','1','important');
+       el.style.setProperty('text-align','center','important');
+       el.style.setProperty('white-space','nowrap','important');
+     }else{
+       el.style.setProperty('min-height','72px','important');
+       el.style.setProperty('height','auto','important');
+       el.style.setProperty('max-height','none','important');
+       el.style.setProperty('padding','4px 3px','important');
+     }
+     el.querySelectorAll('*').forEach(node=>{
+       node.style.setProperty('min-width','0','important');
+       node.style.setProperty('max-width','100%','important');
+       node.style.setProperty('box-sizing','border-box','important');
+       node.style.setProperty('overflow-wrap','anywhere','important');
+     });
+   });
+ });
+ return true;
+}
+function scheduleCalendarMobile(){
+ if(!mobile())return;
+ calendarObserver?.disconnect();
+ const section=by('calendario');
+ if(!section)return;
+ const run=()=>{if(mobile())forceCalendarMobile()};
+ run();
+ calendarObserver=new MutationObserver(()=>run());
+ calendarObserver.observe(section,{childList:true,subtree:true});
+ [80,250,500,900,1400,2200].forEach(ms=>setTimeout(run,ms));
+ try{
+   if(window.B232Calendario&&typeof window.B232Calendario.load==='function'){
+     const r=window.B232Calendario.load();
+     if(r&&typeof r.then==='function')r.then(run).catch(()=>run());
+   }
+ }catch(e){console.warn('[CCF MOBILE] calendar load',e)}
 }
 
 function syncConsolidatedReport(){
