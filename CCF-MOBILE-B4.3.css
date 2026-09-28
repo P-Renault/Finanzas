@@ -1434,3 +1434,163 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     font-size:7px!important;
   }
 }
+
+
+/* CCF MOBILE B4.3 — PROYECCIÓN · ADAPTACIÓN MÓVIL V1 */
+@media(max-width:720px){
+  /* Proyección financiera: lectura ejecutiva primero */
+  #ccf-mobile-b43 .b434-module-host [data-projection]{
+    width:100%!important;
+    min-width:0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] table,
+  #ccf-mobile-b43 .b434-module-host #projection-table{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    table-layout:fixed!important;
+    border-collapse:separate!important;
+    border-spacing:0!important;
+    font-size:9px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] th,
+  #ccf-mobile-b43 .b434-module-host [data-projection] td{
+    padding:7px 5px!important;
+    vertical-align:middle!important;
+    overflow-wrap:anywhere!important;
+    word-break:normal!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] thead th{
+    font-size:8px!important;
+    line-height:1.2!important;
+    color:#64748b!important;
+    font-weight:800!important;
+    background:#f8fafc!important;
+    border-bottom:1px solid #e7ebf0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] tbody tr{
+    background:#fff!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] tbody td{
+    border-bottom:1px solid #edf1f5!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] tbody tr:last-child td{
+    border-bottom:0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host [data-projection] td strong,
+  #ccf-mobile-b43 .b434-module-host [data-projection] td b{
+    font-size:9px!important;
+  }
+
+  /* Próxima necesidad + acciones: lectura vertical y táctil */
+  #ccf-mobile-b43 .b434-module-host .b434-decision{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    margin:8px 0!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-decision article{
+    min-width:0!important;
+    padding:12px!important;
+    border-radius:14px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-decision article>span{
+    display:block!important;
+    margin-bottom:5px!important;
+    font-size:8px!important;
+    letter-spacing:.2px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-decision article [data-next],
+  #ccf-mobile-b43 .b434-module-host .b434-decision article [data-priority]{
+    min-width:0!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Análisis ejecutivo: una lectura por tarjeta, sin dos columnas estrechas */
+  #ccf-mobile-b43 .b434-module-host .b434-insights{
+    grid-template-columns:1fr 1fr!important;
+    gap:7px!important;
+    margin-bottom:8px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-insights article{
+    min-width:0!important;
+    padding:9px!important;
+    border:1px solid var(--m-line)!important;
+    border-radius:12px!important;
+    background:#f8fafc!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-insights article span{
+    display:block!important;
+    font-size:8px!important;
+    color:var(--m-muted)!important;
+    font-weight:800!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-insights article strong{
+    display:block!important;
+    margin-top:4px!important;
+    font-size:9px!important;
+    line-height:1.35!important;
+  }
+
+  /* Gráficos: una columna para preservar legibilidad y evitar compresión */
+  #ccf-mobile-b43 .b434-module-host .b434-charts{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-chart-card{
+    width:100%!important;
+    min-width:0!important;
+    padding:9px!important;
+    border-radius:13px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-chart-card>strong{
+    font-size:9px!important;
+    margin-bottom:5px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-chart-card>[id^="chart-"]{
+    min-height:170px!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-chart-card canvas,
+  #ccf-mobile-b43 .b434-module-host .b434-chart-card svg{
+    max-width:100%!important;
+  }
+
+  /* Compromisos futuros: separar claramente ingresos y egresos */
+  #ccf-mobile-b43 .b434-module-host .b434-future{
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-future>article{
+    padding:9px!important;
+    border-radius:12px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-future header{
+    margin-bottom:4px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-future header b{
+    font-size:9px!important;
+  }
+
+  /* Control diario: tres indicadores legibles sin forzar una tabla */
+  #ccf-mobile-b43 .b434-module-host .b434-margin{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:6px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-margin article{
+    min-width:0!important;
+    padding:8px!important;
+    border-radius:11px!important;
+    background:#f8fafc!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-margin article span{
+    display:block!important;
+    font-size:7px!important;
+    line-height:1.2!important;
+  }
+  #ccf-mobile-b43 .b434-module-host .b434-margin article strong{
+    font-size:10px!important;
+    overflow-wrap:anywhere!important;
+  }
+}
