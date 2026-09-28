@@ -3037,3 +3037,156 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     font-size:6px!important;
   }
 }
+
+
+/* CCF MOBILE B4.3 — CALENDARIO · V6 · SELECTOR REAL DEL MÓDULO */
+@media(max-width:720px){
+  /* V5 dependía de data-active-module, pero la captura real demuestra que
+     el host móvil no expone ese atributo. Esta versión usa únicamente
+     la estructura real y estable del módulo #calendario. */
+  #ccf-mobile-b43 .b434-module-host #calendario,
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-card,
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-scroll{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-card{
+    margin-left:0!important;
+    margin-right:0!important;
+    padding:10px!important;
+    overflow:hidden!important;
+  }
+
+  /* Encabezado semanal: 7 columnas exactas dentro del ancho disponible. */
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-scroll .week-head{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-scroll .week-head > *{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    font-size:9px!important;
+    padding:7px 1px!important;
+  }
+
+  /* Calendario mensual: 7 columnas reales. */
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;
+    grid-auto-flow:row!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid > *{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:78px!important;
+    min-height:78px!important;
+    max-height:78px!important;
+    margin:0!important;
+    padding:5px 3px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    border-radius:0!important;
+  }
+
+  /* Neutraliza anchos intrínsecos de cualquier contenido generado dentro del día. */
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid > * > *{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid button{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    padding:0!important;
+    margin:0!important;
+    font-size:10px!important;
+    line-height:1.05!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  /* Montos/eventos: compactos y contenidos dentro de cada columna. */
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="event"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="entry"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="item"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="pill"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="movement"]{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    margin:2px 0!important;
+    padding:2px!important;
+    font-size:6.5px!important;
+    line-height:1.1!important;
+    box-sizing:border-box!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-help{
+    display:none!important;
+  }
+}
+
+@media(max-width:390px){
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-card{
+    padding:8px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .calendar-scroll .week-head > *{
+    font-size:7px!important;
+    padding:6px 1px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid > *{
+    height:68px!important;
+    min-height:68px!important;
+    max-height:68px!important;
+    padding:4px 2px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid button{
+    font-size:9px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="event"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="entry"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="item"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="pill"],
+  #ccf-mobile-b43 .b434-module-host #calendario #calendarGrid [class*="movement"]{
+    font-size:6px!important;
+  }
+}
