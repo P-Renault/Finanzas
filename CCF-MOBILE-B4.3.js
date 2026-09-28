@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,calendarObserver=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -214,7 +214,11 @@ function showModuleAfterNavigation(id){
    content?.classList.add('b434-view-hidden');
    host?.classList.add('open');
    host?.setAttribute('data-active-module',id);
-   adaptB232261CalendarMobile();
+   if(id==='calendario'){
+     adaptB232261CalendarMobile();
+     setTimeout(adaptB232261CalendarMobile,180);
+     setTimeout(adaptB232261CalendarMobile,600);
+   }
    if(id==='movimientos'){
      adaptMovementsMobile();
      setTimeout(adaptMovementsMobile,250);
@@ -283,76 +287,55 @@ function quick(type){
  if(form)form.classList.add('b434-quick-form');
 }
 
-
 function adaptB232261CalendarMobile(){
  if(!mobile())return;
- const grids=$$('.b232261-grid');
- grids.forEach(grid=>{
-   grid.classList.add('b434-b232261-mobile-calendar');
-   grid.style.setProperty('display','grid','important');
-   grid.style.setProperty('width','100%','important');
-   grid.style.setProperty('max-width','100%','important');
-   grid.style.setProperty('min-width','0','important');
-   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
-   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
-   grid.style.setProperty('grid-auto-flow','row','important');
-   grid.style.setProperty('box-sizing','border-box','important');
-
+ $$('.b232261-grid').forEach(grid=>{
+   if(grid.dataset.b434MobileDone==='1')return;
+   const card=grid.closest('.b232261-card'); if(!card)return;
+   grid.dataset.b434MobileDone='1';
+   const head=card.querySelector('.b232261-head');
+   const title=head?.querySelector('h2');
+   const actions=head?.querySelector('.b232261-actions');
+   const kpis=card.querySelector('.b232261-kpis');
    const scroll=grid.closest('.b232261-scroll');
-   if(scroll){
-     scroll.classList.add('b434-b232261-mobile-calendar-scroll');
-     scroll.style.setProperty('width','100%','important');
-     scroll.style.setProperty('max-width','100%','important');
-     scroll.style.setProperty('min-width','0','important');
-     scroll.style.setProperty('overflow-x','hidden','important');
-     scroll.style.setProperty('overflow-y','visible','important');
-     scroll.style.setProperty('box-sizing','border-box','important');
-   }
+   card.style.setProperty('width','100%','important');card.style.setProperty('max-width','100%','important');card.style.setProperty('min-width','0','important');card.style.setProperty('box-sizing','border-box','important');card.style.setProperty('overflow','hidden','important');
+   if(scroll){scroll.style.setProperty('width','100%','important');scroll.style.setProperty('max-width','100%','important');scroll.style.setProperty('min-width','0','important');scroll.style.setProperty('overflow','hidden','important');scroll.style.setProperty('box-sizing','border-box','important')}
 
-   const card=grid.closest('.b232261-card');
-   if(card){
-     card.classList.add('b434-b232261-mobile-calendar-card');
-     card.style.setProperty('width','100%','important');
-     card.style.setProperty('max-width','100%','important');
-     card.style.setProperty('min-width','0','important');
-     card.style.setProperty('box-sizing','border-box','important');
-     card.style.setProperty('overflow','hidden','important');
+   let header=card.querySelector('.b434-calendar-mobile-header');
+   if(!header){
+     header=document.createElement('div');header.className='b434-calendar-mobile-header';
+     header.innerHTML='<div class="b434-calendar-mobile-title"><strong>Calendario financiero</strong><span>Visualiza ingresos, gastos, obligaciones y saldo por día</span></div><div class="b434-calendar-mobile-nav"><button type="button" class="b434-calendar-mobile-arrow" data-cal-prev aria-label="Mes anterior">‹</button><strong class="b434-calendar-mobile-month"></strong><button type="button" class="b434-calendar-mobile-arrow" data-cal-next aria-label="Mes siguiente">›</button><button type="button" class="b434-calendar-mobile-today" data-cal-today>Hoy</button></div>';
+     card.insertBefore(header,kpis||scroll||head||null);
    }
+   const month=header.querySelector('.b434-calendar-mobile-month'); if(month)month.textContent=title?.textContent?.trim()||'Calendario';
+   const bind=(sel,id)=>{const b=header.querySelector(sel),src=by(id);if(b&&src&&b.dataset.bound!=='1'){b.dataset.bound='1';b.onclick=()=>src.click()}};
+   bind('[data-cal-prev]','b232261Prev');bind('[data-cal-next]','b232261Next');bind('[data-cal-today]','b232261Today');
+   if(actions)actions.style.setProperty('display','none','important');if(head)head.style.setProperty('display','none','important');
+
+   if(kpis){const all=[...kpis.querySelectorAll('.b232261-kpi')];const wanted=[all[0],all[3],all[4],all[1]].filter(Boolean);wanted.forEach(x=>kpis.appendChild(x));all.filter(x=>!wanted.includes(x)).forEach(x=>x.style.setProperty('display','none','important'))}
+
+   grid.style.setProperty('display','grid','important');grid.style.setProperty('width','100%','important');grid.style.setProperty('max-width','100%','important');grid.style.setProperty('min-width','0','important');grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');grid.style.setProperty('grid-auto-flow','row','important');grid.style.setProperty('box-sizing','border-box','important');
+   [...grid.querySelectorAll(':scope > div')].slice(0,7).forEach((el,i)=>{el.style.setProperty('min-width','0','important');el.style.setProperty('width','auto','important');el.style.setProperty('max-width','100%','important');el.style.setProperty('box-sizing','border-box','important');el.style.setProperty('overflow','hidden','important');el.textContent=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'][i]})
 
    $$('.b232261-day',grid).forEach(day=>{
-     day.classList.add('b434-b232261-mobile-day');
-     day.style.setProperty('width','auto','important');
-     day.style.setProperty('min-width','0','important');
-     day.style.setProperty('max-width','100%','important');
-     day.style.setProperty('min-height','92px','important');
-     day.style.setProperty('height','92px','important');
-     day.style.setProperty('max-height','92px','important');
-     day.style.setProperty('padding','4px 2px','important');
-     day.style.setProperty('box-sizing','border-box','important');
-     day.style.setProperty('overflow','hidden','important');
+     day.style.setProperty('width','auto','important');day.style.setProperty('min-width','0','important');day.style.setProperty('max-width','100%','important');day.style.setProperty('min-height','88px','important');day.style.setProperty('height','88px','important');day.style.setProperty('max-height','88px','important');day.style.setProperty('padding','5px 3px','important');day.style.setProperty('box-sizing','border-box','important');day.style.setProperty('overflow','hidden','important');day.classList.add('b434-b232261-mobile-day');
+     $$('.b232261-event,.b232261-mini,.b232261-more',day).forEach(el=>el.style.setProperty('display','none','important'));
+     if(!day.querySelector('.b434-calendar-day-summary')){
+       const summary=document.createElement('div');summary.className='b434-calendar-day-summary';let inc=0,out=0,debt=false,other=false;
+       $$('.b232261-event',day).forEach(ev=>{const a=Number(String(ev.textContent||'').replace(/[^0-9]/g,''))||0;if(ev.classList.contains('b232261-real-in')||ev.classList.contains('b232261-plan-in')||ev.classList.contains('b232261-gen'))inc+=a;if(ev.classList.contains('b232261-real-out')||ev.classList.contains('b232261-plan-out')||ev.classList.contains('b232261-debt'))out+=a;if(ev.classList.contains('b232261-debt'))debt=true;if(ev.classList.contains('b232261-plan-in')||ev.classList.contains('b232261-gen'))other=true});
+       summary.innerHTML=(inc?'<span class="b434-day-amount income">$'+inc.toLocaleString('es-CL')+'</span>':'')+(out?'<span class="b434-day-amount expense">$'+out.toLocaleString('es-CL')+'</span>':'')+(!inc&&!out?'<span class="b434-day-empty">—</span>':'')+'<span class="b434-day-dots">'+(inc?'<i class="income"></i>':'')+(out?'<i class="expense"></i>':'')+(debt?'<i class="debt"></i>':'')+(other?'<i class="gen"></i>':'')+'</span>';
+       day.appendChild(summary);
+     }
    });
-   $$('.b232261-event,.b232261-mini,.b232261-more',grid).forEach(el=>{
-     el.style.setProperty('width','100%','important');
-     el.style.setProperty('min-width','0','important');
-     el.style.setProperty('max-width','100%','important');
-     el.style.setProperty('box-sizing','border-box','important');
-     el.style.setProperty('overflow','hidden','important');
-     el.style.setProperty('text-overflow','ellipsis','important');
-     el.style.setProperty('white-space','nowrap','important');
-   });
+
+   const native=card.querySelector('.b232261-detail');
+   if(native){native.style.setProperty('display','none','important');let detail=card.querySelector('.b434-mobile-day-detail');
+     if(!detail){detail=document.createElement('section');detail.className='b434-mobile-day-detail';const foot=native.nextElementSibling?.textContent||'';const scope=card.querySelector('.b232261-scope span')?.textContent?.trim()||'';const pos=native.querySelector('.b232261-positive-box .b232261-detail-total strong')?.textContent?.trim()||'$0';const neg=native.querySelector('.b232261-negative-box .b232261-detail-total strong')?.textContent?.trim()||'$0';const rows=[...native.querySelectorAll('.b232261-row')];const bal=(foot.match(/Saldo final proyectado:\s*([^·]+)/i)?.[1]||foot.match(/Saldo acumulado real:\s*([^·]+)/i)?.[1]||'$0').trim();detail.innerHTML='<div class="b434-mobile-detail-head"><span class="b434-detail-calendar-icon">▦</span><strong>Día seleccionado'+(scope?' · '+esc(scope):'')+'</strong></div><div class="b434-mobile-detail-kpis"><article class="income"><strong>'+esc(pos)+'</strong><span>Ingresos</span></article><article class="expense"><strong>'+esc(neg)+'</strong><span>Gastos y obligaciones</span></article><article class="debt"><strong>'+rows.length+'</strong><span>Movimientos</span></article><article class="balance"><strong>'+esc(bal)+'</strong><span>Saldo proyectado</span></article></div><div class="b434-mobile-detail-list"></div>';const list=detail.querySelector('.b434-mobile-detail-list');rows.slice(0,8).forEach(r=>list.appendChild(r.cloneNode(true)));if(!rows.length)list.innerHTML='<div class="b434-day-empty-detail">Sin movimientos registrados para este día.</div>';card.appendChild(detail)}
+   }
  });
 }
 function observeB232261CalendarMobile(){
- calendarObserver?.disconnect();
- if(!mobile())return;
- adaptB232261CalendarMobile();
- const target=document.body;
- if(!target)return;
- calendarObserver=new MutationObserver(()=>{
-   if(!mobile())return;
-   adaptB232261CalendarMobile();
- });
- calendarObserver.observe(target,{childList:true,subtree:true});
+ calendarObserver?.disconnect();if(!mobile())return;adaptB232261CalendarMobile();calendarObserver=new MutationObserver(()=>{if(mobile())adaptB232261CalendarMobile()});calendarObserver.observe(document.body,{childList:true,subtree:true})
 }
 
 function syncConsolidatedReport(){
