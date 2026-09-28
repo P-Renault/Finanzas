@@ -22,7 +22,14 @@ function mirrorAll(){[
 const p=by('margin-progress'),q=$('[data-progress]',root);if(p&&q)q.style.width=p.style.width||'0%';}
 
 function moveReal(id,host){
- const el=by(id);if(!el||!host||el.dataset.b434Moved==='1')return el;
+ const el=by(id);if(!el||!host)return el;
+ /* Si el resumen móvil se reconstruye al volver desde “Más”, el nodo real
+    ya fue movido anteriormente. Debe reubicarse en el nuevo contenedor
+    [data-flow]; de lo contrario el nuevo cuadro queda vacío. */
+ if(el.dataset.b434Moved==='1'){
+   host.appendChild(el);
+   return el;
+ }
  const marker=document.createComment('CCF B4.3.4 '+id);el.parentNode?.insertBefore(marker,el);host.appendChild(el);
  el.dataset.b434Moved='1';moved.push({el,marker});return el;
 }
