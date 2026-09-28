@@ -2284,3 +2284,147 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     min-height:40px!important;
   }
 }
+
+
+/* ==========================================================
+   CCF MOBILE B4.3 — CALENDARIO · ADAPTACIÓN MÓVIL V1
+   Solo presentación/navegación móvil. Conserva B232.26.4.
+   ========================================================== */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+    padding:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile > *{
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* El renderer original fuerza 110px por columna/770px de ancho.
+     En móvil las siete columnas deben repartirse en el ancho disponible. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b434-calendar-grid-mobile{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    gap:4px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid > *,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b434-calendar-day-mobile{
+    min-width:0!important;
+    max-width:100%!important;
+    width:auto!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    padding:7px 3px!important;
+    border-radius:9px!important;
+    word-break:break-word!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Cabeceras DOM–SÁB: solo si el renderer realmente las incluye dentro
+     de la misma grilla. Si la grilla contiene 35/42 días, no se reinterpretan
+     los primeros siete días como cabecera. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid[data-b434-grid-header="1"] > :nth-child(-n+7){
+    min-height:30px!important;
+    padding:6px 2px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    font-size:9px!important;
+    font-weight:800!important;
+    white-space:nowrap!important;
+  }
+
+  /* Celdas del mes: compactas pero legibles. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid > *{
+    min-height:72px!important;
+    font-size:10px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid strong,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid b{
+    font-size:11px!important;
+    line-height:1.15!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid small,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid .muted{
+    font-size:8px!important;
+    line-height:1.15!important;
+  }
+
+  /* El resto del módulo no puede crear un segundo viewport horizontal. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .card,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile section,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .panel{
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Tablas/listas auxiliares conservan lectura dentro de la tarjeta. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile table{
+    width:100%!important;
+    max-width:100%!important;
+    table-layout:fixed!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile td,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile th{
+    min-width:0!important;
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Selección del día: mantener el resaltado visible y no permitir que
+     la celda seleccionada vuelva a imponer un ancho mínimo. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .selected,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .active,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile [aria-selected="true"]{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Resumen/KPI del calendario: dos columnas compactas en móvil. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile [class*="summary"],
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile [class*="kpi"]{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Evitar que texto o montos largos vuelvan a expandir el módulo. */
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile h1,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile h2,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile h3,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile h4,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile p,
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile span{
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+}
+
+@media(max-width:390px){
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid{
+    gap:2px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid > :nth-child(n+8){
+    min-height:66px!important;
+    padding:6px 2px!important;
+    font-size:9px!important;
+  }
+}

@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null,calendarObserver=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -198,6 +198,49 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
+function adaptCalendarMobile(){
+ const section=by('calendario');
+ if(!section||!mobile())return false;
+ section.classList.add('b434-calendar-mobile');
+ const grid=section.querySelector('.b232261-grid');
+ if(grid){
+   grid.classList.add('b434-calendar-grid-mobile');
+   const children=[...grid.children];
+   const weekdayPattern=/^(DOM|LUN|MAR|MIÉ|MIE|JUE|VIE|SÁB|SAB|SUN|MON|TUE|WED|THU|FRI|SAT)$/i;
+   const hasHeader=children.length>=7 && children.slice(0,7).every(n=>weekdayPattern.test((n.textContent||'').trim()));
+   if(hasHeader)grid.dataset.b434GridHeader='1';else delete grid.dataset.b434GridHeader;
+   children.forEach(n=>n.classList.add('b434-calendar-day-mobile'));
+ }
+ if(grid&&calendarObserver!==null){calendarObserver.disconnect();calendarObserver=null}
+ if(grid&&window.MutationObserver){
+   calendarObserver=new MutationObserver(()=>{
+     if(!section.classList.contains('hidden')){
+       grid.classList.add('b434-calendar-grid-mobile');
+       [...grid.children].forEach(n=>n.classList.add('b434-calendar-day-mobile'));
+     }
+   });
+   calendarObserver.observe(grid,{childList:true,subtree:true});
+ }
+ return !!grid;
+}
+function refreshCalendarMobile(){
+ if(!mobile())return null;
+ const section=by('calendario');
+ if(!section)return null;
+ try{
+   const loader=window.B232Calendario&&typeof window.B232Calendario.load==='function'
+     ? window.B232Calendario.load()
+     : null;
+   if(loader&&typeof loader.then==='function'){
+     return loader.then(()=>adaptCalendarMobile()).catch(e=>{console.warn('[CCF MOBILE] B232 calendar load',e);adaptCalendarMobile();return false;});
+   }
+ }catch(e){console.warn('[CCF MOBILE] B232 calendar load',e)}
+ return adaptCalendarMobile();
+}
+function scheduleCalendarMobile(){
+ if(!mobile())return;
+ [80,300,700,1400,2400].forEach(ms=>setTimeout(()=>refreshCalendarMobile(),ms));
+}
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
@@ -220,6 +263,10 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
+   }
+   if(id==='calendario'){
+     adaptCalendarMobile();
+     scheduleCalendarMobile();
    }
    setActive(id);
    return true;
@@ -461,7 +508,7 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
