@@ -3318,3 +3318,205 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     font-size:7px!important;
   }
 }
+
+
+/* CCF MOBILE B4.3 — CALENDARIO · V8 · B232.26.4 REAL */
+@media(max-width:720px){
+  /*
+   * Corrección definitiva del selector:
+   * la captura real corresponde al renderer B232.26.4,
+   * que genera .b232261-grid/.b232261-day.
+   */
+  #ccf-mobile-b43 .b434-module-host #calendario{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+    padding:10px!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* El CSS B232.26.4 fija min-width:770px.
+     Esta es la regla que estaba provocando exactamente las 4 columnas visibles. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
+    display:grid!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;
+    grid-auto-flow:row!important;
+    box-sizing:border-box!important;
+    gap:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week{
+    min-width:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week>div{
+    min-width:0!important;
+    width:auto!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    font-size:8px!important;
+    padding:7px 1px!important;
+  }
+
+  /* 42 días: 7 columnas x 6 filas, compactos para teléfono. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:92px!important;
+    height:92px!important;
+    max-height:92px!important;
+    padding:4px 2px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    border-radius:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
+    min-width:0!important;
+    width:100%!important;
+    overflow:hidden!important;
+    font-size:9px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
+    font-size:10px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
+    font-size:6px!important;
+  }
+
+  /* Eventos reales/proyectados: una línea compacta por evento. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    margin-top:2px!important;
+    padding:2px!important;
+    font-size:5.5px!important;
+    line-height:1.05!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    font-size:6px!important;
+    line-height:1.05!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    margin-top:2px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-head{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:100%!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions button{
+    min-width:0!important;
+    width:100%!important;
+    min-height:36px!important;
+    padding:6px 3px!important;
+    font-size:9px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpis{
+    grid-template-columns:1fr 1fr!important;
+    gap:6px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpi{
+    min-width:0!important;
+    overflow:hidden!important;
+    padding:8px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpi strong{
+    font-size:13px!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+}
+
+@media(max-width:390px){
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
+    padding:8px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    min-height:82px!important;
+    height:82px!important;
+    max-height:82px!important;
+    padding:3px 1px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
+    font-size:5px!important;
+    padding:1px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
+    font-size:5.5px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions button{
+    font-size:8px!important;
+    padding-left:1px!important;
+    padding-right:1px!important;
+  }
+}
