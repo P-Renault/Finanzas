@@ -1,0 +1,529 @@
+*** BEGIN PATCH: CCF-MOBILE-B4.3 — CALENDARIO MÓVIL — Backup-1.6-adaptación-móvil
+
+OBJETIVO
+- Adaptar visualmente el calendario existente a móvil.
+- No modificar B232.26.4-calendario-safe.js.
+- No modificar index.html.
+- No cambiar la versión B4.3.0.
+- No crear consultas Supabase ni cálculos financieros nuevos.
+- El módulo B232.26.4 sigue siendo la única fuente funcional.
+- La capa móvil solo replica la información ya renderizada por el calendario nativo.
+
+1) CCF-MOBILE-B4.3.js
+
+A. Inmediatamente antes de:
+   function navigate(id){
+
+   insertar:
+
+/* CALENDARIO MÓVIL — adaptación progresiva sobre DOM nativo */
+let calendarMobileObserver=null;
+let calendarMobileTimer=0;
+let calendarMobileRendering=false;
+
+function stopCalendarMobile(){
+  if(calendarMobileObserver){
+    calendarMobileObserver.disconnect();
+    calendarMobileObserver=null;
+  }
+  clearTimeout(calendarMobileTimer);
+  calendarMobileTimer=0;
+  calendarMobileRendering=false;
+}
+
+function scheduleCalendarMobile(){
+  clearTimeout(calendarMobileTimer);
+  calendarMobileTimer=setTimeout(buildCalendarMobile,40);
+}
+
+function buildCalendarMobile(){
+  calendarMobileTimer=0;
+  if(!mobile())return false;
+
+  const section=by('calendario');
+  if(!section||section.classList.contains('hidden'))return false;
+
+  const nativeCard=section.querySelector('.b232261-card');
+  const nativeScroll=nativeCard?.querySelector('.b232261-scroll');
+  const nativeWeek=nativeScroll?.querySelector('.b232261-grid.b232261-week');
+
+  if(!nativeCard||!nativeScroll||!nativeWeek)return false;
+
+  const nativeDays=[...nativeWeek.querySelectorAll('.b232261-day')];
+  if(nativeDays.length!==42)return false;
+
+  calendarMobileRendering=true;
+
+  try{
+    let mobileCard=nativeCard.querySelector('[data-b434-calendar-mobile]');
+
+    if(!mobileCard){
+      mobileCard=document.createElement('section');
+      mobileCard.className='b434-calendar-mobile';
+      mobileCard.dataset.b434CalendarMobile='1';
+      nativeScroll.before(mobileCard);
+    }
+
+    const title=
+      nativeCard.querySelector('.b232261-head h2')
+      ?.textContent?.trim()||
+      'Calendario mensual';
+
+    const scope=
+      nativeCard.querySelector('.b232261-scope')
+      ?.cloneNode(true);
+
+    mobileCard.replaceChildren();
+
+    const period=document.createElement('div');
+    period.className='b434-calendar-mobile-period';
+    period.innerHTML='<span>PERÍODO</span><strong></strong>';
+    period.querySelector('strong').textContent=title;
+    mobileCard.appendChild(period);
+
+    const weekdays=document.createElement('div');
+    weekdays.className='b434-calendar-mobile-week';
+
+    [...nativeWeek.children].slice(0,7).forEach(cell=>{
+      const item=document.createElement('div');
+      item.textContent=cell.textContent.trim();
+      weekdays.appendChild(item);
+    });
+
+    mobileCard.appendChild(weekdays);
+
+    const grid=document.createElement('div');
+    grid.className='b434-calendar-mobile-grid';
+
+    nativeDays.forEach(original=>{
+      const day=document.createElement('button');
+      day.type='button';
+      day.className='b434-calendar-mobile-day';
+
+      if(original.classList.contains('out'))
+        day.classList.add('is-out');
+
+      if(original.classList.contains('selected'))
+        day.classList.add('is-selected');
+
+      const top=original.querySelector('.b232261-day-top');
+
+      const topBox=document.createElement('div');
+      topBox.className='b434-calendar-mobile-day-top';
+
+      const number=document.createElement('strong');
+      number.textContent=
+        top?.querySelector('strong')?.textContent?.trim()||'';
+
+      topBox.appendChild(number);
+
+      const todayMark=
+        top?.querySelector('small')?.textContent?.trim();
+
+      if(todayMark){
+        const badge=document.createElement('span');
+        badge.textContent=todayMark;
+        topBox.appendChild(badge);
+      }
+
+      day.appendChild(topBox);
+
+      const events=document.createElement('div');
+      events.className='b434-calendar-mobile-events';
+
+      const nativeEvents=
+        [...original.querySelectorAll('.b232261-event')];
+
+      nativeEvents.slice(0,3).forEach(nativeEvent=>{
+        const event=document.createElement('span');
+        event.className='b434-calendar-mobile-event';
+
+        if(nativeEvent.classList.contains('b232261-real-in'))
+          event.classList.add('income');
+        else if(nativeEvent.classList.contains('b232261-real-out'))
+          event.classList.add('expense');
+        else if(nativeEvent.classList.contains('b232261-plan-in'))
+          event.classList.add('planned-income');
+        else if(nativeEvent.classList.contains('b232261-plan-out'))
+          event.classList.add('planned-expense');
+        else if(nativeEvent.classList.contains('b232261-debt'))
+          event.classList.add('obligation');
+        else if(nativeEvent.classList.contains('b232261-gen'))
+          event.classList.add('generation');
+
+        event.textContent=nativeEvent.textContent.trim();
+        events.appendChild(event);
+      });
+
+      if(nativeEvents.length>3){
+        const more=document.createElement('span');
+        more.className='b434-calendar-mobile-more';
+        more.textContent='+'+(nativeEvents.length-3)+' más';
+        events.appendChild(more);
+      }
+
+      day.appendChild(events);
+
+      const minis=
+        [...original.querySelectorAll('.b232261-mini')];
+
+      if(minis.length){
+        const metrics=document.createElement('div');
+        metrics.className='b434-calendar-mobile-metrics';
+
+        metrics.textContent=minis
+          .slice(0,2)
+          .map(x=>x.textContent.trim())
+          .filter(Boolean)
+          .join(' · ');
+
+        day.appendChild(metrics);
+      }
+
+      day.onclick=event=>{
+        event.preventDefault();
+        event.stopPropagation();
+
+        /* La acción real sigue perteneciendo al calendario nativo. */
+        original.click();
+
+        scheduleCalendarMobile();
+      };
+
+      grid.appendChild(day);
+    });
+
+    mobileCard.appendChild(grid);
+
+    if(scope){
+      scope.classList.add('b434-calendar-mobile-scope');
+      mobileCard.appendChild(scope);
+    }
+
+    nativeScroll.hidden=true;
+    nativeScroll.setAttribute('aria-hidden','true');
+
+    return true;
+
+  }finally{
+    calendarMobileRendering=false;
+  }
+}
+
+function startCalendarMobile(){
+  stopCalendarMobile();
+
+  if(!mobile())return;
+
+  const section=by('calendario');
+  if(!section)return;
+
+  calendarMobileObserver=
+    new MutationObserver(()=>{
+      if(calendarMobileRendering)return;
+      scheduleCalendarMobile();
+    });
+
+  calendarMobileObserver.observe(
+    section,
+    {childList:true,subtree:true}
+  );
+
+  buildCalendarMobile();
+
+  [100,300,700,1200].forEach(ms=>{
+    setTimeout(buildCalendarMobile,ms);
+  });
+}
+
+B. Dentro de restoreActiveModule(), al comienzo de la función, insertar:
+
+   stopCalendarMobile();
+
+C. Dentro de showModuleAfterNavigation(id), después de:
+   if(ok){
+
+   insertar:
+
+   if(id==='calendario'){
+     startCalendarMobile();
+   }
+
+2) CCF-MOBILE-B4.3.css
+
+Al final del archivo insertar:
+
+/* CALENDARIO MÓVIL — adaptación progresiva */
+@media (max-width:720px){
+
+  #ccf-mobile-b43 .b434-module-host #calendario{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-x:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpis{
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    margin:12px 0 0!important;
+    padding:9px!important;
+    border:1px solid #e5e7eb!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-period{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    margin:0 0 8px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-period span{
+    font-size:9px!important;
+    font-weight:800!important;
+    letter-spacing:.08em!important;
+    color:#64748b!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-period strong{
+    font-size:13px!important;
+    color:#0f172a!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-week,
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-grid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-week{
+    border:1px solid #e2e8f0!important;
+    border-bottom:0!important;
+    border-radius:9px 9px 0 0!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-week>div{
+    min-width:0!important;
+    padding:6px 1px!important;
+    text-align:center!important;
+    background:#f8fafc!important;
+    color:#475569!important;
+    font-size:8px!important;
+    font-weight:800!important;
+    border-right:1px solid #e2e8f0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-week>div:last-child{
+    border-right:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-grid{
+    border-left:1px solid #e2e8f0!important;
+    border-top:1px solid #e2e8f0!important;
+    border-radius:0 0 9px 9px!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day{
+    appearance:none!important;
+    -webkit-appearance:none!important;
+    display:flex!important;
+    flex-direction:column!important;
+    min-width:0!important;
+    width:100%!important;
+    min-height:94px!important;
+    padding:5px 3px 4px!important;
+    box-sizing:border-box!important;
+    border:0!important;
+    border-right:1px solid #e2e8f0!important;
+    border-bottom:1px solid #e2e8f0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    text-align:left!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day:nth-child(7n){
+    border-right:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day.is-out{
+    background:#f8fafc!important;
+    color:#94a3b8!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day.is-selected{
+    box-shadow:inset 0 0 0 2px #0f172a!important;
+    position:relative!important;
+    z-index:1!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day-top{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    min-width:0!important;
+    margin-bottom:3px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day-top strong{
+    font-size:12px!important;
+    line-height:1!important;
+    font-weight:800!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day-top span{
+    font-size:6px!important;
+    font-weight:800!important;
+    color:#2563eb!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-events{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:2px!important;
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:2px!important;
+    box-sizing:border-box!important;
+    border-radius:4px!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:6.5px!important;
+    line-height:1.25!important;
+    font-weight:700!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event.income{
+    background:#ecfdf5!important;
+    color:#166534!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event.expense{
+    background:#fef2f2!important;
+    color:#991b1b!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event.planned-income{
+    background:#eff6ff!important;
+    color:#1d4ed8!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event.planned-expense{
+    background:#fff7ed!important;
+    color:#9a3412!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event.obligation{
+    background:#eef2ff!important;
+    color:#3730a3!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event.generation{
+    background:#f5f3ff!important;
+    color:#6d28b9!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-more{
+    font-size:6px!important;
+    color:#64748b!important;
+    font-weight:700!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-metrics{
+    margin-top:auto!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:5.5px!important;
+    color:#64748b!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b232261-scroll{
+    display:none!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b232261-detail{
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:1fr!important;
+  }
+}
+
+@media (max-width:380px){
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-day{
+    min-height:84px!important;
+    padding:4px 2px 3px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario
+  .b434-calendar-mobile-event{
+    font-size:6px!important;
+  }
+}
+
+*** END PATCH
