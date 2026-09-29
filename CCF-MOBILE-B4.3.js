@@ -12,112 +12,6 @@ const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],p
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
 let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
 
-/* ==========================================================
-   CCF MOBILE B4.3.5 — CALENDARIO MOBILE NATIVO
-   Capa exclusiva de presentación móvil.
-   No modifica B232.26.4, Supabase, autenticación ni HTML.
-   ========================================================== */
-
-let calendarObserver=null, calendarDecorating=false;
-
-function calendarAmount(text){
-  const s=String(text||'');
-  const m=s.match(/\$\s*[\d.]+/);
-  return m ? m[0].replace(/\s+/g,'') : '';
-}
-
-function compactCalendarDay(cell){
-  if(!cell || cell.dataset.b434CalendarCompact==='1')return;
-  const top=cell.querySelector('.b232261-day-top');
-  const day=top?.querySelector('strong')?.textContent?.trim() || '';
-  if(!day)return;
-
-  const events=[...cell.querySelectorAll('.b232261-event')];
-  const income=events.find(e=>e.classList.contains('b232261-real-in'));
-  const projected=events.find(e=>e.classList.contains('b232261-plan-in'));
-  const expense=events.find(e=>e.classList.contains('b232261-real-out'));
-  const obligation=events.find(e=>e.classList.contains('b232261-plan-out')||e.classList.contains('b232261-debt'));
-  const generation=events.find(e=>e.classList.contains('b232261-gen'));
-
-  const val=e=>calendarAmount(e?.textContent);
-  const today=top?.querySelector('small')?.textContent?.trim()||'';
-
-  const positive=income ? val(income) : generation ? val(generation) : '';
-  const positiveProjected=!income && projected ? val(projected) : '';
-  const negative=expense ? val(expense) : '';
-  const obligationValue=obligation ? val(obligation) : '';
-
-  const parts=[];
-  if(positive)parts.push('<span class="b434-day-income">+'+esc(positive)+'</span>');
-  if(negative)parts.push('<span class="b434-day-expense">-'+esc(negative)+'</span>');
-  if(positiveProjected && parts.length<2)parts.push('<span class="b434-day-projected">+'+esc(positiveProjected)+'</span>');
-  if(obligationValue && parts.length<2)parts.push('<span class="b434-day-obligation">-'+esc(obligationValue)+'</span>');
-
-  const dots=[];
-  if(income||generation)dots.push('<i class="income"></i>');
-  if(expense)dots.push('<i class="expense"></i>');
-  if(projected||obligation)dots.push('<i class="planned"></i>');
-
-  cell.innerHTML=
-    '<div class="b434-day-top"><strong>'+esc(day)+'</strong>'+
-      (today?'<small>'+esc(today)+'</small>':'')+
-    '</div>'+
-    '<div class="b434-day-values">'+
-      (parts.slice(0,2).join('')||'<span class="b434-day-empty">—</span>')+
-    '</div>'+
-    '<div class="b434-day-dots">'+dots.join('')+'</div>';
-
-  cell.dataset.b434CalendarCompact='1';
-}
-
-function decorateCalendarMobile(section){
-  if(!section)return false;
-  const card=section.querySelector('.b232261-card');
-  if(!card)return false;
-
-  section.classList.add('b434-calendar-mobile');
-
-  const subs=card.querySelectorAll('.b232261-sub');
-  if(subs[0])subs[0].textContent='Calendario financiero';
-  if(subs[1])subs[1].textContent='Visualiza ingresos, gastos, obligaciones y saldo por día.';
-
-  const refresh=card.querySelector('#b232261Refresh');
-  if(refresh)refresh.setAttribute('aria-hidden','true');
-
-  card.querySelectorAll('.b232261-day').forEach(compactCalendarDay);
-  return true;
-}
-
-function watchCalendarMobile(section){
-  if(!section)return;
-  if(calendarObserver)calendarObserver.disconnect();
-
-  decorateCalendarMobile(section);
-
-  calendarObserver=new MutationObserver(()=>{
-    if(calendarDecorating)return;
-    calendarDecorating=true;
-    try{
-      decorateCalendarMobile(section);
-    }finally{
-      calendarDecorating=false;
-    }
-  });
-
-  calendarObserver.observe(section,{childList:true,subtree:true});
-
-  [80,250,600,1200].forEach(ms=>setTimeout(()=>{
-    if(section.isConnected)decorateCalendarMobile(section);
-  },ms));
-}
-
-function stopCalendarMobile(){
-  calendarObserver?.disconnect();
-  calendarObserver=null;
-  calendarDecorating=false;
-}
-
-
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
 function mirrorAll(){[
@@ -139,7 +33,6 @@ function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
  if(!activeModule)return;
- if(activeModule.id==='calendario')stopCalendarMobile();
  const el=activeModule;
  delete el.dataset.b434ModuleMoved;
  if(moduleMarker?.parentNode)moduleMarker.parentNode.insertBefore(el,moduleMarker.nextSibling);
@@ -327,9 +220,6 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
-   }
-   if(id==='calendario'){
-     watchCalendarMobile(activeModule);
    }
    setActive(id);
    return true;
