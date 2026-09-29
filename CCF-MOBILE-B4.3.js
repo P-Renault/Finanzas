@@ -11,6 +11,46 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
 let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let calendarObserver=null,calendarTimer=0;
+function stopCalendarMobileObserver(){
+ if(calendarObserver){calendarObserver.disconnect();calendarObserver=null}
+ clearTimeout(calendarTimer);calendarTimer=0;
+}
+function adaptCalendarMobile(){
+ if(!mobile())return false;
+ const section=by('calendario');if(!section)return false;
+ const apply=()=>{
+  if(!mobile()||!section.isConnected||section.classList.contains('hidden'))return;
+  const scroll=section.querySelector('.b232261-scroll'),grid=scroll?.querySelector('.b232261-grid');
+  if(!scroll||!grid)return;
+  let card=section.querySelector('[data-b434-calendar-card]');
+  if(!card){
+   card=document.createElement('section');
+   card.className='b434-calendar-mobile-card';
+   card.dataset.b434CalendarCard='1';
+   const head=document.createElement('header');
+   head.className='b434-calendar-mobile-card-head';
+   head.innerHTML='<div><span>CALENDARIO MENSUAL</span><strong data-calendar-period>—</strong></div>';
+   card.appendChild(head);
+   scroll.parentNode.insertBefore(card,scroll);
+   card.appendChild(scroll);
+  }
+  const nativeMonth=section.querySelector('.b232261-head h2'),period=card.querySelector('[data-calendar-period]');
+  if(period)period.textContent=nativeMonth?.textContent?.trim()||'Período mensual';
+  grid.classList.add('b434-calendar-mobile-grid');
+  scroll.classList.add('b434-calendar-mobile-scroll');
+ };
+ apply();
+ if(!calendarObserver){
+  calendarObserver=new MutationObserver(()=>{
+   clearTimeout(calendarTimer);calendarTimer=setTimeout(apply,0);
+  });
+  calendarObserver.observe(section,{childList:true,subtree:true});
+ }
+ [80,250,600,1200,2200].forEach(ms=>setTimeout(apply,ms));
+ return true;
+}
+
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -220,6 +260,12 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
+   }
+   if(id==='calendario'){
+     stopCalendarMobileObserver();
+     adaptCalendarMobile();
+   }else{
+     stopCalendarMobileObserver();
    }
    setActive(id);
    return true;
@@ -461,7 +507,7 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);stopCalendarMobileObserver();observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
