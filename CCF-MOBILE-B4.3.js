@@ -389,40 +389,82 @@ function installCalendarMobileStyle(){
  return style;
 }
 
+function forceCalendarMobileGlobal(){
+ if(!mobile())return false;
+ const grids=[...document.querySelectorAll('.b232261-grid')];
+ if(!grids.length)return false;
+ grids.forEach(grid=>{
+   grid.style.setProperty('display','grid','important');
+   grid.style.setProperty('width','100%','important');
+   grid.style.setProperty('max-width','100%','important');
+   grid.style.setProperty('min-width','0','important');
+   grid.style.setProperty('inline-size','100%','important');
+   grid.style.setProperty('min-inline-size','0','important');
+   grid.style.setProperty('max-inline-size','100%','important');
+   grid.style.setProperty('box-sizing','border-box','important');
+   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
+   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
+   grid.style.setProperty('grid-auto-flow','row','important');
+   grid.style.setProperty('gap','0','important');
+   grid.style.setProperty('overflow','hidden','important');
+   let p=grid.parentElement;
+   while(p && p!==document.body){
+     p.style.setProperty('min-width','0','important');
+     p.style.setProperty('min-inline-size','0','important');
+     p.style.setProperty('max-width','100%','important');
+     p.style.setProperty('max-inline-size','100%','important');
+     p.style.setProperty('box-sizing','border-box','important');
+     p.style.setProperty('overflow-x','hidden','important');
+     if(p.id==='calendario' || p.classList.contains('b434-module-host'))break;
+     p=p.parentElement;
+   }
+   [...grid.children].forEach(el=>{
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('width','auto','important');
+     el.style.setProperty('max-width','100%','important');
+     el.style.setProperty('min-inline-size','0','important');
+     el.style.setProperty('max-inline-size','100%','important');
+     el.style.setProperty('box-sizing','border-box','important');
+     el.style.setProperty('overflow','hidden','important');
+     el.style.setProperty('overflow-wrap','anywhere','important');
+   });
+ });
+ return true;
+}
+
 function scheduleCalendarMobile(){
  if(!mobile())return;
  installCalendarMobileStyle();
  calendarObserver?.disconnect();
  calendarObserver=null;
- const section=by('calendario');
- if(!section)return;
  const run=()=>{
    if(!mobile())return;
    installCalendarMobileStyle();
    forceCalendarMobile();
+   forceCalendarMobileGlobal();
  };
  run();
  if(window.MutationObserver){
-   calendarObserver=new MutationObserver(()=>{
-     requestAnimationFrame(run);
+   calendarObserver=new MutationObserver(mutations=>{
+     let relevant=false;
+     for(const m of mutations){
+       if(m.type!=='childList')continue;
+       if(m.target?.closest?.('#calendario') || [...m.addedNodes].some(n=>n.nodeType===1 && (n.matches?.('.b232261-grid,#calendario') || n.querySelector?.('.b232261-grid')))){relevant=true;break}
+     }
+     if(relevant)requestAnimationFrame(run);
    });
-   calendarObserver.observe(section,{childList:true,subtree:true});
+   calendarObserver.observe(document.body,{childList:true,subtree:true});
  }
- [0,40,100,200,400,800,1200,2000,3000].forEach(ms=>setTimeout(run,ms));
- /* B232.26.4/app.js son los propietarios de la carga y render del calendario.
-    B4.3 solo adapta la presentación móvil y no vuelve a disparar load(). */
+ [0,100,300,700,1200,2000].forEach(ms=>setTimeout(run,ms));
 }
 
 function bootCalendarMobileFromTab(){
  if(!mobile())return;
- /* Un solo arranque de adaptación; el MutationObserver cubre los renders posteriores. */
- [0,180,500,1000].forEach(ms=>setTimeout(()=>{
-   if(by('calendario'))scheduleCalendarMobile();
- },ms));
+ [0,250,600,1200].forEach(ms=>setTimeout(()=>{if(by('calendario'))scheduleCalendarMobile()},ms));
 }
 
 document.addEventListener('click',e=>{
- const b=e.target.closest?.('.tabs button[data-tab=\"calendario\"]');
+ const b=e.target.closest?.('.tabs button[data-tab="calendario"]');
  if(b)bootCalendarMobileFromTab();
 },true);
 
