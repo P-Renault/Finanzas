@@ -1,41 +1,11 @@
-B232.67 — CORRECCIÓN MOVIMIENTOS → LIQUIDEZ
+CCF-MOBILE-B4.3-CALENDAR-FINAL
 
-DIAGNÓSTICO CONFIRMADO
-El movimiento ID 80 ($8.474) quedó:
-- medio_pago = NULL
-- cuenta_id = NULL
-- naturaleza = NULL
-- liquidez_aplicada = false
+Reemplazar los dos archivos B4.3 actuales por:
+- CCF-MOBILE-B4.3.js
+- CCF-MOBILE-B4.3.css
 
-La causa es que app.js mantiene un handler legacy de movForm que inserta
-directamente en public.movimientos, sin usar el RPC B2.21.
+NO modificar index.html, app.js, Supabase/Auth, SQL/RLS ni B232.26.4-calendario-safe.js.
 
-SOLUCIÓN
-Este paquete instala un propietario de captura sobre movForm.
-Antes de que se ejecuten los handlers legacy:
-- intercepta el submit;
-- usa registrar_movimiento_liquidez_v1 para nuevos movimientos;
-- usa actualizar_movimiento_liquidez_v1 para ediciones;
-- aplica efectivo/cuenta bancaria;
-- aplica naturaleza;
-- impide doble registro;
-- conserva el comportamiento de fechas futuras.
-
-DESPLIEGUE
-Agregar en index.html, después de los módulos existentes:
-
-<script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
-
-No reemplaza B232.65 ni B232.66.
-
-PRUEBA
-1. Crear un gasto nuevo de $1.000 en efectivo.
-2. Debe crearse un solo movimiento.
-3. liquidez_aplicada debe quedar true.
-4. saldo_efectivo_actual debe bajar exactamente $1.000.
-5. No debe aparecer un segundo movimiento.
-6. Footer visible: B232.67-RELEASE-MOVIMIENTOS-LIQUIDEZ
-
-IMPORTANTE
-El movimiento histórico ID 80 no se corrige automáticamente. Primero se valida
-el nuevo circuito para evitar doble descuento del gasto que ya existe.
+La adaptación del calendario se ejecuta solo en <=720px y crea una caja interna
+para la cuadrícula mensual. El módulo B232.26.4 mantiene datos, navegación,
+selección y detalle.

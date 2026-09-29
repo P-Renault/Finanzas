@@ -2284,3 +2284,76 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     min-height:40px!important;
   }
 }
+
+
+/* ==========================================================
+   B4.3.4 — CALENDARIO MÓVIL · CAJA MENSUAL AISLADA
+   Presentación únicamente. B232.26.4 sigue siendo el dueño
+   de datos, navegación, selección y detalle.
+   ========================================================== */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario{
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    overflow-x:hidden!important;box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    box-sizing:border-box!important;overflow:hidden!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-head{
+    width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions{
+    width:100%!important;justify-content:flex-start!important;flex-wrap:wrap!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card{
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    margin:12px 0 0!important;padding:10px!important;box-sizing:border-box!important;
+    background:#f8fafc!important;border:1px solid #e5e7eb!important;
+    border-radius:12px!important;overflow:hidden!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card-head{
+    display:flex!important;align-items:center!important;justify-content:space-between!important;
+    gap:8px!important;min-width:0!important;margin:0 0 8px!important;padding:0 2px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card-head span{
+    display:block!important;color:#64748b!important;font-size:8px!important;font-weight:800!important;
+    letter-spacing:.04em!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card-head strong{
+    display:block!important;color:#111827!important;font-size:13px!important;line-height:1.2!important;margin-top:2px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-scroll{
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    overflow:hidden!important;box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-grid,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
+    display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week>div{
+    min-width:0!important;padding:6px 1px!important;font-size:7px!important;line-height:1.1!important;
+    text-align:center!important;overflow:hidden!important;white-space:nowrap!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    min-width:0!important;width:auto!important;min-height:104px!important;
+    padding:4px 3px!important;overflow:hidden!important;box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
+    min-width:0!important;font-size:10px!important;line-height:1.1!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
+    min-width:0!important;max-width:100%!important;padding:2px!important;
+    font-size:6.5px!important;line-height:1.15!important;white-space:nowrap!important;
+    overflow:hidden!important;text-overflow:ellipsis!important;box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{
+    max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;
+    white-space:nowrap!important;font-size:6.5px!important;
+  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
+    width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  }
+}
