@@ -436,6 +436,13 @@ function applyCalendarMobilePresentation(){
  if(!mobile())return false;
  const host=by('calendario');
  if(!host)return false;
+ host.classList.add('b434-calendar-mobile-ready');
+ host.style.setProperty('display','block','important');
+ host.style.setProperty('width','100%','important');
+ host.style.setProperty('max-width','100%','important');
+ host.style.setProperty('min-width','0','important');
+ host.style.setProperty('box-sizing','border-box','important');
+ host.style.setProperty('overflow-x','hidden','important');
  const card=host.querySelector('.b232261-card');
  if(card){
    let title=card.querySelector('.b434-calendar-mobile-title');
@@ -465,6 +472,17 @@ function applyCalendarMobilePresentation(){
      }
    }
    card.querySelectorAll('.b232261-status,.b232261-scope').forEach(el=>el.style.display='none');
+   const detail=card.querySelector('.b232261-detail');
+   if(detail){
+     detail.classList.add('b434-calendar-selected-detail');
+     let heading=detail.querySelector('.b434-calendar-selected-heading');
+     if(!heading){
+       heading=document.createElement('div');
+       heading.className='b434-calendar-selected-heading';
+       heading.innerHTML='<strong>Día seleccionado</strong><span>Ingresos, gastos, obligaciones y movimientos del día</span>';
+       detail.insertBefore(heading,detail.firstChild);
+     }
+   }
    const kpis=card.querySelector('.b232261-kpis');
    if(kpis){
      [...kpis.children].forEach((el,i)=>{
