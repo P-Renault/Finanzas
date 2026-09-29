@@ -60,11 +60,20 @@ function buildCalendarMobile(){
  if(scopeClone){scopeClone.classList.add('b434-calendar-mobile-scope');mobile.querySelector('.b434-calendar-mobile-period').appendChild(scopeClone)}
  const grid=mobile.querySelector('.b434-calendar-mobile-grid');
  nativeDays.forEach((nativeDay)=>{
-   const day=nativeDay.cloneNode(true);
-   day.removeAttribute('id');
+   const day=document.createElement('button');
+   day.type='button';
    day.className='b434-calendar-mobile-day'+(nativeDay.classList.contains('selected')?' selected':'')+(nativeDay.classList.contains('out')?' out':'');
+   day.dataset.b232261Date=nativeDay.dataset.b232261Date||'';
    day.setAttribute('role','gridcell');
    day.setAttribute('aria-label',nativeDay.getAttribute('aria-label')||nativeDay.textContent.trim());
+   const top=nativeDay.querySelector('.b232261-day-top');
+   if(top) day.appendChild(top.cloneNode(true));
+   nativeDay.querySelectorAll('.b232261-event').forEach((event,index)=>{if(index<3)day.appendChild(event.cloneNode(true));});
+   const events=nativeDay.querySelectorAll('.b232261-event').length;
+   if(events>3){const more=document.createElement('span');more.className='b232261-more';more.textContent='+'+(events-3)+' más';day.appendChild(more);}
+   const mini=nativeDay.querySelectorAll('.b232261-mini');
+   if(mini[0])day.appendChild(mini[0].cloneNode(true));
+   if(mini[1])day.appendChild(mini[1].cloneNode(true));
    day.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();nativeDay.click();scheduleCalendarMobile()};
    grid.appendChild(day);
  });
