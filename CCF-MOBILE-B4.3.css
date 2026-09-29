@@ -2357,3 +2357,9 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     display:none!important;
   }
 }
+
+/* B4.3.8 — fallback de montaje: la vista nativa nunca ocupa el viewport móvil */
+@media(max-width:720px){
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{display:none!important;visibility:hidden!important;}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-real{visibility:visible!important;}
+}

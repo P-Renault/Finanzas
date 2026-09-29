@@ -463,14 +463,28 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){stopCalendarMobile();clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
-function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
+function restore(){stopCalendarMobile();if(__b434CalendarHostObserver){__b434CalendarHostObserver.disconnect();__b434CalendarHostObserver=null}clearTimeout(__b434CalendarTimer);clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+let __b434CalendarHostObserver=null;
+function ensureCalendarHostObserver(){
+  if(__b434CalendarHostObserver) return;
+  const host=moduleHost(); if(!host) return;
+  __b434CalendarHostObserver=new MutationObserver(()=>{
+    if(!mobile()) return;
+    const cal=host.querySelector('#calendario');
+    if(cal){
+      clearTimeout(__b434CalendarTimer);
+      __b434CalendarTimer=setTimeout(()=>adaptCalendarMobileReal(),30);
+    }
+  });
+  __b434CalendarHostObserver.observe(host,{childList:true,subtree:true});
+}
+function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()} ensureCalendarHostObserver();}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 
 /* B4.3.7 — CALENDARIO MÓVIL REAL: RENDER VISUAL INDEPENDIENTE, DATOS NATIVOS */
-let __b434CalendarObserver=null;
+let __b434CalendarObserver=null,__b434CalendarTimer=0;
 function stopCalendarMobile(){
   if(__b434CalendarObserver){__b434CalendarObserver.disconnect();__b434CalendarObserver=null;}
 }
