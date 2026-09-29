@@ -10,7 +10,113 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null,calendarObserver=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+
+/* ==========================================================
+   CCF MOBILE B4.3.5 — CALENDARIO MOBILE NATIVO
+   Capa exclusiva de presentación móvil.
+   No modifica B232.26.4, Supabase, autenticación ni HTML.
+   ========================================================== */
+
+let calendarObserver=null, calendarDecorating=false;
+
+function calendarAmount(text){
+  const s=String(text||'');
+  const m=s.match(/\$\s*[\d.]+/);
+  return m ? m[0].replace(/\s+/g,'') : '';
+}
+
+function compactCalendarDay(cell){
+  if(!cell || cell.dataset.b434CalendarCompact==='1')return;
+  const top=cell.querySelector('.b232261-day-top');
+  const day=top?.querySelector('strong')?.textContent?.trim() || '';
+  if(!day)return;
+
+  const events=[...cell.querySelectorAll('.b232261-event')];
+  const income=events.find(e=>e.classList.contains('b232261-real-in'));
+  const projected=events.find(e=>e.classList.contains('b232261-plan-in'));
+  const expense=events.find(e=>e.classList.contains('b232261-real-out'));
+  const obligation=events.find(e=>e.classList.contains('b232261-plan-out')||e.classList.contains('b232261-debt'));
+  const generation=events.find(e=>e.classList.contains('b232261-gen'));
+
+  const val=e=>calendarAmount(e?.textContent);
+  const today=top?.querySelector('small')?.textContent?.trim()||'';
+
+  const positive=income ? val(income) : generation ? val(generation) : '';
+  const positiveProjected=!income && projected ? val(projected) : '';
+  const negative=expense ? val(expense) : '';
+  const obligationValue=obligation ? val(obligation) : '';
+
+  const parts=[];
+  if(positive)parts.push('<span class="b434-day-income">+'+esc(positive)+'</span>');
+  if(negative)parts.push('<span class="b434-day-expense">-'+esc(negative)+'</span>');
+  if(positiveProjected && parts.length<2)parts.push('<span class="b434-day-projected">+'+esc(positiveProjected)+'</span>');
+  if(obligationValue && parts.length<2)parts.push('<span class="b434-day-obligation">-'+esc(obligationValue)+'</span>');
+
+  const dots=[];
+  if(income||generation)dots.push('<i class="income"></i>');
+  if(expense)dots.push('<i class="expense"></i>');
+  if(projected||obligation)dots.push('<i class="planned"></i>');
+
+  cell.innerHTML=
+    '<div class="b434-day-top"><strong>'+esc(day)+'</strong>'+
+      (today?'<small>'+esc(today)+'</small>':'')+
+    '</div>'+
+    '<div class="b434-day-values">'+
+      (parts.slice(0,2).join('')||'<span class="b434-day-empty">—</span>')+
+    '</div>'+
+    '<div class="b434-day-dots">'+dots.join('')+'</div>';
+
+  cell.dataset.b434CalendarCompact='1';
+}
+
+function decorateCalendarMobile(section){
+  if(!section)return false;
+  const card=section.querySelector('.b232261-card');
+  if(!card)return false;
+
+  section.classList.add('b434-calendar-mobile');
+
+  const subs=card.querySelectorAll('.b232261-sub');
+  if(subs[0])subs[0].textContent='Calendario financiero';
+  if(subs[1])subs[1].textContent='Visualiza ingresos, gastos, obligaciones y saldo por día.';
+
+  const refresh=card.querySelector('#b232261Refresh');
+  if(refresh)refresh.setAttribute('aria-hidden','true');
+
+  card.querySelectorAll('.b232261-day').forEach(compactCalendarDay);
+  return true;
+}
+
+function watchCalendarMobile(section){
+  if(!section)return;
+  if(calendarObserver)calendarObserver.disconnect();
+
+  decorateCalendarMobile(section);
+
+  calendarObserver=new MutationObserver(()=>{
+    if(calendarDecorating)return;
+    calendarDecorating=true;
+    try{
+      decorateCalendarMobile(section);
+    }finally{
+      calendarDecorating=false;
+    }
+  });
+
+  calendarObserver.observe(section,{childList:true,subtree:true});
+
+  [80,250,600,1200].forEach(ms=>setTimeout(()=>{
+    if(section.isConnected)decorateCalendarMobile(section);
+  },ms));
+}
+
+function stopCalendarMobile(){
+  calendarObserver?.disconnect();
+  calendarObserver=null;
+  calendarDecorating=false;
+}
+
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -33,6 +139,7 @@ function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
  if(!activeModule)return;
+ if(activeModule.id==='calendario')stopCalendarMobile();
  const el=activeModule;
  delete el.dataset.b434ModuleMoved;
  if(moduleMarker?.parentNode)moduleMarker.parentNode.insertBefore(el,moduleMarker.nextSibling);
@@ -222,7 +329,7 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,2500);
    }
    if(id==='calendario'){
-     scheduleCalendarMobile();
+     watchCalendarMobile(activeModule);
    }
    setActive(id);
    return true;
@@ -284,294 +391,6 @@ function quick(type){
  const form=by('movForm');
  if(form)form.classList.add('b434-quick-form');
 }
-
-function forceCalendarMobile(){
- if(!mobile())return false;
- const section=by('calendario');
- if(!section)return false;
- section.classList.add('b434-calendar-mobile-force');
- section.style.setProperty('width','100%','important');
- section.style.setProperty('max-width','100%','important');
- section.style.setProperty('min-width','0','important');
- section.style.setProperty('box-sizing','border-box','important');
- section.style.setProperty('overflow-x','hidden','important');
- const grids=[...section.querySelectorAll('.b232261-grid')];
- if(!grids.length)return false;
- const weekday=/^(DOM|LUN|MAR|MIÉ|MIE|JUE|VIE|SÁB|SAB|SUN|MON|TUE|WED|THU|FRI|SAT)$/i;
- grids.forEach(grid=>{
-   /* El renderer nativo fija min-width:770px. La adaptación se aplica
-      directamente al nodo real, sin depender de clases auxiliares. */
-   let parent=grid.parentElement;
-   while(parent&&parent!==section){
-     parent.style.setProperty('width','100%','important');
-     parent.style.setProperty('max-width','100%','important');
-     parent.style.setProperty('min-width','0','important');
-     parent.style.setProperty('min-inline-size','0','important');
-     parent.style.setProperty('max-inline-size','100%','important');
-     parent.style.setProperty('box-sizing','border-box','important');
-     parent.style.setProperty('overflow-x','hidden','important');
-     parent=parent.parentElement;
-   }
-   grid.classList.add('b434-calendar-grid-force');
-   grid.style.setProperty('display','grid','important');
-   grid.style.setProperty('width','100%','important');
-   grid.style.setProperty('max-width','100%','important');
-   grid.style.setProperty('min-width','0','important');
-   grid.style.setProperty('inline-size','100%','important');
-   grid.style.setProperty('min-inline-size','0','important');
-   grid.style.setProperty('max-inline-size','100%','important');
-   grid.style.setProperty('box-sizing','border-box','important');
-   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
-   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
-   grid.style.setProperty('grid-auto-flow','row','important');
-   grid.style.setProperty('gap','0','important');
-   grid.style.setProperty('overflow','hidden','important');
-   const children=[...grid.children];
-   const hasWeekHead=children.length>=7 && children.slice(0,7).every(n=>weekday.test((n.textContent||'').trim()));
-   if(hasWeekHead){
-     grid.style.setProperty('grid-template-rows','30px repeat(6,minmax(72px,1fr))','important');
-   }else{
-     grid.style.removeProperty('grid-template-rows');
-   }
-   children.forEach((el,i)=>{
-     el.style.setProperty('min-width','0','important');
-     el.style.setProperty('width','auto','important');
-     el.style.setProperty('max-width','100%','important');
-     el.style.setProperty('min-inline-size','0','important');
-     el.style.setProperty('max-inline-size','100%','important');
-     el.style.setProperty('box-sizing','border-box','important');
-     el.style.setProperty('overflow','hidden','important');
-     el.style.setProperty('overflow-wrap','anywhere','important');
-     if(hasWeekHead&&i<7){
-       el.style.setProperty('height','30px','important');
-       el.style.setProperty('min-height','30px','important');
-       el.style.setProperty('max-height','30px','important');
-       el.style.setProperty('padding','6px 1px','important');
-       el.style.setProperty('font-size','8px','important');
-       el.style.setProperty('line-height','1','important');
-       el.style.setProperty('text-align','center','important');
-       el.style.setProperty('white-space','nowrap','important');
-     }else{
-       el.style.setProperty('min-height','72px','important');
-       el.style.setProperty('height','auto','important');
-       el.style.setProperty('max-height','none','important');
-       el.style.setProperty('padding','4px 3px','important');
-     }
-     el.querySelectorAll('*').forEach(node=>{
-       node.style.setProperty('min-width','0','important');
-       node.style.setProperty('max-width','100%','important');
-       node.style.setProperty('box-sizing','border-box','important');
-       node.style.setProperty('overflow-wrap','anywhere','important');
-     });
-   });
- });
- return true;
-}
-function installCalendarMobileStyle(){
- const id='b434-calendar-mobile-runtime-style';
- let style=document.getElementById(id);
- if(!style){
-   style=document.createElement('style');
-   style.id=id;
-   style.textContent=`
-@media(max-width:720px){
-  #calendario .b232261-scroll{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important;box-sizing:border-box!important}
-  #calendario .b232261-grid{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;inline-size:100%!important;min-inline-size:0!important;max-inline-size:100%!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-columns:minmax(0,1fr)!important;gap:0!important;overflow:hidden!important;box-sizing:border-box!important}
-  #calendario .b232261-grid>*{min-width:0!important;min-inline-size:0!important;width:auto!important;max-width:100%!important;max-inline-size:100%!important;box-sizing:border-box!important;overflow:hidden!important}
-  #calendario .b232261-grid>* *{min-width:0!important;min-inline-size:0!important;max-width:100%!important;max-inline-size:100%!important;box-sizing:border-box!important}
-  #calendario .b232261-event{font-size:7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
-  #calendario .b232261-mini{font-size:7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
-  #calendario .b232261-day-top{font-size:10px!important}
- }
-@media(max-width:390px){#calendario .b232261-event,#calendario .b232261-mini{font-size:6.5px!important}}`;
-   document.head.appendChild(style);
- }
- return style;
-}
-
-function forceCalendarMobileGlobal(){
- if(!mobile())return false;
- const grids=[...document.querySelectorAll('.b232261-grid')];
- if(!grids.length)return false;
- grids.forEach(grid=>{
-   grid.style.setProperty('display','grid','important');
-   grid.style.setProperty('width','100%','important');
-   grid.style.setProperty('max-width','100%','important');
-   grid.style.setProperty('min-width','0','important');
-   grid.style.setProperty('inline-size','100%','important');
-   grid.style.setProperty('min-inline-size','0','important');
-   grid.style.setProperty('max-inline-size','100%','important');
-   grid.style.setProperty('box-sizing','border-box','important');
-   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
-   grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
-   grid.style.setProperty('grid-auto-flow','row','important');
-   grid.style.setProperty('gap','0','important');
-   grid.style.setProperty('overflow','hidden','important');
-   let p=grid.parentElement;
-   while(p && p!==document.body){
-     p.style.setProperty('min-width','0','important');
-     p.style.setProperty('min-inline-size','0','important');
-     p.style.setProperty('max-width','100%','important');
-     p.style.setProperty('max-inline-size','100%','important');
-     p.style.setProperty('box-sizing','border-box','important');
-     p.style.setProperty('overflow-x','hidden','important');
-     if(p.id==='calendario' || p.classList.contains('b434-module-host'))break;
-     p=p.parentElement;
-   }
-   [...grid.children].forEach(el=>{
-     el.style.setProperty('min-width','0','important');
-     el.style.setProperty('width','auto','important');
-     el.style.setProperty('max-width','100%','important');
-     el.style.setProperty('min-inline-size','0','important');
-     el.style.setProperty('max-inline-size','100%','important');
-     el.style.setProperty('box-sizing','border-box','important');
-     el.style.setProperty('overflow','hidden','important');
-     el.style.setProperty('overflow-wrap','anywhere','important');
-   });
- });
- return true;
-}
-
-function applyCalendarMobilePresentation(){
- if(!mobile())return false;
- const host=by('calendario');
- if(!host)return false;
- host.classList.add('b434-calendar-mobile-ready');
- host.style.setProperty('display','block','important');
- host.style.setProperty('width','100%','important');
- host.style.setProperty('max-width','100%','important');
- host.style.setProperty('min-width','0','important');
- host.style.setProperty('box-sizing','border-box','important');
- host.style.setProperty('overflow-x','hidden','important');
- const card=host.querySelector('.b232261-card');
- if(card){
-   let title=card.querySelector('.b434-calendar-mobile-title');
-   if(!title){
-     title=document.createElement('div');
-     title.className='b434-calendar-mobile-title';
-     title.innerHTML='<h1>Calendario financiero</h1><p>Visualiza ingresos, gastos, obligaciones y saldo por día</p>';
-     card.insertBefore(title,card.firstChild);
-   }
-   const head=card.querySelector('.b232261-head');
-   if(head){
-     const nativeTitle=head.querySelector('h2');
-     const actions=head.querySelector('.b232261-actions');
-     if(actions){
-       const prev=actions.querySelector('#b232261Prev');
-       const next=actions.querySelector('#b232261Next');
-       const today=actions.querySelector('#b232261Today');
-       let month=actions.querySelector('.b434-calendar-mobile-month');
-       if(!month){
-         month=document.createElement('span');
-         month.className='b434-calendar-mobile-month';
-       }
-       month.textContent=nativeTitle?.textContent?.trim()||'Mes actual';
-       if(prev&&next&&today) actions.replaceChildren(prev,month,next,today);
-       const refresh=actions.querySelector('#b232261Refresh');
-       if(refresh)refresh.style.display='none';
-     }
-   }
-   card.querySelectorAll('.b232261-status,.b232261-scope').forEach(el=>el.style.display='none');
-   const detail=card.querySelector('.b232261-detail');
-   if(detail){
-     detail.classList.add('b434-calendar-selected-detail');
-     let heading=detail.querySelector('.b434-calendar-selected-heading');
-     if(!heading){
-       heading=document.createElement('div');
-       heading.className='b434-calendar-selected-heading';
-       heading.innerHTML='<strong>Día seleccionado</strong><span>Ingresos, gastos, obligaciones y movimientos del día</span>';
-       detail.insertBefore(heading,detail.firstChild);
-     }
-   }
-   const kpis=card.querySelector('.b232261-kpis');
-   if(kpis){
-     [...kpis.children].forEach((el,i)=>{
-       el.dataset.b434CalendarKpi=String(i+1);
-       el.style.display=(i===0||i===1||i===3||i===4)?'':'none';
-     });
-   }
- }
- const grids=[...host.querySelectorAll('.b232261-grid')];
- grids.forEach(grid=>{
-   grid.classList.add('b434-calendar-flex-grid');
-   grid.style.setProperty('display','flex','important');
-   grid.style.setProperty('flex-wrap','wrap','important');
-   grid.style.setProperty('align-content','flex-start','important');
-   grid.style.setProperty('width','100%','important');
-   grid.style.setProperty('max-width','100%','important');
-   grid.style.setProperty('min-width','0','important');
-   grid.style.setProperty('inline-size','100%','important');
-   grid.style.setProperty('min-inline-size','0','important');
-   grid.style.setProperty('max-inline-size','100%','important');
-   grid.style.setProperty('box-sizing','border-box','important');
-   grid.style.setProperty('overflow','hidden','important');
-   [...grid.children].forEach((el,i)=>{
-     el.style.setProperty('flex','0 0 14.285714%','important');
-     el.style.setProperty('width','14.285714%','important');
-     el.style.setProperty('max-width','14.285714%','important');
-     el.style.setProperty('min-width','0','important');
-     el.style.setProperty('min-inline-size','0','important');
-     el.style.setProperty('max-inline-size','14.285714%','important');
-     el.style.setProperty('box-sizing','border-box','important');
-     el.style.setProperty('overflow','hidden','important');
-     el.style.setProperty('overflow-wrap','anywhere','important');
-     if(i<7){
-       el.style.setProperty('height','32px','important');
-       el.style.setProperty('min-height','32px','important');
-       el.style.setProperty('max-height','32px','important');
-     }else{
-       el.style.setProperty('height','88px','important');
-       el.style.setProperty('min-height','88px','important');
-       el.style.setProperty('max-height','88px','important');
-     }
-   });
-   const scroll=grid.parentElement;
-   if(scroll){
-     scroll.style.setProperty('width','100%','important');
-     scroll.style.setProperty('max-width','100%','important');
-     scroll.style.setProperty('min-width','0','important');
-     scroll.style.setProperty('overflow','hidden','important');
-     scroll.style.setProperty('box-sizing','border-box','important');
-   }
- });
- return true;
-}
-function scheduleCalendarMobile(){
- if(!mobile())return;
- installCalendarMobileStyle();
- calendarObserver?.disconnect();
- calendarObserver=null;
- const run=()=>{
-   if(!mobile())return;
-   installCalendarMobileStyle();
-   forceCalendarMobile();
-   forceCalendarMobileGlobal();
-   applyCalendarMobilePresentation();
- };
- run();
- if(window.MutationObserver){
-   calendarObserver=new MutationObserver(mutations=>{
-     let relevant=false;
-     for(const m of mutations){
-       if(m.type!=='childList')continue;
-       if(m.target?.closest?.('#calendario') || [...m.addedNodes].some(n=>n.nodeType===1 && (n.matches?.('.b232261-grid,#calendario') || n.querySelector?.('.b232261-grid')))){relevant=true;break}
-     }
-     if(relevant)requestAnimationFrame(run);
-   });
-   calendarObserver.observe(document.body,{childList:true,subtree:true});
- }
- [0,100,300,700,1200,2000].forEach(ms=>setTimeout(run,ms));
-}
-
-function bootCalendarMobileFromTab(){
- if(!mobile())return;
- [0,250,600,1200].forEach(ms=>setTimeout(()=>{if(by('calendario'))scheduleCalendarMobile()},ms));
-}
-
-document.addEventListener('click',e=>{
- const b=e.target.closest?.('.tabs button[data-tab="calendario"]');
- if(b)bootCalendarMobileFromTab();
-},true);
 
 function syncConsolidatedReport(){
  if(!root)return;
@@ -752,9 +571,9 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.5-calendar-mobile-final',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
