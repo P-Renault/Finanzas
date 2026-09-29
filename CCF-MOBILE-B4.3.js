@@ -31,7 +31,58 @@ function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
 function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));document.body.classList.remove('b434-lock')}
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
+
+function stopCalendarMobile(){
+ if(window.__ccfCalendarMobileObserver){window.__ccfCalendarMobileObserver.disconnect();window.__ccfCalendarMobileObserver=null}
+ if(window.__ccfCalendarMobileTimer){clearTimeout(window.__ccfCalendarMobileTimer);window.__ccfCalendarMobileTimer=null}
+}
+function scheduleCalendarMobile(){
+ clearTimeout(window.__ccfCalendarMobileTimer);
+ window.__ccfCalendarMobileTimer=setTimeout(buildCalendarMobile,40);
+}
+function buildCalendarMobile(){
+ const section=by('calendario');
+ if(!section||section.classList.contains('hidden'))return;
+ const nativeCard=section.querySelector('.b232261-card');
+ const nativeScroll=nativeCard?.querySelector('.b232261-scroll');
+ const nativeGrid=nativeCard?.querySelector('.b232261-grid.b232261-week');
+ if(!nativeCard||!nativeScroll||!nativeGrid)return;
+ if(nativeCard.querySelector('.b434-calendar-mobile'))return;
+ const nativeDays=[...nativeGrid.querySelectorAll('button.b232261-day[data-b232261-date]')];
+ if(nativeDays.length!==42)return;
+ const mobile=document.createElement('section');
+ mobile.className='b434-calendar-mobile';
+ mobile.setAttribute('aria-label','Calendario mensual móvil');
+ const monthTitle=nativeCard.querySelector('.b232261-head h2')?.textContent?.trim()||'Calendario';
+ const scope=nativeCard.querySelector('.b232261-scope');
+ const scopeClone=scope?.cloneNode(true);
+ mobile.innerHTML='<div class="b434-calendar-mobile-period"><strong>'+esc(monthTitle)+'</strong></div><div class="b434-calendar-mobile-week" role="row">'+['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'].map(x=>'<div role="columnheader">'+x+'</div>').join('')+'</div><div class="b434-calendar-mobile-grid" role="grid"></div>';
+ if(scopeClone){scopeClone.classList.add('b434-calendar-mobile-scope');mobile.querySelector('.b434-calendar-mobile-period').appendChild(scopeClone)}
+ const grid=mobile.querySelector('.b434-calendar-mobile-grid');
+ nativeDays.forEach((nativeDay)=>{
+   const day=nativeDay.cloneNode(true);
+   day.removeAttribute('id');
+   day.className='b434-calendar-mobile-day'+(nativeDay.classList.contains('selected')?' selected':'')+(nativeDay.classList.contains('out')?' out':'');
+   day.setAttribute('role','gridcell');
+   day.setAttribute('aria-label',nativeDay.getAttribute('aria-label')||nativeDay.textContent.trim());
+   day.onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();nativeDay.click();scheduleCalendarMobile()};
+   grid.appendChild(day);
+ });
+ nativeScroll.hidden=true;
+ nativeCard.insertBefore(mobile,nativeScroll);
+}
+function startCalendarMobile(){
+ stopCalendarMobile();
+ const section=by('calendario');
+ if(!section)return;
+ scheduleCalendarMobile();
+ const observer=new MutationObserver(()=>scheduleCalendarMobile());
+ observer.observe(section,{childList:true,subtree:true});
+ window.__ccfCalendarMobileObserver=observer;
+}
+
 function restoreActiveModule(){
+ stopCalendarMobile();
  if(!activeModule)return;
  const el=activeModule;
  delete el.dataset.b434ModuleMoved;
@@ -220,6 +271,11 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
+   }
+   if(id==='calendario'){
+     startCalendarMobile();
+   }else{
+     stopCalendarMobile();
    }
    setActive(id);
    return true;
