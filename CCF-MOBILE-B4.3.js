@@ -432,6 +432,92 @@ function forceCalendarMobileGlobal(){
  return true;
 }
 
+function applyCalendarMobilePresentation(){
+ if(!mobile())return false;
+ const host=by('calendario');
+ if(!host)return false;
+ const card=host.querySelector('.b232261-card');
+ if(card){
+   let title=card.querySelector('.b434-calendar-mobile-title');
+   if(!title){
+     title=document.createElement('div');
+     title.className='b434-calendar-mobile-title';
+     title.innerHTML='<h1>Calendario financiero</h1><p>Visualiza ingresos, gastos, obligaciones y saldo por día</p>';
+     card.insertBefore(title,card.firstChild);
+   }
+   const head=card.querySelector('.b232261-head');
+   if(head){
+     const nativeTitle=head.querySelector('h2');
+     const actions=head.querySelector('.b232261-actions');
+     if(actions){
+       const prev=actions.querySelector('#b232261Prev');
+       const next=actions.querySelector('#b232261Next');
+       const today=actions.querySelector('#b232261Today');
+       let month=actions.querySelector('.b434-calendar-mobile-month');
+       if(!month){
+         month=document.createElement('span');
+         month.className='b434-calendar-mobile-month';
+       }
+       month.textContent=nativeTitle?.textContent?.trim()||'Mes actual';
+       if(prev&&next&&today) actions.replaceChildren(prev,month,next,today);
+       const refresh=actions.querySelector('#b232261Refresh');
+       if(refresh)refresh.style.display='none';
+     }
+   }
+   card.querySelectorAll('.b232261-status,.b232261-scope').forEach(el=>el.style.display='none');
+   const kpis=card.querySelector('.b232261-kpis');
+   if(kpis){
+     [...kpis.children].forEach((el,i)=>{
+       el.dataset.b434CalendarKpi=String(i+1);
+       el.style.display=(i===0||i===1||i===3||i===4)?'':'none';
+     });
+   }
+ }
+ const grids=[...host.querySelectorAll('.b232261-grid')];
+ grids.forEach(grid=>{
+   grid.classList.add('b434-calendar-flex-grid');
+   grid.style.setProperty('display','flex','important');
+   grid.style.setProperty('flex-wrap','wrap','important');
+   grid.style.setProperty('align-content','flex-start','important');
+   grid.style.setProperty('width','100%','important');
+   grid.style.setProperty('max-width','100%','important');
+   grid.style.setProperty('min-width','0','important');
+   grid.style.setProperty('inline-size','100%','important');
+   grid.style.setProperty('min-inline-size','0','important');
+   grid.style.setProperty('max-inline-size','100%','important');
+   grid.style.setProperty('box-sizing','border-box','important');
+   grid.style.setProperty('overflow','hidden','important');
+   [...grid.children].forEach((el,i)=>{
+     el.style.setProperty('flex','0 0 14.285714%','important');
+     el.style.setProperty('width','14.285714%','important');
+     el.style.setProperty('max-width','14.285714%','important');
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('min-inline-size','0','important');
+     el.style.setProperty('max-inline-size','14.285714%','important');
+     el.style.setProperty('box-sizing','border-box','important');
+     el.style.setProperty('overflow','hidden','important');
+     el.style.setProperty('overflow-wrap','anywhere','important');
+     if(i<7){
+       el.style.setProperty('height','32px','important');
+       el.style.setProperty('min-height','32px','important');
+       el.style.setProperty('max-height','32px','important');
+     }else{
+       el.style.setProperty('height','88px','important');
+       el.style.setProperty('min-height','88px','important');
+       el.style.setProperty('max-height','88px','important');
+     }
+   });
+   const scroll=grid.parentElement;
+   if(scroll){
+     scroll.style.setProperty('width','100%','important');
+     scroll.style.setProperty('max-width','100%','important');
+     scroll.style.setProperty('min-width','0','important');
+     scroll.style.setProperty('overflow','hidden','important');
+     scroll.style.setProperty('box-sizing','border-box','important');
+   }
+ });
+ return true;
+}
 function scheduleCalendarMobile(){
  if(!mobile())return;
  installCalendarMobileStyle();
@@ -442,6 +528,7 @@ function scheduleCalendarMobile(){
    installCalendarMobileStyle();
    forceCalendarMobile();
    forceCalendarMobileGlobal();
+   applyCalendarMobilePresentation();
  };
  run();
  if(window.MutationObserver){
@@ -651,5 +738,5 @@ function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=nul
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.5-calendar-mobile-final',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
