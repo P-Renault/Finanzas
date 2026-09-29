@@ -1,0 +1,229 @@
+diff --git a/CCF-MOBILE-B4.3.js b/CCF-MOBILE-B4.3.js
+--- a/CCF-MOBILE-B4.3.js
++++ b/CCF-MOBILE-B4.3.js
+@@
+- let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
++ let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
++ let calendarObserver=null,calendarTimer=0;
++
++ function stopCalendarMobileObserver(){
++  if(calendarObserver){calendarObserver.disconnect();calendarObserver=null}
++  clearTimeout(calendarTimer);calendarTimer=0;
++ }
++
++ function adaptCalendarMobile(){
++  if(!mobile())return false;
++  const section=by('calendario');
++  if(!section)return false;
++
++  const apply=()=>{
++   if(!mobile()||!section.isConnected||section.classList.contains('hidden'))return;
++   const scroll=section.querySelector('.b232261-scroll');
++   const grid=scroll?.querySelector('.b232261-grid');
++   if(!scroll||!grid)return;
++
++   let card=section.querySelector('[data-b434-calendar-card]');
++   if(!card){
++    card=document.createElement('section');
++    card.className='b434-calendar-mobile-card';
++    card.dataset.b434CalendarCard='1';
++    const head=document.createElement('header');
++    head.className='b434-calendar-mobile-card-head';
++    head.innerHTML='<div><span>CALENDARIO MENSUAL</span><strong data-calendar-period>—</strong></div>';
++    card.appendChild(head);
++    scroll.parentNode.insertBefore(card,scroll);
++    card.appendChild(scroll);
++   }
++
++   const nativeMonth=section.querySelector('.b232261-head h2');
++   const period=card.querySelector('[data-calendar-period]');
++   if(period)period.textContent=nativeMonth?.textContent?.trim()||'Período mensual';
++
++   grid.classList.add('b434-calendar-mobile-grid');
++   scroll.classList.add('b434-calendar-mobile-scroll');
++   return true;
++  };
++
++  apply();
++  if(!calendarObserver){
++   calendarObserver=new MutationObserver(()=>{
++    clearTimeout(calendarTimer);
++    calendarTimer=setTimeout(apply,0);
++   });
++   calendarObserver.observe(section,{childList:true,subtree:true});
++  }
++  [80,250,600,1200,2200].forEach(ms=>setTimeout(apply,ms));
++  return true;
++ }
+@@
+ function showModuleAfterNavigation(id){
+@@
+   const ok=adaptDesktopModule(id);
+   if(ok){
+@@
+     if(id==='movimientos'){
+@@
+       setTimeout(adaptMovementsMobile,2500);
+     }
++    if(id==='calendario'){
++      stopCalendarMobileObserver();
++      adaptCalendarMobile();
++    }else{
++      stopCalendarMobileObserver();
++    }
+     setActive(id);
+     return true;
+   }
+@@
+ function restore(){
++  stopCalendarMobileObserver();
+   clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')
+ }
+diff --git a/CCF-MOBILE-B4.3.css b/CCF-MOBILE-B4.3.css
+--- a/CCF-MOBILE-B4.3.css
++++ b/CCF-MOBILE-B4.3.css
+@@
++/* ============================================================
++   B4.3 · CALENDARIO MÓVIL — CAJA MENSUAL AISLADA
++   Solo presentación. El propietario de datos sigue siendo
++   B232.26.4-calendario-safe.js.
++   ============================================================ */
++@media(max-width:720px){
++  #ccf-mobile-b43 .b434-module-host #calendario{
++    width:100%!important;
++    min-width:0!important;
++    max-width:100%!important;
++    overflow-x:hidden!important;
++    box-sizing:border-box!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
++    width:100%!important;
++    min-width:0!important;
++    max-width:100%!important;
++    box-sizing:border-box!important;
++    overflow:hidden!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-head{
++    width:100%!important;
++    min-width:0!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions{
++    width:100%!important;
++    justify-content:flex-start!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card{
++    width:100%!important;
++    min-width:0!important;
++    max-width:100%!important;
++    margin:12px 0 0!important;
++    padding:10px!important;
++    box-sizing:border-box!important;
++    background:#f8fafc!important;
++    border:1px solid #e5e7eb!important;
++    border-radius:12px!important;
++    overflow:hidden!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card-head{
++    display:flex!important;
++    align-items:center!important;
++    justify-content:space-between!important;
++    gap:8px!important;
++    min-width:0!important;
++    margin:0 0 8px!important;
++    padding:0 2px!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card-head span{
++    display:block!important;
++    color:#64748b!important;
++    font-size:8px!important;
++    font-weight:800!important;
++    letter-spacing:.04em!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card-head strong{
++    display:block!important;
++    margin-top:2px!important;
++    color:#111827!important;
++    font-size:13px!important;
++    line-height:1.2!important;
++    overflow-wrap:anywhere!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-scroll{
++    width:100%!important;
++    min-width:0!important;
++    max-width:100%!important;
++    overflow:hidden!important;
++    box-sizing:border-box!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-grid,
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
++    display:grid!important;
++    grid-template-columns:repeat(7,minmax(0,1fr))!important;
++    width:100%!important;
++    min-width:0!important;
++    max-width:100%!important;
++    box-sizing:border-box!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week>div{
++    min-width:0!important;
++    padding:6px 1px!important;
++    font-size:7px!important;
++    overflow:hidden!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
++    min-width:0!important;
++    min-height:104px!important;
++    width:auto!important;
++    padding:4px 3px!important;
++    overflow:hidden!important;
++    box-sizing:border-box!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
++    min-width:0!important;
++    font-size:10px!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
++    font-size:6px!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
++    min-width:0!important;
++    max-width:100%!important;
++    margin-top:2px!important;
++    padding:2px 2px!important;
++    font-size:6.5px!important;
++    line-height:1.15!important;
++    white-space:nowrap!important;
++    overflow:hidden!important;
++    text-overflow:ellipsis!important;
++    box-sizing:border-box!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{
++    max-width:100%!important;
++    overflow:hidden!important;
++    text-overflow:ellipsis!important;
++    white-space:nowrap!important;
++    font-size:6.5px!important;
++    line-height:1.15!important;
++  }
++
++  #ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
++    width:100%!important;
++    min-width:0!important;
++    box-sizing:border-box!important;
++  }
++}
