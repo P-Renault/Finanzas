@@ -367,23 +367,67 @@ function forceCalendarMobile(){
  });
  return true;
 }
+function installCalendarMobileStyle(){
+ const id='b434-calendar-mobile-runtime-style';
+ let style=document.getElementById(id);
+ if(!style){
+   style=document.createElement('style');
+   style.id=id;
+   style.textContent=`
+@media(max-width:720px){
+  #calendario .b232261-scroll{width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:hidden!important;box-sizing:border-box!important}
+  #calendario .b232261-grid{display:grid!important;width:100%!important;max-width:100%!important;min-width:0!important;inline-size:100%!important;min-inline-size:0!important;max-inline-size:100%!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-auto-columns:minmax(0,1fr)!important;gap:0!important;overflow:hidden!important;box-sizing:border-box!important}
+  #calendario .b232261-grid>*{min-width:0!important;min-inline-size:0!important;width:auto!important;max-width:100%!important;max-inline-size:100%!important;box-sizing:border-box!important;overflow:hidden!important}
+  #calendario .b232261-grid>* *{min-width:0!important;min-inline-size:0!important;max-width:100%!important;max-inline-size:100%!important;box-sizing:border-box!important}
+  #calendario .b232261-event{font-size:7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #calendario .b232261-mini{font-size:7px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  #calendario .b232261-day-top{font-size:10px!important}
+ }
+@media(max-width:390px){#calendario .b232261-event,#calendario .b232261-mini{font-size:6.5px!important}}`;
+   document.head.appendChild(style);
+ }
+ return style;
+}
+
 function scheduleCalendarMobile(){
  if(!mobile())return;
+ installCalendarMobileStyle();
  calendarObserver?.disconnect();
+ calendarObserver=null;
  const section=by('calendario');
  if(!section)return;
- const run=()=>{if(mobile())forceCalendarMobile()};
+ const run=()=>{
+   if(!mobile())return;
+   installCalendarMobileStyle();
+   forceCalendarMobile();
+ };
  run();
- calendarObserver=new MutationObserver(()=>run());
- calendarObserver.observe(section,{childList:true,subtree:true});
- [80,250,500,900,1400,2200].forEach(ms=>setTimeout(run,ms));
+ if(window.MutationObserver){
+   calendarObserver=new MutationObserver(()=>{
+     requestAnimationFrame(run);
+   });
+   calendarObserver.observe(section,{childList:true,subtree:true});
+ }
+ [0,40,100,200,400,800,1200,2000,3000].forEach(ms=>setTimeout(run,ms));
  try{
    if(window.B232Calendario&&typeof window.B232Calendario.load==='function'){
      const r=window.B232Calendario.load();
-     if(r&&typeof r.then==='function')r.then(run).catch(()=>run());
+     if(r&&typeof r.then==='function')r.then(()=>{[0,50,150].forEach(ms=>setTimeout(run,ms))}).catch(()=>run());
    }
- }catch(e){console.warn('[CCF MOBILE] calendar load',e)}
+ }catch(e){console.warn('[CCF MOBILE] calendar load',e);run()}
 }
+
+function bootCalendarMobileFromTab(){
+ if(!mobile())return;
+ [0,80,180,350,700,1200,2000].forEach(ms=>setTimeout(()=>{
+   if(by('calendario'))scheduleCalendarMobile();
+ },ms));
+}
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest?.('.tabs button[data-tab=\"calendario\"]');
+ if(b)bootCalendarMobileFromTab();
+},true);
 
 function syncConsolidatedReport(){
  if(!root)return;
