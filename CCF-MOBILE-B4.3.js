@@ -409,17 +409,14 @@ function scheduleCalendarMobile(){
    calendarObserver.observe(section,{childList:true,subtree:true});
  }
  [0,40,100,200,400,800,1200,2000,3000].forEach(ms=>setTimeout(run,ms));
- try{
-   if(window.B232Calendario&&typeof window.B232Calendario.load==='function'){
-     const r=window.B232Calendario.load();
-     if(r&&typeof r.then==='function')r.then(()=>{[0,50,150].forEach(ms=>setTimeout(run,ms))}).catch(()=>run());
-   }
- }catch(e){console.warn('[CCF MOBILE] calendar load',e);run()}
+ /* B232.26.4/app.js son los propietarios de la carga y render del calendario.
+    B4.3 solo adapta la presentación móvil y no vuelve a disparar load(). */
 }
 
 function bootCalendarMobileFromTab(){
  if(!mobile())return;
- [0,80,180,350,700,1200,2000].forEach(ms=>setTimeout(()=>{
+ /* Un solo arranque de adaptación; el MutationObserver cubre los renders posteriores. */
+ [0,180,500,1000].forEach(ms=>setTimeout(()=>{
    if(by('calendario'))scheduleCalendarMobile();
  },ms));
 }
