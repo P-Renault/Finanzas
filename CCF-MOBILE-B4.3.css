@@ -2286,80 +2286,22 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 }
 
 
-/* B4.3.7 — CALENDARIO MÓVIL REAL */
+/* B4.3.7 — CALENDARIO MÓVIL: RENDER INDEPENDIENTE DESDE DOM NATIVO */
 @media(max-width:720px){
-  #ccf-mobile-b43 .b434-module-host #calendario{
-    width:100%!important;min-width:0!important;max-width:100%!important;
-    overflow-x:hidden!important;box-sizing:border-box!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
-    width:100%!important;min-width:0!important;max-width:100%!important;
-    box-sizing:border-box!important;overflow:hidden!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-real{
-    display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;
-    margin:10px 0!important;padding:8px!important;box-sizing:border-box!important;
-    background:#f8fafc!important;border:1px solid #dfe6ee!important;border-radius:14px!important;
-    overflow:hidden!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-real-period{
-    width:100%!important;box-sizing:border-box!important;
-    padding:7px 8px!important;margin:0 0 7px!important;
-    text-align:center!important;font-size:12px!important;font-weight:800!important;
-    color:#172033!important;background:#fff!important;border:1px solid #e5eaf0!important;
-    border-radius:9px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-real-grid{
-    display:grid!important;
-    grid-template-columns:repeat(7,minmax(0,1fr))!important;
-    grid-auto-rows:minmax(82px,auto)!important;
-    width:100%!important;min-width:0!important;max-width:100%!important;
-    margin:0!important;padding:0!important;box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-weekday{
-    min-width:0!important;width:auto!important;box-sizing:border-box!important;
-    padding:6px 1px!important;text-align:center!important;
-    font-size:7px!important;font-weight:800!important;color:#172033!important;
-    background:#fff!important;border-bottom:1px solid #dfe6ee!important;
-    overflow:hidden!important;white-space:nowrap!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day{
-    display:block!important;position:relative!important;
-    min-width:0!important;width:auto!important;max-width:100%!important;
-    min-height:82px!important;height:auto!important;box-sizing:border-box!important;
-    margin:0!important;padding:4px 3px!important;
-    border:1px solid #e5eaf0!important;border-top:0!important;border-left:0!important;
-    border-radius:0!important;background:#fff!important;overflow:hidden!important;
-    font-size:9px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day *{
-    max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-day-top{
-    width:100%!important;font-size:10px!important;line-height:1.1!important;
-    margin:0 0 3px!important;overflow:hidden!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-event,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
-    display:block!important;width:100%!important;max-width:100%!important;
-    min-width:0!important;margin:2px 0 0!important;padding:2px 2px!important;
-    font-size:6px!important;line-height:1.15!important;
-    overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-more,
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-mini{
-    display:block!important;width:100%!important;max-width:100%!important;
-    overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
-    font-size:6px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
-    display:none!important;
-  }
-}
-
-/* B4.3.8 — fallback de montaje: la vista nativa nunca ocupa el viewport móvil */
-@media(max-width:720px){
-#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{display:none!important;visibility:hidden!important;}
-#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-real{visibility:visible!important;}
+#ccf-mobile-b43 .b434-module-host #calendario{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow-x:hidden!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-card{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll[hidden]{display:none!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-card{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:10px 0!important;padding:8px!important;box-sizing:border-box!important;background:#f8fafc!important;border:1px solid #dfe6ee!important;border-radius:14px!important;overflow:hidden!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-period{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;width:100%!important;box-sizing:border-box!important;padding:7px 3px 9px!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-period span{font-size:7px!important;font-weight:800!important;color:#64748b!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-period strong{font-size:12px!important;font-weight:900!important;color:#172033!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;gap:0!important;overflow:hidden!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-weekday{min-width:0!important;width:auto!important;box-sizing:border-box!important;padding:6px 0!important;text-align:center!important;font-size:7px!important;font-weight:900!important;color:#64748b!important;overflow:hidden!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day{appearance:none!important;-webkit-appearance:none!important;min-width:0!important;width:100%!important;max-width:100%!important;min-height:88px!important;height:auto!important;box-sizing:border-box!important;padding:4px 2px!important;margin:0!important;border:1px solid #e6ebf0!important;border-radius:0!important;background:#fff!important;color:#172033!important;overflow:hidden!important;text-align:left!important;vertical-align:top!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day.today{box-shadow:inset 0 0 0 2px #1688f8!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day.is-selected{box-shadow:inset 0 0 0 2px #071b34!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day *{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-day-top{width:100%!important;font-size:10px!important;line-height:1.1!important;overflow:hidden!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-event{display:block!important;width:100%!important;max-width:100%!important;margin-top:2px!important;padding:2px 2px!important;font-size:6px!important;line-height:1.15!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;border-radius:3px!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-more,#ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-mobile-day .b232261-mini{display:block!important;max-width:100%!important;font-size:6px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 }
