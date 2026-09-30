@@ -211,64 +211,80 @@ function calendarIsMobile(){
 }
 
 function adaptB232261CalendarMobile(){
-  if(!calendarIsMobile())return false;
+  if(!calendarIsMobile()) return false;
   const section=by('calendario');
-  if(!section)return false;
+  if(!section) return false;
+
   const card=section.querySelector('.b232261-card');
   const scroll=section.querySelector('.b232261-scroll');
-  const grid=section.querySelector('.b232261-grid.b232261-week') || section.querySelector('.b232261-grid');
-  if(!card||!scroll||!grid)return false;
+  const grid=section.querySelector('.b232261-grid.b232261-week') ||
+             section.querySelector('.b232261-grid');
+  if(!card||!scroll||!grid) return false;
 
-  /* Bootstrap 5.3.6: .row + .g-0. El ancho de 1/7 es específico del calendario. */
+  /*
+   * Bootstrap 5 grid aislado al calendario.
+   * No depende de un breakpoint de 370px: 370px es el ancho de referencia
+   * del widget. La grilla siempre ocupa el ancho real disponible.
+   */
   grid.classList.add('row','g-0','b434-bs-calendar-row');
-  [...grid.children].forEach(cell=>cell.classList.add('col','b434-bs-calendar-col'));
 
-  const imp=(el,p,v)=>el?.style.setProperty(p,v,'important');
-  const box=el=>{
+  const imp=(el,p,v)=>{
+    if(el) el.style.setProperty(p,String(v),'important');
+  };
+
+  [section,card,scroll,grid].forEach(el=>{
     imp(el,'width','100%');
     imp(el,'max-width','100%');
     imp(el,'min-width','0');
     imp(el,'box-sizing','border-box');
-  };
+  });
 
-  box(section); box(card); box(scroll); box(grid);
+  imp(section,'overflow','hidden');
+  imp(card,'overflow','hidden');
+  imp(scroll,'display','block');
   imp(scroll,'overflow-x','hidden');
   imp(scroll,'overflow-y','visible');
 
-  /* Bootstrap row: flex-wrap. Nunca volver a usar la grilla de 770px. */
-  imp(grid,'display','flex');
-  imp(grid,'flex-wrap','wrap');
-  imp(grid,'grid-template-columns','none');
-  imp(grid,'min-width','0');
+  /*
+   * La regla desktop del motor es:
+   * repeat(7,minmax(110px,1fr)) + min-width:770px.
+   * Se anula directamente en línea con !important.
+   */
+  imp(grid,'display','grid');
+  imp(grid,'grid-template-columns','repeat(7,minmax(0,1fr))');
+  imp(grid,'grid-template-rows','auto');
+  imp(grid,'grid-auto-flow','row');
   imp(grid,'width','100%');
+  imp(grid,'min-width','0');
   imp(grid,'max-width','100%');
-  imp(grid,'margin-left','0');
-  imp(grid,'margin-right','0');
-  imp(grid,'margin-top','0');
-  imp(grid,'--bs-gutter-x','0');
-  imp(grid,'--bs-gutter-y','0');
+  imp(grid,'overflow','hidden');
+  imp(grid,'margin','0');
+  imp(grid,'padding','0');
+  imp(grid,'gap','0');
 
-  [...grid.children].forEach(cell=>{
-    imp(cell,'flex','0 0 14.2857142857%');
-    imp(cell,'width','14.2857142857%');
-    imp(cell,'max-width','14.2857142857%');
+  const cells=[...grid.children];
+  cells.forEach((cell)=>{
+    cell.classList.add('col','b434-bs-calendar-col');
+    imp(cell,'width','auto');
     imp(cell,'min-width','0');
+    imp(cell,'max-width','100%');
     imp(cell,'box-sizing','border-box');
+    imp(cell,'margin','0');
     imp(cell,'padding-left','0');
     imp(cell,'padding-right','0');
-    imp(cell,'margin-top','0');
     imp(cell,'overflow','hidden');
   });
 
-  [...section.querySelectorAll('.b232261-day')].forEach(day=>{
+  section.querySelectorAll('.b232261-day').forEach(day=>{
+    imp(day,'width','100%');
     imp(day,'min-width','0');
     imp(day,'max-width','100%');
-    imp(day,'width','100%');
     imp(day,'min-height','78px');
     imp(day,'height','78px');
     imp(day,'box-sizing','border-box');
     imp(day,'overflow','hidden');
   });
+
   return true;
 }
 

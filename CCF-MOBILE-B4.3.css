@@ -2365,3 +2365,67 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 #ccf-mobile-b43 .b434-module-host #calendario .col{flex:1 0 0}
 #ccf-mobile-b43 .b434-module-host #calendario .g-0{--bs-gutter-x:0;--bs-gutter-y:0}
 
+
+
+/* ================================================================
+   B4.3.10 FINAL — CALENDARIO MÓVIL / BOOTSTRAP AISLADO
+   Referencia de diseño: 370px.
+   No usa 370px como min-width ni como breakpoint.
+   ================================================================ */
+#ccf-mobile-b43 .b434-module-host #calendario,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+
+#ccf-mobile-b43 .b434-module-host #calendario{
+  overflow:hidden!important;
+}
+
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+  display:block!important;
+  overflow-x:hidden!important;
+  overflow-y:visible!important;
+}
+
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
+  display:grid!important;
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  grid-template-rows:auto!important;
+  grid-auto-flow:row!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  gap:0!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > *,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid > *{
+  width:auto!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding-left:0!important;
+  padding-right:0!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  min-height:78px!important;
+  height:78px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
