@@ -206,8 +206,8 @@ function restoreCalendarMobile(){
    calendarObserver.disconnect();
    calendarObserver=null;
  }
- const section=by('calendario');
- const host=moduleHost();
+ const section=document.getElementById('calendario');
+ const host=section?.parentElement;
  const card=section?.querySelector('.b232261-card');
  if(!section||!host||!card)return;
  const period=host.querySelector('[data-b434-calendar-period]');
@@ -224,8 +224,8 @@ function restoreCalendarMobile(){
 }
 
 function applyCalendarMobileLayout(){
- const section=by('calendario');
- const host=moduleHost();
+ const section=document.getElementById('calendario');
+ const host=section?.parentElement;
  if(!section||!host)return false;
 
  const card=section.querySelector('.b232261-card');
@@ -595,8 +595,20 @@ function observe(){
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
 function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
-function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
+function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}setTimeout(()=>{if(document.getElementById('calendario'))adaptCalendarMobile()},250)}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
+/* V6 — enlace directo del calendario móvil.
+   No depende de que la navegación pase por navigate().
+*/
+let calendarClickTimer=null;
+document.addEventListener('click',()=>{
+ if(!mobile())return;
+ clearTimeout(calendarClickTimer);
+ calendarClickTimer=setTimeout(()=>{
+   const cal=document.getElementById('calendario');
+   if(cal?.querySelector('.b232261-card'))adaptCalendarMobile();
+ },120);
+},true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
