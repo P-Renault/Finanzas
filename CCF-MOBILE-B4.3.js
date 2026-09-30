@@ -52,23 +52,65 @@ function markCalendarMobile(section){
  if(!section)return false;
  section.classList.add('b434-calendar-mobile');
  section.dataset.b434CalendarMobile='1';
+ section.style.setProperty('width','100%','important');
+ section.style.setProperty('max-width','100%','important');
+ section.style.setProperty('min-width','0','important');
+ section.style.setProperty('box-sizing','border-box','important');
+ section.style.setProperty('overflow','hidden','important');
+
+ const card=section.querySelector('.b232261-card');
  const grid=section.querySelector('.b232261-grid');
  const scroll=section.querySelector('.b232261-scroll');
- if(grid)grid.classList.add('b434-calendar-grid');
- if(scroll)scroll.classList.add('b434-calendar-scroll');
- section.querySelectorAll('.b232261-day').forEach(x=>x.classList.add('b434-calendar-day'));
- section.querySelectorAll('.b232261-week>div').forEach(x=>x.classList.add('b434-calendar-weekday'));
+
+ if(card){
+   card.classList.add('b434-calendar-card');
+   card.style.setProperty('width','100%','important');
+   card.style.setProperty('max-width','100%','important');
+   card.style.setProperty('min-width','0','important');
+   card.style.setProperty('box-sizing','border-box','important');
+ }
+ if(scroll){
+   scroll.classList.add('b434-calendar-scroll');
+   scroll.style.setProperty('width','100%','important');
+   scroll.style.setProperty('max-width','100%','important');
+   scroll.style.setProperty('min-width','0','important');
+   scroll.style.setProperty('overflow','hidden','important');
+   scroll.style.setProperty('box-sizing','border-box','important');
+ }
+ if(grid){
+   grid.classList.add('b434-calendar-grid');
+   grid.style.setProperty('display','grid','important');
+   grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
+   grid.style.setProperty('width','100%','important');
+   grid.style.setProperty('max-width','100%','important');
+   grid.style.setProperty('min-width','0','important');
+   grid.style.setProperty('box-sizing','border-box','important');
+ }
+ section.querySelectorAll('.b232261-week>div').forEach(x=>{
+   x.classList.add('b434-calendar-weekday');
+   x.style.setProperty('min-width','0','important');
+   x.style.setProperty('width','auto','important');
+   x.style.setProperty('box-sizing','border-box','important');
+ });
+ section.querySelectorAll('.b232261-day').forEach(x=>{
+   x.classList.add('b434-calendar-day');
+   x.style.setProperty('min-width','0','important');
+   x.style.setProperty('width','auto','important');
+   x.style.setProperty('max-width','100%','important');
+   x.style.setProperty('box-sizing','border-box','important');
+   x.style.setProperty('overflow','hidden','important');
+ });
  return true;
 }
 function adaptB232261CalendarMobile(section){
  if(!mobile()||!section)return false;
- markCalendarMobile(section);
+ const apply=()=>{if(section.isConnected)markCalendarMobile(section)};
+ apply();
+ [0,50,150,350,700,1200].forEach(ms=>setTimeout(apply,ms));
  if(calendarObservedHost!==section){
    restoreCalendarObserver();
    calendarObservedHost=section;
-   calendarObserver=new MutationObserver(()=>{
-     if(section.isConnected)markCalendarMobile(section);
-   });
+   calendarObserver=new MutationObserver(()=>apply());
    calendarObserver.observe(section,{childList:true,subtree:true});
  }
  return true;
