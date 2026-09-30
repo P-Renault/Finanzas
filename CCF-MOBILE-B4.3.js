@@ -1,4 +1,5 @@
-/* CCF MOBILE B4.3.4 — ETAPA 1 · CORRECCIÓN RESUMEN
+/* CCF MOBILE B4.3.8 — CALENDARIO MOBILE · CSS GRID NATIVO + LIFECYCLE JS
+   Base funcional: B4.3.4 · Etapa 1 / corrección resumen.
    Solo presentación móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
@@ -10,7 +11,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,calendarObserver=null,calendarFrame=0,reportTimer=null,activeModule=null,moduleMarker=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -173,6 +174,42 @@ function refreshMovementView(){
  });
 }
 
+function stopCalendarMobileObserver(){
+ calendarObserver?.disconnect();
+ calendarObserver=null;
+ if(calendarFrame)cancelAnimationFrame(calendarFrame);
+ calendarFrame=0;
+}
+function adaptB232261CalendarMobile(){
+ if(!mobile())return false;
+ const calendar=by('calendario');
+ if(!calendar)return false;
+ calendar.classList.add('b434-calendar-mobile');
+ const grid=calendar.querySelector('.b232261-grid');
+ if(!grid)return false;
+ grid.classList.add('b434-calendar-grid-mobile');
+ grid.querySelectorAll(':scope > .b232261-week').forEach(week=>{
+   week.classList.add('b434-calendar-week-mobile');
+ });
+ return true;
+}
+function startCalendarMobileObserver(){
+ stopCalendarMobileObserver();
+ if(!mobile())return false;
+ const calendar=by('calendario');
+ if(!calendar)return false;
+ const schedule=()=>{
+   if(calendarFrame)return;
+   calendarFrame=requestAnimationFrame(()=>{
+     calendarFrame=0;
+     adaptB232261CalendarMobile();
+   });
+ };
+ calendarObserver=new MutationObserver(schedule);
+ calendarObserver.observe(calendar,{childList:true,subtree:true});
+ adaptB232261CalendarMobile();
+ return true;
+}
 function adaptDesktopModule(id){
  const host=moduleHost();
  if(!host)return false;
@@ -215,11 +252,18 @@ function showModuleAfterNavigation(id){
    host?.classList.add('open');
    host?.setAttribute('data-active-module',id);
    if(id==='movimientos'){
+     stopCalendarMobileObserver();
      adaptMovementsMobile();
      setTimeout(adaptMovementsMobile,250);
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
+   }
+   if(id==='calendario'){
+     startCalendarMobileObserver();
+     [0,120,300,700,1200].forEach(ms=>setTimeout(adaptB232261CalendarMobile,ms));
+   }else if(id!=='calendario'){
+     stopCalendarMobileObserver();
    }
    setActive(id);
    return true;
@@ -461,9 +505,9 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;stopCalendarMobileObserver();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.8-calendar-grid-native',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
