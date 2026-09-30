@@ -1,4 +1,4 @@
-/* CCF MOBILE B4.3.6 — CALENDARIO MOBILE FINAL
+/* CCF MOBILE B4.3 — CALENDARIO MOBILE
    Solo presentación móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
@@ -48,12 +48,61 @@ function restoreCalendarObserver(){
  if(calendarObserver){try{calendarObserver.disconnect()}catch(e){}}
  calendarObserver=null;calendarObservedHost=null;
 }
+function forceCalendarMobileDOM(){
+ if(!mobile())return;
+ const sections=[...document.querySelectorAll('#calendario')];
+ if(!sections.length)return;
+ sections.forEach(section=>{
+   section.classList.add('b434-calendar-mobile');
+   section.dataset.b434CalendarMobile='1';
+   [section,...section.querySelectorAll('.b232261-card,.b232261-scroll,.b232261-grid')].forEach(el=>{
+     el.style.setProperty('width','100%','important');
+     el.style.setProperty('max-width','100%','important');
+     el.style.setProperty('min-width','0','important');
+     el.style.setProperty('box-sizing','border-box','important');
+   });
+   section.querySelectorAll('.b232261-scroll').forEach(el=>{
+     el.style.setProperty('overflow-x','hidden','important');
+     el.style.setProperty('overflow-y','visible','important');
+   });
+   section.querySelectorAll('.b232261-grid').forEach(grid=>{
+     grid.style.setProperty('display','grid','important');
+     grid.style.setProperty('grid-template-columns','repeat(7,minmax(0,1fr))','important');
+     grid.style.setProperty('grid-auto-columns','minmax(0,1fr)','important');
+     grid.style.setProperty('grid-auto-flow','row','important');
+     grid.style.setProperty('width','100%','important');
+     grid.style.setProperty('min-width','0','important');
+     grid.style.setProperty('max-width','100%','important');
+     [...grid.children].forEach(cell=>{
+       cell.style.setProperty('min-width','0','important');
+       cell.style.setProperty('width','auto','important');
+       cell.style.setProperty('max-width','100%','important');
+       cell.style.setProperty('box-sizing','border-box','important');
+       cell.style.setProperty('overflow','hidden','important');
+     });
+   });
+   section.querySelectorAll('.b232261-day').forEach(day=>{
+     day.style.setProperty('min-width','0','important');
+     day.style.setProperty('width','auto','important');
+     day.style.setProperty('max-width','100%','important');
+     day.style.setProperty('box-sizing','border-box','important');
+     day.style.setProperty('overflow','hidden','important');
+   });
+ });
+}
 function ensureGlobalCalendarAdapter(){
  if(!mobile())return;
- const apply=()=>{const section=by('calendario');if(!section||!section.isConnected)return;adaptB232261CalendarMobile(section)};
+ const apply=()=>{
+   forceCalendarMobileDOM();
+   const sections=[...document.querySelectorAll('#calendario')];
+   sections.forEach(section=>adaptB232261CalendarMobile(section));
+   forceCalendarMobileDOM();
+ };
  apply();
  if(globalCalendarObserver)return;
- globalCalendarObserver=new MutationObserver(()=>{if(mobile())requestAnimationFrame(apply)});
+ globalCalendarObserver=new MutationObserver(()=>{
+   if(mobile())requestAnimationFrame(apply);
+ });
  globalCalendarObserver.observe(document.body,{childList:true,subtree:true});
 }
 function markCalendarMobile(section){
@@ -654,7 +703,8 @@ function observe(){
 }
 function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;restoreCalendarObserver();if(globalCalendarObserver){try{globalCalendarObserver.disconnect()}catch(e){}}globalCalendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}ensureGlobalCalendarAdapter();if(!built){build();observe();ensureGlobalCalendarAdapter()}}
-window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
+window.addEventListener('resize',()=>setTimeout(boot,100));
+window.addEventListener('pageshow',()=>setTimeout(boot,50));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();

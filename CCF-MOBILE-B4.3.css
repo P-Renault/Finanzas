@@ -2785,3 +2785,36 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #calendario.b434-calendar-mobile .b434-calendar-compact-event,
   #calendario.b434-calendar-mobile .b232261-more{font-size:6px!important}
 }
+
+/* B4.3.0 — HARD MOBILE CALENDAR LAYER
+   Only affects #calendario on <=720px.
+*/
+@media(max-width:720px){
+  #calendario,
+  #calendario .b232261-card,
+  #calendario .b232261-scroll,
+  #calendario .b232261-grid{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  #calendario,
+  #calendario .b232261-scroll{
+    overflow-x:hidden!important;
+  }
+  #calendario .b232261-grid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;
+    grid-auto-flow:row!important;
+  }
+  #calendario .b232261-grid>*,
+  #calendario .b232261-day{
+    min-width:0!important;
+    width:auto!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+}
