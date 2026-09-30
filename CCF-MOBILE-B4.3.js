@@ -32,6 +32,7 @@ function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove(
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
+ if(activeModule?.id==='calendario')restoreCalendarMobile();
  if(!activeModule)return;
  const el=activeModule;
  delete el.dataset.b434ModuleMoved;
@@ -199,6 +200,70 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
+
+function restoreCalendarMobile(){
+ const section=by('calendario');
+ if(!section)return;
+ const card=section.querySelector('.b232261-card');
+ if(!card)return;
+ const host=moduleHost();
+ const period=host?.querySelector('[data-b434-calendar-period]');
+ const summary=host?.querySelector('[data-b434-calendar-summary]');
+ if(period){
+   [...period.children].forEach(n=>card.insertBefore(n,card.firstChild));
+   period.remove();
+ }
+ if(summary){
+   [...summary.children].forEach(n=>card.insertBefore(n,card.firstChild));
+   summary.remove();
+ }
+}
+function adaptCalendarMobile(){
+ const section=by('calendario');
+ const host=moduleHost();
+ if(!section||!host)return false;
+ section.classList.add('b434-calendar-mobile');
+ const card=section.querySelector('.b232261-card');
+ if(!card)return false;
+
+ let period=host.querySelector('[data-b434-calendar-period]');
+ if(!period){
+   period=document.createElement('section');
+   period.className='b434-calendar-period-card';
+   period.dataset.b434CalendarPeriod='1';
+   host.insertBefore(period,section);
+ }else{
+   period.replaceChildren();
+ }
+ let summary=host.querySelector('[data-b434-calendar-summary]');
+ if(!summary){
+   summary=document.createElement('section');
+   summary.className='b434-calendar-summary-card';
+   summary.dataset.b434CalendarSummary='1';
+   host.insertBefore(summary,section);
+ }else{
+   summary.replaceChildren();
+ }
+
+ const head=card.querySelector('.b232261-head');
+ const actions=card.querySelector('.b232261-actions');
+ const kpis=card.querySelector('.b232261-kpis');
+
+ if(head)period.appendChild(head);
+ if(actions)period.appendChild(actions);
+ if(kpis)summary.appendChild(kpis);
+
+ if(host.dataset.b434CalendarBound!=='1'){
+   host.dataset.b434CalendarBound='1';
+   host.addEventListener('click',event=>{
+     if(!mobile()||!section.contains(event.target))return;
+     const target=event.target.closest('button');
+     if(target)setTimeout(adaptCalendarMobile,0);
+   });
+ }
+ return true;
+}
+
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
@@ -222,6 +287,7 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
    }
+   if(id==='calendario')adaptCalendarMobile();
    setActive(id);
    return true;
  }
