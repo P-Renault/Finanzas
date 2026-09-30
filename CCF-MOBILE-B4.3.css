@@ -2439,3 +2439,29 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     box-sizing:border-box!important;
   }
 }
+
+
+/* B4.3 — CALENDARIO MÓVIL · INTEGRACIÓN PUNTUAL */
+@media(max-width:720px){
+  #calendario{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:visible!important}
+  #calendario .b232261-card{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:visible!important}
+  #calendario .b232261-scroll{width:100%!important;max-width:100%!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important}
+  #calendario .b232261-grid{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+  #calendario .b232261-week{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;grid-column:1 / -1!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+  #calendario .b232261-week>div{min-width:0!important;width:auto!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important}
+  #calendario .b232261-day{min-width:0!important;width:auto!important;max-width:100%!important;height:62px!important;min-height:62px!important;box-sizing:border-box!important;overflow:hidden!important}
+  #calendario .b232261-event,#calendario .b232261-mini{display:block!important;width:6px!important;height:6px!important;min-height:6px!important;padding:0!important;margin:3px auto 0!important;border-radius:50%!important;font-size:0!important;line-height:0!important;overflow:hidden!important}
+  #calendario .b232261-more{display:none!important}
+
+  .b434-calendar-period-card,
+  .b434-calendar-summary-card{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;
+    margin:0 0 10px!important;padding:10px!important;background:#fff!important;
+    border:1px solid #e5e7eb!important;border-radius:14px!important;
+    box-shadow:0 2px 8px rgba(15,23,42,.05)!important;overflow:hidden!important;
+  }
+  .b434-calendar-period-card .b232261-head{margin:0!important;padding:0!important;width:100%!important;box-sizing:border-box!important}
+  .b434-calendar-period-card .b232261-actions{display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;flex-wrap:wrap!important;margin-top:8px!important}
+  .b434-calendar-summary-card .b232261-kpis{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;margin:0!important}
+  .b434-calendar-summary-card .b232261-kpis>*{min-width:0!important;width:auto!important;box-sizing:border-box!important}
+}
