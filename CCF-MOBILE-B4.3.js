@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,calendarObserver=null,reportTimer=null,activeModule=null,moduleMarker=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -202,19 +202,22 @@ function adaptDesktopModule(id){
 }
 
 function restoreCalendarMobile(){
+ if(calendarObserver){
+   calendarObserver.disconnect();
+   calendarObserver=null;
+ }
  const section=by('calendario');
- if(!section)return;
- const card=section.querySelector('.b232261-card');
  const host=moduleHost();
- if(!card||!host)return;
+ const card=section?.querySelector('.b232261-card');
+ if(!section||!host||!card)return;
  const period=host.querySelector('[data-b434-calendar-period]');
  const summary=host.querySelector('[data-b434-calendar-summary]');
  if(period){
-   [...period.querySelectorAll(':scope > *')].forEach(n=>card.insertBefore(n,card.firstChild));
+   [...period.children].forEach(n=>card.insertBefore(n,card.firstChild));
    period.remove();
  }
  if(summary){
-   [...summary.querySelectorAll(':scope > *')].forEach(n=>card.insertBefore(n,card.firstChild));
+   [...summary.children].forEach(n=>card.insertBefore(n,card.firstChild));
    summary.remove();
  }
  section.classList.remove('b434-calendar-mobile');
@@ -223,7 +226,7 @@ function restoreCalendarMobile(){
 function applyCalendarMobileLayout(){
  const section=by('calendario');
  const host=moduleHost();
- if(!section||!host||!mobile())return false;
+ if(!section||!host)return false;
 
  const card=section.querySelector('.b232261-card');
  if(!card)return false;
@@ -253,9 +256,9 @@ function applyCalendarMobileLayout(){
  if(actions && actions.parentElement!==period)period.appendChild(actions);
  if(kpis && kpis.parentElement!==summary)summary.appendChild(kpis);
 
- // Apply the critical mobile geometry directly to the live DOM.
  const scroll=card.querySelector('.b232261-scroll');
  const grid=card.querySelector('.b232261-grid');
+
  if(scroll){
    scroll.style.width='100%';
    scroll.style.maxWidth='100%';
@@ -269,13 +272,14 @@ function applyCalendarMobileLayout(){
    grid.style.width='100%';
    grid.style.maxWidth='100%';
    grid.style.minWidth='0';
+   grid.style.minWidth='0';
    grid.style.boxSizing='border-box';
  }
- const week=card.querySelector('.b232261-week');
- if(week){
+ card.querySelectorAll('.b232261-week').forEach(week=>{
    week.style.width='100%';
    week.style.minWidth='0';
- }
+   week.style.boxSizing='border-box';
+ });
  card.querySelectorAll('.b232261-week>div').forEach(el=>{
    el.style.minWidth='0';
    el.style.width='auto';
@@ -286,8 +290,9 @@ function applyCalendarMobileLayout(){
    day.style.width='auto';
    day.style.minHeight='62px';
    day.style.height='62px';
-   day.style.boxSizing='border-box';
+   day.style.padding='4px 2px';
    day.style.overflow='hidden';
+   day.style.boxSizing='border-box';
  });
  card.querySelectorAll('.b232261-event,.b232261-mini').forEach(el=>{
    el.style.display='block';
@@ -303,31 +308,25 @@ function applyCalendarMobileLayout(){
  });
  card.querySelectorAll('.b232261-more').forEach(el=>el.style.display='none');
 
- if(host.dataset.b434CalendarBound!=='1'){
-   host.dataset.b434CalendarBound='1';
-   host.addEventListener('click',event=>{
-     if(!mobile()||!section.contains(event.target))return;
-     const target=event.target.closest('button');
-     if(target){
-       setTimeout(adaptCalendarMobile,0);
-       setTimeout(adaptCalendarMobile,120);
-       setTimeout(adaptCalendarMobile,400);
-     }
-   });
- }
-
  return true;
 }
 
 function adaptCalendarMobile(){
+ const section=by('calendario');
+ const host=moduleHost();
+ if(!section||!host)return false;
+
  const ok=applyCalendarMobileLayout();
  if(!ok)return false;
 
- // The calendar engine may finish its render asynchronously.
- // Re-apply only during this calendar navigation/render cycle.
- [0,50,150,350,700].forEach(ms=>{
-   setTimeout(()=>applyCalendarMobileLayout(),ms);
+ if(calendarObserver)calendarObserver.disconnect();
+
+ calendarObserver=new MutationObserver(()=>{
+   if(activeModule!==section)return;
+   applyCalendarMobileLayout();
  });
+ calendarObserver.observe(section,{childList:true,subtree:true});
+
  return true;
 }
 
@@ -354,11 +353,7 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
    }
-   if(id==='calendario'){
-     adaptCalendarMobile();
-     setTimeout(adaptCalendarMobile,900);
-     setTimeout(adaptCalendarMobile,1800);
-   }
+   if(id==='calendario')adaptCalendarMobile();
    setActive(id);
    return true;
  }
