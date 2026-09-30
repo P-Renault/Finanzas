@@ -2429,3 +2429,16 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   box-sizing:border-box!important;
   overflow:hidden!important;
 }
+
+
+/* B4.3.10 — host da nueva vista Bootstrap.
+   Bootstrap vive dentro del Shadow DOM: no altera otros módulos. */
+#ccf-mobile-b43 .b434-module-host #calendario #ccf-bs-calendar-view{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+}
