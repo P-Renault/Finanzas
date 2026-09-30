@@ -874,5 +874,10 @@ ${
     childList:true,
     subtree:true
   });
+   alert(
+  'CCF B4.3 ACTIVO\n' +
+  'Diagnóstico móvil cargado correctamente\n\n' +
+  'URL: ' + location.href
+);
 
 })();})();
