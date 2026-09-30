@@ -1,4 +1,4 @@
-/* CCF MOBILE B4.3.4 — ETAPA 1 · CORRECCIÓN RESUMEN
+/* CCF MOBILE B4.3.10 — ETAPA 1 · CORRECCIÓN RESUMEN
    Solo presentación móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
@@ -198,12 +198,10 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
-/* CCF MOBILE B4.3 — CALENDARIO · ADAPTADOR MÓVIL 380PX
-   Concepto: 380px es la referencia de ancho útil móvil.
-   El motor B232.26.4 conserva íntegramente su estructura de escritorio
-   (min-width:770px). En móvil NO se fija min-width:380px: se usa 100%
-   del ancho disponible y 7 columnas fraccionarias para evitar scroll.
-   No modifica datos, navegación, Supabase ni B232.26.4-calendario-safe.js.
+/* CCF MOBILE B4.3.10 — CALENDARIO · ADAPTADOR MÓVIL 380PX
+   380px es la referencia de diseño, no un min-width.
+   En móvil la grilla ocupa 100% del ancho disponible y mantiene 7 columnas.
+   El motor B232.26.4-calendario-safe.js permanece intacto.
 */
 let calendarObserver=null;
 let calendarAdaptScheduled=false;
@@ -216,64 +214,33 @@ function adaptB232261CalendarMobile(){
   const scroll=section.querySelector('.b232261-scroll');
   const grid=section.querySelector('.b232261-grid.b232261-week') || section.querySelector('.b232261-grid');
   if(!card||!scroll||!grid)return false;
-
   const imp=(el,prop,value)=>el?.style.setProperty(prop,value,'important');
-  const setBox=(el)=>{
-    if(!el)return;
-    imp(el,'width','100%');
-    imp(el,'max-width','100%');
-    imp(el,'min-width','0');
-    imp(el,'box-sizing','border-box');
-  };
-
-  setBox(section);
-  setBox(card);
-  setBox(scroll);
+  const setBox=el=>{if(!el)return;imp(el,'width','100%');imp(el,'max-width','100%');imp(el,'min-width','0');imp(el,'box-sizing','border-box')};
+  setBox(section);setBox(card);setBox(scroll);
   imp(scroll,'overflow-x','hidden');
   imp(scroll,'overflow-y','visible');
-
   imp(grid,'display','grid');
   imp(grid,'grid-template-columns','repeat(7,minmax(0,1fr))');
   imp(grid,'width','100%');
   imp(grid,'max-width','100%');
   imp(grid,'min-width','0');
   imp(grid,'box-sizing','border-box');
-  imp(grid,'overflow','hidden');
-
   [...grid.children].forEach(cell=>{
-    imp(cell,'min-width','0');
-    imp(cell,'max-width','100%');
-    imp(cell,'width','auto');
-    imp(cell,'box-sizing','border-box');
-    imp(cell,'overflow','hidden');
+    imp(cell,'min-width','0');imp(cell,'max-width','100%');imp(cell,'width','auto');imp(cell,'box-sizing','border-box');imp(cell,'overflow','hidden');
   });
-
   [...section.querySelectorAll('.b232261-day')].forEach(day=>{
-    imp(day,'min-width','0');
-    imp(day,'max-width','100%');
-    imp(day,'width','auto');
-    imp(day,'min-height','78px');
-    imp(day,'height','78px');
-    imp(day,'box-sizing','border-box');
-    imp(day,'overflow','hidden');
+    imp(day,'min-width','0');imp(day,'max-width','100%');imp(day,'width','auto');
+    imp(day,'min-height','78px');imp(day,'height','78px');imp(day,'box-sizing','border-box');imp(day,'overflow','hidden');
   });
-
   return true;
 }
-
 function scheduleCalendarMobileAdapt(){
-  if(!mobile())return;
-  if(calendarAdaptScheduled)return;
+  if(!mobile()||calendarAdaptScheduled)return;
   calendarAdaptScheduled=true;
-  requestAnimationFrame(()=>{
-    calendarAdaptScheduled=false;
-    adaptB232261CalendarMobile();
-  });
+  requestAnimationFrame(()=>{calendarAdaptScheduled=false;adaptB232261CalendarMobile()});
 }
-
 function observeCalendarMobile(){
-  calendarObserver?.disconnect();
-  calendarObserver=null;
+  calendarObserver?.disconnect();calendarObserver=null;
   const section=by('calendario');
   if(!mobile()||!section)return;
   calendarObserver=new MutationObserver(()=>scheduleCalendarMobileAdapt());
@@ -550,7 +517,7 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
