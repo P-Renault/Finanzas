@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null,calendarObserver=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -32,6 +32,7 @@ function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove(
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
+ disconnectCalendarMobileAdapter();
  if(!activeModule)return;
  const el=activeModule;
  delete el.dataset.b434ModuleMoved;
@@ -42,6 +43,83 @@ function restoreActiveModule(){
 }
 function moduleHost(){
  return $('[data-module-host]',root);
+}
+
+function disconnectCalendarMobileAdapter(){
+ if(calendarObserver){calendarObserver.disconnect();calendarObserver=null}
+}
+function adaptB232261CalendarMobile(){
+ if(!mobile())return false;
+ const host=by('calendario');
+ if(!host || host.classList.contains('hidden'))return false;
+ const card=host.querySelector('.b232261-card');
+ const scroll=host.querySelector('.b232261-scroll');
+ const grid=host.querySelector('.b232261-grid');
+ if(!card || !scroll || !grid)return false;
+
+ /* Hard layout contract for the real B232.26.4 DOM.
+    The calendar engine emits ONE grid containing 7 headers + 42 days.
+    Do not depend on .b232261-week rows: they do not exist in the owner. */
+ card.classList.add('b434-calendar-mobile');
+ scroll.classList.add('b434-calendar-viewport');
+ grid.classList.add('b434-calendar-grid-7');
+
+ const important=(el,prop,value)=>el.style.setProperty(prop,value,'important');
+ important(card,'width','100%');
+ important(card,'max-width','100%');
+ important(card,'min-width','0');
+ important(card,'box-sizing','border-box');
+ important(card,'overflow','hidden');
+ important(scroll,'width','100%');
+ important(scroll,'max-width','100%');
+ important(scroll,'min-width','0');
+ important(scroll,'overflow','hidden');
+ important(scroll,'box-sizing','border-box');
+ important(grid,'display','grid');
+ important(grid,'grid-template-columns','repeat(7,minmax(0,1fr))');
+ important(grid,'grid-auto-flow','row');
+ important(grid,'width','100%');
+ important(grid,'min-width','0');
+ important(grid,'max-width','100%');
+ important(grid,'box-sizing','border-box');
+ important(grid,'overflow','hidden');
+
+ [...grid.children].forEach((cell,i)=>{
+   important(cell,'min-width','0');
+   important(cell,'max-width','none');
+   important(cell,'width','auto');
+   important(cell,'box-sizing','border-box');
+   important(cell,'overflow','hidden');
+   if(i<7){
+     important(cell,'min-height','28px');
+     important(cell,'height','auto');
+     important(cell,'padding','5px 1px');
+     important(cell,'font-size','8px');
+     important(cell,'line-height','1.1');
+   }else{
+     important(cell,'min-height','76px');
+     important(cell,'height','76px');
+     important(cell,'padding','4px 2px');
+   }
+ });
+
+ scroll.scrollLeft=0;
+ return true;
+}
+function watchCalendarMobileAdapter(){
+ disconnectCalendarMobileAdapter();
+ if(!mobile())return false;
+ const host=by('calendario');
+ if(!host)return false;
+ adaptB232261CalendarMobile();
+ calendarObserver=new MutationObserver(()=>{
+   if(!mobile()){disconnectCalendarMobileAdapter();return}
+   adaptB232261CalendarMobile();
+ });
+ /* Observe DOM replacement only. The adapter changes inline styles, not childList,
+    so this cannot recurse when it reapplies the layout. */
+ calendarObserver.observe(host,{childList:true,subtree:true});
+ return true;
 }
 
 function movementMoney(text){
@@ -220,6 +298,12 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,700);
      setTimeout(adaptMovementsMobile,1500);
      setTimeout(adaptMovementsMobile,2500);
+   }
+   if(id==='calendario'){
+     watchCalendarMobileAdapter();
+     setTimeout(watchCalendarMobileAdapter,80);
+     setTimeout(watchCalendarMobileAdapter,300);
+     setTimeout(watchCalendarMobileAdapter,800);
    }
    setActive(id);
    return true;
@@ -465,5 +549,5 @@ function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=nul
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.10-calendar-hard-adapter',refresh:()=>{mirrorAll();syncConsolidatedReport();adaptB232261CalendarMobile()},disable:restore,adaptB232261CalendarMobile};
 })();

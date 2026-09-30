@@ -2284,35 +2284,20 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     min-height:40px!important;
   }
   
-}
-
-/* ==========================================================
-   CCF MOBILE B4.3.9 — CALENDARIO · CORRECCIÓN ESTRUCTURAL REAL
-   Motor funcional: B232.26.4-calendario-safe.js
-   Alcance: SOLO presentación móvil del calendario.
-
-   Estructura real del motor:
-   .b232261-grid.b232261-week
-      ├── 7 encabezados DOM–SÁB
-      └── 42 botones .b232261-day
-
-   Importante: .b232261-grid ES la grilla de 7 columnas.
-   No convertirla en contenedor vertical de semanas.
-   ========================================================== */
+/* B1.9 — CALENDARIO MÓVIL · CORRECCIÓN AISLADA
+   Solo presentación del DOM generado por B232.26.4.
+   No modifica el motor, navegación ni datos.
+*/
 @media (max-width:720px){
   #ccf-mobile-b43 .b434-module-host #calendario{
-    display:block!important;
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
-    margin:0!important;
-    padding:0!important;
-    box-sizing:border-box!important;
     overflow:visible!important;
+    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
-    display:block!important;
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
@@ -2324,9 +2309,6 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-head{
     display:block!important;
-    width:100%!important;
-    min-width:0!important;
-    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions{
@@ -2334,138 +2316,78 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     grid-template-columns:repeat(4,minmax(0,1fr))!important;
     gap:5px!important;
     width:100%!important;
-    min-width:0!important;
     margin-top:8px!important;
-    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions button{
-    display:block!important;
-    width:100%!important;
     min-width:0!important;
-    max-width:100%!important;
+    width:100%!important;
     height:32px!important;
-    min-height:32px!important;
     padding:3px 4px!important;
-    box-sizing:border-box!important;
     font-size:10px!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    white-space:nowrap!important;
+    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpis{
-    display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:6px!important;
-    width:100%!important;
-    min-width:0!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-  }
-
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpi{
-    min-width:0!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-    overflow:hidden!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
-    display:block!important;
     width:100%!important;
     min-width:0!important;
     max-width:100%!important;
-    margin:0!important;
-    padding:0!important;
-    box-sizing:border-box!important;
     overflow:hidden!important;
+    box-sizing:border-box!important;
     border-radius:9px!important;
   }
 
-  /*
-     CORRECCIÓN CLAVE:
-     El motor genera UN SOLO .b232261-grid.b232261-week.
-     Ese elemento contiene 49 hijos: 7 encabezados + 42 días.
-     Por eso debe conservarse como una grilla de 7 columnas.
-  */
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week{
+  /* Las 7 columnas se ajustan al ancho real del teléfono. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
     display:grid!important;
     grid-template-columns:repeat(7,minmax(0,1fr))!important;
-    grid-auto-columns:minmax(0,1fr)!important;
-    grid-auto-flow:row!important;
     width:100%!important;
     min-width:0!important;
     max-width:100%!important;
-    margin:0!important;
-    padding:0!important;
     box-sizing:border-box!important;
-    overflow:hidden!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > div{
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week>div{
     min-width:0!important;
-    width:auto!important;
-    max-width:none!important;
-    box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
-
-  /* Encabezados DOM–SÁB. */
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > div:not(.b232261-day){
-    min-height:28px!important;
     padding:6px 1px!important;
     font-size:8px!important;
     line-height:1!important;
-    text-align:center!important;
     overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    white-space:nowrap!important;
   }
 
-  /* Días: 7 columnas sin que ningún contenido pueda ensancharlas. */
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > .b232261-day{
-    display:block!important;
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
     min-width:0!important;
     width:auto!important;
-    max-width:none!important;
     min-height:78px!important;
     height:78px!important;
-    margin:0!important;
     padding:4px 2px!important;
-    box-sizing:border-box!important;
     overflow:hidden!important;
+    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
     display:block!important;
-    width:100%!important;
-    min-width:0!important;
     text-align:center!important;
-    font-size:10px!important;
-    line-height:1.1!important;
-    overflow:hidden!important;
-  }
-
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
-    display:block!important;
-    min-width:0!important;
     font-size:11px!important;
     line-height:1.1!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
-    display:block!important;
-    min-width:0!important;
-    margin-top:2px!important;
-    font-size:6px!important;
-    line-height:1.1!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    white-space:nowrap!important;
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
+    font-size:11px!important;
   }
 
-  /* La información financiera completa permanece en el detalle inferior. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
+    display:block!important;
+    margin-top:2px!important;
+    font-size:6px!important;
+  }
+
+  /* En 7 columnas no caben textos de movimientos; el detalle inferior conserva esa información. */
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
@@ -2478,55 +2400,130 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
-    display:grid!important;
     grid-template-columns:1fr!important;
     gap:8px!important;
-    width:100%!important;
-    min-width:0!important;
-    max-width:100%!important;
     margin-top:9px!important;
-    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-box{
-    width:100%!important;
     min-width:0!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
     overflow:hidden!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-box h3{
-    min-width:0!important;
     font-size:11px!important;
     line-height:1.25!important;
-    overflow-wrap:anywhere!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-foot{
-    max-width:100%!important;
     font-size:9px!important;
     line-height:1.35!important;
     overflow-wrap:anywhere!important;
   }
 }
+  
+}
+
+/* =============================================================
+   CCF MOBILE B4.3.10 — CALENDARIO HARD ADAPTER
+   Objetivo: adaptar el DOM REAL de B232.26.4 en móvil.
+   El motor genera un único .b232261-grid con 49 hijos:
+   7 encabezados + 42 días. No existen filas .b232261-week.
+   Esta capa es exclusiva de #calendario y no toca el motor financiero.
+   ============================================================= */
+@media (max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid,
+  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-grid-7{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-flow:row!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>*{
+    min-width:0!important;
+    width:auto!important;
+    max-width:none!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* Encabezados DOM–SÁB */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>*:nth-child(-n+7){
+    min-height:28px!important;
+    height:auto!important;
+    padding:5px 1px!important;
+    font-size:8px!important;
+    line-height:1.1!important;
+    white-space:nowrap!important;
+    text-align:center!important;
+  }
+
+  /* 42 días: 6 semanas x 7 columnas. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>.b232261-day{
+    min-height:76px!important;
+    height:76px!important;
+    padding:4px 2px!important;
+    overflow:hidden!important;
+    word-break:break-word!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
+    min-width:0!important;
+    width:100%!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:7px!important;
+    line-height:1.1!important;
+    padding:2px 2px!important;
+    margin-top:2px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:6px!important;
+    line-height:1.1!important;
+  }
+
+  /* No permitir que el contenido interno vuelva a ensanchar la celda. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day *{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+}
 
 @media (max-width:390px){
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > .b232261-day{
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>.b232261-day{
     min-height:70px!important;
     height:70px!important;
     padding:3px 1px!important;
   }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > div:not(.b232261-day){
-    min-height:26px!important;
-    padding:5px 1px!important;
-    font-size:7px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
-    font-size:10px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
-    font-size:5px!important;
-  }
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{font-size:6px!important}
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{font-size:5.5px!important}
 }
