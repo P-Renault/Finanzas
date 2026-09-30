@@ -1,4 +1,4 @@
-/* CCF MOBILE B4.3.10 — ETAPA 1 · CORRECCIÓN RESUMEN
+/* CCF MOBILE B4.3.4 — ETAPA 1 · CORRECCIÓN RESUMEN
    Solo presentación móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
@@ -32,6 +32,8 @@ function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove(
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
+ if(calendarObserver){calendarObserver.disconnect();calendarObserver=null;}
+
  if(!activeModule)return;
  const el=activeModule;
  delete el.dataset.b434ModuleMoved;
@@ -198,52 +200,89 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
-/* CCF MOBILE B4.3.10 — CALENDARIO · ADAPTADOR MÓVIL 380PX
-   380px es la referencia de diseño, no un min-width.
-   En móvil la grilla ocupa 100% del ancho disponible y mantiene 7 columnas.
-   El motor B232.26.4-calendario-safe.js permanece intacto.
+
+/* CCF MOBILE B4.3.10 — CALENDARIO · ADAPTADOR DOM AISLADO
+   #ccf-mobile-b43 ya identifica la capa móvil; no usa breakpoint 720px.
+   Reaplica las dimensiones después de cada render del motor calendario.
 */
 let calendarObserver=null;
 let calendarAdaptScheduled=false;
 
 function adaptB232261CalendarMobile(){
-  if(!mobile())return false;
+  const shell=by('ccf-mobile-b43');
   const section=by('calendario');
-  if(!section)return false;
+  if(!shell||!section)return false;
+
   const card=section.querySelector('.b232261-card');
   const scroll=section.querySelector('.b232261-scroll');
-  const grid=section.querySelector('.b232261-grid.b232261-week') || section.querySelector('.b232261-grid');
+  const grid=section.querySelector('.b232261-grid.b232261-week');
   if(!card||!scroll||!grid)return false;
-  const imp=(el,prop,value)=>el?.style.setProperty(prop,value,'important');
-  const setBox=el=>{if(!el)return;imp(el,'width','100%');imp(el,'max-width','100%');imp(el,'min-width','0');imp(el,'box-sizing','border-box')};
-  setBox(section);setBox(card);setBox(scroll);
+
+  const imp=(el,prop,value)=>{
+    if(el)el.style.setProperty(prop,value,'important');
+  };
+  const box=(el)=>{
+    if(!el)return;
+    imp(el,'width','100%');
+    imp(el,'min-width','0');
+    imp(el,'max-width','100%');
+    imp(el,'box-sizing','border-box');
+  };
+
+  box(section);
+  box(card);
+  box(scroll);
+
   imp(scroll,'overflow-x','hidden');
   imp(scroll,'overflow-y','visible');
+
   imp(grid,'display','grid');
   imp(grid,'grid-template-columns','repeat(7,minmax(0,1fr))');
   imp(grid,'width','100%');
-  imp(grid,'max-width','100%');
   imp(grid,'min-width','0');
+  imp(grid,'max-width','100%');
   imp(grid,'box-sizing','border-box');
-  [...grid.children].forEach(cell=>{
-    imp(cell,'min-width','0');imp(cell,'max-width','100%');imp(cell,'width','auto');imp(cell,'box-sizing','border-box');imp(cell,'overflow','hidden');
+  imp(grid,'overflow','hidden');
+
+  Array.from(grid.children).forEach(cell=>{
+    imp(cell,'min-width','0');
+    imp(cell,'width','auto');
+    imp(cell,'max-width','100%');
+    imp(cell,'box-sizing','border-box');
+    imp(cell,'overflow','hidden');
   });
-  [...section.querySelectorAll('.b232261-day')].forEach(day=>{
-    imp(day,'min-width','0');imp(day,'max-width','100%');imp(day,'width','auto');
-    imp(day,'min-height','78px');imp(day,'height','78px');imp(day,'box-sizing','border-box');imp(day,'overflow','hidden');
+
+  section.querySelectorAll('.b232261-day').forEach(day=>{
+    imp(day,'min-width','0');
+    imp(day,'width','auto');
+    imp(day,'max-width','100%');
+    imp(day,'box-sizing','border-box');
+    imp(day,'overflow','hidden');
   });
+
   return true;
 }
+
 function scheduleCalendarMobileAdapt(){
-  if(!mobile()||calendarAdaptScheduled)return;
+  if(calendarAdaptScheduled)return;
   calendarAdaptScheduled=true;
-  requestAnimationFrame(()=>{calendarAdaptScheduled=false;adaptB232261CalendarMobile()});
+  requestAnimationFrame(()=>{
+    calendarAdaptScheduled=false;
+    adaptB232261CalendarMobile();
+  });
 }
+
 function observeCalendarMobile(){
-  calendarObserver?.disconnect();calendarObserver=null;
+  calendarObserver?.disconnect();
+  calendarObserver=null;
+
+  const shell=by('ccf-mobile-b43');
   const section=by('calendario');
-  if(!mobile()||!section)return;
-  calendarObserver=new MutationObserver(()=>scheduleCalendarMobileAdapt());
+  if(!shell||!section)return;
+
+  calendarObserver=new MutationObserver(()=>{
+    scheduleCalendarMobileAdapt();
+  });
   calendarObserver.observe(section,{childList:true,subtree:true});
   scheduleCalendarMobileAdapt();
 }
