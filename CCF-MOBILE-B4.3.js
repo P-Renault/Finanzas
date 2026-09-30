@@ -707,4 +707,172 @@ window.addEventListener('resize',()=>setTimeout(boot,100));
 window.addEventListener('pageshow',()=>setTimeout(boot,50));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
-})();
+/* ============================================================
+   B4.3 — DIAGNÓSTICO CALENDARIO MÓVIL
+   TEMPORAL — SOLO LECTURA
+   No modifica B232.26.4
+   No modifica datos
+   No modifica Supabase
+   ============================================================ */
+(function calendarDiagnosticB43(){
+
+  function runCalendarDiagnostic(){
+
+    if (!window.matchMedia('(max-width:720px)').matches) return;
+
+    const section = document.querySelector('#calendario');
+    if (!section) return;
+
+    const grid = section.querySelector('.b232261-grid');
+    const scroll = section.querySelector('.b232261-scroll');
+    const card = section.querySelector('.b232261-card');
+
+    if (!grid) return;
+
+    const gs = getComputedStyle(grid);
+    const ps = grid.parentElement
+      ? getComputedStyle(grid.parentElement)
+      : null;
+
+    const rectGrid = grid.getBoundingClientRect();
+    const rectParent = grid.parentElement
+      ? grid.parentElement.getBoundingClientRect()
+      : null;
+
+    const rectSection = section.getBoundingClientRect();
+
+    let panel = section.querySelector('[data-b434-calendar-diagnostic]');
+
+    if (!panel) {
+      panel = document.createElement('details');
+      panel.setAttribute('data-b434-calendar-diagnostic','1');
+
+      panel.style.cssText = `
+        margin:10px 0!important;
+        padding:0!important;
+        background:#111827!important;
+        color:#f9fafb!important;
+        border-radius:10px!important;
+        font-family:monospace!important;
+        font-size:11px!important;
+        line-height:1.5!important;
+        position:relative!important;
+        z-index:99999!important;
+      `;
+
+      panel.innerHTML = `
+        <summary style="
+          cursor:pointer!important;
+          padding:10px!important;
+          font-family:system-ui,sans-serif!important;
+          font-weight:700!important;
+        ">
+          🔎 Diagnóstico B4.3 — Calendario
+        </summary>
+
+        <pre data-b434-calendar-diagnostic-output
+          style="
+            margin:0!important;
+            padding:10px!important;
+            white-space:pre-wrap!important;
+            overflow:auto!important;
+            color:#f9fafb!important;
+          "
+        ></pre>
+      `;
+
+      section.prepend(panel);
+    }
+
+    const output =
+      panel.querySelector('[data-b434-calendar-diagnostic-output]');
+
+    if (!output) return;
+
+    output.textContent =
+`B4.3 CALENDARIO MOBILE
+========================
+
+VIEWPORT
+ancho ventana: ${window.innerWidth}px
+alto ventana:  ${window.innerHeight}px
+
+SECCIÓN #calendario
+width:     ${gsSafe(section,'width')}
+min-width: ${gsSafe(section,'minWidth')}
+rect.width:${Math.round(rectSection.width)}px
+
+GRID .b232261-grid
+display:              ${gs.display}
+grid-template-columns:${gs.gridTemplateColumns}
+grid-auto-columns:    ${gs.gridAutoColumns}
+width:                ${gs.width}
+min-width:            ${gs.minWidth}
+max-width:            ${gs.maxWidth}
+rect.width:           ${Math.round(rectGrid.width)}px
+
+CONTENEDOR PADRE
+width:     ${ps?.width || 'N/D'}
+min-width: ${ps?.minWidth || 'N/D'}
+max-width: ${ps?.maxWidth || 'N/D'}
+rect.width:${rectParent ? Math.round(rectParent.width)+'px' : 'N/D'}
+
+SCROLL .b232261-scroll
+width:     ${scroll ? getComputedStyle(scroll).width : 'N/D'}
+min-width: ${scroll ? getComputedStyle(scroll).minWidth : 'N/D'}
+overflow-x:${scroll ? getComputedStyle(scroll).overflowX : 'N/D'}
+
+CARD .b232261-card
+width:     ${card ? getComputedStyle(card).width : 'N/D'}
+min-width: ${card ? getComputedStyle(card).minWidth : 'N/D'}
+
+HIJOS DIRECTOS DEL GRID
+cantidad: ${grid.children.length}
+
+RESULTADO PRELIMINAR
+${
+  parseFloat(gs.minWidth) > window.innerWidth
+  ? '⚠️ GRID TIENE MIN-WIDTH MAYOR QUE LA PANTALLA'
+  : '✅ MIN-WIDTH DEL GRID NO SUPERA LA PANTALLA'
+}
+
+${
+  rectGrid.width > window.innerWidth + 2
+  ? '⚠️ GRID REAL ES MÁS ANCHO QUE LA PANTALLA'
+  : '✅ GRID REAL CABE EN EL ANCHO DE LA PANTALLA'
+}
+
+${
+  grid.children.length >= 42
+  ? '✅ GRID CONTIENE LAS CELDAS ESPERADAS'
+  : '⚠️ CANTIDAD DE CELDAS MENOR A 42'
+}
+`;
+
+  }
+
+  function gsSafe(el,prop){
+    if(!el)return 'N/D';
+    return getComputedStyle(el)[prop];
+  }
+
+  function scheduleDiagnostic(){
+    [300,800,1500,2500].forEach(ms=>{
+      setTimeout(runCalendarDiagnosticB43,ms);
+    });
+  }
+
+  scheduleDiagnostic();
+
+  const observer = new MutationObserver(()=>{
+    if(window.matchMedia('(max-width:720px)').matches){
+      setTimeout(runCalendarDiagnosticB43,100);
+    }
+  });
+
+  observer.observe(document.body,{
+    childList:true,
+    subtree:true
+  });
+
+})();})();
