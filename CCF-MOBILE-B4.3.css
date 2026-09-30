@@ -2731,3 +2731,57 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #ccf-mobile-b43 #calendario.b434-calendar-mobile .b434-mobile-day-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   #ccf-mobile-b43 #calendario.b434-calendar-mobile .b434-mobile-day-kpis article{min-height:47px!important}
 }
+
+
+/* ================================================================
+   B4.3 CALENDARIO MOBILE — PUENTE DE EJECUCIÓN
+   Aplica la misma presentación cuando #calendario sea renderizado
+   fuera de #ccf-mobile-b43 por el router/tab nativo.
+   No modifica el motor B232.26.4.
+   ================================================================ */
+@media(max-width:720px){
+  #calendario.b434-calendar-mobile,
+  #calendario.b434-calendar-mobile .b232261-card,
+  #calendario.b434-calendar-mobile .b232261-scroll{
+    width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important;
+  }
+  #calendario.b434-calendar-mobile .b232261-card{padding:10px!important;margin:0!important;border-radius:16px!important}
+  #calendario.b434-calendar-mobile .b232261-grid{
+    display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-auto-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important;min-width:0!important;
+    box-sizing:border-box!important;overflow:hidden!important;
+  }
+  #calendario.b434-calendar-mobile .b232261-grid>*{
+    min-width:0!important;width:auto!important;max-width:100%!important;box-sizing:border-box!important;
+  }
+  #calendario.b434-calendar-mobile .b232261-week>div{
+    min-width:0!important;width:auto!important;height:30px!important;padding:8px 1px!important;
+    font-size:7px!important;line-height:1!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;
+  }
+  #calendario.b434-calendar-mobile .b232261-day{
+    min-width:0!important;width:auto!important;max-width:100%!important;height:82px!important;min-height:82px!important;
+    padding:6px 4px 5px!important;margin:0!important;box-sizing:border-box!important;overflow:hidden!important;border-radius:0!important;
+  }
+  #calendario.b434-calendar-mobile .b232261-day-top{width:100%!important;min-width:0!important;display:flex!important;justify-content:space-between!important}
+  #calendario.b434-calendar-mobile .b232261-event,
+  #calendario.b434-calendar-mobile .b434-calendar-compact-event,
+  #calendario.b434-calendar-mobile .b232261-more{
+    display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;
+    font-size:8px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+    box-sizing:border-box!important;
+  }
+  #calendario.b434-calendar-mobile .b232261-mini{display:none!important}
+  #calendario.b434-calendar-mobile .b434-calendar-dots{display:flex!important;align-items:center!important;gap:3px!important;min-height:6px!important;margin-top:5px!important}
+  #calendario.b434-calendar-mobile .b434-calendar-dots i{display:block!important;width:6px!important;height:6px!important;min-width:6px!important;border-radius:50%!important}
+  #calendario.b434-calendar-mobile .b434-calendar-dots i.income{background:#16a34a!important}
+  #calendario.b434-calendar-mobile .b434-calendar-dots i.expense{background:#ef4444!important}
+  #calendario.b434-calendar-mobile .b434-calendar-dots i.other{background:#60a5fa!important}
+  #calendario.b434-calendar-mobile .b232261-detail{display:block!important;width:100%!important;min-width:0!important}
+  #calendario.b434-calendar-mobile .b232261-box{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important}
+}
+@media(max-width:380px){
+  #calendario.b434-calendar-mobile .b232261-day{height:74px!important;min-height:74px!important;padding:3px 2px!important}
+  #calendario.b434-calendar-mobile .b232261-event,
+  #calendario.b434-calendar-mobile .b434-calendar-compact-event,
+  #calendario.b434-calendar-mobile .b232261-more{font-size:6px!important}
+}

@@ -1,4 +1,4 @@
-/* CCF MOBILE B4.3 — CALENDARIO MOBILE
+/* CCF MOBILE B4.3.6 — CALENDARIO MOBILE FINAL
    Solo presentación móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null,calendarObserver=null,calendarObservedHost=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null,calendarObserver=null,calendarObservedHost=null,globalCalendarObserver=null;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -47,6 +47,14 @@ function moduleHost(){
 function restoreCalendarObserver(){
  if(calendarObserver){try{calendarObserver.disconnect()}catch(e){}}
  calendarObserver=null;calendarObservedHost=null;
+}
+function ensureGlobalCalendarAdapter(){
+ if(!mobile())return;
+ const apply=()=>{const section=by('calendario');if(!section||!section.isConnected)return;adaptB232261CalendarMobile(section)};
+ apply();
+ if(globalCalendarObserver)return;
+ globalCalendarObserver=new MutationObserver(()=>{if(mobile())requestAnimationFrame(apply)});
+ globalCalendarObserver.observe(document.body,{childList:true,subtree:true});
 }
 function markCalendarMobile(section){
  if(!section)return false;
@@ -644,8 +652,8 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;restoreCalendarObserver();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
-function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;restoreCalendarObserver();if(globalCalendarObserver){try{globalCalendarObserver.disconnect()}catch(e){}}globalCalendarObserver=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}ensureGlobalCalendarAdapter();if(!built){build();observe();ensureGlobalCalendarAdapter()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
