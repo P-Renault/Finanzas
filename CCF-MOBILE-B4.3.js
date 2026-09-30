@@ -204,10 +204,10 @@ function adaptDesktopModule(id){
 */
 let calendarObserver=null;
 let calendarAdaptScheduled=false;
-const CALENDAR_BP=370;
-
 function calendarIsMobile(){
-  return window.matchMedia('(max-width:'+CALENDAR_BP+'px)').matches;
+  /* El calendario es móvil cuando está montado dentro de la shell móvil.
+     370px es la referencia de ancho del widget, NO un breakpoint de viewport. */
+  return !!root && !!by('calendario') && root.id==='ccf-mobile-b43';
 }
 
 function adaptB232261CalendarMobile(){

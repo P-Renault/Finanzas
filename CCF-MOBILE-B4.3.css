@@ -2289,71 +2289,79 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
 
 /* ================================================================
    CCF MOBILE B4.3.10 — CALENDARIO · BOOTSTRAP 5.3.6 AISLADO
-   Solo #calendario. No afecta al resto de la aplicación.
+   370px = referencia de ancho del widget, NO breakpoint.
+   La capa se aplica únicamente cuando #calendario está dentro de la shell móvil.
    ================================================================ */
-@media(max-width:370px){
-  #ccf-mobile-b43 .b434-module-host #calendario{
-    width:100%!important;max-width:100%!important;min-width:0!important;
-    box-sizing:border-box!important;overflow:visible!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
-    width:100%!important;max-width:100%!important;min-width:0!important;
-    box-sizing:border-box!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
-    overflow-x:hidden!important;overflow-y:visible!important;
-  }
-
-  /* Bootstrap 5.3.6 — row/g-0, aislado al calendario. */
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-bs-calendar-row{
-    --bs-gutter-x:0;--bs-gutter-y:0;
-    display:flex!important;flex-wrap:wrap!important;
-    width:100%!important;max-width:100%!important;min-width:0!important;
-    margin:0!important;box-sizing:border-box!important;
-    grid-template-columns:none!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-bs-calendar-col{
-    flex:0 0 14.2857142857%!important;
-    width:14.2857142857%!important;
-    max-width:14.2857142857%!important;
-    min-width:0!important;
-    box-sizing:border-box!important;
-    padding-left:0!important;padding-right:0!important;margin-top:0!important;
-    overflow:hidden!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
-    width:100%!important;max-width:100%!important;min-width:0!important;
-    min-height:78px!important;height:78px!important;
-    padding:4px 2px!important;box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
-    display:block!important;text-align:center!important;
-    font-size:11px!important;line-height:1.1!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{font-size:11px!important}
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
-    display:block!important;margin-top:2px!important;font-size:6px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
-    max-width:100%!important;min-width:0!important;overflow:hidden!important;
-    text-overflow:ellipsis!important;white-space:nowrap!important;font-size:7px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
-    grid-template-columns:1fr!important;gap:8px!important;margin-top:9px!important;
-  }
+#ccf-mobile-b43 .b434-module-host #calendario{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  box-sizing:border-box!important;overflow:visible!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  box-sizing:border-box!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+  overflow-x:hidden!important;overflow-y:visible!important;
 }
 
-/* Bootstrap 5.3.6 — subset exacta necesaria para row/col, scoped al calendario. */
-@scope (#ccf-mobile-b43 .b434-module-host #calendario){
-  .row{--bs-gutter-x:1.5rem;--bs-gutter-y:0;display:flex;flex-wrap:wrap;margin-top:calc(-1 * var(--bs-gutter-y));margin-right:calc(-.5 * var(--bs-gutter-x));margin-left:calc(-.5 * var(--bs-gutter-x))}
-  .row>*{flex-shrink:0;width:100%;max-width:100%;padding-right:calc(var(--bs-gutter-x) * .5);padding-left:calc(var(--bs-gutter-x) * .5);margin-top:var(--bs-gutter-y)}
-  .col{flex:1 0 0}
-  .g-0,.gx-0{--bs-gutter-x:0}.g-0,.gy-0{--bs-gutter-y:0}
-  .w-100{width:100%!important}.mw-100{max-width:100%!important}
-  .overflow-hidden{overflow:hidden!important}.overflow-x-hidden{overflow-x:hidden!important}.overflow-y-visible{overflow-y:visible!important}
-  .d-flex{display:flex!important}.flex-wrap{flex-wrap:wrap!important}
+/* Bootstrap 5.3.6 — row/col aislados al calendario. */
+#ccf-mobile-b43 .b434-module-host #calendario .b434-bs-calendar-row{
+  --bs-gutter-x:0;--bs-gutter-y:0;
+  display:flex!important;flex-wrap:wrap!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;box-sizing:border-box!important;
+  grid-template-columns:none!important;
 }
+#ccf-mobile-b43 .b434-module-host #calendario .b434-bs-calendar-col{
+  flex:0 0 14.2857142857%!important;
+  width:14.2857142857%!important;
+  max-width:14.2857142857%!important;
+  min-width:0!important;box-sizing:border-box!important;
+  padding-left:0!important;padding-right:0!important;margin-top:0!important;
+  overflow:hidden!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week{
+  display:flex!important;flex-wrap:wrap!important;
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  margin:0!important;box-sizing:border-box!important;
+  grid-template-columns:none!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week>*{
+  flex:0 0 14.2857142857%!important;
+  width:14.2857142857%!important;
+  max-width:14.2857142857%!important;
+  min-width:0!important;box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+  width:100%!important;max-width:100%!important;min-width:0!important;
+  min-height:78px!important;height:78px!important;
+  padding:4px 2px!important;box-sizing:border-box!important;overflow:hidden!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
+  display:block!important;text-align:center!important;font-size:11px!important;line-height:1.1!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{font-size:11px!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{display:block!important;margin-top:2px!important;font-size:6px!important}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
+  max-width:100%!important;min-width:0!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;white-space:nowrap!important;font-size:7px!important;
+}
+#ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
+  grid-template-columns:1fr!important;gap:8px!important;margin-top:9px!important;
+}
+
+/* Bootstrap 5.3.6 subset necesaria para row/col, completamente scoped. */
+#ccf-mobile-b43 .b434-module-host #calendario .row{
+  --bs-gutter-x:1.5rem;--bs-gutter-y:0;display:flex;flex-wrap:wrap;
+  margin-top:calc(-1 * var(--bs-gutter-y));margin-right:calc(-.5 * var(--bs-gutter-x));margin-left:calc(-.5 * var(--bs-gutter-x));
+}
+#ccf-mobile-b43 .b434-module-host #calendario .row>*{
+  flex-shrink:0;width:100%;max-width:100%;padding-right:calc(var(--bs-gutter-x)*.5);padding-left:calc(var(--bs-gutter-x)*.5);margin-top:var(--bs-gutter-y);
+}
+#ccf-mobile-b43 .b434-module-host #calendario .col{flex:1 0 0}
+#ccf-mobile-b43 .b434-module-host #calendario .g-0{--bs-gutter-x:0;--bs-gutter-y:0}
+
