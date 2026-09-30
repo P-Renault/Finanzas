@@ -611,4 +611,39 @@ document.addEventListener('click',()=>{
 },true);
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+
+/* V7 DIRECT HOOK — no navigation dependency */
+(()=>{
+ const run=()=>{
+   const cal=document.getElementById('calendario');
+   if(!cal)return;
+   cal.classList.add('b434-calendar-mobile');
+   const grid=cal.querySelector('.b232261-grid');
+   const scroll=cal.querySelector('.b232261-scroll');
+   if(scroll){
+     scroll.style.width='100%';
+     scroll.style.maxWidth='100%';
+     scroll.style.minWidth='0';
+     scroll.style.overflow='hidden';
+   }
+   if(grid){
+     grid.style.display='grid';
+     grid.style.gridTemplateColumns='repeat(7,minmax(0,1fr))';
+     grid.style.width='100%';
+     grid.style.maxWidth='100%';
+     grid.style.minWidth='0';
+   }
+   cal.querySelectorAll('.b232261-day').forEach(d=>{
+     d.style.minWidth='0';
+     d.style.width='auto';
+     d.style.boxSizing='border-box';
+   });
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});
+ else run();
+ setTimeout(run,100);
+ setTimeout(run,500);
+ setTimeout(run,1200);
+})();
+
 })();

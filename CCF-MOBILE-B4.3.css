@@ -2285,106 +2285,75 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   }
 }
 
-/* B1.9 — CALENDARIO MÓVIL · V5
-   Integración estructural aislada.
-   B232.26.4-calendario-safe.js permanece intacto.
+/* B1.9 — CALENDARIO MÓVIL · V7 DIRECT
+   La presentación móvil se aplica directamente a #calendario.
+   No depende de clases añadidas por JS.
 */
 @media(max-width:720px){
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile{
+  #calendario{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
-    margin:0!important;
+    overflow:visible!important;
     box-sizing:border-box!important;
   }
 
-  /* Tarjeta compacta del período */
-  #ccf-mobile-b43 .b434-calendar-period-card{
-    display:block!important;
+  #calendario .b232261-card{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
+    padding:8px!important;
+    margin:0!important;
     box-sizing:border-box!important;
-    background:#fff!important;
-    border:1px solid #e1e7ee!important;
-    border-radius:15px!important;
-    padding:10px!important;
-    margin:0 0 8px!important;
-    box-shadow:0 2px 9px rgba(15,23,42,.045)!important;
+    overflow:hidden!important;
   }
 
-  #ccf-mobile-b43 .b434-calendar-period-card .b232261-head{
+  /* Header + navegación compactos */
+  #calendario .b232261-head{
     display:block!important;
+    width:100%!important;
+    min-width:0!important;
     margin:0!important;
   }
-
-  #ccf-mobile-b43 .b434-calendar-period-card .b232261-actions{
+  #calendario .b232261-head h2,
+  #calendario .b232261-head h3{
+    font-size:16px!important;
+    line-height:1.2!important;
+    margin:0!important;
+  }
+  #calendario .b232261-actions{
     display:grid!important;
     grid-template-columns:1fr 1.2fr 1fr!important;
     gap:6px!important;
     width:100%!important;
-    margin:8px 0 0!important;
+    margin:8px 0!important;
   }
-
-  #ccf-mobile-b43 .b434-calendar-period-card .b232261-actions button{
+  #calendario .b232261-actions button{
     min-width:0!important;
     width:100%!important;
-    min-height:34px!important;
     height:34px!important;
     padding:4px!important;
     font-size:10px!important;
     box-sizing:border-box!important;
   }
 
-  /* Tarjeta KPI */
-  #ccf-mobile-b43 .b434-calendar-summary-card{
-    display:block!important;
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    box-sizing:border-box!important;
-    background:#fff!important;
-    border:1px solid #e1e7ee!important;
-    border-radius:15px!important;
-    padding:10px!important;
-    margin:0 0 8px!important;
-    box-shadow:0 2px 9px rgba(15,23,42,.045)!important;
-  }
-
-  #ccf-mobile-b43 .b434-calendar-summary-card::before{
-    content:"RESUMEN DEL MES";
-    display:block!important;
-    margin:0 0 7px!important;
-    color:#334155!important;
-    font-size:10px!important;
-    font-weight:900!important;
-  }
-
-  #ccf-mobile-b43 .b434-calendar-summary-card .b232261-kpis{
+  /* KPIs compactos */
+  #calendario .b232261-kpis{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     gap:6px!important;
-    margin:0!important;
-  }
-
-  #ccf-mobile-b43 .b434-calendar-summary-card .b232261-kpis>*{
-    min-width:0!important;
-    padding:9px!important;
-    box-sizing:border-box!important;
-  }
-
-  /* Tarjeta principal: solamente grilla y detalle */
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-card{
     width:100%!important;
-    max-width:100%!important;
     min-width:0!important;
-    margin:0!important;
+  }
+  #calendario .b232261-kpis>*{
+    min-width:0!important;
     padding:8px!important;
     box-sizing:border-box!important;
-    overflow:hidden!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-scroll{
+  /* El contenedor de desplazamiento NO conserva el ancho de escritorio */
+  #calendario .b232261-scroll{
+    display:block!important;
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
@@ -2392,8 +2361,8 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     box-sizing:border-box!important;
   }
 
-  /* 7 columnas: el min-width de escritorio queda anulado también por JS */
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-grid{
+  /* La grilla original tiene min-width:770px: se anula aquí */
+  #calendario .b232261-grid{
     display:grid!important;
     grid-template-columns:repeat(7,minmax(0,1fr))!important;
     width:100%!important;
@@ -2402,24 +2371,26 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     box-sizing:border-box!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-week{
+  #calendario .b232261-week{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-column:1 / -1!important;
     width:100%!important;
     min-width:0!important;
     box-sizing:border-box!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-week>div{
+  #calendario .b232261-week>div{
     min-width:0!important;
     width:auto!important;
-    padding:6px 1px!important;
+    padding:5px 1px!important;
     font-size:8px!important;
-    line-height:1!important;
-    overflow:hidden!important;
     text-align:center!important;
+    overflow:hidden!important;
     box-sizing:border-box!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-day{
+  #calendario .b232261-day{
     min-width:0!important;
     width:auto!important;
     min-height:62px!important;
@@ -2429,89 +2400,42 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     box-sizing:border-box!important;
   }
 
-  /* Las celdas quedan limpias: día + indicador */
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-event,
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-mini{
+  #calendario .b232261-day-top{
+    text-align:center!important;
+    font-size:10px!important;
+  }
+  #calendario .b232261-day-top small{
+    font-size:6px!important;
+  }
+
+  /* En móvil: eliminar texto financiero dentro de las celdas */
+  #calendario .b232261-event,
+  #calendario .b232261-mini{
     display:block!important;
     width:6px!important;
     height:6px!important;
     min-height:6px!important;
-    padding:0!important;
     margin:3px auto 0!important;
+    padding:0!important;
     border-radius:50%!important;
     font-size:0!important;
     line-height:0!important;
     overflow:hidden!important;
-    box-sizing:border-box!important;
   }
-
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-more{
+  #calendario .b232261-more{
     display:none!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-detail{
+  #calendario .b232261-detail{
     display:grid!important;
     grid-template-columns:1fr!important;
     gap:8px!important;
     margin-top:9px!important;
   }
-
-  #ccf-mobile-b43 .b434-module-host #calendario.b434-calendar-mobile .b232261-box{
-    min-width:0!important;
+  #calendario .b232261-box{
     width:100%!important;
-    box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
-}
-
-/* V6 — selector directo del módulo real */
-@media(max-width:720px){
-  #calendario.b434-calendar-mobile,
-  #calendario.b434-calendar-mobile .b232261-card,
-  #calendario.b434-calendar-mobile .b232261-scroll{
     min-width:0!important;
-    max-width:100%!important;
-    width:100%!important;
-    box-sizing:border-box!important;
-  }
-
-  #calendario.b434-calendar-mobile .b232261-scroll{
     overflow:hidden!important;
-  }
-
-  #calendario.b434-calendar-mobile .b232261-grid{
-    display:grid!important;
-    grid-template-columns:repeat(7,minmax(0,1fr))!important;
-    min-width:0!important;
-    max-width:100%!important;
-    width:100%!important;
     box-sizing:border-box!important;
-  }
-
-  #calendario.b434-calendar-mobile .b232261-week,
-  #calendario.b434-calendar-mobile .b232261-week>div,
-  #calendario.b434-calendar-mobile .b232261-day{
-    min-width:0!important;
-    box-sizing:border-box!important;
-  }
-
-  #calendario.b434-calendar-mobile .b232261-day{
-    width:auto!important;
-    min-height:62px!important;
-    height:62px!important;
-    overflow:hidden!important;
-  }
-
-  #calendario.b434-calendar-mobile .b232261-event,
-  #calendario.b434-calendar-mobile .b232261-mini{
-    width:6px!important;
-    height:6px!important;
-    min-height:6px!important;
-    padding:0!important;
-    margin:3px auto 0!important;
-    overflow:hidden!important;
-    font-size:0!important;
-    line-height:0!important;
-    border-radius:50%!important;
   }
 }
