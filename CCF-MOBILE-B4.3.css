@@ -2283,7 +2283,8 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #ccf-mobile-b43 .b434-module-host #futuros #futurosLista button{
     min-height:40px!important;
   }
-  
+}
+
 /* B1.9 — CALENDARIO MÓVIL · CORRECCIÓN AISLADA
    Solo presentación del DOM generado por B232.26.4.
    No modifica el motor, navegación ni datos.
@@ -2420,6 +2421,4 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     line-height:1.35!important;
     overflow-wrap:anywhere!important;
   }
-}
-  
 }
