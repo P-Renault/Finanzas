@@ -193,6 +193,7 @@ function adaptDesktopModule(id){
  section.parentNode?.insertBefore(moduleMarker,section);
  section.classList.remove('hidden');
  section.dataset.b434ModuleMoved='1';
+ if(id==='calendario')section.classList.add('b434-calendar-mobile');
  host.replaceChildren(section);
  activeModule=section;
  host.classList.add('open');
