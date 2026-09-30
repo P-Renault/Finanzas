@@ -1,4 +1,4 @@
-/* CCF MOBILE B4.3.6 — CALENDARIO MOBILE FINAL
+/* CCF MOBILE B4.3 — CALENDARIO MOBILE
    Solo presentación móvil. No crea Supabase ni modifica autenticación.
    No modifica index.html, app.js ni módulos financieros.
 */
@@ -648,5 +648,5 @@ function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=nul
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.6-calendar-mobile-final',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
