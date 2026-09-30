@@ -2283,4 +2283,143 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   #ccf-mobile-b43 .b434-module-host #futuros #futurosLista button{
     min-height:40px!important;
   }
+  
+/* B1.9 — CALENDARIO MÓVIL · CORRECCIÓN AISLADA
+   Solo presentación del DOM generado por B232.26.4.
+   No modifica el motor, navegación ni datos.
+*/
+@media (max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:9px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-head{
+    display:block!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:100%!important;
+    margin-top:8px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-actions button{
+    min-width:0!important;
+    width:100%!important;
+    height:32px!important;
+    padding:3px 4px!important;
+    font-size:10px!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-kpis{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:6px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    border-radius:9px!important;
+  }
+
+  /* Las 7 columnas se ajustan al ancho real del teléfono. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week>div{
+    min-width:0!important;
+    padding:6px 1px!important;
+    font-size:8px!important;
+    line-height:1!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    min-width:0!important;
+    width:auto!important;
+    min-height:78px!important;
+    height:78px!important;
+    padding:4px 2px!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
+    display:block!important;
+    text-align:center!important;
+    font-size:11px!important;
+    line-height:1.1!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
+    font-size:11px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
+    display:block!important;
+    margin-top:2px!important;
+    font-size:6px!important;
+  }
+
+  /* En 7 columnas no caben textos de movimientos; el detalle inferior conserva esa información. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
+    display:none!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day.selected{
+    outline:2px solid #111827!important;
+    outline-offset:-2px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-detail{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    margin-top:9px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-box{
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-box h3{
+    font-size:11px!important;
+    line-height:1.25!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-foot{
+    font-size:9px!important;
+    line-height:1.35!important;
+    overflow-wrap:anywhere!important;
+  }
+}
+  
 }
