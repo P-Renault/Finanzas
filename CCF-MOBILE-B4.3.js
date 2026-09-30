@@ -469,158 +469,115 @@ window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();
 })();
 
 
-/* CCF MOBILE B4.3.5 — CALENDARIO MÓVIL AISLADO
-   Alternativa 1 · presentación únicamente móvil.
+/* CCF MOBILE B4.3.6 — BOOTSTRAP GRID CALENDARIO · INTERVENCIÓN ÚNICA
+   Solo móvil (<=720px) y solo la grilla del período de #calendario.
+   Bootstrap Grid 5.3.8 se carga como dependencia CSS puntual.
    No modifica B232.26.4, Supabase, autenticación ni otros módulos.
-   El motor existente continúa siendo la única fuente de datos y acciones.
 */
 (()=>{'use strict';
 const BP=720;
-let cal=null, calObserver=null, syncing=false;
-const isMobile=()=>window.matchMedia('(max-width:'+BP+'px)').matches;
+const BOOTSTRAP_CSS='https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap-grid.min.css';
+let observer=null, calendar=null, applying=false;
+const mobile=()=>window.matchMedia('(max-width:'+BP+'px)').matches;
 const getCal=()=>document.getElementById('calendario');
-const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
-
-function sourceReady(){
-  const h=getCal();
-  return h && q('.b232261-card',h) && q('.b232261-grid',h);
+const q=(s,r=document)=>r.querySelector(s);
+function loadBootstrapGrid(){
+  if(!mobile())return;
+  if(document.getElementById('ccf-b436-bootstrap-grid'))return;
+  const link=document.createElement('link');
+  link.id='ccf-b436-bootstrap-grid';
+  link.rel='stylesheet';
+  link.href=BOOTSTRAP_CSS;
+  link.media='screen and (max-width:720px)';
+  document.head.appendChild(link);
 }
-
-function dotsFromDay(src){
-  const dots=[];
-  const add=(cls,label)=>{
-    if(q('.'+cls,src))dots.push('<i class="b435-dot '+cls+'" title="'+label+'" aria-label="'+label+'"></i>');
-  };
-  add('b232261-real-in','Ingreso real');
-  add('b232261-real-out','Gasto real');
-  add('b232261-plan-in','Ingreso proyectado');
-  add('b232261-plan-out','Gasto/compromiso');
-  add('b232261-gen','Generación de ingreso');
-  add('b232261-debt','Cuota/deuda');
-  return dots.join('');
+function prepareRow(row,items){
+  if(!row)return;
+  row.classList.add('row','g-0','b436-bs-row');
+  row.style.display='flex';
+  row.style.flexWrap='wrap';
+  row.style.width='100%';
+  row.style.minWidth='0';
+  row.style.maxWidth='100%';
+  row.style.marginLeft='0';
+  row.style.marginRight='0';
+  row.style.boxSizing='border-box';
+  items.forEach(el=>{
+    el.classList.add('col','b436-bs-col');
+    el.style.flex='1 0 0%';
+    el.style.maxWidth='14.285714%';
+    el.style.minWidth='0';
+    el.style.width='14.285714%';
+    el.style.boxSizing='border-box';
+    el.style.overflow='hidden';
+  });
 }
-
-function buildMobile(){
-  const host=getCal();
-  if(!host||!isMobile()||!sourceReady())return;
-  if(syncing)return;
-  syncing=true;
-  try{
-    const oldView=q(':scope > .b435-calendar-mobile',host);
-    if(oldView)oldView.remove();
-
-    const card=q('.b232261-card',host);
-    const title=q('.b232261-head h2',card)?.textContent?.trim()||'Calendario';
-    const sub=q('.b232261-head .b232261-sub',card)?.textContent?.trim()||'';
-    const actions=qa('.b232261-actions button',card);
-    const sourceGrid=q('.b232261-grid:not(.b232261-week)',card) || qa('.b232261-grid',card).find(x=>!x.classList.contains('b232261-week'));
-    const sourceDays=sourceGrid?qa('.b232261-day',sourceGrid):[];
-    const sourceWeek=q('.b232261-week',card);
-    const kpis=q('.b232261-kpis',card);
-    const scope=q('.b232261-scope',card);
-    const detail=q('.b232261-detail',card);
-    const foot=q('.b232261-foot',card);
-
-    const view=document.createElement('section');
-    view.className='b435-calendar-mobile';
-    view.setAttribute('aria-label','Calendario móvil');
-    view.innerHTML='<div class="b435-cal-head">'+
-      '<div class="b435-cal-title"><span>CALENDARIO</span><h2></h2><small></small></div>'+
-      '<div class="b435-cal-nav">'+
-        '<button type="button" data-cal-action="prev" aria-label="Mes anterior">‹</button>'+
-        '<button type="button" data-cal-action="today">HOY</button>'+
-        '<button type="button" data-cal-action="next" aria-label="Mes siguiente">›</button>'+ 
-      '</div></div>'+ 
-      '<div class="b435-cal-summary"><div class="b435-card-label">RESUMEN DEL MES</div><div data-cal-kpis></div></div>'+ 
-      '<div class="b435-cal-grid-card"><div class="b435-card-label">CALENDARIO MENSUAL</div><div class="b435-week" data-cal-week></div><div class="b435-days" data-cal-days></div></div>'+ 
-      '<div class="b435-cal-detail"><div class="b435-card-label">DETALLE DEL DÍA</div><div data-cal-scope></div><div data-cal-detail></div><div data-cal-foot></div></div>';
-
-    const h2=q('h2',view), small=q('.b435-cal-title small',view);
-    h2.textContent=title;
-    small.textContent=sub;
-
-    const kpiHost=q('[data-cal-kpis]',view);
-    if(kpis)kpiHost.appendChild(kpis.cloneNode(true));
-
-    const weekHost=q('[data-cal-week]',view);
-    if(sourceWeek){
-      qa(':scope > div',sourceWeek).forEach(w=>{const x=document.createElement('span');x.textContent=w.textContent.trim();weekHost.appendChild(x)});
-    }else{
-      ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'].forEach(w=>{const x=document.createElement('span');x.textContent=w;weekHost.appendChild(x)});
-    }
-
-    const daysHost=q('[data-cal-days]',view);
-    sourceDays.forEach(src=>{
-      const b=document.createElement('button');
-      b.type='button';
-      b.className='b435-day '+(src.classList.contains('out')?'out ':'')+(src.classList.contains('selected')?'selected':'');
-      b.dataset.date=src.dataset.b232261Date||'';
-      const top=q('.b232261-day-top',src);
-      const num=q('strong',top)?.textContent?.trim()||'';
-      const isToday=q('small',top)?.textContent?.trim()||'';
-      b.innerHTML='<span class="b435-day-number">'+num+'</span>'+ (isToday?'<small class="b435-today">HOY</small>':'') +'<span class="b435-dots">'+dotsFromDay(src)+'</span>';
-      b.addEventListener('click',()=>{
-        const original=host.querySelector('.b232261-day[data-b232261-date="'+CSS.escape(b.dataset.date)+'"]');
-        original?.click();
-      });
-      daysHost.appendChild(b);
-    });
-
-    const scopeHost=q('[data-cal-scope]',view);
-    if(scope)scopeHost.appendChild(scope.cloneNode(true));
-    const detailHost=q('[data-cal-detail]',view);
-    if(detail)detailHost.appendChild(detail.cloneNode(true));
-    const footHost=q('[data-cal-foot]',view);
-    if(foot)footHost.appendChild(foot.cloneNode(true));
-
-    q('[data-cal-action="prev"]',view)?.addEventListener('click',()=>actions[0]?.click());
-    q('[data-cal-action="today"]',view)?.addEventListener('click',()=>actions[1]?.click());
-    q('[data-cal-action="next"]',view)?.addEventListener('click',()=>actions[2]?.click());
-
-    host.appendChild(view);
-    host.classList.add('b435-calendar-mobile-active');
-  }finally{syncing=false}
-}
-
-function hideOrRestore(){
+function restoreDesktop(){
   const host=getCal();
   if(!host)return;
-  if(isMobile()){
-    host.classList.add('b435-calendar-mobile-mode');
-    if(sourceReady())buildMobile();
-  }else{
-    host.classList.remove('b435-calendar-mobile-mode','b435-calendar-mobile-active');
-    q(':scope > .b435-calendar-mobile',host)?.remove();
-  }
-}
-
-function observeCalendar(){
-  const host=getCal();
-  if(!host||host===cal)return;
-  calObserver?.disconnect();
-  cal=host;
-  calObserver=new MutationObserver(()=>{
-    if(!isMobile()||syncing)return;
-    if(!q(':scope > .b435-calendar-mobile',host)&&sourceReady())buildMobile();
+  qa('.b436-bs-row',host).forEach(row=>{
+    row.classList.remove('row','g-0','b436-bs-row');
+    row.style.removeProperty('display');row.style.removeProperty('flex-wrap');
+    row.style.removeProperty('width');row.style.removeProperty('min-width');
+    row.style.removeProperty('max-width');row.style.removeProperty('margin-left');
+    row.style.removeProperty('margin-right');row.style.removeProperty('box-sizing');
   });
-  calObserver.observe(host,{childList:true,subtree:true});
-  hideOrRestore();
+  qa('.b436-bs-col',host).forEach(el=>{
+    el.classList.remove('col','b436-bs-col');
+    ['flex','max-width','min-width','width','box-sizing','overflow'].forEach(p=>el.style.removeProperty(p));
+  });
 }
-
+function apply(){
+  const host=getCal();
+  if(!host||!mobile()||applying)return;
+  const card=q('.b232261-card',host);
+  if(!card)return;
+  const scroll=q('.b232261-scroll',card);
+  const grids=qa('.b232261-grid',card);
+  const week=q('.b232261-week',card);
+  const dayGrid=grids.find(x=>!x.classList.contains('b232261-week'));
+  if(!scroll||!week||!dayGrid)return;
+  applying=true;
+  try{
+    loadBootstrapGrid();
+    host.classList.add('b436-calendar-bootstrap-active');
+    scroll.style.overflow='hidden';
+    scroll.style.width='100%';
+    scroll.style.maxWidth='100%';
+    scroll.style.minWidth='0';
+    scroll.style.boxSizing='border-box';
+    [week,dayGrid].forEach(row=>prepareRow(row,Array.from(row.children)));
+    Array.from(week.children).forEach(el=>{
+      el.style.paddingLeft='1px';el.style.paddingRight='1px';el.style.minHeight='30px';
+      el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';
+      el.style.overflow='hidden';el.style.whiteSpace='nowrap';
+    });
+    Array.from(dayGrid.children).forEach(el=>{
+      el.style.height='78px';el.style.minHeight='78px';el.style.padding='4px 2px';
+      el.style.overflow='hidden';el.style.textOverflow='clip';
+      el.style.whiteSpace='normal';
+    });
+  }finally{applying=false}
+}
 function boot(){
-  observeCalendar();
-  hideOrRestore();
+  if(!mobile()){restoreDesktop();return;}
+  apply();
 }
-
+function watch(){
+  const host=getCal();
+  if(!host||host===calendar)return;
+  observer?.disconnect();calendar=host;
+  observer=new MutationObserver(()=>{if(mobile())setTimeout(apply,0)});
+  observer.observe(host,{childList:true,subtree:true});
+}
 document.addEventListener('click',e=>{
-  if(e.target.closest?.('.tabs button[data-tab="calendario"]') || e.target.closest?.('[data-module="calendario"]')){
-    setTimeout(boot,120);
-    setTimeout(boot,450);
-    setTimeout(boot,900);
+  if(e.target.closest?.('.tabs button[data-tab="calendario"]')||e.target.closest?.('[data-module="calendario"]')){
+    [100,350,800,1400].forEach(ms=>setTimeout(()=>{watch();boot()},ms));
   }
 },true);
-window.addEventListener('resize',()=>setTimeout(hideOrRestore,80));
-window.addEventListener('orientationchange',()=>setTimeout(hideOrRestore,120));
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,700),{once:true});else setTimeout(boot,700);
+window.addEventListener('resize',()=>setTimeout(boot,80));
+window.addEventListener('orientationchange',()=>setTimeout(boot,120));
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{watch();setTimeout(boot,700)},{once:true});
+else {watch();setTimeout(boot,700)}
 })();
