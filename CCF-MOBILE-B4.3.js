@@ -468,77 +468,159 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 })();
 
-/* B4.3 — CALENDARIO MÓVIL · V3 · PRESENTACIÓN DETERMINISTA */
-(()=>{
- 'use strict';
- if(window.__CCF_CALENDAR_MOBILE_V3__)return;
- window.__CCF_CALENDAR_MOBILE_V3__=true;
- const isMobile=()=>window.matchMedia('(max-width:720px)').matches;
- let observer=null,lastFingerprint='';
- const esc=s=>String(s??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
- const compact=v=>{
-   const raw=String(v||'').replace(/[^0-9-]/g,'');
-   const n=Number(raw)||0,a=Math.abs(n);
-   if(a>=1000000)return (n<0?'-':'')+'$'+(a/1000000).toFixed(a>=10000000?0:1).replace('.0','')+'M';
-   if(a>=1000)return (n<0?'-':'')+'$'+Math.round(a/1000)+'k';
-   return (n<0?'-':'')+'$'+a.toLocaleString('es-CL');
- };
- const amountFrom=t=>{const m=String(t||'').match(/-?\$\s*[\d.]+/);return m?m[0].replace(/\s/g,''):''};
- const positiveEvent=el=>{const c=el.className||'';return /real-in|plan-in|gen|positive/.test(c)||/^\s*[↑+⇢]/.test(el.textContent||'')};
- const original=()=>document.querySelector('#calendario .b232261-card');
- function fingerprint(card){
-   const days=[...card.querySelectorAll('.b232261-day')].map(d=>(d.dataset.b232261Date||'')+'|'+(d.classList.contains('selected')?'1':'0')+'|'+(d.textContent||'').trim()).join('§');
-   const h=card.querySelector('.b232261-head h2')?.textContent||document.querySelector('.b434-calendar-period-card .b232261-head h2')?.textContent||'';
-   return h+'¶'+days;
- }
- function restoreDesktop(){
-   const section=document.getElementById('calendario');if(!section)return;
-   section.querySelector('.b434-cal-mobile-view')?.remove();
-   const card=section.querySelector('.b232261-card');if(card)card.style.display='';
-   document.querySelectorAll('.b434-calendar-period-card,.b434-calendar-summary-card').forEach(w=>w.style.display='');
-   section.querySelectorAll('.b232261-scroll,.b232261-grid,.b232261-week,.b232261-week>div,.b232261-day,.b232261-event,.b232261-mini,.b232261-more').forEach(el=>el.removeAttribute('style'));
-   lastFingerprint='';
- }
- function build(){
-   if(!isMobile())return false;
-   const section=document.getElementById('calendario'),card=original();
-   if(!section||!card)return false;
-   const fp=fingerprint(card);
-   if(section.querySelector('.b434-cal-mobile-view')&&fp===lastFingerprint)return true;
-   lastFingerprint=fp;
-   section.querySelector('.b434-cal-mobile-view')?.remove();
-   const period=document.querySelector('.b434-calendar-period-card .b232261-head');
-   const monthTitle=period?.querySelector('h2')?.textContent?.trim()||card.querySelector('.b232261-head h2')?.textContent?.trim()||'Calendario';
-   const kpis=[...document.querySelectorAll('.b434-calendar-summary-card .b232261-kpi')];
-   const fallback=[...card.querySelectorAll('.b232261-kpi')];
-   const sourceKpis=kpis.length?kpis:fallback;
-   const pick=(i,label)=>sourceKpis[i]?{label:sourceKpis[i].querySelector('span')?.textContent?.trim()||label,value:sourceKpis[i].querySelector('strong')?.textContent?.trim()||'$0',note:sourceKpis[i].querySelector('small')?.textContent?.trim()||''}:{label:label,value:'$0',note:''};
-   const income=pick(0,'Ingresos'),projected=pick(1,'Proyectado'),expense=pick(3,'Gastos'),obligations=pick(4,'Compromisos');
-   const view=document.createElement('div');view.className='b434-cal-mobile-view';
-   view.innerHTML='<section class="b434-cal-mobile-period"><span class="b434-cal-eyebrow">CALENDARIO</span><h2>'+esc(monthTitle)+'</h2><p>Vista mensual</p><div class="b434-cal-mobile-nav"><button type="button" data-cal-action="prev" aria-label="Mes anterior">‹</button><button type="button" data-cal-action="today">HOY</button><button type="button" data-cal-action="next" aria-label="Mes siguiente">›</button></div></section>'+
-   '<section class="b434-cal-mobile-summary"><h3>RESUMEN DEL MES</h3><div class="b434-cal-kpis"><article><span>Ingresos</span><strong>'+esc(income.value)+'</strong><small>'+esc(income.note||income.label)+'</small></article><article><span>Gastos</span><strong>'+esc(expense.value)+'</strong><small>'+esc(expense.note||expense.label)+'</small></article><article><span>Proyectado</span><strong>'+esc(projected.value)+'</strong><small>'+esc(projected.note||projected.label)+'</small></article><article><span>Compromisos</span><strong>'+esc(obligations.value)+'</strong><small>'+esc(obligations.note||obligations.label)+'</small></article></div></section>'+
-   '<section class="b434-cal-mobile-calendar"><div class="b434-cal-week"><span>DOM</span><span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span>SÁB</span></div><div class="b434-cal-grid"></div></section>'+
-   '<section class="b434-cal-mobile-detail"><h3>DETALLE DEL DÍA</h3><div data-cal-detail></div></section>';
-   const grid=view.querySelector('.b434-cal-grid');
-   [...card.querySelectorAll('.b232261-day')].forEach(day=>{
-     const cell=document.createElement('button');cell.type='button';cell.className='b434-cal-day '+(day.classList.contains('out')?'out ':'')+(day.classList.contains('selected')?'selected':'');cell.dataset.date=day.dataset.b232261Date||'';
-     const num=day.querySelector('.b232261-day-top strong')?.textContent?.trim()||'';const events=[...day.querySelectorAll('.b232261-event')];
-     let html='<b class="b434-cal-day-number">'+esc(num)+'</b><div class="b434-cal-values">';
-     events.slice(0,2).forEach(ev=>{const amount=amountFrom(ev.textContent);if(!amount)return;const positive=positiveEvent(ev);html+='<span class="'+(positive?'in':'out')+'">'+(positive?'+':'-')+compact(amount)+'</span>'});
-     html+='</div><div class="b434-cal-dots">';events.slice(0,3).forEach(ev=>{html+='<i class="'+(positiveEvent(ev)?'in':'out')+'"></i>'});html+='</div>';cell.innerHTML=html;
-     cell.addEventListener('click',()=>day.click());grid.appendChild(cell);
-   });
-   const detail=view.querySelector('[data-cal-detail]'),originalDetail=card.querySelector('.b232261-detail');
-   if(originalDetail){const clone=originalDetail.cloneNode(true);clone.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));detail.appendChild(clone)}else detail.innerHTML='<p>Selecciona un día para ver sus movimientos.</p>';
-   view.querySelector('[data-cal-action="prev"]').onclick=()=>card.querySelector('#b232261Prev')?.click();
-   view.querySelector('[data-cal-action="today"]').onclick=()=>card.querySelector('#b232261Today')?.click();
-   view.querySelector('[data-cal-action="next"]').onclick=()=>card.querySelector('#b232261Next')?.click();
-   section.appendChild(view);card.style.display='none';
-   document.querySelectorAll('.b434-calendar-period-card,.b434-calendar-summary-card').forEach(w=>w.style.display='none');
-   return true;
- }
- function attach(){const section=document.getElementById('calendario');if(!section)return false;observer?.disconnect();observer=new MutationObserver(()=>{if(!isMobile()){restoreDesktop();return}requestAnimationFrame(build)});observer.observe(section,{childList:true,subtree:true});build();return true}
- function boot(){if(!isMobile()){restoreDesktop();return}if(!attach())[150,400,900,1800,3500].forEach(ms=>setTimeout(attach,ms))}
- window.addEventListener('resize',()=>setTimeout(boot,120));window.addEventListener('orientationchange',()=>setTimeout(boot,150));document.addEventListener('click',()=>{if(isMobile())setTimeout(build,180)},true);
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+
+/* CCF MOBILE B4.3.5 — CALENDARIO MÓVIL AISLADO
+   Alternativa 1 · presentación únicamente móvil.
+   No modifica B232.26.4, Supabase, autenticación ni otros módulos.
+   El motor existente continúa siendo la única fuente de datos y acciones.
+*/
+(()=>{'use strict';
+const BP=720;
+let cal=null, calObserver=null, syncing=false;
+const isMobile=()=>window.matchMedia('(max-width:'+BP+'px)').matches;
+const getCal=()=>document.getElementById('calendario');
+const q=(s,r=document)=>r.querySelector(s);
+const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+
+function sourceReady(){
+  const h=getCal();
+  return h && q('.b232261-card',h) && q('.b232261-grid',h);
+}
+
+function dotsFromDay(src){
+  const dots=[];
+  const add=(cls,label)=>{
+    if(q('.'+cls,src))dots.push('<i class="b435-dot '+cls+'" title="'+label+'" aria-label="'+label+'"></i>');
+  };
+  add('b232261-real-in','Ingreso real');
+  add('b232261-real-out','Gasto real');
+  add('b232261-plan-in','Ingreso proyectado');
+  add('b232261-plan-out','Gasto/compromiso');
+  add('b232261-gen','Generación de ingreso');
+  add('b232261-debt','Cuota/deuda');
+  return dots.join('');
+}
+
+function buildMobile(){
+  const host=getCal();
+  if(!host||!isMobile()||!sourceReady())return;
+  if(syncing)return;
+  syncing=true;
+  try{
+    const oldView=q(':scope > .b435-calendar-mobile',host);
+    if(oldView)oldView.remove();
+
+    const card=q('.b232261-card',host);
+    const title=q('.b232261-head h2',card)?.textContent?.trim()||'Calendario';
+    const sub=q('.b232261-head .b232261-sub',card)?.textContent?.trim()||'';
+    const actions=qa('.b232261-actions button',card);
+    const sourceGrid=q('.b232261-grid:not(.b232261-week)',card) || qa('.b232261-grid',card).find(x=>!x.classList.contains('b232261-week'));
+    const sourceDays=sourceGrid?qa('.b232261-day',sourceGrid):[];
+    const sourceWeek=q('.b232261-week',card);
+    const kpis=q('.b232261-kpis',card);
+    const scope=q('.b232261-scope',card);
+    const detail=q('.b232261-detail',card);
+    const foot=q('.b232261-foot',card);
+
+    const view=document.createElement('section');
+    view.className='b435-calendar-mobile';
+    view.setAttribute('aria-label','Calendario móvil');
+    view.innerHTML='<div class="b435-cal-head">'+
+      '<div class="b435-cal-title"><span>CALENDARIO</span><h2></h2><small></small></div>'+
+      '<div class="b435-cal-nav">'+
+        '<button type="button" data-cal-action="prev" aria-label="Mes anterior">‹</button>'+
+        '<button type="button" data-cal-action="today">HOY</button>'+
+        '<button type="button" data-cal-action="next" aria-label="Mes siguiente">›</button>'+ 
+      '</div></div>'+ 
+      '<div class="b435-cal-summary"><div class="b435-card-label">RESUMEN DEL MES</div><div data-cal-kpis></div></div>'+ 
+      '<div class="b435-cal-grid-card"><div class="b435-card-label">CALENDARIO MENSUAL</div><div class="b435-week" data-cal-week></div><div class="b435-days" data-cal-days></div></div>'+ 
+      '<div class="b435-cal-detail"><div class="b435-card-label">DETALLE DEL DÍA</div><div data-cal-scope></div><div data-cal-detail></div><div data-cal-foot></div></div>';
+
+    const h2=q('h2',view), small=q('.b435-cal-title small',view);
+    h2.textContent=title;
+    small.textContent=sub;
+
+    const kpiHost=q('[data-cal-kpis]',view);
+    if(kpis)kpiHost.appendChild(kpis.cloneNode(true));
+
+    const weekHost=q('[data-cal-week]',view);
+    if(sourceWeek){
+      qa(':scope > div',sourceWeek).forEach(w=>{const x=document.createElement('span');x.textContent=w.textContent.trim();weekHost.appendChild(x)});
+    }else{
+      ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'].forEach(w=>{const x=document.createElement('span');x.textContent=w;weekHost.appendChild(x)});
+    }
+
+    const daysHost=q('[data-cal-days]',view);
+    sourceDays.forEach(src=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='b435-day '+(src.classList.contains('out')?'out ':'')+(src.classList.contains('selected')?'selected':'');
+      b.dataset.date=src.dataset.b232261Date||'';
+      const top=q('.b232261-day-top',src);
+      const num=q('strong',top)?.textContent?.trim()||'';
+      const isToday=q('small',top)?.textContent?.trim()||'';
+      b.innerHTML='<span class="b435-day-number">'+num+'</span>'+ (isToday?'<small class="b435-today">HOY</small>':'') +'<span class="b435-dots">'+dotsFromDay(src)+'</span>';
+      b.addEventListener('click',()=>{
+        const original=host.querySelector('.b232261-day[data-b232261-date="'+CSS.escape(b.dataset.date)+'"]');
+        original?.click();
+      });
+      daysHost.appendChild(b);
+    });
+
+    const scopeHost=q('[data-cal-scope]',view);
+    if(scope)scopeHost.appendChild(scope.cloneNode(true));
+    const detailHost=q('[data-cal-detail]',view);
+    if(detail)detailHost.appendChild(detail.cloneNode(true));
+    const footHost=q('[data-cal-foot]',view);
+    if(foot)footHost.appendChild(foot.cloneNode(true));
+
+    q('[data-cal-action="prev"]',view)?.addEventListener('click',()=>actions[0]?.click());
+    q('[data-cal-action="today"]',view)?.addEventListener('click',()=>actions[1]?.click());
+    q('[data-cal-action="next"]',view)?.addEventListener('click',()=>actions[2]?.click());
+
+    host.appendChild(view);
+    host.classList.add('b435-calendar-mobile-active');
+  }finally{syncing=false}
+}
+
+function hideOrRestore(){
+  const host=getCal();
+  if(!host)return;
+  if(isMobile()){
+    host.classList.add('b435-calendar-mobile-mode');
+    if(sourceReady())buildMobile();
+  }else{
+    host.classList.remove('b435-calendar-mobile-mode','b435-calendar-mobile-active');
+    q(':scope > .b435-calendar-mobile',host)?.remove();
+  }
+}
+
+function observeCalendar(){
+  const host=getCal();
+  if(!host||host===cal)return;
+  calObserver?.disconnect();
+  cal=host;
+  calObserver=new MutationObserver(()=>{
+    if(!isMobile()||syncing)return;
+    if(!q(':scope > .b435-calendar-mobile',host)&&sourceReady())buildMobile();
+  });
+  calObserver.observe(host,{childList:true,subtree:true});
+  hideOrRestore();
+}
+
+function boot(){
+  observeCalendar();
+  hideOrRestore();
+}
+
+document.addEventListener('click',e=>{
+  if(e.target.closest?.('.tabs button[data-tab="calendario"]') || e.target.closest?.('[data-module="calendario"]')){
+    setTimeout(boot,120);
+    setTimeout(boot,450);
+    setTimeout(boot,900);
+  }
+},true);
+window.addEventListener('resize',()=>setTimeout(hideOrRestore,80));
+window.addEventListener('orientationchange',()=>setTimeout(hideOrRestore,120));
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,700),{once:true});else setTimeout(boot,700);
 })();
