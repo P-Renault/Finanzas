@@ -2424,13 +2424,16 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   
 }
 
-/* =============================================================
-   CCF MOBILE B4.3.10 — CALENDARIO HARD ADAPTER
-   Objetivo: adaptar el DOM REAL de B232.26.4 en móvil.
-   El motor genera un único .b232261-grid con 49 hijos:
-   7 encabezados + 42 días. No existen filas .b232261-week.
-   Esta capa es exclusiva de #calendario y no toca el motor financiero.
-   ============================================================= */
+
+/* ================================================================
+   CCF MOBILE B4.3 — CALENDARIO · CONFIGURACIÓN MÓVIL 380PX
+   ----------------------------------------------------------------
+   Referencia de diseño móvil: 380px de ancho útil.
+   Escritorio: se conserva el motor original B232.26.4 (770px).
+   Móvil: NO se fija min-width:380px; el módulo ocupa 100% del ancho
+   disponible y distribuye sus 7 columnas con fracciones iguales.
+   Esto evita desplazamiento horizontal en 360/375/380/390px.
+   ================================================================ */
 @media (max-width:720px){
   #ccf-mobile-b43 .b434-module-host #calendario,
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
@@ -2439,14 +2442,18 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     max-width:100%!important;
     min-width:0!important;
     box-sizing:border-box!important;
-    overflow:hidden!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid,
-  #ccf-mobile-b43 .b434-module-host #calendario .b434-calendar-grid-7{
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-scroll{
+    overflow-x:hidden!important;
+    overflow-y:visible!important;
+  }
+
+  /* DOM real de B232.26.4: una sola grilla con 7 cabeceras + 42 días. */
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid{
     display:grid!important;
     grid-template-columns:repeat(7,minmax(0,1fr))!important;
-    grid-auto-flow:row!important;
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
@@ -2454,76 +2461,58 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     overflow:hidden!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>*{
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid.b232261-week > *,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid > *{
     min-width:0!important;
+    max-width:100%!important;
     width:auto!important;
-    max-width:none!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
   }
 
-  /* Encabezados DOM–SÁB */
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>*:nth-child(-n+7){
-    min-height:28px!important;
-    height:auto!important;
-    padding:5px 1px!important;
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-week>div{
+    min-width:0!important;
+    padding:6px 1px!important;
     font-size:8px!important;
-    line-height:1.1!important;
-    white-space:nowrap!important;
-    text-align:center!important;
+    line-height:1!important;
+    overflow:hidden!important;
   }
 
-  /* 42 días: 6 semanas x 7 columnas. */
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>.b232261-day{
-    min-height:76px!important;
-    height:76px!important;
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day{
+    min-width:0!important;
+    max-width:100%!important;
+    width:auto!important;
+    min-height:78px!important;
+    height:78px!important;
     padding:4px 2px!important;
     overflow:hidden!important;
-    word-break:break-word!important;
+    box-sizing:border-box!important;
   }
 
   #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top{
-    min-width:0!important;
-    width:100%!important;
-    overflow:hidden!important;
+    display:block!important;
+    text-align:center!important;
+    font-size:11px!important;
+    line-height:1.1!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{
-    max-width:100%!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    white-space:nowrap!important;
-    font-size:7px!important;
-    line-height:1.1!important;
-    padding:2px 2px!important;
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top strong{
+    font-size:11px!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day-top small{
+    display:block!important;
     margin-top:2px!important;
+    font-size:6px!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini,
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more{
     max-width:100%!important;
+    min-width:0!important;
     overflow:hidden!important;
     text-overflow:ellipsis!important;
     white-space:nowrap!important;
-    font-size:6px!important;
-    line-height:1.1!important;
   }
-
-  /* No permitir que el contenido interno vuelva a ensanchar la celda. */
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-day *{
-    min-width:0!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-  }
-}
-
-@media (max-width:390px){
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-grid>.b232261-day{
-    min-height:70px!important;
-    height:70px!important;
-    padding:3px 1px!important;
-  }
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-event{font-size:6px!important}
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-more,
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-mini{font-size:5.5px!important}
 }
