@@ -1218,6 +1218,936 @@
 <script src="B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1.js"></script>
   <script src="CCF-MULTIUSER-DEUDAS-FIX-2317.js?v=231.7"></script>
 <script src="B234-FINAL-RECONCILIACION.js?v=234.3-final"></script>
+  <script id="ccf-calendar-mobile-premium-b4-3-18">
+(function(){
+  'use strict';
+
+  /*
+   * ============================================================
+   * CCF CALENDAR MOBILE PREMIUM — B4.3.18
+   * ============================================================
+   *
+   * VISTA A/B PREMIUM PARA MÓVIL
+   *
+   * - No modifica B232.26.4-calendario-safe.js
+   * - No modifica Supabase
+   * - No modifica Auth
+   * - No recalcula información financiera
+   * - Lee directamente el DOM generado por B232.26.4
+   * - Se carga AL FINAL de index.html
+   *
+   * ============================================================
+   */
+
+  var ID = 'ccf-calendar-mobile-premium-b4-3-18';
+  var STYLE_ID = ID + '-style';
+
+  var timer = null;
+  var observer = null;
+  var sectionObserver = null;
+  var rendering = false;
+  var lastSection = null;
+
+  /*
+   * ------------------------------------------------------------
+   * UTILIDADES
+   * ------------------------------------------------------------
+   */
+
+  function q(selector, root){
+    return (root || document).querySelector(selector);
+  }
+
+  function qa(selector, root){
+    return Array.prototype.slice.call(
+      (root || document).querySelectorAll(selector)
+    );
+  }
+
+  function text(el){
+    return (el && el.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * LOCALIZACIÓN DEL CALENDARIO ORIGINAL
+   * ------------------------------------------------------------
+   */
+
+  function mobileRoot(){
+    return document.getElementById('ccf-mobile-b43');
+  }
+
+  function calendarSection(){
+    return document.getElementById('calendario');
+  }
+
+  function sourceCard(){
+    var section = calendarSection();
+    if(!section) return null;
+
+    return section.querySelector('.b232261-card');
+  }
+
+  function sourceGrid(){
+    var source = sourceCard();
+    if(!source) return null;
+
+    return source.querySelector(
+      '.b232261-grid.b232261-week'
+    );
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * OCULTAR LAS PRUEBAS ANTERIORES
+   *
+   * Esto permite que B4.3.18 pueda probarse sin que la vista
+   * B4.3.17 quede encima o debajo.
+   * ------------------------------------------------------------
+   */
+
+  function hidePreviousAdapters(){
+
+    var oldDirect = document.getElementById(
+      'ccf-calendar-mobile-direct'
+    );
+
+    if(oldDirect){
+      oldDirect.style.setProperty(
+        'display',
+        'none',
+        'important'
+      );
+    }
+
+    var oldAB = document.getElementById(
+      'ccf-calendar-mobile-ab-final'
+    );
+
+    if(oldAB){
+      oldAB.style.setProperty(
+        'display',
+        'none',
+        'important'
+      );
+    }
+
+    var oldPremium = document.getElementById(
+      'ccf-calendar-mobile-premium'
+    );
+
+    if(oldPremium){
+      oldPremium.style.setProperty(
+        'display',
+        'none',
+        'important'
+      );
+    }
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * HOST
+   * ------------------------------------------------------------
+   */
+
+  function ensureHost(section){
+
+    if(!section || !section.parentNode){
+      return null;
+    }
+
+    var host = section.parentNode.querySelector(
+      ':scope > #' + ID
+    );
+
+    if(!host){
+
+      host = document.createElement('section');
+
+      host.id = ID;
+
+      host.setAttribute(
+        'data-ccf-calendar-mobile',
+        'premium-b4-3-18'
+      );
+
+      section.parentNode.insertBefore(
+        host,
+        section
+      );
+
+    }else{
+
+      if(host.nextElementSibling !== section){
+
+        section.parentNode.insertBefore(
+          host,
+          section
+        );
+      }
+    }
+
+    return host;
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * ESTILOS PREMIUM
+   * ------------------------------------------------------------
+   */
+
+  function installStyle(){
+
+    if(document.getElementById(STYLE_ID)){
+      return;
+    }
+
+    var style = document.createElement('style');
+
+    style.id = STYLE_ID;
+
+    style.textContent = `
+
+      /*
+       * ========================================================
+       * CONTENEDOR PRINCIPAL
+       * ========================================================
+       */
+
+      #${ID}{
+        display:block;
+        width:100%;
+        max-width:100%;
+        min-width:0;
+        box-sizing:border-box;
+        margin:0 0 14px;
+      }
+
+      #${ID} *{
+        box-sizing:border-box;
+      }
+
+      /*
+       * ========================================================
+       * SHELL PREMIUM
+       * ========================================================
+       */
+
+      #${ID} .premium-shell{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+        overflow:hidden;
+        background:#fff;
+        border:1px solid #dfe5ec;
+        border-radius:18px;
+        box-shadow:
+          0 4px 18px rgba(15,23,42,.055);
+      }
+
+      /*
+       * ========================================================
+       * CABECERA
+       * ========================================================
+       */
+
+      #${ID} .premium-head{
+        position:relative;
+        overflow:hidden;
+        padding:15px 14px 13px;
+        color:#fff;
+        background:
+          linear-gradient(
+            135deg,
+            #071b34 0%,
+            #0c3155 58%,
+            #1557a5 100%
+          );
+      }
+
+      #${ID} .premium-head:after{
+        content:"";
+        position:absolute;
+        width:120px;
+        height:120px;
+        right:-48px;
+        top:-58px;
+        border-radius:50%;
+        background:rgba(255,255,255,.075);
+        pointer-events:none;
+      }
+
+      #${ID} .premium-brand{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        position:relative;
+        z-index:1;
+      }
+
+      #${ID} .premium-dot{
+        width:8px;
+        height:8px;
+        flex:0 0 8px;
+        border-radius:50%;
+        background:#1688f8;
+        box-shadow:0 0 0 4px rgba(22,136,248,.16);
+      }
+
+      #${ID} .premium-eyebrow{
+        font-size:8px;
+        line-height:1;
+        font-weight:900;
+        letter-spacing:.10em;
+        text-transform:uppercase;
+        color:#b9cadb;
+      }
+
+      #${ID} .premium-title{
+        position:relative;
+        z-index:1;
+        margin:8px 0 0;
+        font-size:21px;
+        line-height:1.15;
+        font-weight:850;
+        color:#fff;
+      }
+
+      #${ID} .premium-sub{
+        position:relative;
+        z-index:1;
+        margin-top:4px;
+        font-size:9px;
+        line-height:1.4;
+        color:#cbd8e5;
+      }
+
+      /*
+       * ========================================================
+       * ESTADO
+       * ========================================================
+       */
+
+      #${ID} .premium-status{
+        margin-top:10px;
+        padding:7px 9px;
+        border-radius:9px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.11);
+        color:#e5edf5;
+        font-size:8px;
+        line-height:1.35;
+      }
+
+      /*
+       * ========================================================
+       * NAVEGACIÓN
+       * ========================================================
+       */
+
+      #${ID} .premium-actions{
+        display:grid;
+        grid-template-columns:
+          minmax(0,1fr)
+          minmax(0,1.25fr)
+          minmax(0,1fr)
+          minmax(0,1fr);
+        gap:6px;
+        margin-top:11px;
+        position:relative;
+        z-index:2;
+      }
+
+      #${ID} .premium-actions button{
+        min-width:0;
+        min-height:38px;
+        padding:5px 4px;
+        border:0;
+        border-radius:10px;
+        background:rgba(255,255,255,.13);
+        color:#fff;
+        font-size:9px;
+        font-weight:850;
+        cursor:pointer;
+        -webkit-tap-highlight-color:transparent;
+      }
+
+      #${ID} .premium-actions button.today{
+        background:#1688f8;
+        box-shadow:
+          0 4px 10px rgba(22,136,248,.25);
+      }
+
+      #${ID} .premium-actions button.refresh{
+        background:rgba(255,255,255,.18);
+      }
+
+      #${ID} .premium-actions button:active{
+        transform:scale(.97);
+      }
+
+      /*
+       * ========================================================
+       * KPI
+       * ========================================================
+       */
+
+      #${ID} .premium-kpis{
+        display:grid;
+        grid-template-columns:
+          repeat(2,minmax(0,1fr));
+        gap:8px;
+        padding:11px 10px 8px;
+      }
+
+      #${ID} .premium-kpi{
+        position:relative;
+        min-width:0;
+        overflow:hidden;
+        padding:10px;
+        border:1px solid #e1e7ee;
+        border-radius:14px;
+        background:#fff;
+      }
+
+      #${ID} .premium-kpi:before{
+        content:"";
+        position:absolute;
+        left:0;
+        top:0;
+        bottom:0;
+        width:3px;
+        background:#1688f8;
+      }
+
+      #${ID} .premium-kpi.green:before{
+        background:#10b981;
+      }
+
+      #${ID} .premium-kpi.red:before{
+        background:#ef4055;
+      }
+
+      #${ID} .premium-kpi.navy:before{
+        background:#071b34;
+      }
+
+      #${ID} .premium-kpi-label{
+        display:block;
+        padding-left:3px;
+        color:#718096;
+        font-size:8px;
+        line-height:1.25;
+      }
+
+      #${ID} .premium-kpi-value{
+        display:block;
+        margin-top:4px;
+        padding-left:3px;
+        color:#172033;
+        font-size:16px;
+        line-height:1.15;
+        font-weight:850;
+        overflow-wrap:anywhere;
+      }
+
+      /*
+       * ========================================================
+       * CONTEXTO / DÍA
+       * ========================================================
+       */
+
+      #${ID} .premium-scope{
+        margin:0 10px 9px;
+        padding:8px 9px;
+        border-radius:10px;
+        background:#f8fafc;
+        border:1px solid #e7ecf1;
+        color:#64748b;
+        font-size:9px;
+        line-height:1.35;
+      }
+
+      #${ID} .premium-scope strong{
+        color:#172033;
+        font-weight:850;
+      }
+
+      /*
+       * ========================================================
+       * LEYENDA
+       * ========================================================
+       */
+
+      #${ID} .premium-legend{
+        display:flex;
+        align-items:center;
+        gap:7px;
+        flex-wrap:wrap;
+        padding:0 10px 9px;
+      }
+
+      #${ID} .premium-legend-item{
+        display:inline-flex;
+        align-items:center;
+        gap:4px;
+        color:#64748b;
+        font-size:7px;
+        font-weight:700;
+      }
+
+      #${ID} .premium-legend-dot{
+        width:7px;
+        height:7px;
+        border-radius:50%;
+        flex:0 0 7px;
+      }
+
+      #${ID} .legend-in{
+        background:#10b981;
+      }
+
+      #${ID} .legend-out{
+        background:#ef4055;
+      }
+
+      #${ID} .legend-plan{
+        background:#1688f8;
+      }
+
+      #${ID} .legend-debt{
+        background:#6d28b9;
+      }
+
+      /*
+       * ========================================================
+       * CALENDARIO
+       * ========================================================
+       */
+
+      #${ID} .premium-calendar{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+        overflow:hidden;
+        border-top:1px solid #e5eaf0;
+      }
+
+      #${ID} .premium-grid{
+        display:grid;
+        grid-template-columns:
+          repeat(7,minmax(0,1fr));
+        width:100%;
+        max-width:100%;
+        min-width:0;
+      }
+
+      /*
+       * ========================================================
+       * DÍAS DE LA SEMANA
+       * ========================================================
+       */
+
+      #${ID} .premium-weekday{
+        min-width:0;
+        min-height:30px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:5px 1px;
+        background:#071b34;
+        color:#fff;
+        font-size:7px;
+        line-height:1;
+        font-weight:900;
+        white-space:nowrap;
+        overflow:hidden;
+      }
+
+      /*
+       * ========================================================
+       * CELDAS
+       * ========================================================
+       */
+
+      #${ID} .premium-cell{
+        min-width:0;
+        width:100%;
+        overflow:hidden;
+      }
+
+      #${ID} .premium-day{
+        display:block;
+        width:100%;
+        min-width:0;
+        height:88px;
+        padding:5px 3px;
+        border:0;
+        border-right:1px solid #e4e9ef;
+        border-bottom:1px solid #e4e9ef;
+        background:#fff;
+        color:#334155;
+        text-align:left;
+        overflow:hidden;
+        cursor:pointer;
+        -webkit-tap-highlight-color:transparent;
+      }
+
+      #${ID} .premium-day.out{
+        background:#f7f9fb;
+        color:#94a3b8;
+      }
+
+      #${ID} .premium-day.selected{
+        position:relative;
+        z-index:1;
+        outline:2px solid #1688f8;
+        outline-offset:-2px;
+        background:#f8fbff;
+      }
+
+      #${ID} .premium-day.today{
+        box-shadow:
+          inset 0 0 0 2px rgba(22,136,248,.18);
+      }
+
+      #${ID} .premium-day-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:2px;
+        min-width:0;
+      }
+
+      #${ID} .premium-day-number{
+        color:#334155;
+        font-size:10px;
+        line-height:1;
+        font-weight:900;
+      }
+
+      #${ID} .premium-day.out
+      .premium-day-number{
+        color:#94a3b8;
+      }
+
+      #${ID} .premium-today{
+        display:inline-flex;
+        align-items:center;
+        padding:2px 3px;
+        border-radius:4px;
+        background:#1688f8;
+        color:#fff;
+        font-size:5px;
+        line-height:1;
+        font-weight:900;
+      }
+
+      /*
+       * ========================================================
+       * EVENTOS
+       * ========================================================
+       */
+
+      #${ID} .premium-event{
+        display:block;
+        min-width:0;
+        margin-top:2px;
+        padding:2px 3px;
+        border-radius:4px;
+        font-size:6px;
+        line-height:1.05;
+        font-weight:700;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
+      #${ID} .premium-real-in{
+        background:#ecfdf5;
+        color:#166534;
+      }
+
+      #${ID} .premium-real-out{
+        background:#fef2f2;
+        color:#991b1b;
+      }
+
+      #${ID} .premium-plan-in{
+        background:#eff6ff;
+        color:#1d4ed8;
+      }
+
+      #${ID} .premium-plan-out{
+        background:#fff7ed;
+        color:#9a3412;
+      }
+
+      #${ID} .premium-debt{
+        background:#f5f3ff;
+        color:#6d28b9;
+      }
+
+      #${ID} .premium-other{
+        background:#f1f5f9;
+        color:#475569;
+      }
+
+      #${ID} .premium-mini{
+        display:block;
+        min-width:0;
+        margin-top:2px;
+        color:#64748b;
+        font-size:6px;
+        line-height:1.05;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
+      /*
+       * ========================================================
+       * DETALLE
+       * ========================================================
+       */
+
+      #${ID} .premium-detail{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+        padding:10px;
+        background:#f4f7fb;
+      }
+
+      #${ID} .premium-detail-box{
+        min-width:0;
+        padding:10px;
+        border:1px solid #e1e7ee;
+        border-radius:14px;
+        background:#fff;
+        box-shadow:0 2px 8px rgba(15,23,42,.035);
+      }
+
+      #${ID} .premium-detail-title{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        margin:0 0 6px;
+        color:#172033;
+        font-size:10px;
+        line-height:1.2;
+        font-weight:850;
+      }
+
+      #${ID} .premium-detail-icon{
+        width:7px;
+        height:7px;
+        border-radius:50%;
+        background:#10b981;
+        flex:0 0 7px;
+      }
+
+      #${ID} .premium-detail-box.expense
+      .premium-detail-icon{
+        background:#ef4055;
+      }
+
+      #${ID} .premium-detail-body{
+        color:#475569;
+        font-size:9px;
+        line-height:1.4;
+        overflow-wrap:anywhere;
+      }
+
+      /*
+       * ========================================================
+       * MARCADOR DE PRUEBA
+       * ========================================================
+       */
+
+      #${ID} .premium-test{
+        margin:0 10px 10px;
+        padding:6px 8px;
+        border-radius:8px;
+        background:#071b34;
+        color:#fff;
+        text-align:center;
+        font-size:7px;
+        line-height:1.2;
+        font-weight:900;
+        letter-spacing:.04em;
+      }
+
+      /*
+       * ========================================================
+       * ESCRITORIO
+       * ========================================================
+       *
+       * La vista Premium solo debe aparecer en móvil.
+       * El calendario desktop permanece intacto.
+       */
+
+      @media(min-width:721px){
+        #${ID}{
+          display:none!important;
+        }
+      }
+
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * CLASIFICACIÓN DE EVENTOS
+   * ------------------------------------------------------------
+   */
+
+  function eventClass(sourceEvent){
+
+    var c = sourceEvent.className || '';
+
+    if(c.indexOf('real-in') >= 0){
+      return 'premium-real-in';
+    }
+
+    if(c.indexOf('real-out') >= 0){
+      return 'premium-real-out';
+    }
+
+    if(c.indexOf('plan-in') >= 0){
+      return 'premium-plan-in';
+    }
+
+    if(c.indexOf('plan-out') >= 0){
+      return 'premium-plan-out';
+    }
+
+    if(
+      c.indexOf('debt') >= 0 ||
+      c.indexOf('cuota') >= 0
+    ){
+      return 'premium-debt';
+    }
+
+    return 'premium-other';
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * EVENTOS DE UNA CELDA
+   * ------------------------------------------------------------
+   */
+
+  function copyEvents(sourceDay, target){
+
+    var events = qa(
+      '.b232261-event',
+      sourceDay
+    );
+
+    for(var i=0;i<events.length;i++){
+
+      var event = document.createElement('span');
+
+      event.className =
+        'premium-event ' +
+        eventClass(events[i]);
+
+      event.textContent = text(events[i]);
+
+      target.appendChild(event);
+    }
+
+    var mini = qa(
+      '.b232261-mini,.b232261-more',
+      sourceDay
+    );
+
+    for(var j=0;j<mini.length;j++){
+
+      var m = document.createElement('span');
+
+      m.className = 'premium-mini';
+
+      m.textContent = text(mini[j]);
+
+      target.appendChild(m);
+    }
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * CREAR KPI
+   * ------------------------------------------------------------
+   */
+
+  function buildKpi(sourceKpi, index){
+
+    var card = document.createElement('article');
+
+    card.className = 'premium-kpi';
+
+    if(index === 0){
+      card.classList.add('green');
+    }
+
+    if(index === 1){
+      card.classList.add('blue');
+    }
+
+    if(index === 2){
+      card.classList.add('green');
+    }
+
+    if(index === 3){
+      card.classList.add('red');
+    }
+
+    if(index >= 4){
+      card.classList.add('navy');
+    }
+
+    var label = document.createElement('span');
+
+    label.className = 'premium-kpi-label';
+
+    label.textContent = text(
+      q('span',sourceKpi)
+    );
+
+    var value = document.createElement('strong');
+
+    value.className = 'premium-kpi-value';
+
+    value.textContent = text(
+      q('strong',sourceKpi)
+    );
+
+    card.appendChild(label);
+    card.appendChild(value);
+
+    return card;
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * NAVEGACIÓN
+   * ------------------------------------------------------------
+   */
+
+  function buildActions(source){
+
+    var actions = document.createElement('div');
+
+    actions.className = 'premium-actions';
+
+    var
 
   <script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
 
