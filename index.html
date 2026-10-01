@@ -4129,6 +4129,42 @@
         'line-height:1.25!important;' +
       '}' +
 
+      /* ==========================================================
+         CONTROL DE CAJA — TARJETA PREMIUM EXPLÍCITA
+         ========================================================== */
+      '#' + ID + ' .p181-source-detail .p181-cash-control{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'box-sizing:border-box!important;' +
+        'margin:9px 0!important;' +
+        'padding:14px 12px!important;' +
+        'background:#f8fbff!important;' +
+        'border:1px solid #d8e4f1!important;' +
+        'border-radius:15px!important;' +
+        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control h3{' +
+        'display:block!important;' +
+        'margin:0 0 9px!important;' +
+        'font-size:11px!important;' +
+        'font-weight:900!important;' +
+        'color:#263b54!important;' +
+        'text-transform:uppercase!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control > *{' +
+        'max-width:100%!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control strong:last-child{' +
+        'color:#168447!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control + *{' +
+        'margin-top:0!important;' +
+      '}' +
+
       /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
       '@media(max-width:480px){' +
         '#' + ID + ' .p181-detail-wrap{' +
@@ -4213,22 +4249,51 @@
     var section = document.getElementById('calendario');
     if(!section) return;
 
-    var originalDetail = section.querySelector('.b232261-card .b232261-detail');
+    var originalDetail =
+      section.querySelector('.b232261-card .b232261-detail') ||
+      section.querySelector('.b232261-detail');
+
     if(!originalDetail) return;
 
     var wrap = document.createElement('section');
     wrap.className = 'p181-detail-wrap';
 
+    /*
+     * Clonamos TODO el detalle propietario.
+     * No reconstruimos importes ni textos.
+     */
     var detail = originalDetail.cloneNode(true);
 
-    /* Evitar IDs duplicados. */
     detail.querySelectorAll('[id]').forEach(function(el){
       el.removeAttribute('id');
     });
 
     detail.classList.add('p181-source-detail');
 
+    /*
+     * Identificar explícitamente Control de Caja para darle
+     * tratamiento visual Premium sin perder su contenido.
+     */
+    var boxes = detail.querySelectorAll('.b232261-box');
+
+    for(var i=0; i<boxes.length; i++){
+      var heading = boxes[i].querySelector('h3');
+      var headingText = heading
+        ? (heading.textContent || '').trim()
+        : '';
+
+      if(/control\s+de\s+caja/i.test(headingText)){
+        boxes[i].classList.add('p181-cash-control');
+      }
+    }
+
     wrap.appendChild(detail);
+
+    /*
+     * Fallback: si la versión propietaria separa la leyenda
+     * fuera de .b232261-box, se conserva porque estamos clonando
+     * el detalle completo. No se calcula nada aquí.
+     */
     host.appendChild(wrap);
   }
 
