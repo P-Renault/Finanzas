@@ -1,11 +1,10 @@
-# B4.3.18.1 — NUEVA BASE HTML
+# CCF B4.3.18.1 — Corrección de integración inline
 
-Paquete de trabajo creado a partir de la base de referencia.
+Entrega incremental. No crea rama ni punto de restauración.
 
-- `index.html` conserva la aplicación y el script Premium 18.1 INLINE.
-- El Premium 18.1 está envuelto explícitamente por `<script type="text/javascript">` y `</script>`.
-- El bloque 18.1 permanece dentro de `index.html`; no es módulo ni archivo externo.
+- `index.html`: conserva el código estructural completo Premium 18.1 inline.
+- El bloque está encerrado explícitamente entre `<script ...>` y `</script>`.
+- El bloque Premium 18.1 es el último `<script>` del documento y queda inmediatamente antes de `</body>`.
 - `CCF-MOBILE-B4.3.js` y `CCF-MOBILE-B4.3.css` permanecen independientes.
 - No se modifica `B232.26.4-calendario-safe.js`.
-
-Esta entrega establece la nueva base HTML para el siguiente paso de integración.
+- No se convierte 18.1 en módulo ni en archivo externo.
