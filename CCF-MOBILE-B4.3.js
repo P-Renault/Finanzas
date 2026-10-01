@@ -2160,10 +2160,46 @@ function activateCalendarPremium181(){
   }
 }
 
+let ccfCalendarPremium181Watch=null;
+
 function scheduleCalendarPremium181(){
-  [60,180,400,800,1400].forEach(ms=>setTimeout(()=>{
-    if(root?.id==='ccf-mobile-b43' && by('calendario')) activateCalendarPremium181();
-  },ms));
+  const tryStart=()=>{
+    try{
+      const mobileRoot=document.getElementById('ccf-mobile-b43');
+      const calendar=document.getElementById('calendario');
+      if(mobileRoot && calendar){
+        activateCalendarPremium181();
+      }
+    }catch(e){
+      console.warn('[CCF MOBILE] Premium 18.1 activation',e);
+    }
+  };
+
+  [0,60,180,400,800,1400,2200].forEach(ms=>setTimeout(tryStart,ms));
+
+  /*
+     FASE 1 robusta: el módulo Calendario puede ser creado/reemplazado
+     después de la navegación. Observamos el DOM para no depender de un
+     instante concreto de renderizado.
+  */
+  if(!ccfCalendarPremium181Watch && document.body){
+    ccfCalendarPremium181Watch=new MutationObserver(()=>{
+      const mobileRoot=document.getElementById('ccf-mobile-b43');
+      const calendar=document.getElementById('calendario');
+      if(mobileRoot && calendar){
+        clearTimeout(window.__ccfPremium181Schedule);
+        window.__ccfPremium181Schedule=setTimeout(tryStart,80);
+      }
+    });
+    ccfCalendarPremium181Watch.observe(document.body,{childList:true,subtree:true});
+  }
+}
+
+/* Arranque seguro incluso si la navegación ya ocurrió antes de cargar B4.3. */
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(scheduleCalendarPremium181,150),{once:true});
+}else{
+  setTimeout(scheduleCalendarPremium181,150);
 }
 
 
