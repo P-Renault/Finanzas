@@ -1222,6 +1222,66 @@
 
   <script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
   <script src="CCF-CALENDAR-MINIMAL-TEST-B4.3.15.js?v=B4.3.15"></script>
+  <script>
+(function () {
+  function pruebaCalendario() {
+    var root = document.getElementById('ccf-mobile-b43');
+    var calendario = document.getElementById('calendario');
+
+    if (!root || !calendario) {
+      return;
+    }
+
+    if (document.getElementById('PRUEBA-CALENDARIO-DIRECTA')) {
+      return;
+    }
+
+    var prueba = document.createElement('div');
+    prueba.id = 'PRUEBA-CALENDARIO-DIRECTA';
+
+    prueba.style.cssText =
+      'display:block!important;' +
+      'width:100%!important;' +
+      'box-sizing:border-box!important;' +
+      'margin:0 0 10px!important;' +
+      'padding:12px!important;' +
+      'background:#fff7ed!important;' +
+      'border:3px solid #f97316!important;' +
+      'border-radius:12px!important;' +
+      'font-family:Arial,sans-serif!important;' +
+      'position:relative!important;' +
+      'z-index:99999!important;';
+
+    prueba.innerHTML =
+      '<div style="font-size:15px;font-weight:900;color:#9a3412;">' +
+      'PRUEBA DIRECTA · B4.3.15' +
+      '</div>' +
+      '<div style="font-size:11px;color:#7c2d12;margin-top:4px;">' +
+      'INDEX.HTML EJECUTANDO JAVASCRIPT' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:8px;">' +
+      '<b>DOM</b><b>LUN</b><b>MAR</b><b>MIÉ</b><b>JUE</b><b>VIE</b><b>SÁB</b>' +
+      '</div>';
+
+    calendario.parentNode.insertBefore(prueba, calendario);
+  }
+
+  var intentos = 0;
+
+  var timer = setInterval(function () {
+    pruebaCalendario();
+
+    intentos++;
+
+    if (
+      document.getElementById('PRUEBA-CALENDARIO-DIRECTA') ||
+      intentos >= 40
+    ) {
+      clearInterval(timer);
+    }
+  }, 250);
+})();
+  </script>
   
 
 
