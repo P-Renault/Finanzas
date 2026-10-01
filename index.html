@@ -1221,293 +1221,2016 @@
 
   <script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
 
-  
-<script id="ccf-calendar-mobile-direct-b4-3-16">
+ 
+    <!-- ============================================================
+     CCF CALENDAR MOBILE · B4.3.17
+     VISTA MÓVIL DIRECTA
+
+     Propósito:
+     - Crear una vista móvil independiente del calendario B232.26.4.
+     - Leer exclusivamente los datos/DOM que ya genera B232.26.4.
+     - No modificar B232.26.4-calendario-safe.js.
+     - No modificar Supabase.
+     - No duplicar cálculos financieros.
+     - No afectar el calendario desktop.
+     - 7 columnas reales dentro del ancho disponible.
+     - Navegación: anterior / hoy / siguiente / actualizar.
+     - Selección de día.
+     - KPIs.
+     - Detalle del día.
+
+     INSTALACIÓN:
+     Pegar este bloque AL FINAL de index.html.
+
+     NO cargar simultáneamente:
+     - CCF-CALENDAR-MINIMAL-TEST-B4.3.15.js
+     - CCF-CALENDAR-MOBILE-AB-FINAL.js
+     - otra versión B4.3.16
+============================================================ -->
+
+<script id="ccf-calendar-mobile-direct-b4-3-17">
+
 (function(){
+
   'use strict';
 
-  var ID='ccf-calendar-mobile-direct';
-  var timer=null, observer=null, rendering=false;
+  /* ==========================================================
+     CONFIGURACIÓN
+  ========================================================== */
 
-  function root(){ return document.getElementById('ccf-mobile-b43'); }
-  function section(){ return document.getElementById('calendario'); }
-  function source(){ var s=section(); return s && s.querySelector('.b232261-card'); }
-  function text(el){ return (el && el.textContent || '').replace(/\s+/g,' ').trim(); }
+  var ID = 'ccf-calendar-mobile-direct-b4-3-17';
+
+  var timer = null;
+
+  var observer = null;
+
+  var rendering = false;
+
+  var renderTimer = null;
+
+  var started = false;
+
+
+  /* ==========================================================
+     REFERENCIAS AL SISTEMA EXISTENTE
+  ========================================================== */
+
+  function root(){
+
+    return document.getElementById('ccf-mobile-b43');
+
+  }
+
+
+  function section(){
+
+    return document.getElementById('calendario');
+
+  }
+
+
+  function source(){
+
+    var s = section();
+
+    if(!s) return null;
+
+    return s.querySelector('.b232261-card');
+
+  }
+
+
+  function text(el){
+
+    return String(
+      (el && el.textContent) || ''
+    )
+    .replace(/\s+/g,' ')
+    .trim();
+
+  }
+
+
+  /* ==========================================================
+     ESTILOS AISLADOS
+  ========================================================== */
 
   function css(){
-    if(document.getElementById(ID+'-style')) return;
-    var s=document.createElement('style');
-    s.id=ID+'-style';
-    s.textContent=
-      '#'+ID+'{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:0 0 12px;}' +
-      '#'+ID+' .cm-shell{width:100%;max-width:100%;min-width:0;box-sizing:border-box;background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;}' +
-      '#'+ID+' *{box-sizing:border-box;}' +
-      '#'+ID+' .cm-head{padding:12px 10px 8px;}' +
-      '#'+ID+' .cm-title{margin:0;font-size:18px;line-height:1.2;color:#172033;font-weight:800;}' +
-      '#'+ID+' .cm-sub{margin-top:3px;font-size:10px;line-height:1.35;color:#64748b;}' +
-      '#'+ID+' .cm-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px;}' +
-      '#'+ID+' .cm-actions button{min-width:0;min-height:34px;padding:5px 3px;border:0;border-radius:8px;background:#111827;color:#fff;font-size:10px;font-weight:800;}' +
-      '#'+ID+' .cm-actions button.secondary{background:#e5e7eb;color:#172033;}' +
-      '#'+ID+' .cm-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 10px 9px;}' +
-      '#'+ID+' .cm-kpi{min-width:0;padding:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;}' +
-      '#'+ID+' .cm-kpi span{display:block;font-size:8px;color:#64748b;}' +
-      '#'+ID+' .cm-kpi strong{display:block;margin-top:3px;font-size:13px;line-height:1.15;overflow-wrap:anywhere;color:#172033;}' +
-      '#'+ID+' .cm-scope{margin:0 10px 8px;padding:7px 8px;border-radius:8px;background:#f8fafc;color:#475569;font-size:9px;}' +
-      '#'+ID+' .cm-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));width:100%;min-width:0;max-width:100%;overflow:hidden;}' +
-      '#'+ID+' .cm-week{min-width:0;padding:7px 1px;text-align:center;background:#111827;color:#fff;font-size:8px;font-weight:900;overflow:hidden;}' +
-      '#'+ID+' .cm-day{display:block;width:100%;min-width:0;height:88px;padding:4px 3px;border:0;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;background:#fff;text-align:left;overflow:hidden;color:#334155;}' +
-      '#'+ID+' .cm-day.out{background:#f8fafc;color:#94a3b8;}' +
-      '#'+ID+' .cm-day.selected{outline:2px solid #111827;outline-offset:-2px;}' +
-      '#'+ID+' .cm-day-top{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:800;min-width:0;}' +
-      '#'+ID+' .cm-day-top small{font-size:6px;}' +
-      '#'+ID+' .cm-event{display:block;margin-top:2px;padding:2px;border-radius:3px;font-size:6px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-      '#'+ID+' .cm-real-in{background:#ecfdf5;color:#166534;}' +
-      '#'+ID+' .cm-real-out{background:#fef2f2;color:#991b1b;}' +
-      '#'+ID+' .cm-plan-in{background:#eff6ff;color:#1d4ed8;}' +
-      '#'+ID+' .cm-plan-out{background:#fff7ed;color:#9a3412;}' +
-      '#'+ID+' .cm-gen{background:#f5f3ff;color:#6d28b9;}' +
-      '#'+ID+' .cm-debt{background:#eef2ff;color:#3730a3;}' +
-      '#'+ID+' .cm-mini{display:block;margin-top:2px;font-size:6px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#64748b;}' +
-      '#'+ID+' .cm-pos{color:#166534;}' +
-      '#'+ID+' .cm-neg{color:#991b1b;}' +
-      '#'+ID+' .cm-detail{display:grid;grid-template-columns:1fr;gap:7px;padding:9px;}' +
-      '#'+ID+' .cm-box{min-width:0;padding:8px;border:1px solid #e5e7eb;border-radius:10px;font-size:9px;overflow:hidden;}' +
-      '#'+ID+' .cm-box h3{margin:0 0 5px;font-size:10px;}' +
-      '#'+ID+' .cm-box-body{line-height:1.35;overflow-wrap:anywhere;}' +
-      '#'+ID+' .cm-status{margin:0 10px 8px;padding:7px 8px;border-radius:8px;background:#f8fafc;color:#475569;font-size:9px;}' +
-      '@media(min-width:721px){#'+ID+'{display:none!important;}}';
+
+    if(document.getElementById(ID + '-style')){
+
+      return;
+
+    }
+
+
+    var s = document.createElement('style');
+
+    s.id = ID + '-style';
+
+
+    s.textContent =
+
+      '#' + ID + '{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'max-width:100%;' +
+
+        'min-width:0;' +
+
+        'box-sizing:border-box;' +
+
+        'margin:0 0 12px;' +
+
+        'padding:0;' +
+
+      '}' +
+
+
+      '#' + ID + ' *{' +
+
+        'box-sizing:border-box;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-shell{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'max-width:100%;' +
+
+        'min-width:0;' +
+
+        'box-sizing:border-box;' +
+
+        'background:#fff;' +
+
+        'border:1px solid #e5e7eb;' +
+
+        'border-radius:14px;' +
+
+        'overflow:hidden;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-head{' +
+
+        'padding:12px 10px 8px;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-title{' +
+
+        'margin:0;' +
+
+        'font-size:18px;' +
+
+        'line-height:1.2;' +
+
+        'color:#172033;' +
+
+        'font-weight:800;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-sub{' +
+
+        'margin-top:3px;' +
+
+        'font-size:10px;' +
+
+        'line-height:1.35;' +
+
+        'color:#64748b;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-status{' +
+
+        'margin-top:8px;' +
+
+        'padding:7px 8px;' +
+
+        'border-radius:8px;' +
+
+        'background:#f8fafc;' +
+
+        'color:#475569;' +
+
+        'font-size:9px;' +
+
+        'line-height:1.3;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-actions{' +
+
+        'display:grid;' +
+
+        'grid-template-columns:repeat(4,minmax(0,1fr));' +
+
+        'gap:5px;' +
+
+        'margin-top:9px;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-actions button{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'min-height:34px;' +
+
+        'padding:5px 3px;' +
+
+        'border:0;' +
+
+        'border-radius:8px;' +
+
+        'background:#111827;' +
+
+        'color:#fff;' +
+
+        'font-size:10px;' +
+
+        'font-weight:800;' +
+
+        'line-height:1;' +
+
+        'cursor:pointer;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-actions button.secondary{' +
+
+        'background:#e5e7eb;' +
+
+        'color:#172033;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-kpis{' +
+
+        'display:grid;' +
+
+        'grid-template-columns:repeat(2,minmax(0,1fr));' +
+
+        'gap:6px;' +
+
+        'padding:0 10px 9px;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-kpi{' +
+
+        'min-width:0;' +
+
+        'padding:8px;' +
+
+        'border:1px solid #e5e7eb;' +
+
+        'border-radius:10px;' +
+
+        'background:#fff;' +
+
+        'overflow:hidden;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-kpi span{' +
+
+        'display:block;' +
+
+        'font-size:8px;' +
+
+        'line-height:1.2;' +
+
+        'color:#64748b;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-kpi strong{' +
+
+        'display:block;' +
+
+        'margin-top:3px;' +
+
+        'font-size:13px;' +
+
+        'line-height:1.15;' +
+
+        'overflow-wrap:anywhere;' +
+
+        'word-break:break-word;' +
+
+        'color:#172033;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-scope{' +
+
+        'margin:0 10px 8px;' +
+
+        'padding:7px 8px;' +
+
+        'border-radius:8px;' +
+
+        'background:#f8fafc;' +
+
+        'color:#475569;' +
+
+        'font-size:9px;' +
+
+        'line-height:1.3;' +
+
+        'overflow-wrap:anywhere;' +
+
+      '}' +
+
+
+      /* ======================================================
+         GRILLA PRINCIPAL
+         ====================================================== */
+
+      '#' + ID + ' .cm-grid{' +
+
+        'display:grid;' +
+
+        'grid-template-columns:repeat(7,minmax(0,1fr));' +
+
+        'grid-auto-flow:row;' +
+
+        'width:100%;' +
+
+        'max-width:100%;' +
+
+        'min-width:0;' +
+
+        'margin:0;' +
+
+        'padding:0;' +
+
+        'gap:0;' +
+
+        'overflow:hidden;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-week{' +
+
+        'display:flex;' +
+
+        'align-items:center;' +
+
+        'justify-content:center;' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'max-width:100%;' +
+
+        'height:30px;' +
+
+        'padding:4px 1px;' +
+
+        'background:#111827;' +
+
+        'color:#fff;' +
+
+        'font-size:8px;' +
+
+        'font-weight:900;' +
+
+        'line-height:1;' +
+
+        'text-align:center;' +
+
+        'overflow:hidden;' +
+
+        'white-space:nowrap;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-day{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'max-width:100%;' +
+
+        'height:88px;' +
+
+        'margin:0;' +
+
+        'padding:4px 3px;' +
+
+        'border:0;' +
+
+        'border-right:1px solid #e5e7eb;' +
+
+        'border-bottom:1px solid #e5e7eb;' +
+
+        'border-radius:0;' +
+
+        'background:#fff;' +
+
+        'color:#334155;' +
+
+        'text-align:left;' +
+
+        'overflow:hidden;' +
+
+        'cursor:pointer;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-day.out{' +
+
+        'background:#f8fafc;' +
+
+        'color:#94a3b8;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-day.selected{' +
+
+        'outline:2px solid #111827;' +
+
+        'outline-offset:-2px;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-day-top{' +
+
+        'display:flex;' +
+
+        'justify-content:space-between;' +
+
+        'align-items:center;' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'font-size:10px;' +
+
+        'font-weight:800;' +
+
+        'line-height:1;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-day-top strong{' +
+
+        'min-width:0;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-day-top small{' +
+
+        'font-size:6px;' +
+
+        'line-height:1;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-event{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'max-width:100%;' +
+
+        'min-width:0;' +
+
+        'margin-top:2px;' +
+
+        'padding:2px;' +
+
+        'border-radius:3px;' +
+
+        'font-size:6px;' +
+
+        'line-height:1.05;' +
+
+        'white-space:nowrap;' +
+
+        'overflow:hidden;' +
+
+        'text-overflow:ellipsis;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-real-in{' +
+
+        'background:#ecfdf5;' +
+
+        'color:#166534;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-real-out{' +
+
+        'background:#fef2f2;' +
+
+        'color:#991b1b;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-plan-in{' +
+
+        'background:#eff6ff;' +
+
+        'color:#1d4ed8;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-plan-out{' +
+
+        'background:#fff7ed;' +
+
+        'color:#9a3412;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-gen{' +
+
+        'background:#f5f3ff;' +
+
+        'color:#6d28b9;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-debt{' +
+
+        'background:#eef2ff;' +
+
+        'color:#3730a3;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-mini{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'margin-top:2px;' +
+
+        'font-size:6px;' +
+
+        'line-height:1.05;' +
+
+        'white-space:nowrap;' +
+
+        'overflow:hidden;' +
+
+        'text-overflow:ellipsis;' +
+
+        'color:#64748b;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-pos{' +
+
+        'color:#166534;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-neg{' +
+
+        'color:#991b1b;' +
+
+      '}' +
+
+
+      /* ======================================================
+         DETALLE
+         ====================================================== */
+
+      '#' + ID + ' .cm-detail{' +
+
+        'display:grid;' +
+
+        'grid-template-columns:minmax(0,1fr);' +
+
+        'gap:7px;' +
+
+        'padding:9px;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-box{' +
+
+        'display:block;' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'padding:8px;' +
+
+        'border:1px solid #e5e7eb;' +
+
+        'border-radius:10px;' +
+
+        'background:#fff;' +
+
+        'font-size:9px;' +
+
+        'line-height:1.35;' +
+
+        'overflow:hidden;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-box h3{' +
+
+        'margin:0 0 5px;' +
+
+        'font-size:10px;' +
+
+        'line-height:1.25;' +
+
+      '}' +
+
+
+      '#' + ID + ' .cm-box-body{' +
+
+        'width:100%;' +
+
+        'min-width:0;' +
+
+        'line-height:1.35;' +
+
+        'overflow-wrap:anywhere;' +
+
+        'word-break:break-word;' +
+
+      '}' +
+
+
+      /* ======================================================
+         ESTADO DE ERROR
+         ====================================================== */
+
+      '#' + ID + ' .cm-error{' +
+
+        'margin:10px;' +
+
+        'padding:12px;' +
+
+        'border:2px solid #dc2626;' +
+
+        'border-radius:10px;' +
+
+        'background:#fef2f2;' +
+
+        'color:#991b1b;' +
+
+        'font-size:11px;' +
+
+        'line-height:1.4;' +
+
+      '}';
+
+
     document.head.appendChild(s);
+
   }
+
+
+  /* ==========================================================
+     CLASIFICACIÓN DE EVENTOS
+  ========================================================== */
 
   function cloneEvents(srcDay, btn){
-    var nodes=srcDay.querySelectorAll('.b232261-event');
+
+    if(!srcDay || !btn) return;
+
+
+    var nodes =
+      srcDay.querySelectorAll('.b232261-event');
+
+
     for(var i=0;i<nodes.length;i++){
-      var n=document.createElement('span');
-      var c=nodes[i].className;
-      n.className='cm-event '+
-        (c.indexOf('real-in')>=0?'cm-real-in':
-         c.indexOf('real-out')>=0?'cm-real-out':
-         c.indexOf('plan-in')>=0?'cm-plan-in':
-         c.indexOf('plan-out')>=0?'cm-plan-out':
-         c.indexOf('gen')>=0?'cm-gen':
-         c.indexOf('debt')>=0?'cm-debt':'cm-plan-out');
-      n.textContent=text(nodes[i]);
+
+      var n =
+        document.createElement('span');
+
+
+      var c =
+        nodes[i].className || '';
+
+
+      n.className =
+        'cm-event ' +
+
+        (
+          c.indexOf('real-in') >= 0
+          ? 'cm-real-in'
+
+          : c.indexOf('real-out') >= 0
+          ? 'cm-real-out'
+
+          : c.indexOf('plan-in') >= 0
+          ? 'cm-plan-in'
+
+          : c.indexOf('plan-out') >= 0
+          ? 'cm-plan-out'
+
+          : c.indexOf('gen') >= 0
+          ? 'cm-gen'
+
+          : c.indexOf('debt') >= 0
+          ? 'cm-debt'
+
+          : 'cm-plan-out'
+        );
+
+
+      n.textContent =
+        text(nodes[i]);
+
+
       btn.appendChild(n);
+
     }
-    var mini=srcDay.querySelectorAll('.b232261-mini,.b232261-more');
+
+
+    var mini =
+      srcDay.querySelectorAll(
+        '.b232261-mini,.b232261-more'
+      );
+
+
     for(var j=0;j<mini.length;j++){
-      var m=document.createElement('span');
-      m.className='cm-mini '+(mini[j].classList.contains('b232261-pos')?'cm-pos':mini[j].classList.contains('b232261-neg')?'cm-neg':'');
-      m.textContent=text(mini[j]);
+
+      var m =
+        document.createElement('span');
+
+
+      m.className =
+        'cm-mini ' +
+
+        (
+          mini[j].classList.contains(
+            'b232261-pos'
+          )
+          ? 'cm-pos'
+
+          : mini[j].classList.contains(
+            'b232261-neg'
+          )
+          ? 'cm-neg'
+
+          : ''
+        );
+
+
+      m.textContent =
+        text(mini[j]);
+
+
       btn.appendChild(m);
+
     }
+
   }
 
-  function render(){
-    if(rendering) return false;
-    var r=root(), s=section(), src=source();
-    if(!r||!s||!src) return false;
-    var grid=src.querySelector('.b232261-grid.b232261-week');
-    if(!grid || grid.children.length<49) return false;
 
-    rendering=true;
+  /* ==========================================================
+     CONSTRUCCIÓN DE LA VISTA
+  ========================================================== */
+
+  function render(){
+
+    if(rendering) return false;
+
+
+    var r = root();
+
+    var s = section();
+
+    var src = source();
+
+
+    if(!r || !s || !src){
+
+      return false;
+
+    }
+
+
+    var grid =
+      src.querySelector(
+        '.b232261-grid.b232261-week'
+      );
+
+
+    /*
+     * El calendario propietario genera:
+     *
+     * 7 encabezados
+     * +
+     * 42 días
+     *
+     * = 49 hijos directos.
+     */
+
+    if(!grid || grid.children.length < 49){
+
+      return false;
+
+    }
+
+
+    rendering = true;
+
+
     try{
+
       css();
 
-      var host=document.getElementById(ID);
+
+      /* ======================================================
+         HOST
+      ====================================================== */
+
+      var host =
+        document.getElementById(ID);
+
+
       if(!host){
-        host=document.createElement('section');
-        host.id=ID;
-        s.parentNode.insertBefore(host,s);
+
+        host =
+          document.createElement('section');
+
+
+        host.id = ID;
+
+
+        /*
+         * La nueva vista queda inmediatamente
+         * antes del calendario propietario.
+         */
+
+        s.parentNode.insertBefore(
+          host,
+          s
+        );
+
       }
-      host.innerHTML='';
 
-      var shell=document.createElement('div');
-      shell.className='cm-shell';
 
-      var head=document.createElement('div');
-      head.className='cm-head';
+      /*
+       * Solo limpiamos nuestro propio host.
+       */
 
-      var h=document.createElement('h2');
-      h.className='cm-title';
-      h.textContent=text(src.querySelector('.b232261-head h2'))||'Calendario';
+      host.innerHTML = '';
+
+
+      /* ======================================================
+         CONTENEDOR PRINCIPAL
+      ====================================================== */
+
+      var shell =
+        document.createElement('div');
+
+
+      shell.className =
+        'cm-shell';
+
+
+      /* ======================================================
+         CABECERA
+      ====================================================== */
+
+      var head =
+        document.createElement('div');
+
+
+      head.className =
+        'cm-head';
+
+
+      var h =
+        document.createElement('h2');
+
+
+      h.className =
+        'cm-title';
+
+
+      h.textContent =
+        text(
+          src.querySelector(
+            '.b232261-head h2'
+          )
+        ) || 'Calendario';
+
+
       head.appendChild(h);
 
-      var sub=document.createElement('div');
-      sub.className='cm-sub';
-      sub.textContent=text(src.querySelector('.b232261-sub'))||'Vista mensual';
+
+      var sub =
+        document.createElement('div');
+
+
+      sub.className =
+        'cm-sub';
+
+
+      sub.textContent =
+        text(
+          src.querySelector(
+            '.b232261-sub'
+          )
+        ) || 'Vista mensual';
+
+
       head.appendChild(sub);
 
-      var status=text(src.querySelector('.b232261-status'));
+
+      /* ======================================================
+         ESTADO
+      ====================================================== */
+
+      var status =
+        text(
+          src.querySelector(
+            '.b232261-status'
+          )
+        );
+
+
       if(status){
-        var st=document.createElement('div');
-        st.className='cm-status';
-        st.textContent=status;
+
+        var st =
+          document.createElement('div');
+
+
+        st.className =
+          'cm-status';
+
+
+        st.textContent =
+          status;
+
+
         head.appendChild(st);
+
       }
 
-      var actions=document.createElement('div');
-      actions.className='cm-actions';
-      var sourceButtons=src.querySelectorAll('.b232261-actions button');
-      var labels=['‹','Hoy','›','↻'];
-      for(var a=0;a<Math.min(sourceButtons.length,4);a++){
+
+      /* ======================================================
+         NAVEGACIÓN
+      ====================================================== */
+
+      var actions =
+        document.createElement('div');
+
+
+      actions.className =
+        'cm-actions';
+
+
+      var sourceButtons =
+        src.querySelectorAll(
+          '.b232261-actions button'
+        );
+
+
+      /*
+       * Orden real del calendario propietario:
+       *
+       * 0 = anterior
+       * 1 = Hoy
+       * 2 = siguiente
+       * 3 = actualizar
+       */
+
+      var labels =
+        [
+          '‹',
+          'Hoy',
+          '›',
+          '↻'
+        ];
+
+
+      for(
+        var a=0;
+        a<Math.min(sourceButtons.length,4);
+        a++
+      ){
+
         (function(srcBtn,i){
-          var b=document.createElement('button');
-          b.type='button';
-          b.textContent=labels[i]||text(srcBtn);
-          b.className=i===1?'':'secondary';
-          b.onclick=function(){
-            srcBtn.click();
-            setTimeout(render,80);
-          };
+
+          var b =
+            document.createElement('button');
+
+
+          b.type =
+            'button';
+
+
+          b.textContent =
+            labels[i] ||
+            text(srcBtn);
+
+
+          b.className =
+            i === 1
+            ? ''
+            : 'secondary';
+
+
+          b.onclick =
+            function(){
+
+              /*
+               * Se delega la acción al calendario
+               * propietario B232.26.4.
+               */
+
+              srcBtn.click();
+
+
+              /*
+               * Esperamos a que el propietario
+               * termine de reconstruir su DOM.
+               */
+
+              setTimeout(
+                function(){
+                  render();
+                },
+                100
+              );
+
+            };
+
+
           actions.appendChild(b);
+
         })(sourceButtons[a],a);
+
       }
+
+
       head.appendChild(actions);
+
+
       shell.appendChild(head);
 
-      var kpis=document.createElement('div');
-      kpis.className='cm-kpis';
-      var sourceKpis=src.querySelectorAll('.b232261-kpi');
-      for(var k=0;k<sourceKpis.length;k++){
-        var kc=document.createElement('div');
-        kc.className='cm-kpi';
-        var sp=document.createElement('span');
-        sp.textContent=text(sourceKpis[k].querySelector('span'));
-        var strong=document.createElement('strong');
-        strong.textContent=text(sourceKpis[k].querySelector('strong'));
-        kc.appendChild(sp); kc.appendChild(strong); kpis.appendChild(kc);
+
+      /* ======================================================
+         KPIs
+      ====================================================== */
+
+      var kpis =
+        document.createElement('div');
+
+
+      kpis.className =
+        'cm-kpis';
+
+
+      var sourceKpis =
+        src.querySelectorAll(
+          '.b232261-kpi'
+        );
+
+
+      for(
+        var k=0;
+        k<sourceKpis.length;
+        k++
+      ){
+
+        var kc =
+          document.createElement('div');
+
+
+        kc.className =
+          'cm-kpi';
+
+
+        var sp =
+          document.createElement('span');
+
+
+        sp.textContent =
+          text(
+            sourceKpis[k].querySelector(
+              'span'
+            )
+          );
+
+
+        var strong =
+          document.createElement('strong');
+
+
+        strong.textContent =
+          text(
+            sourceKpis[k].querySelector(
+              'strong'
+            )
+          );
+
+
+        kc.appendChild(sp);
+
+        kc.appendChild(strong);
+
+        kpis.appendChild(kc);
+
       }
+
+
       shell.appendChild(kpis);
 
-      var scope=src.querySelector('.b232261-scope');
+
+      /* ======================================================
+         CONTEXTO DEL PERÍODO / DÍA
+      ====================================================== */
+
+      var scope =
+        src.querySelector(
+          '.b232261-scope'
+        );
+
+
       if(scope){
-        var sc=document.createElement('div');
-        sc.className='cm-scope';
-        sc.textContent=text(scope);
+
+        var sc =
+          document.createElement('div');
+
+
+        sc.className =
+          'cm-scope';
+
+
+        sc.textContent =
+          text(scope);
+
+
         shell.appendChild(sc);
+
       }
 
-      var cal=document.createElement('div');
-      cal.className='cm-grid';
 
-      var cells=grid.children;
-      for(var i=0;i<cells.length;i++){
-        if(i<7){
-          var wh=document.createElement('div');
-          wh.className='cm-week';
-          wh.textContent=text(cells[i]);
+      /* ======================================================
+         GRILLA DE 7 COLUMNAS
+      ====================================================== */
+
+      var cal =
+        document.createElement('div');
+
+
+      cal.className =
+        'cm-grid';
+
+
+      var cells =
+        grid.children;
+
+
+      for(
+        var i=0;
+        i<cells.length;
+        i++
+      ){
+
+        /*
+         * Primeros 7 elementos:
+         * encabezados DOM-SÁB.
+         */
+
+        if(i < 7){
+
+          var wh =
+            document.createElement('div');
+
+
+          wh.className =
+            'cm-week';
+
+
+          wh.textContent =
+            text(cells[i]);
+
+
           cal.appendChild(wh);
-        }else{
-          (function(srcDay){
-            var b=document.createElement('button');
-            b.type='button';
-            b.className='cm-day'+
-              (srcDay.classList.contains('out')?' out':'')+
-              (srcDay.classList.contains('selected')?' selected':'');
-            var top=srcDay.querySelector('.b232261-day-top');
-            var dt=document.createElement('div');
-            dt.className='cm-day-top';
-            var dn=document.createElement('strong');
-            dn.textContent=text(top && top.querySelector('strong'));
-            dt.appendChild(dn);
-            var small=top && top.querySelector('small');
-            if(small){
-              var sm=document.createElement('small');
-              sm.textContent=text(small);
-              dt.appendChild(sm);
-            }
-            b.appendChild(dt);
-            cloneEvents(srcDay,b);
-            b.onclick=function(){
-              srcDay.click();
-              setTimeout(render,50);
-            };
-            cal.appendChild(b);
-          })(cells[i]);
+
+          continue;
+
         }
+
+
+        /*
+         * Los restantes 42 elementos
+         * son los días.
+         */
+
+        (function(srcDay){
+
+          var b =
+            document.createElement('button');
+
+
+          b.type =
+            'button';
+
+
+          b.className =
+            'cm-day' +
+
+            (
+              srcDay.classList.contains(
+                'out'
+              )
+              ? ' out'
+              : ''
+            ) +
+
+            (
+              srcDay.classList.contains(
+                'selected'
+              )
+              ? ' selected'
+              : ''
+            );
+
+
+          /* ================================================
+             NÚMERO DEL DÍA
+          ================================================= */
+
+          var top =
+            srcDay.querySelector(
+              '.b232261-day-top'
+            );
+
+
+          var dt =
+            document.createElement('div');
+
+
+          dt.className =
+            'cm-day-top';
+
+
+          var dn =
+            document.createElement('strong');
+
+
+          dn.textContent =
+            text(
+              top &&
+              top.querySelector('strong')
+            );
+
+
+          dt.appendChild(dn);
+
+
+          var small =
+            top &&
+            top.querySelector('small');
+
+
+          if(small){
+
+            var sm =
+              document.createElement('small');
+
+
+            sm.textContent =
+              text(small);
+
+
+            dt.appendChild(sm);
+
+          }
+
+
+          b.appendChild(dt);
+
+
+          /* ================================================
+             EVENTOS
+          ================================================= */
+
+          cloneEvents(
+            srcDay,
+            b
+          );
+
+
+          /* ================================================
+             SELECCIÓN
+          ================================================= */
+
+          b.onclick =
+            function(){
+
+              /*
+               * Delegamos al botón propietario.
+               * El calendario original conserva
+               * toda su lógica.
+               */
+
+              srcDay.click();
+
+
+              setTimeout(
+                function(){
+                  render();
+                },
+                80
+              );
+
+            };
+
+
+          cal.appendChild(b);
+
+
+        })(cells[i]);
+
       }
+
 
       shell.appendChild(cal);
 
-      var detail=src.querySelector('.b232261-detail');
+
+      /* ======================================================
+         DETALLE DEL DÍA
+      ====================================================== */
+
+      var detail =
+        src.querySelector(
+          '.b232261-detail'
+        );
+
+
       if(detail){
-        var dwrap=document.createElement('div');
-        dwrap.className='cm-detail';
-        var boxes=detail.querySelectorAll('.b232261-box');
-        for(var d=0;d<boxes.length;d++){
-          var box=document.createElement('div');
-          box.className='cm-box';
-          var hh=boxes[d].querySelector('h3');
+
+        var dwrap =
+          document.createElement('div');
+
+
+        dwrap.className =
+          'cm-detail';
+
+
+        var boxes =
+          detail.querySelectorAll(
+            '.b232261-box'
+          );
+
+
+        for(
+          var d=0;
+          d<boxes.length;
+          d++
+        ){
+
+          var box =
+            document.createElement('div');
+
+
+          box.className =
+            'cm-box';
+
+
+          var hh =
+            boxes[d].querySelector('h3');
+
+
+          var headingText =
+            hh
+            ? text(hh)
+            : '';
+
+
           if(hh){
-            var h3=document.createElement('h3');
-            h3.textContent=text(hh);
+
+            var h3 =
+              document.createElement('h3');
+
+
+            h3.textContent =
+              headingText;
+
+
             box.appendChild(h3);
+
           }
-          var body=document.createElement('div');
-          body.className='cm-box-body';
-          body.textContent=text(boxes[d]).replace(text(hh),'').trim();
+
+
+          var body =
+            document.createElement('div');
+
+
+          body.className =
+            'cm-box-body';
+
+
+          var completeText =
+            text(boxes[d]);
+
+
+          body.textContent =
+            completeText
+              .replace(
+                headingText,
+                ''
+              )
+              .trim();
+
+
           box.appendChild(body);
+
+
           dwrap.appendChild(box);
+
         }
+
+
         shell.appendChild(dwrap);
+
       }
+
+
+      /* ======================================================
+         MONTAJE
+      ====================================================== */
 
       host.appendChild(shell);
 
-      // La vista móvil pasa a ser la vista visible; el motor original permanece intacto.
-      src.style.setProperty('display','none','important');
-      s.style.setProperty('width','100%','important');
-      s.style.setProperty('max-width','100%','important');
-      s.style.setProperty('min-width','0','important');
-      s.style.setProperty('overflow','visible','important');
+
+      /*
+       * El calendario propietario sigue existiendo.
+       *
+       * Solo se oculta visualmente.
+       *
+       * NO se elimina.
+       * NO se modifica su motor.
+       */
+
+      src.style.setProperty(
+        'display',
+        'none',
+        'important'
+      );
+
+
+      /*
+       * Garantizamos que la sección móvil
+       * pueda contener la vista completa.
+       */
+
+      s.style.setProperty(
+        'width',
+        '100%',
+        'important'
+      );
+
+
+      s.style.setProperty(
+        'max-width',
+        '100%',
+        'important'
+      );
+
+
+      s.style.setProperty(
+        'min-width',
+        '0',
+        'important'
+      );
+
+
+      s.style.setProperty(
+        'overflow',
+        'visible',
+        'important'
+      );
+
 
       return true;
-    } finally {
-      rendering=false;
+
+
+    }catch(error){
+
+      console.error(
+        '[CCF CALENDAR MOBILE B4.3.17]',
+        error
+      );
+
+
+      return false;
+
+
+    }finally{
+
+      rendering =
+        false;
+
     }
+
   }
+
+
+  /* ==========================================================
+     OBSERVADOR SEGURO
+     
+     IMPORTANTE:
+     NO volver a renderizar cuando la modificación
+     proviene de nuestra propia vista.
+  ========================================================== */
+
+  function observe(){
+
+    if(observer){
+
+      observer.disconnect();
+
+      observer = null;
+
+    }
+
+
+    var s =
+      section();
+
+
+    if(!s){
+
+      return;
+
+    }
+
+
+    observer =
+      new MutationObserver(
+        function(mutations){
+
+          if(rendering){
+
+            return;
+
+          }
+
+
+          var mustRender =
+            false;
+
+
+          for(
+            var i=0;
+            i<mutations.length;
+            i++
+          ){
+
+            var m =
+              mutations[i];
+
+
+            /*
+             * Si la modificación ocurre dentro
+             * de nuestra propia vista, ignorarla.
+             */
+
+            if(
+              m.target &&
+              (
+                m.target.id === ID ||
+                (
+                  typeof m.target.closest ===
+                  'function' &&
+                  m.target.closest('#' + ID)
+                )
+              )
+            ){
+
+              continue;
+
+            }
+
+
+            /*
+             * Si alguno de los nodos afectados
+             * pertenece a nuestra vista, ignorar.
+             */
+
+            var affectedByOwnView =
+              false;
+
+
+            var added =
+              m.addedNodes || [];
+
+
+            for(
+              var a=0;
+              a<added.length;
+              a++
+            ){
+
+              if(
+                added[a].nodeType === 1 &&
+                (
+                  added[a].id === ID ||
+                  (
+                    typeof added[a].closest ===
+                    'function' &&
+                    added[a].closest('#' + ID)
+                  )
+                )
+              ){
+
+                affectedByOwnView =
+                  true;
+
+                break;
+
+              }
+
+            }
+
+
+            if(affectedByOwnView){
+
+              continue;
+
+            }
+
+
+            var removed =
+              m.removedNodes || [];
+
+
+            for(
+              var r=0;
+              r<removed.length;
+              r++
+            ){
+
+              if(
+                removed[r].nodeType === 1 &&
+                (
+                  removed[r].id === ID ||
+                  (
+                    typeof removed[r].closest ===
+                    'function' &&
+                    removed[r].closest('#' + ID)
+                  )
+                )
+              ){
+
+                affectedByOwnView =
+                  true;
+
+                break;
+
+              }
+
+            }
+
+
+            if(affectedByOwnView){
+
+              continue;
+
+            }
+
+
+            /*
+             * Cualquier modificación restante
+             * puede provenir del calendario propietario.
+             */
+
+            if(
+              m.type === 'childList' ||
+              m.type === 'characterData'
+            ){
+
+              mustRender =
+                true;
+
+              break;
+
+            }
+
+          }
+
+
+          if(!mustRender){
+
+            return;
+
+          }
+
+
+          clearTimeout(
+            renderTimer
+          );
+
+
+          renderTimer =
+            setTimeout(
+              function(){
+
+                if(
+                  !root() ||
+                  !section()
+                ){
+
+                  return;
+
+                }
+
+
+                /*
+                 * Verificamos nuevamente que
+                 * el calendario propietario exista.
+                 */
+
+                if(source()){
+
+                  render();
+
+                }
+
+              },
+              100
+            );
+
+        }
+      );
+
+
+    observer.observe(
+      s,
+      {
+        childList:true,
+        subtree:true,
+        characterData:true
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     INICIO
+  ========================================================== */
 
   function start(){
-    if(!root() || !section()) return false;
-    var ok=render();
-    if(ok){
-      if(timer){clearInterval(timer);timer=null;}
-      if(observer) observer.disconnect();
-      observer=new MutationObserver(function(){
-        if(rendering) return;
-        clearTimeout(window.__CCF_CALENDAR_MOBILE_RENDER__);
-        window.__CCF_CALENDAR_MOBILE_RENDER__=setTimeout(render,80);
-      });
-      var s=section();
-      observer.observe(s,{childList:true,subtree:true});
+
+    var r =
+      root();
+
+
+    var s =
+      section();
+
+
+    /*
+     * El script puede estar cargado cuando
+     * la shell móvil todavía no existe.
+     */
+
+    if(!r || !s){
+
+      return false;
+
     }
-    return ok;
+
+
+    /*
+     * Intentamos renderizar.
+     */
+
+    var ok =
+      render();
+
+
+    if(!ok){
+
+      return false;
+
+    }
+
+
+    /*
+     * Una vez que la vista existe,
+     * dejamos de utilizar el timer.
+     */
+
+    if(timer){
+
+      clearInterval(timer);
+
+      timer = null;
+
+    }
+
+
+    /*
+     * Solo instalamos el observer una vez.
+     */
+
+    if(!started){
+
+      observe();
+
+      started = true;
+
+    }
+
+
+    return true;
+
   }
+
+
+  /* ==========================================================
+     BOOT CON REINTENTOS
+  ========================================================== */
 
   function boot(){
-    var tries=0;
-    timer=setInterval(function(){
-      if(start() || ++tries>=40){
-        clearInterval(timer); timer=null;
-      }
-    },250);
+
+    if(timer){
+
+      clearInterval(timer);
+
+    }
+
+
+    var tries =
+      0;
+
+
+    timer =
+      setInterval(
+        function(){
+
+          /*
+           * Si la vista ya está funcionando,
+           * se detiene el polling.
+           */
+
+          if(
+            start() ||
+            ++tries >= 40
+          ){
+
+            clearInterval(timer);
+
+            timer = null;
+
+          }
+
+        },
+        250
+      );
+
+
+    /*
+     * Primer intento inmediato.
+     */
+
     start();
+
   }
 
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',boot,{once:true});
+
+  /* ==========================================================
+     ARRANQUE
+  ========================================================== */
+
+  if(
+    document.readyState ===
+    'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      boot,
+      {once:true}
+    );
+
   }else{
+
     boot();
+
   }
 
-  window.CCFCalendarMobileDirect={
-    version:'B4.3.16',
-    render:render,
-    start:start
+
+  /* ==========================================================
+     API DE DIAGNÓSTICO
+  ========================================================== */
+
+  window.CCFCalendarMobileDirect = {
+
+    version:'B4.3.17',
+
+    render:function(){
+
+      return render();
+
+    },
+
+    start:function(){
+
+      return start();
+
+    },
+
+    status:function(){
+
+      return {
+
+        version:'B4.3.17',
+
+        mobileRoot:!!root(),
+
+        calendarSection:!!section(),
+
+        sourceCalendar:!!source(),
+
+        mobileView:!!document.getElementById(ID),
+
+        rendering:rendering
+
+      };
+
+    }
+
   };
+
+
 })();
-                                   </script>
+
+</script>
+    
+            
+
+      
   
 
 
