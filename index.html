@@ -4132,19 +4132,20 @@
       /* ==========================================================
          CONTROL DE CAJA — TARJETA PREMIUM EXPLÍCITA
          ========================================================== */
-      '#' + ID + ' .p181-source-detail .p181-cash-control{' +
+      '#' + ID + ' .p181-cash-control{' +
         'display:block!important;' +
         'width:100%!important;' +
         'box-sizing:border-box!important;' +
-        'margin:9px 0!important;' +
+        'margin:10px 0!important;' +
         'padding:14px 12px!important;' +
         'background:#f8fbff!important;' +
         'border:1px solid #d8e4f1!important;' +
         'border-radius:15px!important;' +
         'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
+        'overflow:hidden!important;' +
       '}' +
 
-      '#' + ID + ' .p181-source-detail .p181-cash-control h3{' +
+      '#' + ID + ' .p181-cash-control h3{' +
         'display:block!important;' +
         'margin:0 0 9px!important;' +
         'font-size:11px!important;' +
@@ -4153,15 +4154,15 @@
         'text-transform:uppercase!important;' +
       '}' +
 
-      '#' + ID + ' .p181-source-detail .p181-cash-control > *{' +
+      '#' + ID + ' .p181-cash-control > *{' +
         'max-width:100%!important;' +
       '}' +
 
-      '#' + ID + ' .p181-source-detail .p181-cash-control strong:last-child{' +
+      '#' + ID + ' .p181-cash-control strong:last-child{' +
         'color:#168447!important;' +
       '}' +
 
-      '#' + ID + ' .p181-source-detail .p181-cash-control + *{' +
+      '#' + ID + ' .p181-cash-control + *{' +
         'margin-top:0!important;' +
       '}' +
 
@@ -4297,6 +4298,58 @@
     host.appendChild(wrap);
   }
 
+  function ensurePremiumCashControl(host){
+    if(!host) return;
+
+    /* Si ya fue encontrado dentro del detalle propietario, no duplicar. */
+    if(host.querySelector('.p181-cash-control')) return;
+
+    var section = document.getElementById('calendario');
+    if(!section) return;
+
+    var sourceDetail =
+      section.querySelector('.b232261-card .b232261-detail') ||
+      section.querySelector('.b232261-detail');
+
+    if(!sourceDetail) return;
+
+    var sourceBox = null;
+    var candidates = sourceDetail.querySelectorAll('.b232261-box');
+
+    for(var i=0;i<candidates.length;i++){
+      var txt = (candidates[i].textContent || '').replace(/\s+/g,' ').trim();
+      if(/CONTROL\s+DE\s+CAJA/i.test(txt)){
+        sourceBox = candidates[i];
+        break;
+      }
+    }
+
+    if(!sourceBox) return;
+
+    /*
+     * Copia exacta de la tarjeta propietaria:
+     * los importes siguen viniendo del motor B232.26.4.
+     */
+    var card = sourceBox.cloneNode(true);
+    card.classList.add('p181-cash-control');
+
+    card.querySelectorAll('[id]').forEach(function(el){
+      el.removeAttribute('id');
+    });
+
+    /*
+     * Si el detalle Premium ya contiene una tarjeta equivalente,
+     * no agregamos una segunda.
+     */
+    var detail = host.querySelector('.p181-source-detail');
+    if(detail){
+      detail.appendChild(card);
+    }else{
+      host.appendChild(card);
+    }
+  }
+
+
   function render(){
     if(rendering) return false;
 
@@ -4352,6 +4405,7 @@
        * detalle completo con la estructura de la imagen de referencia.
        */
       appendPremiumDetail(host);
+      ensurePremiumCashControl(host);
 
       return true;
 
