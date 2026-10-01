@@ -609,645 +609,14 @@
     <!-- =========================================================
          CALENDARIO
          ========================================================= -->
-    <section id="calendario" class="tab hidden">
-
-      <div class="card calendar-card">
-
-        <div class="calendar-toolbar">
-          <button id="calPrev" class="nav-month">‹</button>
-
-          <div class="calendar-heading">
-            <h2 id="calendarMonth">Septiembre 2026</h2>
-            <span>Plan mensual de ingresos y pagos</span>
-          </div>
-
-          <button id="calNext" class="nav-month">›</button>
-        </div>
-
-        <button id="calToday"
-                class="secondary today-btn">
-          Ir a hoy
-        </button>
-
-        <div class="calendar-metrics">
-
-          <article>
-            <span>Ingresos registrados</span>
-            <strong id="calIncome">$0</strong>
-          </article>
-
-          <article>
-            <span>Gastos registrados</span>
-            <strong id="calExpenses">$0</strong>
-          </article>
-
-          <article>
-            <span>Pagos programados</span>
-            <strong id="calPayments">$0</strong>
-          </article>
-
-          <article>
-            <span>Saldo al cierre</span>
-            <strong id="calFinalBalance">$0</strong>
-          </article>
-
-        </div>
-
-        <div class="legend">
-          <span><i class="dot income-dot"></i>Ingreso</span>
-          <span><i class="dot expense-dot"></i>Gasto</span>
-          <span><i class="dot payment-dot"></i>Pago programado</span>
-          <span><i class="dot balance-dot"></i>Saldo acumulado</span>
-        </div>
-
-        <div class="calendar-scroll">
-
-          <div class="calendar-grid week-head">
-            <div>DOM</div>
-            <div>LUN</div>
-            <div>MAR</div>
-            <div>MIÉ</div>
-            <div>JUE</div>
-            <div>VIE</div>
-            <div>SÁB</div>
-          </div>
-
-          <div id="calendarGrid"
-               class="calendar-grid">
-          </div>
-
-        </div>
-
-        <p id="calMonthNote"
-           class="muted calendar-note">
-        </p>
-
-        <div id="calendarDayDetails"
-             class="calendar-day-details">
-          <p class="muted">
-            Selecciona un día del calendario para ver sus ingresos y gastos.
-          </p>
-        </div>
-
-        <p class="calendar-help">
-          Desliza horizontalmente si quieres ver el calendario completo en el teléfono.
-        </p>
-
-      </div>
-
-    </section>
-
-    <!-- =========================================================
-         AHORRO
-         ========================================================= -->
-    <section id="ahorro" class="tab hidden">
-
-      <div class="card">
-
-        <h2 id="savingFormTitle">Fondo de ahorro</h2>
-
-        <form id="savingForm" class="grid2">
-
-          <input type="hidden" id="savingId">
-
-          <label>
-            Tipo
-            <select id="savingTipo">
-              <option value="aporte">Aporte</option>
-              <option value="retiro">Retiro</option>
-            </select>
-          </label>
-
-          <label>
-            Fecha
-            <input id="savingFecha"
-                   type="date"
-                   required>
-          </label>
-
-          <label>
-            Monto
-            <input id="savingMonto"
-                   type="number"
-                   min="0"
-                   step="1"
-                   required>
-          </label>
-
-          <label class="full">
-            Descripción
-            <input id="savingDescripcion"
-                   placeholder="Ahorro del día...">
-          </label>
-
-          <div class="form-actions full">
-            <button type="submit"
-                    id="savingSubmit">
-              Registrar
-            </button>
-
-            <button type="button"
-                    id="savingCancel"
-                    class="secondary hidden">
-              Cancelar edición
-            </button>
-          </div>
-
-        </form>
-
-        <p class="big-number"
-           id="savingBalance">
-          $0
-        </p>
-
-        <p id="savingMsg"
-           class="status">
-        </p>
-
-      </div>
-
-      <div class="card">
-        <h2>Historial de ahorro</h2>
-        <div id="ahorroLista"></div>
-</div>
-</div>
-
-    </section>
-
-    <!--
-      Los módulos Deudas, Cuentas, Operaciones y Planificación
-      mantienen su integración dinámica existente.
-    -->
-
-  </section>
-</main>
-
-<!-- =============================================================
-     CORE
-     ============================================================= -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=232.23"></script>
-  
-<script src="CCF-SUPABASE-BOOT-231.4.js?v=231.4"></script>
-  
-<script src="CCF-AUTH-BOOT-FINAL.js?v=231.2"></script>
-
-<script src="CCF-ACCESS-FLOW-B1.9.6.js?v=1.9.6"></script>
-<script src="b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js?v=230.12"></script>
-<script src="b225-motor-multifuente.js?v=225.2"></script>
-
-<!-- =============================================================
-     CARGA CONTROLADA DE MÓDULOS
-     - Mantiene los módulos legacy.
-     - Conecta el nuevo Centro de Control.
-     - Evita ejecutar motores financieros antes de Supabase.
-     ============================================================= -->
-<script>
-(function () {
-  'use strict';
-
-  var legacyLoaded = false;
-  var summaryLoaded = false;
-
-  var legacyModules = [
-    'b220-motor-ejecucion-financiera.js?v=231.7-R4',
-    'b220.2-puente-ejecucion.js?v=231.7-R4',
-    'b221-movimientos-liquidez.js?v=231.7-R4',
-    'b227-ia-financiera.js?v=231.7-R4',
-    'b229-movimientos-fondos.js?v=231.7-R4',
-    'finanzas-v233.js?v=231.7-R4',
-    'b231.0-adaptador-deudas-v2.js?v=231.7-R4',
-    'b231.1-persistencia-deuda-sin-fecha.js?v=231.7-R4',
-    'b231.2-deudas-fecha.js?v=231.7-R4',
-    'b231.3-abonos-parciales.js?v=231.7-R4',
-    'b233-motor-presupuesto.js?v=233.22'
-  ];
-
-  var summaryModules = [];
-
-  function loadOne(src) {
-    return new Promise(function (resolve) {
-      if (document.querySelector(
-        'script[data-finance-module="' + src + '"]'
-      )) {
-        resolve();
-        return;
-      }
-
-      var el = document.createElement('script');
-      el.src = src;
-      el.async = false;
-      el.dataset.financeModule = src;
-
-      el.onload = resolve;
-
-      el.onerror = function () {
-        console.error('[CCF V5] No se pudo cargar:', src);
-        var status = document.getElementById('summary-status-text');
-        if (status) {
-          status.textContent = 'ERROR DE CARGA: ' + src;
-        }
-        resolve();
-      };
-
-      document.body.appendChild(el);
-    });
-  }
-
-  function ensureSummaryClient() {
-    if (window.supabaseClient) {
-      return true;
-    }
-
-    if (
-      !window.supabase ||
-      !window.supabase.createClient
-    ) {
-      return false;
-    }
-
-    var url = localStorage.getItem('sf_url');
-    var key = localStorage.getItem('sf_key');
-
-    if (!url || !key) {
-      return false;
-    }
-
-    try {
-      window.supabaseClient =
-        window.supabase.createClient(
-          url,
-          key,
-          {
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false
-            }
-          }
-        );
-
-      return true;
-
-    } catch (error) {
-      console.error(
-        '[Finance] Error creando cliente del resumen:',
-        error
-      );
-
-      return false;
-    }
-  }
-
-  async function loadLegacyModules() {
-    if (legacyLoaded) return;
-
-    var app = document.getElementById('app');
-    var panel = document.getElementById('configPanel');
-
-    if (
-      !app ||
-      app.classList.contains('hidden') ||
-      (panel && !panel.classList.contains('hidden'))
-    ) {
-      return;
-    }
-
-    legacyLoaded = true;
-
-    for (
-      var i = 0;
-      i < legacyModules.length;
-      i++
-    ) {
-      await loadOne(legacyModules[i]);
-    }
-  }
-
-  async function loadFinancialSummary() {
-    if (summaryLoaded) return;
-
-    var app = document.getElementById('app');
-    var panel = document.getElementById('configPanel');
-
-    if (
-      !app ||
-      app.classList.contains('hidden') ||
-      (panel && !panel.classList.contains('hidden'))
-    ) {
-      return;
-    }
-
-    if (!ensureSummaryClient()) {
-      return;
-    }
-
-    summaryLoaded = true;
-
-    for (
-      var i = 0;
-      i < summaryModules.length;
-      i++
-    ) {
-      await loadOne(summaryModules[i]);
-    }
-
-    if (
-      window.FinancialSummary &&
-      typeof window.FinancialSummary.init === 'function'
-    ) {
-      try {
-        await window.FinancialSummary.init();
-
-      } catch (error) {
-
-        console.error(
-          '[Finance] Error en Centro de Control Financiero:',
-          error
-        );
-
-        var status =
-          document.getElementById(
-            'summary-status-text'
-          );
-
-        if (status) {
-          status.textContent =
-            'No fue posible cargar el estado financiero: ' +
-            (error.message || error);
-        }
-      }
-    }
-  }
-
-  async function refreshSummary() {
-    if (
-      window.FinancialSummary &&
-      typeof window.FinancialSummary.init === 'function'
-    ) {
-      try {
-        await window.FinancialSummary.init();
-      } catch (error) {
-        console.error(
-          '[Finance] Error actualizando resumen:',
-          error
-        );
-      }
-    }
-  }
-
-  async function boot() {
-
-    var app = document.getElementById('app');
-    var panel = document.getElementById('configPanel');
-
-    if (
-      !app ||
-      app.classList.contains('hidden') ||
-      (panel && !panel.classList.contains('hidden'))
-    ) {
-      return;
-    }
-
-    await loadLegacyModules();
-    await loadFinancialSummary();
-
-  }
-
-  function watch() {
-
-    var app =
-      document.getElementById('app');
-
-    if (!app) return;
-
-    if (
-      app.classList.contains('hidden')
-    ) {
-
-      var observer =
-        new MutationObserver(
-          boot
-        );
-
-      observer.observe(
-        app,
-        {
-          attributes: true,
-          attributeFilter: ['class']
-        }
-      );
-
-    } else {
-
-      boot();
-
-    }
-
-    setTimeout(boot, 500);
-    setTimeout(boot, 1500);
-    setTimeout(boot, 3000);
-  }
-
-  /*
-   * Refresco del nuevo resumen cuando se vuelve a la pestaña
-   * y después de operaciones normales del sistema.
-   */
-  document.addEventListener(
-    'click',
-    function (event) {
-
-      var button =
-        event.target.closest(
-          '[data-tab="dashboard"]'
-        );
-
-      if (button) {
-        setTimeout(
-          refreshSummary,
-          50
-        );
-      }
-
-    }
-  );
-
-  /*
-   * El app.js original mantiene refresh() como función global.
-   * Se envuelve para que cada alta/edición/borrado actualice
-   * también el Centro de Control Financiero.
-   */
-  setTimeout(function () {
-
-    if (
-      typeof window.refresh === 'function' &&
-      !window.__financialRefreshWrapped
-    ) {
-
-      var originalRefresh =
-        window.refresh;
-
-      window.refresh =
-        async function () {
-
-          var result =
-            await originalRefresh.apply(
-              this,
-              arguments
-            );
-
-          setTimeout(
-            refreshSummary,
-            0
-          );
-
-          return result;
-
-        };
-
-      window.__financialRefreshWrapped = true;
-    }
-
-  }, 1000);
-
-  if (
-    document.readyState === 'loading'
-  ) {
-
-    document.addEventListener(
-      'DOMContentLoaded',
-      watch,
-      { once: true }
-    );
-
-  } else {
-
-    watch();
-
-  }
-
-})();
-</script>
-
-<script src="B234-movimientos-futuros.js?v=234.1"></script>
-<script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
-  <script src="B232.68-CCF-DEUDA-DUAL.js?v=232.68"></script>
-<script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
-<script src="B232.26.4-calendario-safe.js?v=232.26.4"></script>
-  
-
-  <script src="B232.34-resumen-integrado.js?v=232.34-FIX-2026.09.26"></script>
-<script src="B232.35-cierre-resumen-ejecutivo.js?v=232.35-FIX-1"></script>
-<script src="B232.39-IA-FINANCIERA-DATA-BRIDGE.js?v=232.39"></script>
-<script src="B232.40-correccion-planificacion.js?v=232.40"></script>
-<script src="B232.41-integracion-regresion-final.js?v=232.41"></script>
-<script src="B232.42.1-reconciliacion-fuentes.js?v=232.42.2"></script>
-<script src="B232.53.5-recalculo-integral.js?v=232.53.5"></script>
-<script src="B232.51.2-runtime-hardening.js?v=232.51.2"></script>
-<script src="B232.51.3-navigation-safe.js?v=232.51.3"></script>
-  
-  <script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66-FIX-2026.09.26"></script>
-  <script src="B232.65-menu-principal.js?v=232.65"></script>
-  <script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
-
-
-<!-- CCF · Limpieza de referencias técnicas de despliegue visibles -->
-<script id="ccf-ui-cleanup">
-(function(){
-  'use strict';
-  if(window.__CCF_UI_CLEANUP__) return;
-  window.__CCF_UI_CLEANUP__=true;
-
-  var ids=[
-    'b231-indicador-deudas',
-    'b23260-footer',
-    'b23266-footer',
-    'b23267-footer',
-    'b23268-footer',
-    'b23269-footer',
-    'b23273-bridge-badge',
-    'b23274Footer',
-    'ccf-release-footer'
-  ];
-
-  function removeTechnicalUi(root){
-    var scope=root&&root.querySelectorAll?root:document;
-    ids.forEach(function(id){
-      var el=document.getElementById(id);
-      if(el) el.remove();
-    });
-    scope.querySelectorAll('footer,div,span,p').forEach(function(el){
-      var t=(el.textContent||'').trim();
-      if(/^Paquete desplegado:/i.test(t)) el.remove();
-    });
-  }
-
-  function run(){ removeTechnicalUi(document); }
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',run,{once:true});
-  }else{ run(); }
-
-  if(window.MutationObserver && document.body){
-    var observer=new MutationObserver(function(mutations){
-      mutations.forEach(function(m){
-        m.addedNodes.forEach(function(node){
-          if(node.nodeType===1) removeTechnicalUi(node);
-        });
-      });
-    });
-    observer.observe(document.body,{childList:true,subtree:true});
-  }
-})();
-</script>
-
-<!-- CCF · Pie de producto -->
-<footer id="ccf-product-footer" aria-label="Producto desarrollado por Somos Software">
-  <div class="ccf-product-footer-inner">
-    <img src="somos-software-logo.jpg" alt="Somos Software · Innovación Digital" class="ccf-product-footer-logo">
-    <strong>Producto desarrollado por Somos Software</strong>
-  </div>
-</footer>
-<style id="ccf-product-footer-style">
-#ccf-product-footer{margin:22px 10px 18px;padding:16px 10px;text-align:center;border-top:1px solid #e5e7eb;color:#334155;font:600 11px/1.4 system-ui,sans-serif}
-.ccf-product-footer-inner{display:flex;flex-direction:column;align-items:center;gap:9px}
-.ccf-product-footer-logo{display:block;width:min(260px,72vw);max-height:86px;object-fit:contain}
-#ccf-product-footer strong{font-weight:700}
-  
-</style>
-  
-<script src="B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1.js"></script>
-  <script src="CCF-MULTIUSER-DEUDAS-FIX-2317.js?v=231.7"></script>
-<script src="B234-FINAL-RECONCILIACION.js?v=234.3-final"></script>
-
-  <script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
-
- 
     <!-- ============================================================
-     CCF CALENDAR MOBILE · B4.3.17
-     VISTA MÓVIL DIRECTA
-
-     Propósito:
-     - Crear una vista móvil independiente del calendario B232.26.4.
-     - Leer exclusivamente los datos/DOM que ya genera B232.26.4.
-     - No modificar B232.26.4-calendario-safe.js.
-     - No modificar Supabase.
-     - No duplicar cálculos financieros.
-     - No afectar el calendario desktop.
-     - 7 columnas reales dentro del ancho disponible.
-     - Navegación: anterior / hoy / siguiente / actualizar.
-     - Selección de día.
-     - KPIs.
-     - Detalle del día.
-
-     INSTALACIÓN:
-     Pegar este bloque AL FINAL de index.html.
-
-     NO cargar simultáneamente:
-     - CCF-CALENDAR-MINIMAL-TEST-B4.3.15.js
-     - CCF-CALENDAR-MOBILE-AB-FINAL.js
-     - otra versión B4.3.16
-============================================================ -->
-
+     CCF MOBILE CALENDAR · B4.3.18.1
+     Integración independiente de la capa móvil:
+     - CCF-MOBILE-B4.3.js
+     - B4.3.17 como vista funcional actual
+     - B4.3.18.1 Premium acoplado ANTES de la vista actual
+     ============================================================ -->
+<script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
 <script id="ccf-calendar-mobile-direct-b4-3-17">
 
 (function(){
@@ -3604,28 +2973,6 @@
 })();
 
 </script>
-    
-            
-
-      
-  
-
-
-
-<!-- ============================================================
- CCF CALENDAR MOBILE · B4.3.18.1
- PRUEBA VISUAL SOBRE LA ESTRUCTURA FUNCIONAL APROBADA B4.3.17
-
- REGLA DE ESTA PRUEBA:
- - B4.3.17 NO SE MODIFICA.
- - B232.26.4 NO SE MODIFICA.
- - No se recalculan datos financieros.
- - Se toma la vista ya construida por B4.3.17 y se presenta
-   inmediatamente A CONTINUACIÓN en una segunda vista Premium.
- - Esta versión es deliberadamente inline para validación visual
-   antes de migrar CSS/JS a archivos independientes.
-============================================================ -->
-
 <script id="ccf-calendar-mobile-premium-b4-3-18-1-after17">
 (function(){
   'use strict';
@@ -3638,567 +2985,6 @@
 
   function sourceHost(){
     return document.getElementById(SOURCE);
-  }
-
-  function css(){
-    if(document.getElementById(ID + '-style')) return;
-
-    var s = document.createElement('style');
-    s.id = ID + '-style';
-
-    s.textContent =
-      '#' + ID + '{' +
-        'display:block;' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'margin:18px 0 18px;' +
-        'padding:0;' +
-        'box-sizing:border-box;' +
-      '}' +
-
-      '#' + ID + ' *{box-sizing:border-box;}' +
-
-      /* Contenedor Premium */
-      '#' + ID + ' .p181-shell{' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'background:#fff;' +
-        'border:1px solid #dbe4ee;' +
-        'border-radius:20px;' +
-        'overflow:hidden;' +
-        'box-shadow:0 10px 30px rgba(15,39,71,.10);' +
-      '}' +
-
-      /* Cabecera */
-      '#' + ID + ' .cm-head{' +
-        'position:relative;' +
-        'padding:16px 12px 10px;' +
-        'min-height:76px;' +
-        'background:#fff;' +
-      '}' +
-
-      '#' + ID + ' .cm-eyebrow{' +
-        'margin:0 0 4px;' +
-        'font:900 9px/1 system-ui,sans-serif;' +
-        'letter-spacing:.05em;' +
-        'color:#64748b;' +
-        'text-transform:uppercase;' +
-      '}' +
-
-      '#' + ID + ' .cm-title{' +
-        'margin:0;' +
-        'padding-right:188px;' +
-        'font:900 24px/1.08 system-ui,sans-serif;' +
-        'letter-spacing:-.025em;' +
-        'color:#0f2747;' +
-      '}' +
-
-      '#' + ID + ' .cm-sub,' +
-      '#' + ID + ' .cm-status{' +
-        'display:none!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-actions{' +
-        'position:absolute;' +
-        'top:10px;' +
-        'right:10px;' +
-        'display:flex;' +
-        'gap:6px;' +
-        'align-items:center;' +
-      '}' +
-
-      '#' + ID + ' .cm-actions button{' +
-        'width:44px;' +
-        'min-width:44px;' +
-        'height:44px;' +
-        'min-height:44px;' +
-        'padding:0;' +
-        'border:0;' +
-        'border-radius:11px;' +
-        'background:#eef2f7;' +
-        'color:#122a49;' +
-        'font:900 23px/1 system-ui,sans-serif;' +
-        'cursor:pointer;' +
-      '}' +
-
-      '#' + ID + ' .cm-actions button:nth-child(2){' +
-        'width:74px;' +
-        'min-width:74px;' +
-        'background:#102b4d;' +
-        'color:#fff;' +
-        'font-size:15px;' +
-      '}' +
-
-      /* KPI: exactamente 2 arriba + 3 abajo */
-      '#' + ID + ' .cm-kpis{' +
-        'display:grid;' +
-        'grid-template-columns:repeat(6,minmax(0,1fr));' +
-        'gap:8px;' +
-        'padding:0 12px 9px;' +
-        'width:100%;' +
-        'min-width:0;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi{' +
-        'position:relative;' +
-        'grid-column:span 2!important;' +
-        'min-width:0;' +
-        'min-height:82px;' +
-        'padding:14px 60px 12px 15px;' +
-        'border-radius:16px;' +
-        'overflow:hidden;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(1),' +
-      '#' + ID + ' .cm-kpi:nth-child(2){' +
-        'grid-column:span 3!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(1){' +
-        'background:linear-gradient(135deg,#148cf0,#087ff0)!important;' +
-        'border-color:#148cf0!important;' +
-        'color:#fff!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(2){' +
-        'background:linear-gradient(135deg,#10c48a,#0bb77a)!important;' +
-        'border-color:#10c48a!important;' +
-        'color:#fff!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(3){' +
-        'background:linear-gradient(135deg,#ff3e53,#f5263d)!important;' +
-        'border-color:#ff3e53!important;' +
-        'color:#fff!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(4){' +
-        'background:#f5f7fb!important;' +
-        'border-color:#e7ebf1!important;' +
-        'color:#172033!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(5){' +
-        'background:linear-gradient(135deg,#1767b9,#0b5cae)!important;' +
-        'border-color:#1767b9!important;' +
-        'color:#fff!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi span{' +
-        'display:block;' +
-        'font:500 10px/1.2 system-ui,sans-serif;' +
-        'color:inherit!important;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi strong{' +
-        'display:block;' +
-        'margin-top:4px;' +
-        'font:900 22px/1.05 system-ui,sans-serif;' +
-        'color:inherit!important;' +
-        'overflow-wrap:anywhere;' +
-        'word-break:break-word;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:after{' +
-        'content:"";' +
-        'position:absolute;' +
-        'right:12px;' +
-        'top:50%;' +
-        'transform:translateY(-50%);' +
-        'width:42px;' +
-        'height:42px;' +
-        'border-radius:11px;' +
-        'background:rgba(255,255,255,.16);' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:before{' +
-        'position:absolute;' +
-        'z-index:2;' +
-        'right:23px;' +
-        'top:50%;' +
-        'transform:translateY(-50%);' +
-        'font:900 22px/1 system-ui,sans-serif;' +
-        'color:#fff;' +
-      '}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(1):before{content:"▥";}' +
-      '#' + ID + ' .cm-kpi:nth-child(2):before{content:"↑";}' +
-      '#' + ID + ' .cm-kpi:nth-child(3):before{content:"↓";}' +
-      '#' + ID + ' .cm-kpi:nth-child(4):before{content:"▣";color:#ef4960;}' +
-      '#' + ID + ' .cm-kpi:nth-child(5):before{content:"▤";}' +
-
-      '#' + ID + ' .cm-kpi:nth-child(4):after{' +
-        'background:#ffe8ed;' +
-      '}' +
-
-      /* Contexto */
-      '#' + ID + ' .cm-scope{' +
-        'position:relative;' +
-        'display:flex;' +
-        'align-items:center;' +
-        'min-height:45px;' +
-        'margin:0 12px 10px;' +
-        'padding:10px 12px 10px 43px;' +
-        'border-radius:11px;' +
-        'background:#f1f6fc;' +
-        'color:#526173;' +
-        'font:500 10px/1.25 system-ui,sans-serif;' +
-        'overflow-wrap:anywhere;' +
-      '}' +
-
-      '#' + ID + ' .cm-scope:before{' +
-        'content:"▣";' +
-        'position:absolute;' +
-        'left:14px;' +
-        'top:50%;' +
-        'transform:translateY(-50%);' +
-        'font:900 18px/1 system-ui,sans-serif;' +
-        'color:#0877cf;' +
-      '}' +
-
-      /* Calendario */
-      '#' + ID + ' .cm-calendar-wrap{' +
-        'margin:0 12px 12px;' +
-        'border:1px solid #dfe6ee;' +
-        'border-radius:14px;' +
-        'overflow:hidden;' +
-        'width:calc(100% - 24px);' +
-        'min-width:0;' +
-      '}' +
-
-      '#' + ID + ' .cm-grid{' +
-        'display:grid!important;' +
-        'grid-template-columns:repeat(7,minmax(0,1fr))!important;' +
-        'width:100%!important;' +
-        'min-width:0!important;' +
-        'max-width:100%!important;' +
-        'overflow:hidden;' +
-        'gap:0;' +
-      '}' +
-
-      '#' + ID + ' .cm-week{' +
-        'width:100%;' +
-        'min-width:0;' +
-        'height:30px;' +
-        'display:flex;' +
-        'align-items:center;' +
-        'justify-content:center;' +
-        'padding:4px 1px;' +
-        'background:#111827;' +
-        'color:#fff;' +
-        'font:900 8px/1 system-ui,sans-serif;' +
-        'overflow:hidden;' +
-      '}' +
-
-      '#' + ID + ' .cm-day{' +
-        'width:100%!important;' +
-        'min-width:0!important;' +
-        'max-width:100%!important;' +
-        'height:88px;' +
-        'margin:0;' +
-        'padding:4px 3px;' +
-        'border:0;' +
-        'border-right:1px solid #e5e7eb;' +
-        'border-bottom:1px solid #e5e7eb;' +
-        'border-radius:0;' +
-        'background:#fff;' +
-        'color:#334155;' +
-        'text-align:left;' +
-        'overflow:hidden;' +
-      '}' +
-
-      '#' + ID + ' .cm-day.out{' +
-        'background:#f8fafc;' +
-        'color:#94a3b8;' +
-      '}' +
-
-      '#' + ID + ' .cm-day.selected{' +
-        'outline:2px solid #0f7fe5;' +
-        'outline-offset:-2px;' +
-        'background:#f7fbff;' +
-      '}' +
-
-      '#' + ID + ' .cm-day-top{' +
-        'display:flex;' +
-        'justify-content:space-between;' +
-        'align-items:center;' +
-        'width:100%;' +
-        'min-width:0;' +
-        'font:800 10px/1 system-ui,sans-serif;' +
-      '}' +
-
-      '#' + ID + ' .cm-day-top small{' +
-        'font-size:6px;' +
-      '}' +
-
-      '#' + ID + ' .cm-event{' +
-        'display:block;' +
-        'width:100%;' +
-        'min-width:0;' +
-        'margin-top:2px;' +
-        'padding:2px;' +
-        'border-radius:3px;' +
-        'font:700 6px/1.05 system-ui,sans-serif;' +
-        'white-space:nowrap;' +
-        'overflow:hidden;' +
-        'text-overflow:ellipsis;' +
-      '}' +
-
-      '#' + ID + ' .cm-mini{' +
-        'display:block;' +
-        'width:100%;' +
-        'min-width:0;' +
-        'margin-top:2px;' +
-        'font:600 6px/1.05 system-ui,sans-serif;' +
-        'white-space:nowrap;' +
-        'overflow:hidden;' +
-        'text-overflow:ellipsis;' +
-      '}' +
-
-      /* Detalle inferior */
-      '#' + ID + ' .cm-detail{' +
-        'display:grid;' +
-        'grid-template-columns:1fr;' +
-        'gap:8px;' +
-        'padding:0 12px 12px;' +
-      '}' +
-
-      '#' + ID + ' .cm-box{' +
-        'width:100%;' +
-        'min-width:0;' +
-        'padding:12px;' +
-        'border:1px solid #e2e8f0;' +
-        'border-radius:13px;' +
-        'background:#fff;' +
-        'font:500 10px/1.4 system-ui,sans-serif;' +
-        'overflow:hidden;' +
-      '}' +
-
-      '#' + ID + ' .cm-box-income{' +
-        'background:#f0fdf4;' +
-        'border-color:#bbf7d0;' +
-      '}' +
-
-      '#' + ID + ' .cm-box-expense{' +
-        'background:#fff5f5;' +
-        'border-color:#fecaca;' +
-      '}' +
-
-      '#' + ID + ' .cm-box h3{' +
-        'margin:0 0 6px;' +
-        'font:900 10px/1.25 system-ui,sans-serif;' +
-      '}' +
-
-      '#' + ID + ' .cm-box-body{' +
-        'width:100%;' +
-        'min-width:0;' +
-        'overflow-wrap:anywhere;' +
-        'word-break:break-word;' +
-      '}' +
-
-      /* ==========================================================
-         DETALLE PREMIUM — DISEÑO REFERENCIA
-         ========================================================== */
-      '#' + ID + ' .p181-detail-wrap{' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'padding:0 12px 14px;' +
-        'background:#fff;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail{' +
-        'display:block!important;' +
-        'width:100%!important;' +
-        'max-width:100%!important;' +
-        'min-width:0!important;' +
-        'margin:0!important;' +
-        'padding:0!important;' +
-        'background:#fff!important;' +
-        'border:0!important;' +
-        'box-shadow:none!important;' +
-        'font-family:system-ui,sans-serif!important;' +
-      '}' +
-
-      /*
-       * Encabezado "Detalle del Jueves..." + fecha.
-       * El selector es flexible para no depender de una clase
-       * que pueda cambiar en B232.26.4.
-       */
-      '#' + ID + ' .p181-source-detail > :first-child{' +
-        'width:100%;' +
-        'min-width:0;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail h2,' +
-      '#' + ID + ' .p181-source-detail h3{' +
-        'color:#102b4d!important;' +
-      '}' +
-
-      /*
-       * Cada bloque financiero queda como tarjeta independiente.
-       */
-      '#' + ID + ' .p181-source-detail .b232261-box{' +
-        'display:block!important;' +
-        'width:100%!important;' +
-        'max-width:100%!important;' +
-        'min-width:0!important;' +
-        'margin:8px 0!important;' +
-        'padding:13px 12px!important;' +
-        'border:1px solid #e3e8ef!important;' +
-        'border-radius:15px!important;' +
-        'background:#fff!important;' +
-        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
-        'overflow:hidden!important;' +
-        'font-size:10px!important;' +
-        'line-height:1.35!important;' +
-      '}' +
-
-      /*
-       * El primer bloque es el resumen superior.
-       */
-      '#' + ID + ' .p181-source-detail .b232261-box:first-of-type{' +
-        'background:#fbfdff!important;' +
-        'border-color:#dce5ee!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .b232261-box h3{' +
-        'margin:0 0 7px!important;' +
-        'font-size:11px!important;' +
-        'font-weight:900!important;' +
-        'line-height:1.2!important;' +
-        'color:#122a49!important;' +
-      '}' +
-
-      /*
-       * Preservar las filas/valores originales.
-       * Se usa una combinación de selectores genéricos para que
-       * no se pierda la alineación derecha de los importes.
-       */
-      '#' + ID + ' .p181-source-detail .b232261-box > div,' +
-      '#' + ID + ' .p181-source-detail .b232261-box > p,' +
-      '#' + ID + ' .p181-source-detail .b232261-box > section{' +
-        'max-width:100%;' +
-        'min-width:0;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail strong{' +
-        'font-weight:900!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail small{' +
-        'color:#7b8796!important;' +
-      '}' +
-
-      /*
-       * Tarjeta de ingresos.
-       */
-      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(2){' +
-        'background:#fff!important;' +
-        'border-color:#dfe6ee!important;' +
-      '}' +
-
-      /*
-       * Tarjeta de egresos/obligaciones.
-       */
-      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(3){' +
-        'background:#fff!important;' +
-        'border-color:#dfe6ee!important;' +
-      '}' +
-
-      /*
-       * Control de caja: destacamos el flujo neto.
-       */
-      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(4){' +
-        'background:#f8fbff!important;' +
-        'border-color:#d8e4f1!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(4) strong:last-child{' +
-        'color:#159447!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .b232261-note,' +
-      '#' + ID + ' .p181-source-detail .b232261-footnote{' +
-        'display:block;' +
-        'padding:0 3px 3px;' +
-        'color:#718096!important;' +
-        'font-size:9px!important;' +
-        'line-height:1.25!important;' +
-      '}' +
-
-      /* ==========================================================
-         CONTROL DE CAJA — TARJETA PREMIUM EXPLÍCITA
-         ========================================================== */
-      '#' + ID + ' .p181-source-detail .p181-cash-control{' +
-        'display:block!important;' +
-        'width:100%!important;' +
-        'box-sizing:border-box!important;' +
-        'margin:9px 0!important;' +
-        'padding:14px 12px!important;' +
-        'background:#f8fbff!important;' +
-        'border:1px solid #d8e4f1!important;' +
-        'border-radius:15px!important;' +
-        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .p181-cash-control h3{' +
-        'display:block!important;' +
-        'margin:0 0 9px!important;' +
-        'font-size:11px!important;' +
-        'font-weight:900!important;' +
-        'color:#263b54!important;' +
-        'text-transform:uppercase!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .p181-cash-control > *{' +
-        'max-width:100%!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .p181-cash-control strong:last-child{' +
-        'color:#168447!important;' +
-      '}' +
-
-      '#' + ID + ' .p181-source-detail .p181-cash-control + *{' +
-        'margin-top:0!important;' +
-      '}' +
-
-      /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
-      '@media(max-width:480px){' +
-        '#' + ID + ' .p181-detail-wrap{' +
-          'padding:0 8px 10px;' +
-        '}' +
-        '#' + ID + ' .p181-source-detail .b232261-box{' +
-          'margin:7px 0!important;' +
-          'padding:12px 10px!important;' +
-          'border-radius:13px!important;' +
-        '}' +
-        '#' + ID + ' .p181-source-detail .b232261-box h3{' +
-          'font-size:10px!important;' +
-        '}' +
-      '}' +
-
-      /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
-      '@media(max-width:480px){' +
-        '#' + ID + ' .cm-head{padding:13px 9px 7px;min-height:70px;}' +
-        '#' + ID + ' .cm-title{font-size:20px;padding-right:174px;}' +
-        '#' + ID + ' .cm-actions{top:8px;right:8px;gap:5px;}' +
-        '#' + ID + ' .cm-actions button{width:38px;min-width:38px;height:38px;min-height:38px;border-radius:9px;font-size:20px;}' +
-        '#' + ID + ' .cm-actions button:nth-child(2){width:55px;min-width:55px;font-size:13px;}' +
-        '#' + ID + ' .cm-kpis{gap:6px;padding:0 8px 8px;}' +
-        '#' + ID + ' .cm-kpi{min-height:72px;padding:11px 47px 10px 10px;border-radius:13px;}' +
-        '#' + ID + ' .cm-kpi strong{font-size:18px;}' +
-        '#' + ID + ' .cm-kpi:after{right:7px;width:35px;height:35px;border-radius:10px;}' +
-        '#' + ID + ' .cm-kpi:before{right:17px;font-size:18px;}' +
-        '#' + ID + ' .cm-scope{margin:0 8px 8px;min-height:40px;padding-left:38px;font-size:9px;}' +
-        '#' + ID + ' .cm-calendar-wrap{margin:0 8px 10px;width:calc(100% - 16px);}' +
-        '#' + ID + ' .cm-day{height:86px;padding:4px 2px;}' +
-        '#' + ID + ' .cm-detail{padding:0 8px 10px;}' +
-      '}' ;
-
-    document.head.appendChild(s);
   }
 
   function wireButtons(clone, original){
@@ -4309,18 +3095,20 @@
     rendering = true;
 
     try{
-      css();
-
       var host = document.getElementById(ID);
 
       if(!host){
         host = document.createElement('section');
         host.id = ID;
 
-        /* IMPORTANTE: después de la vista B4.3.17. */
-        original.parentNode.insertBefore(host, original.nextSibling);
+        /* B4.3.18.1: la capa Premium se acopla ANTES de la vista móvil actual. */
+        original.parentNode.insertBefore(host, original);
       }
 
+      /* Garantizar que Premium 18.1 permanezca antes de la vista actual. */
+      if(original.parentNode && original.previousElementSibling !== host){
+        original.parentNode.insertBefore(host, original);
+      }
       host.innerHTML = '';
 
       var clone = shell.cloneNode(true);
@@ -4446,6 +3234,665 @@
 
 })();
 </script>
+
+<section id="calendario" class="tab hidden">
+
+      <div class="card calendar-card">
+
+        <div class="calendar-toolbar">
+          <button id="calPrev" class="nav-month">‹</button>
+
+          <div class="calendar-heading">
+            <h2 id="calendarMonth">Septiembre 2026</h2>
+            <span>Plan mensual de ingresos y pagos</span>
+          </div>
+
+          <button id="calNext" class="nav-month">›</button>
+        </div>
+
+        <button id="calToday"
+                class="secondary today-btn">
+          Ir a hoy
+        </button>
+
+        <div class="calendar-metrics">
+
+          <article>
+            <span>Ingresos registrados</span>
+            <strong id="calIncome">$0</strong>
+          </article>
+
+          <article>
+            <span>Gastos registrados</span>
+            <strong id="calExpenses">$0</strong>
+          </article>
+
+          <article>
+            <span>Pagos programados</span>
+            <strong id="calPayments">$0</strong>
+          </article>
+
+          <article>
+            <span>Saldo al cierre</span>
+            <strong id="calFinalBalance">$0</strong>
+          </article>
+
+        </div>
+
+        <div class="legend">
+          <span><i class="dot income-dot"></i>Ingreso</span>
+          <span><i class="dot expense-dot"></i>Gasto</span>
+          <span><i class="dot payment-dot"></i>Pago programado</span>
+          <span><i class="dot balance-dot"></i>Saldo acumulado</span>
+        </div>
+
+        <div class="calendar-scroll">
+
+          <div class="calendar-grid week-head">
+            <div>DOM</div>
+            <div>LUN</div>
+            <div>MAR</div>
+            <div>MIÉ</div>
+            <div>JUE</div>
+            <div>VIE</div>
+            <div>SÁB</div>
+          </div>
+
+          <div id="calendarGrid"
+               class="calendar-grid">
+          </div>
+
+        </div>
+
+        <p id="calMonthNote"
+           class="muted calendar-note">
+        </p>
+
+        <div id="calendarDayDetails"
+             class="calendar-day-details">
+          <p class="muted">
+            Selecciona un día del calendario para ver sus ingresos y gastos.
+          </p>
+        </div>
+
+        <p class="calendar-help">
+          Desliza horizontalmente si quieres ver el calendario completo en el teléfono.
+        </p>
+
+      </div>
+
+    </section>
+
+    <!-- =========================================================
+         AHORRO
+         ========================================================= -->
+    <section id="ahorro" class="tab hidden">
+
+      <div class="card">
+
+        <h2 id="savingFormTitle">Fondo de ahorro</h2>
+
+        <form id="savingForm" class="grid2">
+
+          <input type="hidden" id="savingId">
+
+          <label>
+            Tipo
+            <select id="savingTipo">
+              <option value="aporte">Aporte</option>
+              <option value="retiro">Retiro</option>
+            </select>
+          </label>
+
+          <label>
+            Fecha
+            <input id="savingFecha"
+                   type="date"
+                   required>
+          </label>
+
+          <label>
+            Monto
+            <input id="savingMonto"
+                   type="number"
+                   min="0"
+                   step="1"
+                   required>
+          </label>
+
+          <label class="full">
+            Descripción
+            <input id="savingDescripcion"
+                   placeholder="Ahorro del día...">
+          </label>
+
+          <div class="form-actions full">
+            <button type="submit"
+                    id="savingSubmit">
+              Registrar
+            </button>
+
+            <button type="button"
+                    id="savingCancel"
+                    class="secondary hidden">
+              Cancelar edición
+            </button>
+          </div>
+
+        </form>
+
+        <p class="big-number"
+           id="savingBalance">
+          $0
+        </p>
+
+        <p id="savingMsg"
+           class="status">
+        </p>
+
+      </div>
+
+      <div class="card">
+        <h2>Historial de ahorro</h2>
+        <div id="ahorroLista"></div>
+</div>
+</div>
+
+    </section>
+
+    <!--
+      Los módulos Deudas, Cuentas, Operaciones y Planificación
+      mantienen su integración dinámica existente.
+    -->
+
+  </section>
+</main>
+
+<!-- =============================================================
+     CORE
+     ============================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js?v=232.23"></script>
+  
+<script src="CCF-SUPABASE-BOOT-231.4.js?v=231.4"></script>
+  
+<script src="CCF-AUTH-BOOT-FINAL.js?v=231.2"></script>
+
+<script src="CCF-ACCESS-FLOW-B1.9.6.js?v=1.9.6"></script>
+<script src="b219-arquitectura-navegacion-B2.6-D6-CORREGIDO-CRUD.js?v=230.12"></script>
+<script src="b225-motor-multifuente.js?v=225.2"></script>
+
+<!-- =============================================================
+     CARGA CONTROLADA DE MÓDULOS
+     - Mantiene los módulos legacy.
+     - Conecta el nuevo Centro de Control.
+     - Evita ejecutar motores financieros antes de Supabase.
+     ============================================================= -->
+<script>
+(function () {
+  'use strict';
+
+  var legacyLoaded = false;
+  var summaryLoaded = false;
+
+  var legacyModules = [
+    'b220-motor-ejecucion-financiera.js?v=231.7-R4',
+    'b220.2-puente-ejecucion.js?v=231.7-R4',
+    'b221-movimientos-liquidez.js?v=231.7-R4',
+    'b227-ia-financiera.js?v=231.7-R4',
+    'b229-movimientos-fondos.js?v=231.7-R4',
+    'finanzas-v233.js?v=231.7-R4',
+    'b231.0-adaptador-deudas-v2.js?v=231.7-R4',
+    'b231.1-persistencia-deuda-sin-fecha.js?v=231.7-R4',
+    'b231.2-deudas-fecha.js?v=231.7-R4',
+    'b231.3-abonos-parciales.js?v=231.7-R4',
+    'b233-motor-presupuesto.js?v=233.22'
+  ];
+
+  var summaryModules = [];
+
+  function loadOne(src) {
+    return new Promise(function (resolve) {
+      if (document.querySelector(
+        'script[data-finance-module="' + src + '"]'
+      )) {
+        resolve();
+        return;
+      }
+
+      var el = document.createElement('script');
+      el.src = src;
+      el.async = false;
+      el.dataset.financeModule = src;
+
+      el.onload = resolve;
+
+      el.onerror = function () {
+        console.error('[CCF V5] No se pudo cargar:', src);
+        var status = document.getElementById('summary-status-text');
+        if (status) {
+          status.textContent = 'ERROR DE CARGA: ' + src;
+        }
+        resolve();
+      };
+
+      document.body.appendChild(el);
+    });
+  }
+
+  function ensureSummaryClient() {
+    if (window.supabaseClient) {
+      return true;
+    }
+
+    if (
+      !window.supabase ||
+      !window.supabase.createClient
+    ) {
+      return false;
+    }
+
+    var url = localStorage.getItem('sf_url');
+    var key = localStorage.getItem('sf_key');
+
+    if (!url || !key) {
+      return false;
+    }
+
+    try {
+      window.supabaseClient =
+        window.supabase.createClient(
+          url,
+          key,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false
+            }
+          }
+        );
+
+      return true;
+
+    } catch (error) {
+      console.error(
+        '[Finance] Error creando cliente del resumen:',
+        error
+      );
+
+      return false;
+    }
+  }
+
+  async function loadLegacyModules() {
+    if (legacyLoaded) return;
+
+    var app = document.getElementById('app');
+    var panel = document.getElementById('configPanel');
+
+    if (
+      !app ||
+      app.classList.contains('hidden') ||
+      (panel && !panel.classList.contains('hidden'))
+    ) {
+      return;
+    }
+
+    legacyLoaded = true;
+
+    for (
+      var i = 0;
+      i < legacyModules.length;
+      i++
+    ) {
+      await loadOne(legacyModules[i]);
+    }
+  }
+
+  async function loadFinancialSummary() {
+    if (summaryLoaded) return;
+
+    var app = document.getElementById('app');
+    var panel = document.getElementById('configPanel');
+
+    if (
+      !app ||
+      app.classList.contains('hidden') ||
+      (panel && !panel.classList.contains('hidden'))
+    ) {
+      return;
+    }
+
+    if (!ensureSummaryClient()) {
+      return;
+    }
+
+    summaryLoaded = true;
+
+    for (
+      var i = 0;
+      i < summaryModules.length;
+      i++
+    ) {
+      await loadOne(summaryModules[i]);
+    }
+
+    if (
+      window.FinancialSummary &&
+      typeof window.FinancialSummary.init === 'function'
+    ) {
+      try {
+        await window.FinancialSummary.init();
+
+      } catch (error) {
+
+        console.error(
+          '[Finance] Error en Centro de Control Financiero:',
+          error
+        );
+
+        var status =
+          document.getElementById(
+            'summary-status-text'
+          );
+
+        if (status) {
+          status.textContent =
+            'No fue posible cargar el estado financiero: ' +
+            (error.message || error);
+        }
+      }
+    }
+  }
+
+  async function refreshSummary() {
+    if (
+      window.FinancialSummary &&
+      typeof window.FinancialSummary.init === 'function'
+    ) {
+      try {
+        await window.FinancialSummary.init();
+      } catch (error) {
+        console.error(
+          '[Finance] Error actualizando resumen:',
+          error
+        );
+      }
+    }
+  }
+
+  async function boot() {
+
+    var app = document.getElementById('app');
+    var panel = document.getElementById('configPanel');
+
+    if (
+      !app ||
+      app.classList.contains('hidden') ||
+      (panel && !panel.classList.contains('hidden'))
+    ) {
+      return;
+    }
+
+    await loadLegacyModules();
+    await loadFinancialSummary();
+
+  }
+
+  function watch() {
+
+    var app =
+      document.getElementById('app');
+
+    if (!app) return;
+
+    if (
+      app.classList.contains('hidden')
+    ) {
+
+      var observer =
+        new MutationObserver(
+          boot
+        );
+
+      observer.observe(
+        app,
+        {
+          attributes: true,
+          attributeFilter: ['class']
+        }
+      );
+
+    } else {
+
+      boot();
+
+    }
+
+    setTimeout(boot, 500);
+    setTimeout(boot, 1500);
+    setTimeout(boot, 3000);
+  }
+
+  /*
+   * Refresco del nuevo resumen cuando se vuelve a la pestaña
+   * y después de operaciones normales del sistema.
+   */
+  document.addEventListener(
+    'click',
+    function (event) {
+
+      var button =
+        event.target.closest(
+          '[data-tab="dashboard"]'
+        );
+
+      if (button) {
+        setTimeout(
+          refreshSummary,
+          50
+        );
+      }
+
+    }
+  );
+
+  /*
+   * El app.js original mantiene refresh() como función global.
+   * Se envuelve para que cada alta/edición/borrado actualice
+   * también el Centro de Control Financiero.
+   */
+  setTimeout(function () {
+
+    if (
+      typeof window.refresh === 'function' &&
+      !window.__financialRefreshWrapped
+    ) {
+
+      var originalRefresh =
+        window.refresh;
+
+      window.refresh =
+        async function () {
+
+          var result =
+            await originalRefresh.apply(
+              this,
+              arguments
+            );
+
+          setTimeout(
+            refreshSummary,
+            0
+          );
+
+          return result;
+
+        };
+
+      window.__financialRefreshWrapped = true;
+    }
+
+  }, 1000);
+
+  if (
+    document.readyState === 'loading'
+  ) {
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      watch,
+      { once: true }
+    );
+
+  } else {
+
+    watch();
+
+  }
+
+})();
+</script>
+
+<script src="B234-movimientos-futuros.js?v=234.1"></script>
+<script src="dashboard-deudas-v1.2.2-fix.js?v=1.2.2"></script>
+  <script src="B232.68-CCF-DEUDA-DUAL.js?v=232.68"></script>
+<script src="B232.52-planificacion-safe.js?v=232.52.3"></script>
+<script src="B232.26.4-calendario-safe.js?v=232.26.4"></script>
+  
+
+  <script src="B232.34-resumen-integrado.js?v=232.34-FIX-2026.09.26"></script>
+<script src="B232.35-cierre-resumen-ejecutivo.js?v=232.35-FIX-1"></script>
+<script src="B232.39-IA-FINANCIERA-DATA-BRIDGE.js?v=232.39"></script>
+<script src="B232.40-correccion-planificacion.js?v=232.40"></script>
+<script src="B232.41-integracion-regresion-final.js?v=232.41"></script>
+<script src="B232.42.1-reconciliacion-fuentes.js?v=232.42.2"></script>
+<script src="B232.53.5-recalculo-integral.js?v=232.53.5"></script>
+<script src="B232.51.2-runtime-hardening.js?v=232.51.2"></script>
+<script src="B232.51.3-navigation-safe.js?v=232.51.3"></script>
+  
+  <script src="B232.66-ABONO-LIQUIDEZ.js?v=232.66-FIX-2026.09.26"></script>
+  <script src="B232.65-menu-principal.js?v=232.65"></script>
+  <script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
+
+
+<!-- CCF · Limpieza de referencias técnicas de despliegue visibles -->
+<script id="ccf-ui-cleanup">
+(function(){
+  'use strict';
+  if(window.__CCF_UI_CLEANUP__) return;
+  window.__CCF_UI_CLEANUP__=true;
+
+  var ids=[
+    'b231-indicador-deudas',
+    'b23260-footer',
+    'b23266-footer',
+    'b23267-footer',
+    'b23268-footer',
+    'b23269-footer',
+    'b23273-bridge-badge',
+    'b23274Footer',
+    'ccf-release-footer'
+  ];
+
+  function removeTechnicalUi(root){
+    var scope=root&&root.querySelectorAll?root:document;
+    ids.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.remove();
+    });
+    scope.querySelectorAll('footer,div,span,p').forEach(function(el){
+      var t=(el.textContent||'').trim();
+      if(/^Paquete desplegado:/i.test(t)) el.remove();
+    });
+  }
+
+  function run(){ removeTechnicalUi(document); }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',run,{once:true});
+  }else{ run(); }
+
+  if(window.MutationObserver && document.body){
+    var observer=new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        m.addedNodes.forEach(function(node){
+          if(node.nodeType===1) removeTechnicalUi(node);
+        });
+      });
+    });
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+})();
+</script>
+
+<!-- CCF · Pie de producto -->
+<footer id="ccf-product-footer" aria-label="Producto desarrollado por Somos Software">
+  <div class="ccf-product-footer-inner">
+    <img src="somos-software-logo.jpg" alt="Somos Software · Innovación Digital" class="ccf-product-footer-logo">
+    <strong>Producto desarrollado por Somos Software</strong>
+  </div>
+</footer>
+<style id="ccf-product-footer-style">
+#ccf-product-footer{margin:22px 10px 18px;padding:16px 10px;text-align:center;border-top:1px solid #e5e7eb;color:#334155;font:600 11px/1.4 system-ui,sans-serif}
+.ccf-product-footer-inner{display:flex;flex-direction:column;align-items:center;gap:9px}
+.ccf-product-footer-logo{display:block;width:min(260px,72vw);max-height:86px;object-fit:contain}
+#ccf-product-footer strong{font-weight:700}
+  
+</style>
+  
+<script src="B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1.js"></script>
+  <script src="CCF-MULTIUSER-DEUDAS-FIX-2317.js?v=231.7"></script>
+<script src="B234-FINAL-RECONCILIACION.js?v=234.3-final"></script><!-- ============================================================
+     CCF CALENDAR MOBILE · B4.3.17
+     VISTA MÓVIL DIRECTA
+
+     Propósito:
+     - Crear una vista móvil independiente del calendario B232.26.4.
+     - Leer exclusivamente los datos/DOM que ya genera B232.26.4.
+     - No modificar B232.26.4-calendario-safe.js.
+     - No modificar Supabase.
+     - No duplicar cálculos financieros.
+     - No afectar el calendario desktop.
+     - 7 columnas reales dentro del ancho disponible.
+     - Navegación: anterior / hoy / siguiente / actualizar.
+     - Selección de día.
+     - KPIs.
+     - Detalle del día.
+
+     INSTALACIÓN:
+     Pegar este bloque AL FINAL de index.html.
+
+     NO cargar simultáneamente:
+     - CCF-CALENDAR-MINIMAL-TEST-B4.3.15.js
+     - CCF-CALENDAR-MOBILE-AB-FINAL.js
+     - otra versión B4.3.16
+============================================================ -->
+
+
+    
+            
+
+      
+  
+
+
+
+<!-- ============================================================
+ CCF CALENDAR MOBILE · B4.3.18.1
+ PRUEBA VISUAL SOBRE LA ESTRUCTURA FUNCIONAL APROBADA B4.3.17
+
+ REGLA DE ESTA PRUEBA:
+ - B4.3.17 NO SE MODIFICA.
+ - B232.26.4 NO SE MODIFICA.
+ - No se recalculan datos financieros.
+ - Se toma la vista ya construida por B4.3.17 y se presenta
+   inmediatamente A CONTINUACIÓN en una segunda vista Premium.
+ - Esta versión es deliberadamente inline para validación visual
+   antes de migrar CSS/JS a archivos independientes.
+============================================================ -->
+
+
 
 </body>
 </html>
