@@ -1,46 +1,22 @@
-CCF CALENDAR MOBILE B4.3.18.1 — INTEGRACIÓN FINAL
-=================================================
+CCF CALENDAR MOBILE B4.3.18.1 · INTEGRACIÓN FINAL
 
 OBJETIVO
---------
-La vista móvil Premium B4.3.18.1 pasa a ser la ÚNICA representación
-visual del módulo Calendario.
+Eliminar la presentación visual antigua del módulo Calendario y dejar B4.3.18.1 Premium como única vista móvil visible.
 
-ORDEN VISUAL MÓVIL
-------------------
-1. Barra azul .b434-header de la shell móvil.
-2. CCF-CALENDAR-MOBILE-B4.3.18.1 Premium.
-3. Navegación inferior móvil.
+ARQUITECTURA
+1. CCF-MOBILE-B4.3.js / CCF-MOBILE-B4.3.css: se conservan sin modificación.
+2. B232.26.4-calendario-safe.js: se conserva sin modificación y continúa generando los datos/DOM fuente.
+3. CCF-CALENDAR-MOBILE-B4.3.17-SOURCE.js: contiene el antiguo motor B4.3.17 externalizado desde index.html. Su host visual se oculta permanentemente; existe solo como fuente técnica para B4.3.18.1.
+4. CCF-CALENDAR-MOBILE-B4.3.18.1.js: genera la vista Premium y copia la información necesaria desde las fuentes existentes.
+5. CCF-CALENDAR-MOBILE-B4.3.18.1.css: estilos exclusivos de la vista Premium.
+6. index.html: ya no contiene el bloque inline B4.3.17; solo carga el motor fuente aislado y la capa Premium.
 
-CAMBIO RESPECTO A LA PRUEBA ANTERIOR
--------------------------------------
-- Se elimina visualmente la vista anterior B232.26.4.
-- Se elimina visualmente la vista intermedia B4.3.17.
-- Se oculta también cualquier host Bootstrap anterior.
-- B4.3.17 y B232.26.4 NO se eliminan del DOM: permanecen como fuentes
-  técnicas para que Premium 18.1 pueda leer los datos ya generados.
-- No se recalculan importes.
-- No se modifica Supabase.
-- No se modifica CCF-MOBILE-B4.3.js.
-- No se modifica CCF-MOBILE-B4.3.css.
-- No se modifica B232.26.4-calendario-safe.js.
+RESULTADO MÓVIL
+Barra azul CCF → B4.3.18.1 Premium → navegación inferior.
 
-ARCHIVOS
---------
-index.html
-CCF-CALENDAR-MOBILE-B4.3.18.1.js
-CCF-CALENDAR-MOBILE-B4.3.18.1.css
-CCF-MOBILE-B4.3.js
-CCF-MOBILE-B4.3.css
+La vista B4.3.17 antigua, la tarjeta visual B232.26.4 y la vista Bootstrap paralela quedan ocultas. No se elimina el motor de datos porque B4.3.18.1 necesita leer los valores que ya genera el sistema; se elimina la presentación duplicada, no la fuente funcional.
 
-FUENTE / PRESENTACIÓN
----------------------
-B4.3.17 -> fuente DOM técnica
-B232.26.4 -> fuente DOM financiera existente
-B4.3.18.1 -> única presentación visual
-
-POSICIÓN
---------
-Premium se inserta inmediatamente después de .b434-header cuando el
-módulo activo es 'calendario'. Al salir del módulo, Premium se oculta.
-Al regresar, vuelve a colocarse inmediatamente después del header.
+VALIDACIÓN
+- JS principal y motores aislados comprobados con Node.js --check.
+- No se modificaron Supabase ni el motor financiero.
+- No se modificaron CCF-MOBILE-B4.3.js ni CCF-MOBILE-B4.3.css.

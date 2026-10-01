@@ -3,7 +3,7 @@
   'use strict';
 
   var ID = 'ccf-calendar-mobile-premium-b4-3-18-1-after17';
-  var SOURCE = 'ccf-calendar-mobile-direct-b4-3-17';
+  var SOURCE = 'ccf-calendar-mobile-direct-b4-3-17'; // technical source host only; never displayed
   var timer = null;
   var observer = null;
   var rendering = false;
@@ -319,7 +319,7 @@
   }
 
   window.CCFCalendarMobilePremium181 = {
-    version:'B4.3.18.1-PREMIUM-FINAL-OVER-HIDDEN-SOURCES',
+    version:'B4.3.18.1-PREMIUM-SINGLE-VIEW',
     render:render,
     status:function(){
       return {
