@@ -84,6 +84,31 @@ function html(){
 
 function removePortal(){const p=document.getElementById(ID);if(p)p.remove();document.body.classList.remove('b230-portal-active')}
 function findAuthGate(){return document.getElementById('ccf-auth-gate')}
+function setAuthGateVisible(visible){
+ const gate=findAuthGate();
+ if(!gate)return;
+ if(visible){
+  gate.removeAttribute('data-b230-hidden');
+  gate.style.removeProperty('display');
+  gate.style.removeProperty('visibility');
+  gate.style.removeProperty('opacity');
+  gate.style.removeProperty('pointer-events');
+ }else{
+  gate.setAttribute('data-b230-hidden','1');
+  gate.style.setProperty('display','none','important');
+ }
+}
+function keepAuthGateBehindPortal(){
+ setAuthGateVisible(false);
+ if(window.__CCF_B230_GATE_OBSERVER__)return;
+ const obs=new MutationObserver(()=>{
+  const p=document.getElementById(ID);
+  const gate=findAuthGate();
+  if(p&&gate&&!gate.hasAttribute('data-b230-auth-open'))setAuthGateVisible(false);
+ });
+ obs.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class']});
+ window.__CCF_B230_GATE_OBSERVER__=obs;
+}
 async function waitForGate(timeout=5000){for(let i=0;i<timeout/100;i++){const g=findAuthGate();if(g)return g;await sleep(100)}return null}
 async function openExistingAuth(mode){
  const gate=await waitForGate();
@@ -92,6 +117,8 @@ async function openExistingAuth(mode){
    const session=c?.auth?(await c.auth.getSession()).data?.session:null;if(session){removePortal();return}}catch(_){}
   alert('La autenticación todavía está cargando. Intenta nuevamente en unos segundos.');return;
  }
+ gate.setAttribute('data-b230-auth-open','1');
+ setAuthGateVisible(true);
  removePortal();
  const re=mode==='register'?/crear|registr/i:/iniciar|sesión|login|ingresar|entrar/i;
  const target=[...gate.querySelectorAll('button')].find(b=>re.test((b.textContent||'').trim()));
@@ -122,10 +149,21 @@ function bind(){
 async function watchAuth(){
  for(let i=0;i<80;i++){
   const c=window.supabaseClient||window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__;
-  if(c?.auth){try{c.auth.getSession().then(({data})=>{if(data?.session)removePortal()});c.auth.onAuthStateChange((_e,session)=>{if(session)removePortal()})}catch(_){}return}
+  if(c?.auth){try{
+    const {data}=await c.auth.getSession();
+    if(data?.session){removePortal();return}
+    c.auth.onAuthStateChange((_e,session)=>{if(session)removePortal()});
+  }catch(_){}return}
   await sleep(100);
  }
 }
-function boot(){style();if(!document.getElementById(ID))document.body.insertAdjacentHTML('afterbegin',html());bind()}
+function boot(){
+ style();
+ keepAuthGateBehindPortal();
+ if(!document.getElementById(ID))document.body.insertAdjacentHTML('afterbegin',html());
+ keepAuthGateBehindPortal();
+ bind();
+ watchAuth();
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
