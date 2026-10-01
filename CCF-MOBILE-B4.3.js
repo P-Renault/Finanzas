@@ -811,7 +811,12 @@ function activateBootstrapCalendarView(){
   return ok;
 }
 
-
+/* ==========================================================
+   CCF MOBILE B4.3.18.1 — CALENDARIUM PREMIUM · MIGRACIÓN REAL
+   Fuente: bloque Premium INLINE validado del index.html.
+   La vista B232.26.4 permanece visible durante FASE 1.
+   La lógica financiera no se recalcula: se consume el DOM propietario.
+========================================================== */
 
 (function(){
 
@@ -821,7 +826,7 @@ function activateBootstrapCalendarView(){
      CONFIGURACIÓN
   ========================================================== */
 
-  var ID = 'ccf-calendar-mobile-premium-b4-3-18-1';
+  var ID = 'ccf-calendar-mobile-premium-b4-3-18-1-standalone';
 
   var timer = null;
 
@@ -877,6 +882,9 @@ function activateBootstrapCalendarView(){
   /* ==========================================================
      ESTILOS AISLADOS
   ========================================================== */
+
+
+
 
   /* ==========================================================
      CLASIFICACIÓN DE EVENTOS
@@ -1016,7 +1024,7 @@ function activateBootstrapCalendarView(){
      * = 49 hijos directos.
      */
 
-    if(!grid || grid.children.length < 8){
+    if(!grid || grid.children.length < 49){
 
       return false;
 
@@ -1027,6 +1035,7 @@ function activateBootstrapCalendarView(){
 
 
     try{
+
 
 
       /* ======================================================
@@ -1744,6 +1753,110 @@ function activateBootstrapCalendarView(){
 
       }
 
+      /* ==========================================================
+         DETALLE PREMIUM + CONTROL DE CAJA
+      ========================================================== */
+
+      '#' + ID + ' .p181-detail-wrap{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'padding:0 12px 14px!important;' +
+        'box-sizing:border-box!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'margin:0!important;' +
+        'padding:0!important;' +
+        'background:#fff!important;' +
+        'border:0!important;' +
+        'box-shadow:none!important;' +
+        'font-family:system-ui,sans-serif!important;' +
+        'overflow:visible!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-box{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'margin:8px 0!important;' +
+        'padding:13px 12px!important;' +
+        'box-sizing:border-box!important;' +
+        'border:1px solid #e2e8f0!important;' +
+        'border-radius:15px!important;' +
+        'background:#fff!important;' +
+        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
+        'overflow:hidden!important;' +
+        'font-size:10px!important;' +
+        'line-height:1.35!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-box h3{' +
+        'margin:0 0 7px!important;' +
+        'font-size:11px!important;' +
+        'font-weight:900!important;' +
+        'color:#122a49!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail strong{' +
+        'font-weight:900!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail small{' +
+        'color:#7b8796!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'margin:10px 0!important;' +
+        'padding:14px 12px!important;' +
+        'box-sizing:border-box!important;' +
+        'background:#f8fbff!important;' +
+        'border:1px solid #d8e4f1!important;' +
+        'border-radius:15px!important;' +
+        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control h3{' +
+        'margin:0 0 9px!important;' +
+        'font-size:11px!important;' +
+        'font-weight:900!important;' +
+        'color:#263b54!important;' +
+        'text-transform:uppercase!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .p181-cash-control strong:last-child{' +
+        'color:#168447!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-cash-missing{' +
+        'background:#fff8f8!important;' +
+        'border-color:#fecaca!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-cash-missing-text{' +
+        'color:#8b3a3a!important;' +
+        'font-size:10px!important;' +
+      '}' +
+
+      '@media(max-width:480px){' +
+        '#' + ID + ' .p181-detail-wrap{' +
+          'padding:0 8px 10px!important;' +
+        '}' +
+        '#' + ID + ' .p181-source-detail .b232261-box{' +
+          'margin:7px 0!important;' +
+          'padding:12px 10px!important;' +
+          'border-radius:13px!important;' +
+        '}' +
+      '}' +
+
       /* ======================================================
          MONTAJE
       ====================================================== */
@@ -1751,8 +1864,53 @@ function activateBootstrapCalendarView(){
       host.appendChild(shell);
 
 
-      /* FASE 1: el calendario propietario permanece visible debajo. */
+      /*
+       * El calendario propietario sigue existiendo.
+       *
+       * Solo se oculta visualmente.
+       *
+       * NO se elimina.
+       * NO se modifica su motor.
+       */
 
+      src.style.setProperty(
+        'display',
+        'none',
+        'important'
+      );
+
+
+      /*
+       * Garantizamos que la sección móvil
+       * pueda contener la vista completa.
+       */
+
+      s.style.setProperty(
+        'width',
+        '100%',
+        'important'
+      );
+
+
+      s.style.setProperty(
+        'max-width',
+        '100%',
+        'important'
+      );
+
+
+      s.style.setProperty(
+        'min-width',
+        '0',
+        'important'
+      );
+
+
+      s.style.setProperty(
+        'overflow',
+        'visible',
+        'important'
+      );
 
 
       return true;
@@ -2093,7 +2251,78 @@ function activateBootstrapCalendarView(){
   }
 
 
-  /* B4.3.18.1 FASE 1: activación controlada por navegación. */
+  /* ==========================================================
+     BOOT CON REINTENTOS
+  ========================================================== */
+
+  function boot(){
+
+    if(timer){
+
+      clearInterval(timer);
+
+    }
+
+
+    var tries =
+      0;
+
+
+    timer =
+      setInterval(
+        function(){
+
+          /*
+           * Si la vista ya está funcionando,
+           * se detiene el polling.
+           */
+
+          if(
+            start() ||
+            ++tries >= 40
+          ){
+
+            clearInterval(timer);
+
+            timer = null;
+
+          }
+
+        },
+        250
+      );
+
+
+    /*
+     * Primer intento inmediato.
+     */
+
+    start();
+
+  }
+
+
+  /* ==========================================================
+     ARRANQUE
+  ========================================================== */
+
+  if(
+    document.readyState ===
+    'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      boot,
+      {once:true}
+    );
+
+  }else{
+
+    boot();
+
+  }
+
 
   /* ==========================================================
      API DE DIAGNÓSTICO
@@ -2101,7 +2330,7 @@ function activateBootstrapCalendarView(){
 
   window.CCFCalendarMobilePremium181 = {
 
-    version:'B4.3.18.1-PREMIUM-FASE1',
+    version:'B4.3.18.1-PREMIUM-STANDALONE',
 
     render:function(){
 
@@ -2119,7 +2348,7 @@ function activateBootstrapCalendarView(){
 
       return {
 
-        version:'B4.3.18.1-PREMIUM-FASE1',
+        version:'B4.3.18.1-PREMIUM-STANDALONE',
 
         mobileRoot:!!root(),
 
@@ -2139,68 +2368,5 @@ function activateBootstrapCalendarView(){
 
 
 })();
-
-
-
-/* ==========================================================
-   CCF MOBILE B4.3.18.1 — CALENDARIUM PREMIUM · FASE 1
-   La vista propietaria anterior permanece visible.
-   Esta capa solo presenta datos del DOM de B232.26.4.
-========================================================== */
-function activateCalendarPremium181(){
-  try{
-    if(!window.CCFCalendarMobilePremium181 ||
-       typeof window.CCFCalendarMobilePremium181.start!=='function'){
-      return false;
-    }
-    return !!window.CCFCalendarMobilePremium181.start();
-  }catch(e){
-    console.warn('[CCF MOBILE] Calendarium Premium 18.1',e);
-    return false;
-  }
-}
-
-let ccfCalendarPremium181Watch=null;
-
-function scheduleCalendarPremium181(){
-  const tryStart=()=>{
-    try{
-      const mobileRoot=document.getElementById('ccf-mobile-b43');
-      const calendar=document.getElementById('calendario');
-      if(mobileRoot && calendar){
-        activateCalendarPremium181();
-      }
-    }catch(e){
-      console.warn('[CCF MOBILE] Premium 18.1 activation',e);
-    }
-  };
-
-  [0,60,180,400,800,1400,2200].forEach(ms=>setTimeout(tryStart,ms));
-
-  /*
-     FASE 1 robusta: el módulo Calendario puede ser creado/reemplazado
-     después de la navegación. Observamos el DOM para no depender de un
-     instante concreto de renderizado.
-  */
-  if(!ccfCalendarPremium181Watch && document.body){
-    ccfCalendarPremium181Watch=new MutationObserver(()=>{
-      const mobileRoot=document.getElementById('ccf-mobile-b43');
-      const calendar=document.getElementById('calendario');
-      if(mobileRoot && calendar){
-        clearTimeout(window.__ccfPremium181Schedule);
-        window.__ccfPremium181Schedule=setTimeout(tryStart,80);
-      }
-    });
-    ccfCalendarPremium181Watch.observe(document.body,{childList:true,subtree:true});
-  }
-}
-
-/* Arranque seguro incluso si la navegación ya ocurrió antes de cargar B4.3. */
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(scheduleCalendarPremium181,150),{once:true});
-}else{
-  setTimeout(scheduleCalendarPremium181,150);
-}
-
 
 })();
