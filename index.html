@@ -1221,1452 +1221,1026 @@
 
   <script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
 
-<script>
+      
+
+       <script>
+/* ============================================================
+   CCF MOBILE — CALENDARIO PREMIUM
+   B4.3.18.1
+   ============================================================
+
+   OBJETIVO
+   --------
+   Adaptar visualmente el calendario B232.26.4 a móvil
+   sin modificar el motor original.
+
+   FUENTE DE DATOS
+   ---------------
+   #calendario
+   .b232261-card
+   .b232261-grid
+
+   PRINCIPIO
+   ---------
+   El calendario original sigue siendo el dueño de:
+   - datos
+   - navegación
+   - selección
+   - cálculos
+   - eventos
+   - detalle
+
+   Este módulo solamente presenta una COPIA VISUAL.
+
+   NO MODIFICA:
+   - B232.26.4-calendario-safe.js
+   - Supabase
+   - Auth
+   - motores financieros
+   - escritorio
+   ============================================================ */
+
 (function () {
   'use strict';
 
-  /*
-   * ==========================================================
-   * CCF CALENDAR MOBILE PREMIUM
-   * B4.3.18
-   * ==========================================================
-   *
-   * PRUEBA A/B DE ADAPTACIÓN MÓVIL
-   *
-   * NO MODIFICA:
-   * - B232.26.4-calendario-safe.js
-   * - Supabase
-   * - Auth
-   * - cálculos financieros
-   * - datos financieros
-   * - calendario desktop
-   *
-   * SOLO CREA UNA CAPA VISUAL MÓVIL
-   * A PARTIR DEL DOM DEL CALENDARIO ORIGINAL.
-   *
-   * ==========================================================
-   */
+  const VERSION = 'B4.3.18.1';
+  const HOST_ID = 'ccf-calendar-mobile-premium-b4-3-18';
+  const STYLE_ID = 'ccf-calendar-mobile-premium-style-b4-3-18';
 
-  var ID = 'ccf-calendar-mobile-premium-b4-3-18';
-  var STYLE_ID = ID + '-style';
+  let observer = null;
+  let renderTimer = null;
+  let rendering = false;
 
-  var observer = null;
-  var renderTimer = null;
-  var rendering = false;
+  /* ------------------------------------------------------------
+     1. DETECCIÓN MÓVIL
+     ------------------------------------------------------------ */
 
-  /* ==========================================================
-     UTILIDADES
-     ========================================================== */
-
-  function mobile() {
-    return window.innerWidth <= 720;
+  function isMobile() {
+    return window.matchMedia &&
+           window.matchMedia('(max-width: 720px)').matches;
   }
 
-  function text(el) {
-    return (el && el.textContent || '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
+  /* ------------------------------------------------------------
+     2. CSS PREMIUM
+     ------------------------------------------------------------ */
 
-  function calendarSection() {
-    return document.getElementById('calendario');
-  }
-
-  function calendarSource() {
-    var section = calendarSection();
-
-    if (!section) {
-      return null;
-    }
-
-    return section.querySelector('.b232261-card');
-  }
-
-  function calendarGrid() {
-    var source = calendarSource();
-
-    if (!source) {
-      return null;
-    }
-
-    return source.querySelector(
-      '.b232261-grid.b232261-week'
-    );
-  }
-
-  /* ==========================================================
-     ESTILOS
-     ========================================================== */
-
-  function installCSS() {
+  function installStyles() {
 
     if (document.getElementById(STYLE_ID)) {
       return;
     }
 
-    var style = document.createElement('style');
-
+    const style = document.createElement('style');
     style.id = STYLE_ID;
 
-    style.textContent = [
+    style.textContent = `
+      /* ========================================================
+         CCF B4.3.18.1 — CONTENEDOR
+         ======================================================== */
 
-      /* CONTENEDOR */
+      #${HOST_ID} {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        margin: 0 0 16px 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+      }
 
-      '#' + ID + '{' +
-        'display:block;' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'margin:0 0 18px;' +
-        'padding:0;' +
-        'box-sizing:border-box;' +
-        'font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;' +
-        'color:#172033;' +
-      '}',
+      #${HOST_ID},
+      #${HOST_ID} * {
+        box-sizing: border-box;
+      }
 
-      '#' + ID + ' *{' +
-        'box-sizing:border-box;' +
-      '}',
+      /* --------------------------------------------------------
+         CARD
+         -------------------------------------------------------- */
 
-      /* CARD PRINCIPAL */
+      #${HOST_ID} .ccf-premium-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
 
-      '#' + ID + ' .premium-card{' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'overflow:hidden;' +
-        'background:#fff;' +
-        'border:1px solid #e5e7eb;' +
-        'border-radius:18px;' +
-        'box-shadow:0 8px 26px rgba(15,23,42,.07);' +
-      '}',
+        border-radius: 18px !important;
+        border: 1px solid rgba(148,163,184,.24) !important;
 
-      /* HEADER */
+        background:
+          linear-gradient(
+            180deg,
+            rgba(255,255,255,.98),
+            rgba(248,250,252,.98)
+          ) !important;
 
-      '#' + ID + ' .premium-header{' +
-        'padding:16px 16px 13px;' +
-        'background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);' +
-        'border-bottom:1px solid #edf0f4;' +
-      '}',
+        box-shadow:
+          0 8px 28px rgba(15,23,42,.10) !important;
+      }
 
-      '#' + ID + ' .premium-header-row{' +
-        'display:flex;' +
-        'align-items:flex-start;' +
-        'justify-content:space-between;' +
-        'gap:10px;' +
-      '}',
+      /* --------------------------------------------------------
+         CONTENEDORES INTERNOS
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-title{' +
-        'margin:0;' +
-        'font-size:21px;' +
-        'line-height:1.15;' +
-        'font-weight:850;' +
-        'letter-spacing:-.025em;' +
-        'color:#172033;' +
-      '}',
+      #${HOST_ID} .b232261-scroll {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
 
-      '#' + ID + ' .premium-subtitle{' +
-        'margin-top:5px;' +
-        'font-size:10px;' +
-        'line-height:1.4;' +
-        'color:#64748b;' +
-      '}',
+        overflow: hidden !important;
 
-      /* BADGE DE PRUEBA */
+        border: 0 !important;
+        border-radius: 0 !important;
+      }
 
-      '#' + ID + ' .premium-badge{' +
-        'flex:0 0 auto;' +
-        'padding:6px 8px;' +
-        'border-radius:999px;' +
-        'background:#eff6ff;' +
-        'border:1px solid #bfdbfe;' +
-        'color:#2563eb;' +
-        'font-size:7px;' +
-        'line-height:1;' +
-        'font-weight:900;' +
-        'letter-spacing:.05em;' +
-        'white-space:nowrap;' +
-      '}',
+      /* --------------------------------------------------------
+         LA GRILLA ES EL PUNTO CRÍTICO
+         -------------------------------------------------------- */
 
-      /* ESTADO */
+      #${HOST_ID} .b232261-grid {
+        display: grid !important;
 
-      '#' + ID + ' .premium-status{' +
-        'margin-top:10px;' +
-        'padding:8px 10px;' +
-        'border-radius:9px;' +
-        'background:#f8fafc;' +
-        'color:#64748b;' +
-        'font-size:9px;' +
-        'line-height:1.4;' +
-      '}',
+        grid-template-columns:
+          repeat(7, minmax(0, 1fr)) !important;
 
-      /* BOTONES */
+        width: 100% !important;
+        max-width: 100% !important;
 
-      '#' + ID + ' .premium-actions{' +
-        'display:grid;' +
-        'grid-template-columns:repeat(4,minmax(0,1fr));' +
-        'gap:6px;' +
-        'margin-top:11px;' +
-      '}',
+        min-width: 0 !important;
 
-      '#' + ID + ' .premium-actions button{' +
-        'width:100%;' +
-        'min-width:0;' +
-        'height:38px;' +
-        'padding:5px 3px;' +
-        'border:1px solid #e2e8f0;' +
-        'border-radius:10px;' +
-        'background:#f1f5f9;' +
-        'color:#334155;' +
-        'font-size:10px;' +
-        'font-weight:850;' +
-        'cursor:pointer;' +
-      '}',
+        margin: 0 !important;
+        padding: 0 !important;
 
-      '#' + ID + ' .premium-actions button.today{' +
-        'background:#111827;' +
-        'border-color:#111827;' +
-        'color:#fff;' +
-      '}',
+        overflow: hidden !important;
+      }
 
-      /* KPI */
+      /*
+       * IMPORTANTE:
+       * El motor original utiliza:
+       *
+       * repeat(7,minmax(110px,1fr))
+       * min-width:770px
+       *
+       * Estas propiedades quedan anuladas SOLAMENTE
+       * dentro del clon móvil.
+       */
 
-      '#' + ID + ' .premium-kpis{' +
-        'display:grid;' +
-        'grid-template-columns:repeat(2,minmax(0,1fr));' +
-        'gap:7px;' +
-        'padding:11px 10px 9px;' +
-      '}',
+      #${HOST_ID} .b232261-grid.b232261-week {
+        grid-template-columns:
+          repeat(7, minmax(0, 1fr)) !important;
 
-      '#' + ID + ' .premium-kpi{' +
-        'min-width:0;' +
-        'padding:10px;' +
-        'border:1px solid #e5e7eb;' +
-        'border-radius:12px;' +
-        'background:#fff;' +
-      '}',
+        min-width: 0 !important;
+        width: 100% !important;
+      }
 
-      '#' + ID + ' .premium-kpi-label{' +
-        'display:block;' +
-        'font-size:8px;' +
-        'line-height:1.25;' +
-        'color:#64748b;' +
-      '}',
+      /* --------------------------------------------------------
+         CABECERA DE DÍAS
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-kpi-value{' +
-        'display:block;' +
-        'margin-top:4px;' +
-        'font-size:14px;' +
-        'line-height:1.15;' +
-        'font-weight:850;' +
-        'color:#172033;' +
-        'overflow-wrap:anywhere;' +
-      '}',
+      #${HOST_ID} .b232261-week > div {
+        min-width: 0 !important;
 
-      /* CONTEXTO */
+        padding: 7px 2px !important;
 
-      '#' + ID + ' .premium-scope{' +
-        'margin:0 10px 9px;' +
-        'padding:8px 10px;' +
-        'border-radius:9px;' +
-        'background:#f8fafc;' +
-        'color:#475569;' +
-        'font-size:9px;' +
-        'line-height:1.4;' +
-      '}',
+        font-size: 9px !important;
+        line-height: 1.1 !important;
 
-      /* CALENDARIO */
+        text-align: center !important;
 
-      '#' + ID + ' .premium-calendar{' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'overflow:hidden;' +
-        'border-top:1px solid #e5e7eb;' +
-      '}',
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
 
-      '#' + ID + ' .premium-grid{' +
-        'display:grid;' +
-        'grid-template-columns:repeat(7,minmax(0,1fr));' +
-        'width:100%;' +
-        'max-width:100%;' +
-        'min-width:0;' +
-        'overflow:hidden;' +
-      '}',
+        border-right:
+          1px solid rgba(255,255,255,.10) !important;
+      }
 
-      /* DÍAS DE LA SEMANA */
+      /* --------------------------------------------------------
+         DÍAS
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-weekday{' +
-        'min-width:0;' +
-        'height:34px;' +
-        'display:flex;' +
-        'align-items:center;' +
-        'justify-content:center;' +
-        'padding:0 1px;' +
-        'background:#111827;' +
-        'color:#fff;' +
-        'font-size:8px;' +
-        'font-weight:900;' +
-        'white-space:nowrap;' +
-        'overflow:hidden;' +
-      '}',
+      #${HOST_ID} .b232261-day {
+        min-width: 0 !important;
+        width: 100% !important;
 
-      /* CELDA */
+        min-height: 96px !important;
 
-      '#' + ID + ' .premium-day{' +
-        'display:block;' +
-        'width:100%;' +
-        'min-width:0;' +
-        'height:104px;' +
-        'margin:0;' +
-        'padding:6px 4px;' +
-        'border:0;' +
-        'border-right:1px solid #e5e7eb;' +
-        'border-bottom:1px solid #e5e7eb;' +
-        'background:#fff;' +
-        'color:#334155;' +
-        'text-align:left;' +
-        'overflow:hidden;' +
-        'cursor:pointer;' +
-      '}',
+        padding: 5px !important;
 
-      '#' + ID + ' .premium-day.outside{' +
-        'background:#f8fafc;' +
-        'color:#94a3b8;' +
-      '}',
+        overflow: hidden !important;
 
-      '#' + ID + ' .premium-day.selected{' +
-        'box-shadow:inset 0 0 0 2px #111827;' +
-        'z-index:2;' +
-      '}',
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
 
-      '#' + ID + ' .premium-day-top{' +
-        'display:flex;' +
-        'align-items:center;' +
-        'justify-content:space-between;' +
-        'gap:2px;' +
-        'height:17px;' +
-        'min-width:0;' +
-      '}',
+        font-size: 10px !important;
+      }
 
-      '#' + ID + ' .premium-day-number{' +
-        'font-size:11px;' +
-        'line-height:1;' +
-        'font-weight:850;' +
-        'color:#334155;' +
-      '}',
+      /* --------------------------------------------------------
+         BOTONES DE DÍA
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-today{' +
-        'font-size:6px;' +
-        'font-weight:900;' +
-        'color:#334155;' +
-      '}',
+      #${HOST_ID} button {
+        max-width: 100% !important;
+      }
 
-      /* EVENTOS */
+      #${HOST_ID} .b232261-day button {
+        min-width: 0 !important;
+      }
 
-      '#' + ID + ' .premium-event{' +
-        'display:block;' +
-        'width:100%;' +
-        'min-width:0;' +
-        'margin-top:3px;' +
-        'padding:3px;' +
-        'border-radius:4px;' +
-        'font-size:6.3px;' +
-        'line-height:1.08;' +
-        'font-weight:700;' +
-        'white-space:nowrap;' +
-        'overflow:hidden;' +
-        'text-overflow:ellipsis;' +
-      '}',
+      /* --------------------------------------------------------
+         EVENTOS
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-real-in{' +
-        'background:#ecfdf5;' +
-        'color:#166534;' +
-      '}',
+      #${HOST_ID} .b232261-event,
+      #${HOST_ID} .b232261-mini,
+      #${HOST_ID} .b232261-more {
+        max-width: 100% !important;
 
-      '#' + ID + ' .premium-real-out{' +
-        'background:#fef2f2;' +
-        'color:#991b1b;' +
-      '}',
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
 
-      '#' + ID + ' .premium-plan-in{' +
-        'background:#eff6ff;' +
-        'color:#1d4ed8;' +
-      '}',
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+      }
 
-      '#' + ID + ' .premium-plan-out{' +
-        'background:#fff7ed;' +
-        'color:#9a3412;' +
-      '}',
+      /* --------------------------------------------------------
+         DETALLE DEL DÍA
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-general{' +
-        'background:#f5f3ff;' +
-        'color:#6d28b9;' +
-      '}',
+      #${HOST_ID} .b232261-detail,
+      #${HOST_ID} .b232261-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
 
-      '#' + ID + ' .premium-debt{' +
-        'background:#eef2ff;' +
-        'color:#3730a3;' +
-      '}',
+        overflow: hidden !important;
+      }
 
-      '#' + ID + ' .premium-mini{' +
-        'display:block;' +
-        'width:100%;' +
-        'margin-top:3px;' +
-        'font-size:6px;' +
-        'line-height:1.1;' +
-        'white-space:nowrap;' +
-        'overflow:hidden;' +
-        'text-overflow:ellipsis;' +
-        'color:#64748b;' +
-      '}',
+      /* --------------------------------------------------------
+         TEXTOS
+         -------------------------------------------------------- */
 
-      /* DETALLE */
+      #${HOST_ID} h1,
+      #${HOST_ID} h2,
+      #${HOST_ID} h3,
+      #${HOST_ID} h4,
+      #${HOST_ID} p,
+      #${HOST_ID} span,
+      #${HOST_ID} div {
+        max-width: 100%;
+      }
 
-      '#' + ID + ' .premium-detail{' +
-        'display:grid;' +
-        'grid-template-columns:1fr;' +
-        'gap:8px;' +
-        'padding:10px;' +
-        'background:#f8fafc;' +
-      '}',
+      /* --------------------------------------------------------
+         SELECTED / FOCUS
+         -------------------------------------------------------- */
 
-      '#' + ID + ' .premium-box{' +
-        'min-width:0;' +
-        'padding:10px;' +
-        'border:1px solid #e5e7eb;' +
-        'border-radius:11px;' +
-        'background:#fff;' +
-        'overflow:hidden;' +
-      '}',
+      #${HOST_ID} button:focus-visible {
+        outline:
+          2px solid rgba(37,99,235,.75) !important;
 
-      '#' + ID + ' .premium-box-title{' +
-        'margin:0 0 5px;' +
-        'font-size:10px;' +
-        'line-height:1.25;' +
-        'font-weight:850;' +
-        'color:#172033;' +
-      '}',
+        outline-offset: 1px !important;
+      }
 
-      '#' + ID + ' .premium-box-body{' +
-        'font-size:9px;' +
-        'line-height:1.45;' +
-        'color:#475569;' +
-        'overflow-wrap:anywhere;' +
-      '}',
+      /* --------------------------------------------------------
+         DIAGNÓSTICO
+         -------------------------------------------------------- */
 
-      /* PRUEBA */
+      #${HOST_ID} .ccf-premium-debug {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
 
-      '#' + ID + ' .premium-proof{' +
-        'padding:9px 10px;' +
-        'border-top:1px solid #edf0f4;' +
-        'background:#fff;' +
-        'text-align:center;' +
-        'font-size:7px;' +
-        'font-weight:850;' +
-        'letter-spacing:.05em;' +
-        'color:#94a3b8;' +
-      '}',
+        gap: 8px !important;
 
-      /* DESKTOP */
+        padding: 7px 10px !important;
 
-      '@media(min-width:721px){' +
-        '#' + ID + '{display:none!important;}' +
-      '}',
+        font-size: 9px !important;
+        font-weight: 800 !important;
 
-      /* TELÉFONOS PEQUEÑOS */
+        letter-spacing: .03em !important;
 
-      '@media(max-width:360px){' +
+        color: #475569 !important;
 
-        '#' + ID + ' .premium-title{' +
-          'font-size:19px;' +
-        '}' +
+        background: rgba(241,245,249,.85) !important;
 
-        '#' + ID + ' .premium-day{' +
-          'height:98px;' +
-          'padding:5px 3px;' +
-        '}' +
+        border-bottom:
+          1px solid rgba(148,163,184,.18) !important;
+      }
 
-        '#' + ID + ' .premium-day-number{' +
-          'font-size:10px;' +
-        '}' +
+      #${HOST_ID} .ccf-premium-debug strong {
+        color: #2563eb !important;
+      }
 
-        '#' + ID + ' .premium-event{' +
-          'font-size:5.7px;' +
-        '}' +
+      /* --------------------------------------------------------
+         ESCRITORIO
+         -------------------------------------------------------- */
 
-      '}'
+      @media (min-width: 721px) {
 
-    ].join('');
+        #${HOST_ID} {
+          display: none !important;
+        }
+
+      }
+
+      /* --------------------------------------------------------
+         TELÉFONOS PEQUEÑOS
+         -------------------------------------------------------- */
+
+      @media (max-width: 390px) {
+
+        #${HOST_ID} .b232261-day {
+          min-height: 88px !important;
+          padding: 4px !important;
+        }
+
+        #${HOST_ID} .b232261-week > div {
+          padding:
+            6px 1px !important;
+
+          font-size: 8px !important;
+        }
+
+      }
+
+    `;
 
     document.head.appendChild(style);
   }
 
-  /* ==========================================================
-     CLASIFICACIÓN
-     ========================================================== */
+  /* ------------------------------------------------------------
+     3. LOCALIZAR CALENDARIO ORIGINAL
+     ------------------------------------------------------------ */
 
-  function eventClass(el) {
+  function findCalendar() {
 
-    var c = String(el.className || '');
+    const section =
+      document.getElementById('calendario') ||
+      document.querySelector('[id="calendario"]');
 
-    if (c.indexOf('real-in') >= 0) {
-      return 'premium-event premium-real-in';
-    }
-
-    if (c.indexOf('real-out') >= 0) {
-      return 'premium-event premium-real-out';
-    }
-
-    if (c.indexOf('plan-in') >= 0) {
-      return 'premium-event premium-plan-in';
-    }
-
-    if (c.indexOf('plan-out') >= 0) {
-      return 'premium-event premium-plan-out';
-    }
-
-    if (c.indexOf('gen') >= 0) {
-      return 'premium-event premium-general';
-    }
-
-    if (c.indexOf('debt') >= 0) {
-      return 'premium-event premium-debt';
-    }
-
-    return 'premium-event premium-plan-out';
-  }
-
-  /* ==========================================================
-     COPIAR CONTENIDO FINANCIERO
-     ========================================================== */
-
-  function copyDayContent(sourceDay, target) {
-
-    var events = sourceDay.querySelectorAll(
-      '.b232261-event'
-    );
-
-    for (var i = 0; i < events.length; i++) {
-
-      var event = document.createElement('span');
-
-      event.className =
-        eventClass(events[i]);
-
-      event.textContent =
-        text(events[i]);
-
-      target.appendChild(event);
-    }
-
-    var minis = sourceDay.querySelectorAll(
-      '.b232261-mini,.b232261-more'
-    );
-
-    for (var j = 0; j < minis.length; j++) {
-
-      var mini = document.createElement('span');
-
-      mini.className =
-        'premium-mini';
-
-      mini.textContent =
-        text(minis[j]);
-
-      target.appendChild(mini);
-    }
-  }
-
-  /* ==========================================================
-     DETALLE
-     ========================================================== */
-
-  function buildDetail(source, card) {
-
-    var detail =
-      card.querySelector('.b232261-detail');
-
-    if (!detail) {
+    if (!section) {
       return null;
     }
 
-    var wrapper =
-      document.createElement('div');
+    const source =
+      section.querySelector('.b232261-card') ||
+      section.querySelector('[class*="b232261-card"]') ||
+      section;
 
-    wrapper.className =
-      'premium-detail';
+    const grid =
+      source.querySelector('.b232261-grid.b232261-week') ||
+      source.querySelector('.b232261-grid');
 
-    var boxes =
-      detail.querySelectorAll('.b232261-box');
-
-    for (var i = 0; i < boxes.length; i++) {
-
-      var box =
-        document.createElement('div');
-
-      box.className =
-        'premium-box';
-
-      var title =
-        boxes[i].querySelector('h3');
-
-      if (title) {
-
-        var h3 =
-          document.createElement('h3');
-
-        h3.className =
-          'premium-box-title';
-
-        h3.textContent =
-          text(title);
-
-        box.appendChild(h3);
-      }
-
-      var body =
-        document.createElement('div');
-
-      body.className =
-        'premium-box-body';
-
-      var complete =
-        text(boxes[i]);
-
-      var titleText =
-        text(title);
-
-      if (titleText) {
-        complete =
-          complete
-            .replace(titleText, '')
-            .trim();
-      }
-
-      body.textContent =
-        complete;
-
-      box.appendChild(body);
-
-      wrapper.appendChild(box);
+    if (!grid) {
+      return {
+        section,
+        source,
+        grid: null
+      };
     }
 
-    return wrapper;
+    return {
+      section,
+      source,
+      grid
+    };
   }
 
-  /* ==========================================================
-     RENDER
-     ========================================================== */
+  /* ------------------------------------------------------------
+     4. ELIMINAR IDs DUPLICADOS DEL CLON
+     ------------------------------------------------------------ */
 
-  function render() {
+  function removeDuplicateIds(root) {
 
-    if (!mobile()) {
+    root.querySelectorAll('[id]').forEach(function (element) {
+      element.removeAttribute('id');
+    });
+
+    if (root.id) {
+      root.removeAttribute('id');
+    }
+  }
+
+  /* ------------------------------------------------------------
+     5. CONSTRUIR HOST
+     ------------------------------------------------------------ */
+
+  function createHost(section) {
+
+    let host = document.getElementById(HOST_ID);
+
+    if (host && host.parentNode === section.parentNode) {
+      return host;
+    }
+
+    if (host) {
+      host.remove();
+    }
+
+    host = document.createElement('div');
+
+    host.id = HOST_ID;
+
+    host.setAttribute(
+      'data-ccf-calendar-premium',
+      VERSION
+    );
+
+    section.parentNode.insertBefore(
+      host,
+      section
+    );
+
+    return host;
+  }
+
+  /* ------------------------------------------------------------
+     6. CONECTAR BOTONES DEL CLON CON EL ORIGINAL
+     ------------------------------------------------------------ */
+
+  function bindCloneButtons(clone, source) {
+
+    const originalButtons =
+      Array.from(
+        source.querySelectorAll('button')
+      );
+
+    const cloneButtons =
+      Array.from(
+        clone.querySelectorAll('button')
+      );
+
+    cloneButtons.forEach(function (cloneButton, index) {
+
+      const originalButton =
+        originalButtons[index];
+
+      if (!originalButton) {
+        return;
+      }
+
+      cloneButton.addEventListener(
+        'click',
+        function (event) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          originalButton.click();
+
+          /*
+           * El calendario original puede cambiar
+           * inmediatamente después del click.
+           *
+           * Programamos una nueva representación.
+           */
+
+          scheduleRender(80);
+        },
+        true
+      );
+
+    });
+  }
+
+  /* ------------------------------------------------------------
+     7. CONSTRUIR COPIA PREMIUM
+     ------------------------------------------------------------ */
+
+  function buildPremium(calendar) {
+
+    if (!calendar ||
+        !calendar.section ||
+        !calendar.source ||
+        !calendar.grid) {
+
       return false;
     }
 
-    if (rendering) {
+    const section = calendar.section;
+    const source = calendar.source;
+
+    const host = createHost(section);
+
+    /*
+     * Construimos el clon ANTES de ocultar
+     * el calendario original.
+     */
+
+    const clone =
+      source.cloneNode(true);
+
+    if (!clone) {
       return false;
     }
 
-    var section =
-      calendarSection();
+    removeDuplicateIds(clone);
 
-    var source =
-      calendarSource();
+    clone.classList.add(
+      'ccf-premium-card'
+    );
 
-    var grid =
-      calendarGrid();
+    /*
+     * Marca técnica para comprobar
+     * visualmente que 18.1 está activo.
+     */
 
-    if (!section || !source || !grid) {
+    const debug =
+      document.createElement('div');
+
+    debug.className =
+      'ccf-premium-debug';
+
+    debug.innerHTML =
+      '<span>Calendario móvil</span>' +
+      '<strong>PREMIUM ' + VERSION + '</strong>';
+
+    /*
+     * Limpiamos host.
+     */
+
+    host.innerHTML = '';
+
+    host.appendChild(debug);
+    host.appendChild(clone);
+
+    /*
+     * Conectamos botones.
+     */
+
+    bindCloneButtons(
+      clone,
+      source
+    );
+
+    /*
+     * VALIDACIÓN MÍNIMA
+     *
+     * No exigimos 49 elementos.
+     * Solamente comprobamos que exista
+     * la estructura de grilla.
+     */
+
+    const clonedGrid =
+      clone.querySelector('.b232261-grid');
+
+    if (!clonedGrid) {
+
+      host.remove();
+
       return false;
     }
 
     /*
-     * El calendario propietario genera:
+     * Contamos las columnas existentes.
      *
-     * 7 encabezados
-     * +
-     * 42 días
+     * El resultado esperado normalmente será:
+     * 7 encabezados + días del período.
      *
-     * = 49 elementos
+     * No bloqueamos el montaje si todavía
+     * faltan elementos.
      */
 
-    if (grid.children.length < 49) {
-      return false;
+    const cellCount =
+      clonedGrid.children.length;
+
+    host.setAttribute(
+      'data-grid-cells',
+      String(cellCount)
+    );
+
+    /*
+     * AHORA sí podemos ocultar
+     * el calendario original.
+     */
+
+    source.style.display =
+      'none';
+
+    host.setAttribute(
+      'data-mounted',
+      'true'
+    );
+
+    return true;
+  }
+
+  /* ------------------------------------------------------------
+     8. RESTAURAR ORIGINAL
+     ------------------------------------------------------------ */
+
+  function restoreOriginal() {
+
+    const calendar =
+      findCalendar();
+
+    if (!calendar ||
+        !calendar.source) {
+      return;
+    }
+
+    calendar.source.style.display = '';
+
+    const host =
+      document.getElementById(HOST_ID);
+
+    if (host) {
+      host.remove();
+    }
+  }
+
+  /* ------------------------------------------------------------
+     9. RENDER PRINCIPAL
+     ------------------------------------------------------------ */
+
+  function render() {
+
+    if (rendering) {
+      return;
     }
 
     rendering = true;
 
-    if (observer) {
-      observer.disconnect();
-    }
-
     try {
 
-      installCSS();
+      installStyles();
 
       /*
-       * Eliminar vista anterior.
+       * En escritorio:
+       * no hacemos absolutamente nada.
        */
 
-      var old =
-        document.getElementById(ID);
+      if (!isMobile()) {
 
-      if (old) {
-        old.remove();
+        restoreOriginal();
+
+        return;
       }
 
-      /*
-       * HOST
-       */
-
-      var host =
-        document.createElement('section');
-
-      host.id = ID;
+      const calendar =
+        findCalendar();
 
       /*
-       * Se inserta ANTES del módulo original.
-       */
-
-      section.parentNode.insertBefore(
-        host,
-        section
-      );
-
-      /*
-       * CARD
-       */
-
-      var card =
-        document.createElement('div');
-
-      card.className =
-        'premium-card';
-
-      /*
-       * HEADER
-       */
-
-      var header =
-        document.createElement('div');
-
-      header.className =
-        'premium-header';
-
-      var headerRow =
-        document.createElement('div');
-
-      headerRow.className =
-        'premium-header-row';
-
-      var titleWrap =
-        document.createElement('div');
-
-      var title =
-        document.createElement('h2');
-
-      title.className =
-        'premium-title';
-
-      title.textContent =
-        text(
-          source.querySelector(
-            '.b232261-head h2'
-          )
-        ) ||
-        'Calendario';
-
-      titleWrap.appendChild(title);
-
-      var subtitle =
-        document.createElement('div');
-
-      subtitle.className =
-        'premium-subtitle';
-
-      subtitle.textContent =
-        text(
-          source.querySelector(
-            '.b232261-sub'
-          )
-        ) ||
-        'Vista mensual';
-
-      titleWrap.appendChild(subtitle);
-
-      headerRow.appendChild(titleWrap);
-
-      /*
-       * BADGE
-       */
-
-      var badge =
-        document.createElement('span');
-
-      badge.className =
-        'premium-badge';
-
-      badge.textContent =
-        'PREMIUM · B4.3.18';
-
-      headerRow.appendChild(badge);
-
-      header.appendChild(headerRow);
-
-      /*
-       * ESTADO
-       */
-
-      var statusText =
-        text(
-          source.querySelector(
-            '.b232261-status'
-          )
-        );
-
-      if (statusText) {
-
-        var status =
-          document.createElement('div');
-
-        status.className =
-          'premium-status';
-
-        status.textContent =
-          statusText;
-
-        header.appendChild(status);
-      }
-
-      /*
-       * NAVEGACIÓN
-       */
-
-      var actions =
-        document.createElement('div');
-
-      actions.className =
-        'premium-actions';
-
-      var buttons =
-        source.querySelectorAll(
-          '.b232261-actions button'
-        );
-
-      var labels = [
-        '‹',
-        'Hoy',
-        '›',
-        '↻'
-      ];
-
-      for (
-        var a = 0;
-        a < Math.min(buttons.length, 4);
-        a++
-      ) {
-
-        (function (sourceButton, index) {
-
-          var button =
-            document.createElement('button');
-
-          button.type =
-            'button';
-
-          button.textContent =
-            labels[index] ||
-            text(sourceButton);
-
-          if (index === 1) {
-            button.className =
-              'today';
-          }
-
-          button.addEventListener(
-            'click',
-            function () {
-
-              sourceButton.click();
-
-              scheduleRender(150);
-            }
-          );
-
-          actions.appendChild(button);
-
-        })(buttons[a], a);
-      }
-
-      header.appendChild(actions);
-
-      card.appendChild(header);
-
-      /*
-       * KPI
-       */
-
-      var kpis =
-        document.createElement('div');
-
-      kpis.className =
-        'premium-kpis';
-
-      var sourceKpis =
-        source.querySelectorAll(
-          '.b232261-kpi'
-        );
-
-      for (
-        var k = 0;
-        k < sourceKpis.length;
-        k++
-      ) {
-
-        var kpi =
-          document.createElement('div');
-
-        kpi.className =
-          'premium-kpi';
-
-        var label =
-          document.createElement('span');
-
-        label.className =
-          'premium-kpi-label';
-
-        label.textContent =
-          text(
-            sourceKpis[k].querySelector(
-              'span'
-            )
-          );
-
-        var value =
-          document.createElement('strong');
-
-        value.className =
-          'premium-kpi-value';
-
-        value.textContent =
-          text(
-            sourceKpis[k].querySelector(
-              'strong'
-            )
-          );
-
-        kpi.appendChild(label);
-        kpi.appendChild(value);
-
-        kpis.appendChild(kpi);
-      }
-
-      card.appendChild(kpis);
-
-      /*
-       * DÍA / CONTEXTO
-       */
-
-      var scope =
-        source.querySelector(
-          '.b232261-scope'
-        );
-
-      if (scope) {
-
-        var scopeBox =
-          document.createElement('div');
-
-        scopeBox.className =
-          'premium-scope';
-
-        scopeBox.textContent =
-          text(scope);
-
-        card.appendChild(scopeBox);
-      }
-
-      /*
-       * GRILLA
-       */
-
-      var calendar =
-        document.createElement('div');
-
-      calendar.className =
-        'premium-calendar';
-
-      var premiumGrid =
-        document.createElement('div');
-
-      premiumGrid.className =
-        'premium-grid';
-
-      var cells =
-        grid.children;
-
-      for (
-        var i = 0;
-        i < cells.length;
-        i++
-      ) {
-
-        /*
-         * 7 encabezados
-         */
-
-        if (i < 7) {
-
-          var weekday =
-            document.createElement('div');
-
-          weekday.className =
-            'premium-weekday';
-
-          weekday.textContent =
-            text(cells[i]);
-
-          premiumGrid.appendChild(
-            weekday
-          );
-
-          continue;
-        }
-
-        /*
-         * CELDA
-         */
-
-        (function (sourceDay) {
-
-          var day =
-            document.createElement('button');
-
-          day.type =
-            'button';
-
-          var cls =
-            'premium-day';
-
-          if (
-            sourceDay.classList.contains(
-              'out'
-            )
-          ) {
-            cls += ' outside';
-          }
-
-          if (
-            sourceDay.classList.contains(
-              'selected'
-            )
-          ) {
-            cls += ' selected';
-          }
-
-          day.className =
-            cls;
-
-          /*
-           * CABECERA
-           */
-
-          var top =
-            document.createElement('div');
-
-          top.className =
-            'premium-day-top';
-
-          var number =
-            document.createElement('span');
-
-          number.className =
-            'premium-day-number';
-
-          number.textContent =
-            text(
-              sourceDay.querySelector(
-                '.b232261-day-top strong'
-              )
-            );
-
-          top.appendChild(number);
-
-          var today =
-            sourceDay.querySelector(
-              '.b232261-day-top small'
-            );
-
-          if (today) {
-
-            var todayText =
-              document.createElement('span');
-
-            todayText.className =
-              'premium-today';
-
-            todayText.textContent =
-              text(today);
-
-            top.appendChild(
-              todayText
-            );
-          }
-
-          day.appendChild(top);
-
-          /*
-           * CONTENIDO
-           */
-
-          copyDayContent(
-            sourceDay,
-            day
-          );
-
-          /*
-           * SELECCIÓN
-           */
-
-          day.addEventListener(
-            'click',
-            function () {
-
-              sourceDay.click();
-
-              scheduleRender(100);
-            }
-          );
-
-          premiumGrid.appendChild(day);
-
-        })(cells[i]);
-      }
-
-      calendar.appendChild(
-        premiumGrid
-      );
-
-      card.appendChild(
-        calendar
-      );
-
-      /*
-       * DETALLE
-       */
-
-      var detail =
-        buildDetail(
-          source,
-          source
-        );
-
-      if (detail) {
-        card.appendChild(detail);
-      }
-
-      /*
-       * MARCA DE VALIDACIÓN
-       */
-
-      var proof =
-        document.createElement('div');
-
-      proof.className =
-        'premium-proof';
-
-      proof.textContent =
-        'VISTA MÓVIL PREMIUM · B4.3.18 · DATOS DEL MOTOR ORIGINAL';
-
-      card.appendChild(proof);
-
-      /*
-       * MONTAJE FINAL
-       */
-
-      host.appendChild(card);
-
-      /*
-       * IMPORTANTE:
+       * El módulo todavía puede no existir.
        *
-       * El original SOLO se oculta después
-       * de construir exitosamente la vista.
+       * Esto NO es un error.
+       *
+       * El MutationObserver seguirá esperando.
        */
 
-      source.style.setProperty(
-        'display',
-        'none',
-        'important'
-      );
-
-      section.style.setProperty(
-        'width',
-        '100%',
-        'important'
-      );
-
-      section.style.setProperty(
-        'max-width',
-        '100%',
-        'important'
-      );
-
-      section.style.setProperty(
-        'min-width',
-        '0',
-        'important'
-      );
-
-      section.style.setProperty(
-        'overflow',
-        'visible',
-        'important'
-      );
+      if (!calendar) {
+        return;
+      }
 
       /*
-       * API DIAGNÓSTICA
+       * El módulo existe pero la grilla
+       * todavía está construyéndose.
        */
 
-      window.CCFCalendarMobilePremium = {
-        version: 'B4.3.18',
-        rendered: true,
-        mobile: true
-      };
+      if (!calendar.grid) {
+        return;
+      }
 
-      installObserver();
+      /*
+       * Si ya existe Premium, reconstruimos
+       * solamente cuando el calendario original
+       * haya cambiado.
+       *
+       * Para mantenerlo robusto durante esta
+       * fase de validación, reconstruimos.
+       */
 
-      return true;
+      buildPremium(calendar);
 
     } catch (error) {
 
       console.error(
-        '[CCF B4.3.18 PREMIUM]',
+        '[CCF ' + VERSION + '] Error:',
         error
       );
-
-      /*
-       * Si ocurre un error, no destruimos
-       * el calendario propietario.
-       */
-
-      var sourceRestore =
-        calendarSource();
-
-      if (sourceRestore) {
-        sourceRestore.style.removeProperty(
-          'display'
-        );
-      }
-
-      return false;
 
     } finally {
 
       rendering = false;
+
     }
   }
 
-  /* ==========================================================
-     OBSERVER
-     ========================================================== */
+  /* ------------------------------------------------------------
+     10. PROGRAMADOR DE RENDER
+     ------------------------------------------------------------ */
+
+  function scheduleRender(delay) {
+
+    clearTimeout(renderTimer);
+
+    renderTimer =
+      setTimeout(
+        function () {
+          render();
+        },
+        typeof delay === 'number'
+          ? delay
+          : 120
+      );
+  }
+
+  /* ------------------------------------------------------------
+     11. OBSERVADOR DINÁMICO
+     ------------------------------------------------------------ */
 
   function installObserver() {
 
     if (observer) {
-      observer.disconnect();
+      return;
     }
 
-    var source =
-      calendarSource();
-
-    if (!source) {
+    if (!document.body) {
       return;
     }
 
     observer =
       new MutationObserver(
-        function () {
+        function (mutations) {
 
-          if (rendering) {
-            return;
+          /*
+           * No reaccionar a cambios realizados
+           * exclusivamente dentro del Premium.
+           */
+
+          let relevant = false;
+
+          for (
+            let i = 0;
+            i < mutations.length;
+            i++
+          ) {
+
+            const mutation =
+              mutations[i];
+
+            /*
+             * Ignorar mutaciones internas
+             * del Premium.
+             */
+
+            if (
+              mutation.target &&
+              document.getElementById(HOST_ID) &&
+              document
+                .getElementById(HOST_ID)
+                .contains(mutation.target)
+            ) {
+              continue;
+            }
+
+            /*
+             * Si se agregó/eliminó el host,
+             * tampoco necesitamos otro render
+             * inmediatamente.
+             */
+
+            let onlyPremium = true;
+
+            mutation.addedNodes &&
+            mutation.addedNodes.forEach(
+              function (node) {
+
+                if (
+                  node.nodeType === 1 &&
+                  node.id !== HOST_ID &&
+                  !(
+                    document
+                      .getElementById(HOST_ID) &&
+                    document
+                      .getElementById(HOST_ID)
+                      .contains(node)
+                  )
+                ) {
+                  onlyPremium = false;
+                }
+
+              }
+            );
+
+            mutation.removedNodes &&
+            mutation.removedNodes.forEach(
+              function (node) {
+
+                if (
+                  node.nodeType === 1 &&
+                  node.id !== HOST_ID
+                ) {
+                  onlyPremium = false;
+                }
+
+              }
+            );
+
+            if (!onlyPremium) {
+              relevant = true;
+              break;
+            }
+
           }
 
-          scheduleRender(120);
+          if (relevant) {
+            scheduleRender(100);
+          }
+
         }
       );
 
     observer.observe(
-      source,
+      document.body,
       {
-        childList:true,
-        subtree:true
+        childList: true,
+        subtree: true
       }
     );
   }
 
-  /* ==========================================================
-     RENDER DIFERIDO
-     ========================================================== */
-
-  function scheduleRender(delay) {
-
-    window.clearTimeout(
-      renderTimer
-    );
-
-    renderTimer =
-      window.setTimeout(
-        function () {
-
-          if (!mobile()) {
-            return;
-          }
-
-          render();
-
-        },
-        delay || 120
-      );
-  }
-
-  /* ==========================================================
-     ARRANQUE
-     ========================================================== */
-
-  function boot() {
-
-    if (!mobile()) {
-      return;
-    }
-
-    var attempts = 0;
-
-    var wait =
-      window.setInterval(
-        function () {
-
-          attempts++;
-
-          if (render()) {
-
-            window.clearInterval(wait);
-
-            return;
-          }
-
-          /*
-           * Máximo 15 segundos.
-           */
-
-          if (attempts >= 60) {
-
-            window.clearInterval(wait);
-
-            console.warn(
-              '[CCF B4.3.18 PREMIUM] ' +
-              'Calendario propietario no disponible.'
-            );
-          }
-
-        },
-        250
-      );
-  }
-
-  /* ==========================================================
-     RESIZE
-     ========================================================== */
+  /* ------------------------------------------------------------
+     12. CAMBIO DE TAMAÑO / ORIENTACIÓN
+     ------------------------------------------------------------ */
 
   window.addEventListener(
     'resize',
     function () {
 
-      if (mobile()) {
-
-        if (
-          !document.getElementById(ID)
-        ) {
-          scheduleRender(100);
-        }
-
-      } else {
-
-        var premium =
-          document.getElementById(ID);
-
-        if (premium) {
-          premium.remove();
-        }
-
-        var source =
-          calendarSource();
-
-        if (source) {
-          source.style.removeProperty(
-            'display'
-          );
-        }
-      }
+      scheduleRender(150);
 
     },
-    { passive:true }
+    { passive: true }
   );
 
-  /* ==========================================================
-     INICIO
-     ========================================================== */
+  window.addEventListener(
+    'orientationchange',
+    function () {
+
+      scheduleRender(250);
+
+    },
+    { passive: true }
+  );
+
+  /* ------------------------------------------------------------
+     13. API DE DIAGNÓSTICO
+     ------------------------------------------------------------ */
+
+  window.CCFCalendarMobilePremium = {
+
+    version: VERSION,
+
+    status: function () {
+
+      const calendar =
+        findCalendar();
+
+      const host =
+        document.getElementById(
+          HOST_ID
+        );
+
+      const grid =
+        calendar &&
+        calendar.grid
+          ? calendar.grid
+          : null;
+
+      return {
+
+        version: VERSION,
+
+        mobile:
+          isMobile(),
+
+        calendarFound:
+          !!calendar,
+
+        sourceFound:
+          !!(
+            calendar &&
+            calendar.source
+          ),
+
+        gridFound:
+          !!grid,
+
+        originalCells:
+          grid
+            ? grid.children.length
+            : 0,
+
+        premiumFound:
+          !!host,
+
+        premiumMounted:
+          !!(
+            host &&
+            host.getAttribute(
+              'data-mounted'
+            ) === 'true'
+          ),
+
+        premiumCells:
+          host
+            ? host.getAttribute(
+                'data-grid-cells'
+              )
+            : null
+
+      };
+
+    },
+
+    render: function () {
+      scheduleRender(0);
+    },
+
+    restore: function () {
+      restoreOriginal();
+    }
+
+  };
+
+  /* ------------------------------------------------------------
+     14. ARRANQUE
+     ------------------------------------------------------------ */
+
+  function boot() {
+
+    installStyles();
+
+    installObserver();
+
+    /*
+     * Primer intento.
+     */
+
+    scheduleRender(0);
+
+    /*
+     * El sistema puede cargar el módulo
+     * después del primer arranque.
+     *
+     * Por eso hacemos varios intentos
+     * cortos, no un único intento.
+     */
+
+    let attempts = 0;
+
+    const bootTimer =
+      setInterval(
+        function () {
+
+          attempts++;
+
+          scheduleRender(0);
+
+          if (
+            attempts >= 40 ||
+            document.getElementById(HOST_ID)
+          ) {
+
+            clearInterval(
+              bootTimer
+            );
+
+          }
+
+        },
+        500
+      );
+
+  }
+
+  /*
+   * Esperar DOM.
+   */
 
   if (
-    document.readyState === 'loading'
+    document.readyState ===
+    'loading'
   ) {
 
     document.addEventListener(
       'DOMContentLoaded',
       boot,
-      { once:true }
+      { once: true }
     );
 
   } else {
 
     boot();
+
   }
 
-  /* ==========================================================
-     DIAGNÓSTICO
-     ========================================================== */
-
-  window.CCFCalendarMobilePremium = {
-
-    version:'B4.3.18',
-
-    render:function () {
-      return render();
-    },
-
-    start:function () {
-      boot();
-    },
-
-    status:function () {
-
-      return {
-        version:'B4.3.18',
-        mobile:mobile(),
-        calendario:!!calendarSection(),
-        calendarioOriginal:!!calendarSource(),
-        grillaOriginal:!!calendarGrid(),
-        premium:!!document.getElementById(ID),
-        rendering:rendering
-      };
-
-    }
-
-  };
-
 })();
-</script>
+</script> 
+        
+
+
+  
 
     
             
