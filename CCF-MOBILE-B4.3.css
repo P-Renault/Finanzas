@@ -2442,3 +2442,20 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   padding:0!important;
   box-sizing:border-box!important;
 }
+
+/* B4.3.10 — CALENDARIO BOOTSTRAP VISTA NUEVA V2: fallback de layout */
+
+/* B4.3.10 TEST — nueva vista Bootstrap arriba del calendario original */
+#ccf-mobile-b43 .b434-module-host #calendario #ccf-bs-calendar-view{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0 0 14px 0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+  z-index:20!important;
+}

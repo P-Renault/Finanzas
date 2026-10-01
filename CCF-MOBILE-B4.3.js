@@ -596,6 +596,7 @@ window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();
 let ccfBsCalendarView=null;
 let ccfBsCalendarObserver=null;
 let ccfBsCalendarBound=null;
+let ccfBsCalendarRenderTimer=null;
 
 function ensureBootstrapCalendarView(){
   const section=by('calendario');
@@ -606,7 +607,9 @@ function ensureBootstrapCalendarView(){
     host=document.createElement('div');
     host.id='ccf-bs-calendar-view';
     host.setAttribute('data-ccf-bs-calendar','1');
-    section.appendChild(host);
+    const currentCard=section.querySelector('.b232261-card');
+    if(currentCard) currentCard.parentNode.insertBefore(host,currentCard);
+    else section.appendChild(host);
   }
   if(!host.shadowRoot){
     const shadow=host.attachShadow({mode:'open'});
@@ -628,7 +631,8 @@ function ensureBootstrapCalendarView(){
       .calendar-kpi{border:1px solid #e5e7eb;border-radius:10px;padding:8px;min-width:0}
       .calendar-kpi span{display:block;font-size:8px;color:#64748b}
       .calendar-kpi strong{display:block;font-size:13px;color:#172033;margin-top:3px;overflow-wrap:anywhere}
-      .calendar-grid{width:100%;min-width:0}
+      .calendar-grid{width:100%;min-width:0;display:flex;flex-wrap:wrap}
+      .calendar-grid>.col{flex:0 0 14.285714%;max-width:14.285714%;min-width:0;padding:0!important}
       .calendar-grid .col{min-width:0;padding:0!important}
       .weekday{height:30px;display:flex;align-items:center;justify-content:center;background:#111827;color:#fff;font-size:8px;font-weight:900;overflow:hidden}
       .day{width:100%;height:86px;border:0;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;background:#fff;text-align:left;padding:4px 3px;overflow:hidden;color:#334155}
@@ -758,9 +762,13 @@ function renderBootstrapCalendarView(){
   shell.appendChild(detail);
   shadow.appendChild(shell);
 
-  /* Hide only the old visual view; its engine and buttons remain active. */
-  source.style.setProperty('display','none','important');
-  hostStyleMobileCalendar(section);
+  /* La vista nueva queda ARRIBA del calendario original.
+     El calendario original permanece visible para comparar ambas implementaciones. */
+  const currentCard=section.querySelector('.b232261-card');
+  const host=section.querySelector('#ccf-bs-calendar-view');
+  if(currentCard && host && host.nextElementSibling!==currentCard){
+    currentCard.parentNode.insertBefore(host,currentCard);
+  }
   return true;
 }
 
@@ -775,23 +783,29 @@ function observeBootstrapCalendarView(){
   const section=by('calendario');
   if(!section)return;
   ccfBsCalendarObserver=new MutationObserver(()=>{
-    if(!section.querySelector('#ccf-bs-calendar-view .calendar-shell')){
-      setTimeout(renderBootstrapCalendarView,0);
-    }
+    clearTimeout(ccfBsCalendarRenderTimer);
+    ccfBsCalendarRenderTimer=setTimeout(()=>{
+      if(root?.id==='ccf-mobile-b43'&&by('calendario'))renderBootstrapCalendarView();
+    },40);
   });
-  const source=section.querySelector('.b232261-card');
-  if(source)ccfBsCalendarObserver.observe(source,{childList:true,subtree:true,characterData:true});
+  ccfBsCalendarObserver.observe(section,{childList:true,subtree:true});
   setTimeout(renderBootstrapCalendarView,120);
 }
 
 function activateBootstrapCalendarView(){
-  if(!calendarIsMobile())return false;
   const section=by('calendario');
-  if(!section)return false;
-  if(ccfBsCalendarBound===section)return renderBootstrapCalendarView();
-  ccfBsCalendarBound=section;
-  observeBootstrapCalendarView();
-  return renderBootstrapCalendarView();
+  if(!section||!root||root.id!=='ccf-mobile-b43')return false;
+  if(ccfBsCalendarBound!==section){
+    ccfBsCalendarBound=section;
+    observeBootstrapCalendarView();
+  }
+  const ok=renderBootstrapCalendarView();
+  if(!ok){
+    [120,300,600,1000,1600].forEach(ms=>setTimeout(()=>{
+      if(by('calendario')&&root?.id==='ccf-mobile-b43')renderBootstrapCalendarView();
+    },ms));
+  }
+  return ok;
 }
 
 })();
