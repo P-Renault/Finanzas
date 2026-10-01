@@ -1467,71 +1467,100 @@
       '}' +
 
       '#' + ID + ' .cm-kpi{' +
-        'grid-column:span 2;' +
         'min-width:0;' +
-        'min-height:67px;' +
-        'padding:11px 12px;' +
+        'min-height:78px;' +
+        'padding:12px 14px;' +
         'border:1px solid transparent;' +
-        'border-radius:13px;' +
+        'border-radius:14px;' +
         'overflow:hidden;' +
       '}' +
 
-      '#' + ID + ' .cm-kpi:nth-child(4),' +
-      '#' + ID + ' .cm-kpi:nth-child(5){' +
+      /* Primera fila: 2 indicadores */
+      '#' + ID + ' .cm-kpi:nth-child(1),' +
+      '#' + ID + ' .cm-kpi:nth-child(2){' +
         'grid-column:span 3;' +
       '}' +
 
+      /* Segunda fila: 3 indicadores */
+      '#' + ID + ' .cm-kpi:nth-child(3),' +
+      '#' + ID + ' .cm-kpi:nth-child(4),' +
+      '#' + ID + ' .cm-kpi:nth-child(5){' +
+        'grid-column:span 2;' +
+      '}' +
+
+      /* Colores de la referencia */
       '#' + ID + ' .cm-kpi:nth-child(1){' +
-        'background:#ecfdf5;' +
-        'border-color:#d1fae5;' +
+        'background:#1289ee;' +
+        'border-color:#1289ee;' +
+        'color:#fff;' +
       '}' +
 
       '#' + ID + ' .cm-kpi:nth-child(2){' +
-        'background:#eff6ff;' +
-        'border-color:#dbeafe;' +
+        'background:#11bf87;' +
+        'border-color:#11bf87;' +
+        'color:#fff;' +
       '}' +
 
       '#' + ID + ' .cm-kpi:nth-child(3){' +
-        'background:#fef2f2;' +
-        'border-color:#fee2e2;' +
+        'background:#ff314a;' +
+        'border-color:#ff314a;' +
+        'color:#fff;' +
       '}' +
 
       '#' + ID + ' .cm-kpi:nth-child(4){' +
-        'background:#f5f3ff;' +
-        'border-color:#ede9fe;' +
+        'background:#f7f9fc;' +
+        'border-color:#e7ebf1;' +
+        'color:#172033;' +
       '}' +
 
       '#' + ID + ' .cm-kpi:nth-child(5){' +
-        'background:#fffbeb;' +
-        'border-color:#fef3c7;' +
+        'background:#1767b7;' +
+        'border-color:#1767b7;' +
+        'color:#fff;' +
       '}' +
 
       '#' + ID + ' .cm-kpi span{' +
         'display:block;' +
         'font-size:10px;' +
         'line-height:1.2;' +
-        'color:#64748b;' +
+        'color:inherit;' +
+        'opacity:.95;' +
       '}' +
 
       '#' + ID + ' .cm-kpi strong{' +
         'display:block;' +
         'margin-top:5px;' +
-        'font-size:16px;' +
-        'line-height:1.1;' +
+        'font-size:20px;' +
+        'line-height:1.08;' +
         'overflow-wrap:anywhere;' +
         'word-break:break-word;' +
-        'color:#172033;' +
+        'color:inherit;' +
       '}' +
 
       '#' + ID + ' .cm-scope{' +
+        'position:relative;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'min-height:45px;' +
         'margin:0 14px 10px;' +
-        'padding:7px 10px;' +
-        'border-radius:9px;' +
-        'background:#f8fafc;' +
-        'color:#64748b;' +
-        'font-size:9px;' +
-        'line-height:1.3;' +
+        'padding:10px 12px 10px 43px;' +
+        'border-radius:10px;' +
+        'background:#f1f6fc;' +
+        'color:#526173;' +
+        'font-size:10px;' +
+        'line-height:1.25;' +
         'overflow-wrap:anywhere;' +
+      '}' +
+
+      '#' + ID + ' .cm-scope:before{' +
+        'content:"▣";' +
+        'position:absolute;' +
+        'left:14px;' +
+        'top:50%;' +
+        'transform:translateY(-50%);' +
+        'font-size:18px;' +
+        'font-weight:900;' +
+        'color:#0877cf;' +
       '}' +
 
       '#' + ID + ' .cm-calendar-wrap{' +
@@ -1542,27 +1571,18 @@
       '}' +
 
       '@media(max-width:720px){' +
-        '#' + ID + ' .cm-title{font-size:22px;padding-right:174px;}' +
-        '#' + ID + ' .cm-sub{padding-right:174px;font-size:9px;}' +
-        '#' + ID + ' .cm-actions{gap:5px;right:12px;top:18px;}' +
-        '#' + ID + ' .cm-actions button{width:39px;min-width:39px;height:39px;min-height:39px;border-radius:9px;font-size:18px;}' +
-        '#' + ID + ' .cm-actions button:nth-child(2){width:48px;min-width:48px;font-size:10px;}' +
         '#' + ID + ' .cm-kpis{gap:7px;padding-left:10px;padding-right:10px;}' +
-        '#' + ID + ' .cm-kpi{min-height:61px;padding:9px;}' +
-        '#' + ID + ' .cm-kpi strong{font-size:14px;}' +
+        '#' + ID + ' .cm-kpi{min-height:72px;padding:10px 11px;}' +
+        '#' + ID + ' .cm-kpi strong{font-size:18px;}' +
+        '#' + ID + ' .cm-scope{margin-left:10px;margin-right:10px;}' +
       '}' +
 
       '@media(max-width:480px){' +
-        '#' + ID + ' .cm-head{padding:14px 10px 10px;}' +
-        '#' + ID + ' .cm-title{padding-right:0;font-size:20px;white-space:nowrap;}' +
-        '#' + ID + ' .cm-sub{padding-right:0;font-size:8px;}' +
-        '#' + ID + ' .cm-actions{position:static;margin-top:10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}' +
-        '#' + ID + ' .cm-actions button{width:100%;min-width:0;height:36px;min-height:36px;}' +
-        '#' + ID + ' .cm-actions button:nth-child(2){width:100%;min-width:0;}' +
-        '#' + ID + ' .cm-kpis{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;padding-left:8px;padding-right:8px;}' +
-        '#' + ID + ' .cm-kpi{min-height:58px;padding:7px;border-radius:10px;}' +
-        '#' + ID + ' .cm-kpi span{font-size:8px;}' +
-        '#' + ID + ' .cm-kpi strong{font-size:13px;margin-top:3px;}' +
+        '#' + ID + ' .cm-kpis{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding-left:8px;padding-right:8px;}' +
+        '#' + ID + ' .cm-kpi{min-height:76px;padding:10px 10px;border-radius:13px;}' +
+        '#' + ID + ' .cm-kpi strong{font-size:17px;margin-top:4px;}' +
+        '#' + ID + ' .cm-kpi span{font-size:9px;}' +
+        '#' + ID + ' .cm-scope{margin:0 8px 8px;min-height:40px;padding-left:38px;font-size:9px;}' +
       '}' +
 
 
@@ -2603,75 +2623,130 @@
 
 
       /* ======================================================
-         KPIs
+         KPIs — FUENTE REAL DEL CALENDARIO PROPIETARIO
+         B232.26.4 ya calcula estos valores. Esta capa SOLO
+         presenta cinco indicadores del DOM existente:
+         1) Ingresos reales
+         2) Ingresos proyectados
+         3) Egresos reales
+         4) Obligaciones
+         5) Saldo final
+
+         No se recalculan importes aquí.
       ====================================================== */
 
       var kpis =
         document.createElement('div');
 
-
       kpis.className =
         'cm-kpis';
-
 
       var sourceKpis =
         src.querySelectorAll(
           '.b232261-kpi'
         );
 
+      /*
+       * Mapeamos por etiqueta, no por posición.
+       * Esto evita que un cambio de orden en B232.26.4
+       * altere el significado de los indicadores.
+       */
+      var wantedLabels =
+        [
+          'Ingresos reales',
+          'Ingresos proyectados',
+          'Egresos reales',
+          'Obligaciones',
+          'Saldo final'
+        ];
 
       for(
-        var k=0;
-        k<sourceKpis.length;
-        k++
+        var wk=0;
+        wk<wantedLabels.length;
+        wk++
       ){
+
+        var wanted =
+          wantedLabels[wk];
+
+        var sourceKpi =
+          null;
+
+        for(
+          var sk=0;
+          sk<sourceKpis.length;
+          sk++
+        ){
+
+          var label =
+            text(
+              sourceKpis[sk].querySelector('span')
+            );
+
+          if(
+            label.toLowerCase() ===
+            wanted.toLowerCase()
+          ){
+
+            sourceKpi =
+              sourceKpis[sk];
+
+            break;
+
+          }
+
+        }
+
+        /*
+         * Si B232.26.4 todavía no terminó de pintar
+         * un KPI, no inventamos un valor.
+         */
+        if(!sourceKpi){
+
+          continue;
+
+        }
 
         var kc =
           document.createElement('div');
 
-
         kc.className =
           'cm-kpi';
 
+        kc.setAttribute(
+          'data-kpi-label',
+          wanted
+        );
 
         var sp =
           document.createElement('span');
 
-
         sp.textContent =
           text(
-            sourceKpis[k].querySelector(
-              'span'
-            )
+            sourceKpi.querySelector('span')
           );
-
 
         var strong =
           document.createElement('strong');
 
-
         strong.textContent =
           text(
-            sourceKpis[k].querySelector(
-              'strong'
-            )
+            sourceKpi.querySelector('strong')
           );
 
-
         kc.appendChild(sp);
-
         kc.appendChild(strong);
 
         kpis.appendChild(kc);
 
       }
 
-
       shell.appendChild(kpis);
 
 
       /* ======================================================
          CONTEXTO DEL PERÍODO / DÍA
+         Se toma directamente del DOM propietario.
       ====================================================== */
 
       var scope =
@@ -2679,21 +2754,31 @@
           '.b232261-scope'
         );
 
-
       if(scope){
 
         var sc =
           document.createElement('div');
 
-
         sc.className =
           'cm-scope';
 
+        var scopeDate =
+          scope.querySelector('span');
+
+        var scopeMode =
+          scope.querySelector('b');
 
         sc.textContent =
-          'Día seleccionado: ' +
-          text(scope);
-
+          (
+            scopeMode
+              ? text(scopeMode)
+              : 'Día seleccionado'
+          ) +
+          (
+            scopeDate
+              ? ': ' + text(scopeDate)
+              : ''
+          );
 
         shell.appendChild(sc);
 
