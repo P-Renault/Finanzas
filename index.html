@@ -2063,6 +2063,37 @@
      12. CAMBIO DE TAMAÑO / ORIENTACIÓN
      ------------------------------------------------------------ */
 
+  /*
+   * Entrada explícita al módulo Calendario.
+   * El observer cubre cambios estructurales; este hook cubre
+   * navegación por pestañas cuando el DOM ya existe.
+   */
+  document.addEventListener(
+    'click',
+    function (event) {
+
+      const tab =
+        event.target.closest &&
+        event.target.closest(
+          '[data-tab="calendario"]'
+        );
+
+      if (!tab) return;
+
+      scheduleRender(50);
+
+      setTimeout(function () {
+        scheduleRender(0);
+      }, 300);
+
+      setTimeout(function () {
+        scheduleRender(0);
+      }, 1000);
+
+    },
+    true
+  );
+
   window.addEventListener(
     'resize',
     function () {
