@@ -3998,6 +3998,152 @@
         'word-break:break-word;' +
       '}' +
 
+      /* ==========================================================
+         DETALLE PREMIUM — DISEÑO REFERENCIA
+         ========================================================== */
+      '#' + ID + ' .p181-detail-wrap{' +
+        'width:100%;' +
+        'max-width:100%;' +
+        'min-width:0;' +
+        'padding:0 12px 14px;' +
+        'background:#fff;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'margin:0!important;' +
+        'padding:0!important;' +
+        'background:#fff!important;' +
+        'border:0!important;' +
+        'box-shadow:none!important;' +
+        'font-family:system-ui,sans-serif!important;' +
+      '}' +
+
+      /*
+       * Encabezado "Detalle del Jueves..." + fecha.
+       * El selector es flexible para no depender de una clase
+       * que pueda cambiar en B232.26.4.
+       */
+      '#' + ID + ' .p181-source-detail > :first-child{' +
+        'width:100%;' +
+        'min-width:0;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail h2,' +
+      '#' + ID + ' .p181-source-detail h3{' +
+        'color:#102b4d!important;' +
+      '}' +
+
+      /*
+       * Cada bloque financiero queda como tarjeta independiente.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'margin:8px 0!important;' +
+        'padding:13px 12px!important;' +
+        'border:1px solid #e3e8ef!important;' +
+        'border-radius:15px!important;' +
+        'background:#fff!important;' +
+        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
+        'overflow:hidden!important;' +
+        'font-size:10px!important;' +
+        'line-height:1.35!important;' +
+      '}' +
+
+      /*
+       * El primer bloque es el resumen superior.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:first-of-type{' +
+        'background:#fbfdff!important;' +
+        'border-color:#dce5ee!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-box h3{' +
+        'margin:0 0 7px!important;' +
+        'font-size:11px!important;' +
+        'font-weight:900!important;' +
+        'line-height:1.2!important;' +
+        'color:#122a49!important;' +
+      '}' +
+
+      /*
+       * Preservar las filas/valores originales.
+       * Se usa una combinación de selectores genéricos para que
+       * no se pierda la alineación derecha de los importes.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box > div,' +
+      '#' + ID + ' .p181-source-detail .b232261-box > p,' +
+      '#' + ID + ' .p181-source-detail .b232261-box > section{' +
+        'max-width:100%;' +
+        'min-width:0;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail strong{' +
+        'font-weight:900!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail small{' +
+        'color:#7b8796!important;' +
+      '}' +
+
+      /*
+       * Tarjeta de ingresos.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(2){' +
+        'background:#fff!important;' +
+        'border-color:#dfe6ee!important;' +
+      '}' +
+
+      /*
+       * Tarjeta de egresos/obligaciones.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(3){' +
+        'background:#fff!important;' +
+        'border-color:#dfe6ee!important;' +
+      '}' +
+
+      /*
+       * Control de caja: destacamos el flujo neto.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(4){' +
+        'background:#f8fbff!important;' +
+        'border-color:#d8e4f1!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(4) strong:last-child{' +
+        'color:#159447!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-note,' +
+      '#' + ID + ' .p181-source-detail .b232261-footnote{' +
+        'display:block;' +
+        'padding:0 3px 3px;' +
+        'color:#718096!important;' +
+        'font-size:9px!important;' +
+        'line-height:1.25!important;' +
+      '}' +
+
+      /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
+      '@media(max-width:480px){' +
+        '#' + ID + ' .p181-detail-wrap{' +
+          'padding:0 8px 10px;' +
+        '}' +
+        '#' + ID + ' .p181-source-detail .b232261-box{' +
+          'margin:7px 0!important;' +
+          'padding:12px 10px!important;' +
+          'border-radius:13px!important;' +
+        '}' +
+        '#' + ID + ' .p181-source-detail .b232261-box h3{' +
+          'font-size:10px!important;' +
+        '}' +
+      '}' +
+
       /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
       '@media(max-width:480px){' +
         '#' + ID + ' .cm-head{padding:13px 9px 7px;min-height:70px;}' +
@@ -4045,6 +4191,47 @@
     }
   }
 
+  /*
+   * ============================================================
+   * DETALLE PREMIUM — FUENTE DIRECTA DEL CALENDARIO PROPIETARIO
+   *
+   * Esta sección no reconstruye importes.
+   * Copia la estructura completa de .b232261-detail que ya
+   * genera B232.26.4. De esta manera se conserva:
+   * - encabezado del día + fecha
+   * - resumen de rentabilidad
+   * - ingresos y rentabilidad
+   * - egresos, pagos y obligaciones
+   * - control de caja
+   * - textos auxiliares
+   * - valores reales/proyectados
+   *
+   * La capa Premium solamente cambia presentación.
+   * ============================================================
+   */
+  function appendPremiumDetail(host){
+    var section = document.getElementById('calendario');
+    if(!section) return;
+
+    var originalDetail = section.querySelector('.b232261-card .b232261-detail');
+    if(!originalDetail) return;
+
+    var wrap = document.createElement('section');
+    wrap.className = 'p181-detail-wrap';
+
+    var detail = originalDetail.cloneNode(true);
+
+    /* Evitar IDs duplicados. */
+    detail.querySelectorAll('[id]').forEach(function(el){
+      el.removeAttribute('id');
+    });
+
+    detail.classList.add('p181-source-detail');
+
+    wrap.appendChild(detail);
+    host.appendChild(wrap);
+  }
+
   function render(){
     if(rendering) return false;
 
@@ -4080,9 +4267,26 @@
 
       clone.className = 'p181-shell';
 
+      /*
+       * La vista 18.1 conserva el calendario completo de B4.3.17.
+       * Su detalle resumido interno se elimina porque debajo
+       * construiremos el detalle Premium completo desde
+       * B232.26.4.
+       */
+      var oldDetail = clone.querySelector('.cm-detail');
+      if(oldDetail){
+        oldDetail.remove();
+      }
+
       host.appendChild(clone);
 
       wireButtons(clone, original);
+
+      /*
+       * A continuación del calendario:
+       * detalle completo con la estructura de la imagen de referencia.
+       */
+      appendPremiumDetail(host);
 
       return true;
 
