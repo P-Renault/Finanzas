@@ -198,7 +198,7 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
-/* CCF MOBILE B4.3.10 — CALENDARIO · BOOTSTRAP GRID AISLADO
+/* LEGACY/TRANSITORIO — CCF MOBILE B4.3.10 — CALENDARIO · BOOTSTRAP GRID AISLADO
    Bootstrap 5.3 grid aplicado únicamente a #calendario.
    No modifica B232.26.4-calendario-safe.js ni otros módulos.
 */
@@ -331,12 +331,15 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,2500);
    }
    if(id==='calendario'){
+     /* FASE TRANSITORIA: mantener la vista móvil propietaria visible. */
      observeCalendarMobile();
-     setTimeout(activateBootstrapCalendarView,120);
      setTimeout(adaptB232261CalendarMobile,50);
      setTimeout(adaptB232261CalendarMobile,150);
      setTimeout(adaptB232261CalendarMobile,350);
      setTimeout(adaptB232261CalendarMobile,800);
+
+     /* FASE 1: montar Premium arriba de la vista anterior. */
+     scheduleCalendarPremium181();
    }
    setActive(id);
    return true;
@@ -807,5 +810,1361 @@ function activateBootstrapCalendarView(){
   }
   return ok;
 }
+
+
+
+(function(){
+
+  'use strict';
+
+  /* ==========================================================
+     CONFIGURACIÓN
+  ========================================================== */
+
+  var ID = 'ccf-calendar-mobile-premium-b4-3-18-1';
+
+  var timer = null;
+
+  var observer = null;
+
+  var rendering = false;
+
+  var renderTimer = null;
+
+  var started = false;
+
+
+  /* ==========================================================
+     REFERENCIAS AL SISTEMA EXISTENTE
+  ========================================================== */
+
+  function root(){
+
+    return document.getElementById('ccf-mobile-b43');
+
+  }
+
+
+  function section(){
+
+    return document.getElementById('calendario');
+
+  }
+
+
+  function source(){
+
+    var s = section();
+
+    if(!s) return null;
+
+    return s.querySelector('.b232261-card');
+
+  }
+
+
+  function text(el){
+
+    return String(
+      (el && el.textContent) || ''
+    )
+    .replace(/\s+/g,' ')
+    .trim();
+
+  }
+
+
+  /* ==========================================================
+     ESTILOS AISLADOS
+  ========================================================== */
+
+  /* ==========================================================
+     CLASIFICACIÓN DE EVENTOS
+  ========================================================== */
+
+  function cloneEvents(srcDay, btn){
+
+    if(!srcDay || !btn) return;
+
+
+    var nodes =
+      srcDay.querySelectorAll('.b232261-event');
+
+
+    for(var i=0;i<nodes.length;i++){
+
+      var n =
+        document.createElement('span');
+
+
+      var c =
+        nodes[i].className || '';
+
+
+      n.className =
+        'cm-event ' +
+
+        (
+          c.indexOf('real-in') >= 0
+          ? 'cm-real-in'
+
+          : c.indexOf('real-out') >= 0
+          ? 'cm-real-out'
+
+          : c.indexOf('plan-in') >= 0
+          ? 'cm-plan-in'
+
+          : c.indexOf('plan-out') >= 0
+          ? 'cm-plan-out'
+
+          : c.indexOf('gen') >= 0
+          ? 'cm-gen'
+
+          : c.indexOf('debt') >= 0
+          ? 'cm-debt'
+
+          : 'cm-plan-out'
+        );
+
+
+      n.textContent =
+        text(nodes[i]);
+
+
+      btn.appendChild(n);
+
+    }
+
+
+    var mini =
+      srcDay.querySelectorAll(
+        '.b232261-mini,.b232261-more'
+      );
+
+
+    for(var j=0;j<mini.length;j++){
+
+      var m =
+        document.createElement('span');
+
+
+      m.className =
+        'cm-mini ' +
+
+        (
+          mini[j].classList.contains(
+            'b232261-pos'
+          )
+          ? 'cm-pos'
+
+          : mini[j].classList.contains(
+            'b232261-neg'
+          )
+          ? 'cm-neg'
+
+          : ''
+        );
+
+
+      m.textContent =
+        text(mini[j]);
+
+
+      btn.appendChild(m);
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     CONSTRUCCIÓN DE LA VISTA
+  ========================================================== */
+
+  function render(){
+
+    if(rendering) return false;
+
+
+    var r = root();
+
+    var s = section();
+
+    var src = source();
+
+
+    if(!r || !s || !src){
+
+      return false;
+
+    }
+
+
+    var grid =
+      src.querySelector(
+        '.b232261-grid.b232261-week'
+      );
+
+
+    /*
+     * El calendario propietario genera:
+     *
+     * 7 encabezados
+     * +
+     * 42 días
+     *
+     * = 49 hijos directos.
+     */
+
+    if(!grid || grid.children.length < 8){
+
+      return false;
+
+    }
+
+
+    rendering = true;
+
+
+    try{
+
+
+      /* ======================================================
+         HOST
+      ====================================================== */
+
+      var host =
+        document.getElementById(ID);
+
+
+      if(!host){
+
+        host =
+          document.createElement('section');
+
+
+        host.id = ID;
+
+
+        /*
+         * La nueva vista queda inmediatamente
+         * antes del calendario propietario.
+         */
+
+        s.parentNode.insertBefore(
+          host,
+          s
+        );
+
+      }
+
+
+      /*
+       * Solo limpiamos nuestro propio host.
+       */
+
+      host.innerHTML = '';
+
+
+      /* ======================================================
+         CONTENEDOR PRINCIPAL
+      ====================================================== */
+
+      var shell =
+        document.createElement('div');
+
+
+      shell.className =
+        'cm-shell';
+
+
+      /* ======================================================
+         CABECERA
+      ====================================================== */
+
+      var head =
+        document.createElement('div');
+
+
+      head.className =
+        'cm-head';
+
+
+      var eyebrow =
+        document.createElement('div');
+
+
+      eyebrow.className =
+        'cm-eyebrow';
+
+
+      eyebrow.textContent =
+        'PERIODO';
+
+
+      head.appendChild(eyebrow);
+
+
+      var h =
+        document.createElement('h2');
+
+
+      h.className =
+        'cm-title';
+
+
+      h.textContent =
+        text(
+          src.querySelector(
+            '.b232261-head h2'
+          )
+        ) || 'Calendario';
+
+
+      head.appendChild(h);
+
+
+      var sub =
+        document.createElement('div');
+
+
+      sub.className =
+        'cm-sub';
+
+
+      sub.textContent =
+        text(
+          src.querySelector(
+            '.b232261-sub'
+          )
+        ) || 'Vista mensual';
+
+
+      head.appendChild(sub);
+
+
+      /* ======================================================
+         ESTADO
+      ====================================================== */
+
+      var status =
+        text(
+          src.querySelector(
+            '.b232261-status'
+          )
+        );
+
+
+      if(status){
+
+        var st =
+          document.createElement('div');
+
+
+        st.className =
+          'cm-status';
+
+
+        st.textContent =
+          status;
+
+
+        head.appendChild(st);
+
+      }
+
+
+      /* ======================================================
+         NAVEGACIÓN
+      ====================================================== */
+
+      var actions =
+        document.createElement('div');
+
+
+      actions.className =
+        'cm-actions';
+
+
+      var sourceButtons =
+        src.querySelectorAll(
+          '.b232261-actions button'
+        );
+
+
+      /*
+       * Orden real del calendario propietario:
+       *
+       * 0 = anterior
+       * 1 = Hoy
+       * 2 = siguiente
+       * 3 = actualizar
+       */
+
+      var labels =
+        [
+          '‹',
+          'Hoy',
+          '›',
+          '↻'
+        ];
+
+
+      for(
+        var a=0;
+        a<Math.min(sourceButtons.length,4);
+        a++
+      ){
+
+        (function(srcBtn,i){
+
+          var b =
+            document.createElement('button');
+
+
+          b.type =
+            'button';
+
+
+          b.textContent =
+            labels[i] ||
+            text(srcBtn);
+
+
+          b.className =
+            i === 1
+            ? ''
+            : 'secondary';
+
+
+          b.onclick =
+            function(){
+
+              /*
+               * Se delega la acción al calendario
+               * propietario B232.26.4.
+               */
+
+              srcBtn.click();
+
+
+              /*
+               * Esperamos a que el propietario
+               * termine de reconstruir su DOM.
+               */
+
+              setTimeout(
+                function(){
+                  render();
+                },
+                100
+              );
+
+            };
+
+
+          actions.appendChild(b);
+
+        })(sourceButtons[a],a);
+
+      }
+
+
+      head.appendChild(actions);
+
+
+      shell.appendChild(head);
+
+
+      /* ======================================================
+         KPIs — FUENTE REAL DEL CALENDARIO PROPIETARIO
+         B232.26.4 ya calcula estos valores. Esta capa SOLO
+         presenta cinco indicadores del DOM existente:
+         1) Ingresos reales
+         2) Ingresos proyectados
+         3) Egresos reales
+         4) Obligaciones
+         5) Saldo final
+
+         No se recalculan importes aquí.
+      ====================================================== */
+
+      var kpis =
+        document.createElement('div');
+
+      kpis.className =
+        'cm-kpis';
+
+      var sourceKpis =
+        src.querySelectorAll(
+          '.b232261-kpi'
+        );
+
+      /*
+       * Mapeamos por etiqueta, no por posición.
+       * Esto evita que un cambio de orden en B232.26.4
+       * altere el significado de los indicadores.
+       */
+      var wantedLabels =
+        [
+          'Ingresos reales',
+          'Ingresos proyectados',
+          'Egresos reales',
+          'Obligaciones',
+          'Saldo final'
+        ];
+
+      for(
+        var wk=0;
+        wk<wantedLabels.length;
+        wk++
+      ){
+
+        var wanted =
+          wantedLabels[wk];
+
+        var sourceKpi =
+          null;
+
+        for(
+          var sk=0;
+          sk<sourceKpis.length;
+          sk++
+        ){
+
+          var label =
+            text(
+              sourceKpis[sk].querySelector('span')
+            );
+
+          if(
+            label.toLowerCase() ===
+            wanted.toLowerCase()
+          ){
+
+            sourceKpi =
+              sourceKpis[sk];
+
+            break;
+
+          }
+
+        }
+
+        /*
+         * Si B232.26.4 todavía no terminó de pintar
+         * un KPI, no inventamos un valor.
+         */
+        if(!sourceKpi){
+
+          continue;
+
+        }
+
+        var kc =
+          document.createElement('div');
+
+        kc.className =
+          'cm-kpi';
+
+        kc.setAttribute(
+          'data-kpi-label',
+          wanted
+        );
+
+        var sp =
+          document.createElement('span');
+
+        sp.textContent =
+          text(
+            sourceKpi.querySelector('span')
+          );
+
+        var strong =
+          document.createElement('strong');
+
+        strong.textContent =
+          text(
+            sourceKpi.querySelector('strong')
+          );
+
+        kc.appendChild(sp);
+        kc.appendChild(strong);
+
+        kpis.appendChild(kc);
+
+      }
+
+      shell.appendChild(kpis);
+
+
+      /* ======================================================
+         CONTEXTO DEL PERÍODO / DÍA
+         Se toma directamente del DOM propietario.
+      ====================================================== */
+
+      var scope =
+        src.querySelector(
+          '.b232261-scope'
+        );
+
+      if(scope){
+
+        var sc =
+          document.createElement('div');
+
+        sc.className =
+          'cm-scope';
+
+        var scopeDate =
+          scope.querySelector('span');
+
+        var scopeMode =
+          scope.querySelector('b');
+
+        sc.textContent =
+          (
+            scopeMode
+              ? text(scopeMode)
+              : 'Día seleccionado'
+          ) +
+          (
+            scopeDate
+              ? ': ' + text(scopeDate)
+              : ''
+          );
+
+        shell.appendChild(sc);
+
+      }
+
+
+      /* ======================================================
+         GRILLA DE 7 COLUMNAS
+      ====================================================== */
+
+      var cal =
+        document.createElement('div');
+
+
+      cal.className =
+        'cm-grid';
+
+
+      var cells =
+        grid.children;
+
+
+      for(
+        var i=0;
+        i<cells.length;
+        i++
+      ){
+
+        /*
+         * Primeros 7 elementos:
+         * encabezados DOM-SÁB.
+         */
+
+        if(i < 7){
+
+          var wh =
+            document.createElement('div');
+
+
+          wh.className =
+            'cm-week';
+
+
+          wh.textContent =
+            text(cells[i]);
+
+
+          cal.appendChild(wh);
+
+          continue;
+
+        }
+
+
+        /*
+         * Los restantes 42 elementos
+         * son los días.
+         */
+
+        (function(srcDay){
+
+          var b =
+            document.createElement('button');
+
+
+          b.type =
+            'button';
+
+
+          b.className =
+            'cm-day' +
+
+            (
+              srcDay.classList.contains(
+                'out'
+              )
+              ? ' out'
+              : ''
+            ) +
+
+            (
+              srcDay.classList.contains(
+                'selected'
+              )
+              ? ' selected'
+              : ''
+            );
+
+
+          /* ================================================
+             NÚMERO DEL DÍA
+          ================================================= */
+
+          var top =
+            srcDay.querySelector(
+              '.b232261-day-top'
+            );
+
+
+          var dt =
+            document.createElement('div');
+
+
+          dt.className =
+            'cm-day-top';
+
+
+          var dn =
+            document.createElement('strong');
+
+
+          dn.textContent =
+            text(
+              top &&
+              top.querySelector('strong')
+            );
+
+
+          dt.appendChild(dn);
+
+
+          var small =
+            top &&
+            top.querySelector('small');
+
+
+          if(small){
+
+            var sm =
+              document.createElement('small');
+
+
+            sm.textContent =
+              text(small);
+
+
+            dt.appendChild(sm);
+
+          }
+
+
+          b.appendChild(dt);
+
+
+          /* ================================================
+             EVENTOS
+          ================================================= */
+
+          cloneEvents(
+            srcDay,
+            b
+          );
+
+
+          /* ================================================
+             SELECCIÓN
+          ================================================= */
+
+          b.onclick =
+            function(){
+
+              /*
+               * Delegamos al botón propietario.
+               * El calendario original conserva
+               * toda su lógica.
+               */
+
+              srcDay.click();
+
+
+              setTimeout(
+                function(){
+                  render();
+                },
+                80
+              );
+
+            };
+
+
+          cal.appendChild(b);
+
+
+        })(cells[i]);
+
+      }
+
+
+      var calendarWrap =
+        document.createElement('div');
+
+
+      calendarWrap.className =
+        'cm-calendar-wrap';
+
+
+      calendarWrap.appendChild(cal);
+
+
+      shell.appendChild(calendarWrap);
+
+
+      /* ======================================================
+         DETALLE PREMIUM COMPLETO
+
+         Se clona directamente el detalle propietario B232.26.4.
+         No se recalculan valores.
+         Incluye:
+         - resumen de rentabilidad
+         - ingresos y rentabilidad
+         - egresos/pagos/obligaciones
+         - CONTROL DE CAJA
+         - textos auxiliares
+      ====================================================== */
+
+      var detail =
+        src.querySelector(
+          '.b232261-detail'
+        );
+
+      if(detail){
+
+        var dwrap =
+          document.createElement('div');
+
+        dwrap.className =
+          'p181-detail-wrap';
+
+        var fullDetail =
+          detail.cloneNode(true);
+
+        fullDetail.classList.add(
+          'p181-source-detail'
+        );
+
+        fullDetail
+          .querySelectorAll('[id]')
+          .forEach(function(el){
+            el.removeAttribute('id');
+          });
+
+        /*
+         * Garantizar la tarjeta CONTROL DE CAJA.
+         * Preferimos siempre el bloque propietario.
+         */
+        var cashBox = null;
+        var detailBoxes =
+          fullDetail.querySelectorAll(
+            '.b232261-box'
+          );
+
+        for(
+          var cb=0;
+          cb<detailBoxes.length;
+          cb++
+        ){
+
+          if(
+            /control\s+de\s+caja/i.test(
+              text(detailBoxes[cb])
+            )
+          ){
+
+            cashBox =
+              detailBoxes[cb];
+
+            cashBox.classList.add(
+              'p181-cash-control'
+            );
+
+            break;
+
+          }
+
+        }
+
+        /*
+         * Si el propietario no entregara el bloque,
+         * no inventamos importes: se deja constancia
+         * visual de que el dato aún no está disponible.
+         */
+        if(!cashBox){
+
+          var missingCash =
+            document.createElement('div');
+
+          missingCash.className =
+            'p181-cash-control p181-cash-missing';
+
+          missingCash.innerHTML =
+            '<h3>CONTROL DE CAJA</h3>' +
+            '<div class="p181-cash-missing-text">' +
+              'La fuente financiera todavía no entregó este bloque.' +
+            '</div>';
+
+          fullDetail.appendChild(
+            missingCash
+          );
+
+        }
+
+        dwrap.appendChild(
+          fullDetail
+        );
+
+        shell.appendChild(
+          dwrap
+        );
+
+      }
+
+      /* ======================================================
+         MONTAJE
+      ====================================================== */
+
+      host.appendChild(shell);
+
+
+      /* FASE 1: el calendario propietario permanece visible debajo. */
+
+
+
+      return true;
+
+
+    }catch(error){
+
+      console.error(
+        '[CCF CALENDAR MOBILE B4.3.18.1]',
+        error
+      );
+
+
+      return false;
+
+
+    }finally{
+
+      rendering =
+        false;
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     OBSERVADOR SEGURO
+     
+     IMPORTANTE:
+     NO volver a renderizar cuando la modificación
+     proviene de nuestra propia vista.
+  ========================================================== */
+
+  function observe(){
+
+    if(observer){
+
+      observer.disconnect();
+
+      observer = null;
+
+    }
+
+
+    var s =
+      section();
+
+
+    if(!s){
+
+      return;
+
+    }
+
+
+    observer =
+      new MutationObserver(
+        function(mutations){
+
+          if(rendering){
+
+            return;
+
+          }
+
+
+          var mustRender =
+            false;
+
+
+          for(
+            var i=0;
+            i<mutations.length;
+            i++
+          ){
+
+            var m =
+              mutations[i];
+
+
+            /*
+             * Si la modificación ocurre dentro
+             * de nuestra propia vista, ignorarla.
+             */
+
+            if(
+              m.target &&
+              (
+                m.target.id === ID ||
+                (
+                  typeof m.target.closest ===
+                  'function' &&
+                  m.target.closest('#' + ID)
+                )
+              )
+            ){
+
+              continue;
+
+            }
+
+
+            /*
+             * Si alguno de los nodos afectados
+             * pertenece a nuestra vista, ignorar.
+             */
+
+            var affectedByOwnView =
+              false;
+
+
+            var added =
+              m.addedNodes || [];
+
+
+            for(
+              var a=0;
+              a<added.length;
+              a++
+            ){
+
+              if(
+                added[a].nodeType === 1 &&
+                (
+                  added[a].id === ID ||
+                  (
+                    typeof added[a].closest ===
+                    'function' &&
+                    added[a].closest('#' + ID)
+                  )
+                )
+              ){
+
+                affectedByOwnView =
+                  true;
+
+                break;
+
+              }
+
+            }
+
+
+            if(affectedByOwnView){
+
+              continue;
+
+            }
+
+
+            var removed =
+              m.removedNodes || [];
+
+
+            for(
+              var r=0;
+              r<removed.length;
+              r++
+            ){
+
+              if(
+                removed[r].nodeType === 1 &&
+                (
+                  removed[r].id === ID ||
+                  (
+                    typeof removed[r].closest ===
+                    'function' &&
+                    removed[r].closest('#' + ID)
+                  )
+                )
+              ){
+
+                affectedByOwnView =
+                  true;
+
+                break;
+
+              }
+
+            }
+
+
+            if(affectedByOwnView){
+
+              continue;
+
+            }
+
+
+            /*
+             * Cualquier modificación restante
+             * puede provenir del calendario propietario.
+             */
+
+            if(
+              m.type === 'childList' ||
+              m.type === 'characterData'
+            ){
+
+              mustRender =
+                true;
+
+              break;
+
+            }
+
+          }
+
+
+          if(!mustRender){
+
+            return;
+
+          }
+
+
+          clearTimeout(
+            renderTimer
+          );
+
+
+          renderTimer =
+            setTimeout(
+              function(){
+
+                if(
+                  !root() ||
+                  !section()
+                ){
+
+                  return;
+
+                }
+
+
+                /*
+                 * Verificamos nuevamente que
+                 * el calendario propietario exista.
+                 */
+
+                if(source()){
+
+                  render();
+
+                }
+
+              },
+              100
+            );
+
+        }
+      );
+
+
+    observer.observe(
+      s,
+      {
+        childList:true,
+        subtree:true,
+        characterData:true
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     INICIO
+  ========================================================== */
+
+  function start(){
+
+    var r =
+      root();
+
+
+    var s =
+      section();
+
+
+    /*
+     * El script puede estar cargado cuando
+     * la shell móvil todavía no existe.
+     */
+
+    if(!r || !s){
+
+      return false;
+
+    }
+
+
+    /*
+     * Intentamos renderizar.
+     */
+
+    var ok =
+      render();
+
+
+    if(!ok){
+
+      return false;
+
+    }
+
+
+    /*
+     * Una vez que la vista existe,
+     * dejamos de utilizar el timer.
+     */
+
+    if(timer){
+
+      clearInterval(timer);
+
+      timer = null;
+
+    }
+
+
+    /*
+     * Solo instalamos el observer una vez.
+     */
+
+    if(!started){
+
+      observe();
+
+      started = true;
+
+    }
+
+
+    return true;
+
+  }
+
+
+  /* B4.3.18.1 FASE 1: activación controlada por navegación. */
+
+  /* ==========================================================
+     API DE DIAGNÓSTICO
+  ========================================================== */
+
+  window.CCFCalendarMobilePremium181 = {
+
+    version:'B4.3.18.1-PREMIUM-FASE1',
+
+    render:function(){
+
+      return render();
+
+    },
+
+    start:function(){
+
+      return start();
+
+    },
+
+    status:function(){
+
+      return {
+
+        version:'B4.3.18.1-PREMIUM-FASE1',
+
+        mobileRoot:!!root(),
+
+        calendarSection:!!section(),
+
+        sourceCalendar:!!source(),
+
+        mobileView:!!document.getElementById(ID),
+
+        rendering:rendering
+
+      };
+
+    }
+
+  };
+
+
+})();
+
+
+
+/* ==========================================================
+   CCF MOBILE B4.3.18.1 — CALENDARIUM PREMIUM · FASE 1
+   La vista propietaria anterior permanece visible.
+   Esta capa solo presenta datos del DOM de B232.26.4.
+========================================================== */
+function activateCalendarPremium181(){
+  try{
+    if(!window.CCFCalendarMobilePremium181 ||
+       typeof window.CCFCalendarMobilePremium181.start!=='function'){
+      return false;
+    }
+    return !!window.CCFCalendarMobilePremium181.start();
+  }catch(e){
+    console.warn('[CCF MOBILE] Calendarium Premium 18.1',e);
+    return false;
+  }
+}
+
+function scheduleCalendarPremium181(){
+  [60,180,400,800,1400].forEach(ms=>setTimeout(()=>{
+    if(root?.id==='ccf-mobile-b43' && by('calendario')) activateCalendarPremium181();
+  },ms));
+}
+
 
 })();
