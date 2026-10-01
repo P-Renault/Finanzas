@@ -1226,40 +1226,91 @@
        <script>
 /* ============================================================
    CCF MOBILE — CALENDARIO PREMIUM
-   B4.3.18.1-RECONSTRUIDO
+   B4.3.18.1 — ADAPTADO A LA ARQUITECTURA B4.3
    ============================================================
 
-   BASE:
-   - Mantiene el calendario funcional existente.
-   - No clona el motor.
-   - No crea una segunda fuente de datos.
-   - No modifica Supabase/Auth.
-   - Solo aplica presentación Premium al calendario móvil.
+   ARQUITECTURA RESPETADA
+   ----------------------
+   CCF-MOBILE-B4.3.js sigue siendo responsable de:
+   - navegación móvil
+   - montaje de módulos
+   - movimiento de #calendario al b434-module-host
+   - estado activo
 
-   ESTRATEGIA:
-   1. Esperar a que B232.26.4 / CCF-MOBILE termine de montar.
-   2. Detectar tanto la estructura B232 como la estructura base
-      del index actual.
-   3. Aplicar la presentación Premium directamente sobre el
-      módulo existente.
-   4. Reaplicar después de navegación, render y resize.
+   B232.26.4-calendario-safe.js sigue siendo responsable de:
+   - datos
+   - navegación del calendario
+   - selección
+   - detalle
+   - cálculos
+
+   ESTE SCRIPT SOLO:
+   - detecta #calendario después del montaje de B4.3
+   - añade una clase de presentación
+   - aplica CSS Premium al DOM existente
+   - NO mueve
+   - NO clona
+   - NO oculta
+   - NO reemplaza
+   - NO crea otro host
+   - NO crea otra navegación
    ============================================================ */
 
 (function () {
   'use strict';
 
-  var VERSION = 'B4.3.18.1-RECONSTRUIDO';
-  var STYLE_ID = 'ccf-calendar-premium-181-rebuilt-style';
-  var MARKER_ID = 'ccf-calendar-premium-181-rebuilt-marker';
-
+  var VERSION = 'B4.3.18.1-ADAPTADO-B4.3';
+  var STYLE_ID = 'ccf-calendar-premium-b4318-adapted';
+  var ATTR = 'data-ccf-premium-181';
   var timer = null;
   var observer = null;
-  var applying = false;
 
-  function mobile() {
+  function isMobile() {
     return window.matchMedia
       ? window.matchMedia('(max-width:720px)').matches
       : window.innerWidth <= 720;
+  }
+
+  function getCalendar() {
+    /*
+     * IMPORTANTE:
+     * B4.3 mueve físicamente #calendario a:
+     *
+     * #ccf-mobile-b43
+     *   .b434-module-host
+     *      #calendario
+     *
+     * Primero usamos la ruta exacta de la arquitectura.
+     * Los fallbacks solo sirven para no depender de un
+     * nombre de host si B4.3 cambia internamente.
+     */
+    var section =
+      document.querySelector(
+        '#ccf-mobile-b43 .b434-module-host #calendario'
+      );
+
+    if (!section) {
+      section =
+        document.querySelector(
+          '.b434-module-host #calendario'
+        );
+    }
+
+    if (!section) {
+      section = document.getElementById('calendario');
+    }
+
+    return section || null;
+  }
+
+  function getGrid(section) {
+    if (!section) return null;
+
+    return (
+      section.querySelector('.b232261-grid') ||
+      section.querySelector('#calendarGrid') ||
+      section.querySelector('.calendar-grid')
+    );
   }
 
   function installStyle() {
@@ -1270,13 +1321,18 @@
 
     style.textContent = `
 /* ============================================================
-   B4.3.18.1 RECONSTRUIDO — PREMIUM MOBILE
-   Solo #calendario en móvil
+   B4.3.18.1 — PREMIUM CALENDAR
+   La especificidad comienza en la arquitectura real B4.3.
    ============================================================ */
 
 @media (max-width:720px){
 
-  #calendario.ccf-premium-181{
+  /* ----------------------------------------------------------
+     CONTENEDOR REAL DE B4.3
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181],
+  .b434-module-host #calendario[data-ccf-premium-181]{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
@@ -1286,8 +1342,10 @@
     box-sizing:border-box!important;
   }
 
-  #calendario.ccf-premium-181 .calendar-card,
-  #calendario.ccf-premium-181 .b232261-card{
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-card,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-card,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-card,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-card{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
@@ -1295,177 +1353,296 @@
     box-sizing:border-box!important;
     overflow:hidden!important;
     border-radius:20px!important;
-    border:1px solid rgba(148,163,184,.25)!important;
-    background:linear-gradient(180deg,#ffffff,#f8fafc)!important;
-    box-shadow:0 10px 30px rgba(15,23,42,.10)!important;
+    border:1px solid rgba(148,163,184,.28)!important;
+    background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)!important;
+    box-shadow:0 10px 28px rgba(15,23,42,.10)!important;
   }
 
-  #calendario.ccf-premium-181 .calendar-toolbar,
-  #calendario.ccf-premium-181 .b232261-head{
+  /* ----------------------------------------------------------
+     CABECERA
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-toolbar,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-head,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-toolbar,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-head{
     width:100%!important;
-    box-sizing:border-box!important;
-  }
-
-  /* Navegación */
-  #calendario.ccf-premium-181 .nav-month,
-  #calendario.ccf-premium-181 .b232261-actions button{
     min-width:0!important;
     box-sizing:border-box!important;
   }
 
-  /* KPIs */
-  #calendario.ccf-premium-181 .calendar-metrics,
-  #calendario.ccf-premium-181 .b232261-kpis{
+  /* ----------------------------------------------------------
+     NAVEGACIÓN
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .nav-month,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-actions button,
+  .b434-module-host #calendario[data-ccf-premium-181] .nav-month,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-actions button{
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-actions,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-actions{
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:6px!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-actions button,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-actions button{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    min-height:34px!important;
+    padding:5px 3px!important;
+    border-radius:10px!important;
+    font-size:10px!important;
+  }
+
+  /* ----------------------------------------------------------
+     KPI PREMIUM
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-metrics,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-kpis,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-metrics,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-kpis{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    box-sizing:border-box!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-metrics > *,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-kpis > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-metrics > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-kpis > *{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    border-radius:14px!important;
+  }
+
+  /* ----------------------------------------------------------
+     LEYENDA
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .legend,
+  .b434-module-host #calendario[data-ccf-premium-181] .legend{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:8px!important;
+    gap:6px 8px!important;
     width:100%!important;
     min-width:0!important;
     box-sizing:border-box!important;
   }
 
-  #calendario.ccf-premium-181 .calendar-metrics > *,
-  #calendario.ccf-premium-181 .b232261-kpis > *{
-    min-width:0!important;
-    overflow:hidden!important;
-    box-sizing:border-box!important;
-  }
+  /* ----------------------------------------------------------
+     CONTENEDOR DE GRILLA
+     ---------------------------------------------------------- */
 
-  /* Grilla legacy del index */
-  #calendario.ccf-premium-181 .calendar-scroll{
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    overflow:hidden!important;
-    box-sizing:border-box!important;
-    border-radius:12px!important;
-  }
-
-  #calendario.ccf-premium-181 .calendar-grid{
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-scroll,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-scroll,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-scroll,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-scroll{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
+    overflow:hidden!important;
     box-sizing:border-box!important;
+    border:1px solid rgba(148,163,184,.22)!important;
+    border-radius:14px!important;
+    background:#fff!important;
+  }
+
+  /* ----------------------------------------------------------
+     7 COLUMNAS — ANCHO REAL DEL TELÉFONO
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-grid,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-grid,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-grid,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-grid{
     display:grid!important;
     grid-template-columns:repeat(7,minmax(0,1fr))!important;
-  }
-
-  #calendario.ccf-premium-181 .calendar-grid > *{
-    min-width:0!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
-
-  /* Grilla B232 */
-  #calendario.ccf-premium-181 .b232261-scroll{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
-    overflow:hidden!important;
-    box-sizing:border-box!important;
-    border-radius:12px!important;
-  }
-
-  #calendario.ccf-premium-181 .b232261-grid{
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    display:grid!important;
-    grid-template-columns:repeat(7,minmax(0,1fr))!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
   }
 
-  #calendario.ccf-premium-181 .b232261-grid > *{
-    min-width:0!important;
-    max-width:100%!important;
-    box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
+  /* ----------------------------------------------------------
+     ENCABEZADOS DOM-SÁB
+     ---------------------------------------------------------- */
 
-  #calendario.ccf-premium-181 .b232261-day{
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .week-head > *,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-week > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .week-head > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-week > *{
     min-width:0!important;
-    width:auto!important;
     max-width:100%!important;
-    min-height:92px!important;
-    padding:5px!important;
-    box-sizing:border-box!important;
     overflow:hidden!important;
-  }
-
-  #calendario.ccf-premium-181 .b232261-week > div{
-    min-width:0!important;
-    width:auto!important;
-    max-width:100%!important;
-    padding:6px 1px!important;
+    box-sizing:border-box!important;
+    padding:7px 1px!important;
+    text-align:center!important;
     font-size:8px!important;
+    line-height:1!important;
+  }
+
+  /* ----------------------------------------------------------
+     CÉLULAS
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-grid:not(.week-head) > *,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-grid > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-grid:not(.week-head) > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-grid > *{
+    min-width:0!important;
+    max-width:100%!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
   }
 
-  /* Detalle */
-  #calendario.ccf-premium-181 .calendar-day-details,
-  #calendario.ccf-premium-181 .b232261-detail{
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-day,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-day{
+    min-width:0!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:82px!important;
+    height:auto!important;
+    padding:4px 3px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    border-radius:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-day,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-day{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* ----------------------------------------------------------
+     TEXTO INTERNO
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-day *,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-day *,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-day *,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-day *{
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-event,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-event{
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:8px!important;
+    line-height:1.15!important;
+  }
+
+  /* ----------------------------------------------------------
+     DETALLE
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-day-details,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-detail,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-day-details,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-detail{
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
     box-sizing:border-box!important;
     overflow:hidden!important;
+    border-radius:16px!important;
   }
 
-  #calendario.ccf-premium-181 .calendar-day-details *,
-  #calendario.ccf-premium-181 .b232261-detail *{
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .calendar-day-details *,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-detail *,
+  .b434-module-host #calendario[data-ccf-premium-181] .calendar-day-details *,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-detail *{
     max-width:100%!important;
     box-sizing:border-box!important;
     overflow-wrap:anywhere!important;
   }
 
-  /* Evitar scroll horizontal dentro del módulo */
-  #calendario.ccf-premium-181,
-  #calendario.ccf-premium-181 *{
+  /* ----------------------------------------------------------
+     SIN SCROLL HORIZONTAL
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181],
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] *,
+  .b434-module-host #calendario[data-ccf-premium-181],
+  .b434-module-host #calendario[data-ccf-premium-181] *{
     scrollbar-width:none;
   }
 
-  #calendario.ccf-premium-181::-webkit-scrollbar,
-  #calendario.ccf-premium-181 *::-webkit-scrollbar{
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181]::-webkit-scrollbar,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] *::-webkit-scrollbar,
+  .b434-module-host #calendario[data-ccf-premium-181]::-webkit-scrollbar,
+  .b434-module-host #calendario[data-ccf-premium-181] *::-webkit-scrollbar{
     display:none;
   }
 
-  /* Marcador discreto de prueba */
-  #${MARKER_ID}{
-    display:flex!important;
-    align-items:center!important;
-    justify-content:space-between!important;
-    gap:8px!important;
-    margin:0 0 8px!important;
-    padding:7px 10px!important;
-    border-radius:10px!important;
+  /* ----------------------------------------------------------
+     INDICADOR DE PRUEBA
+     ---------------------------------------------------------- */
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181]::before,
+  .b434-module-host #calendario[data-ccf-premium-181]::before{
+    content:'PREMIUM 18.1 · B4.3';
+    display:block!important;
+    width:max-content!important;
+    max-width:100%!important;
+    margin:0 0 7px auto!important;
+    padding:5px 9px!important;
+    border-radius:999px!important;
     background:#0f172a!important;
     color:#fff!important;
-    font:700 10px/1.2 system-ui,sans-serif!important;
+    font:800 8px/1 system-ui,sans-serif!important;
+    letter-spacing:.03em!important;
     box-sizing:border-box!important;
-  }
-
-  #${MARKER_ID} span{
-    opacity:.72!important;
-    font-weight:600!important;
-  }
-
-  #${MARKER_ID} strong{
-    font-weight:800!important;
   }
 }
 
 @media (max-width:390px){
-  #calendario.ccf-premium-181 .b232261-day{
-    min-height:84px!important;
-    padding:4px!important;
+
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-day,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-day{
+    min-height:76px!important;
+    padding:3px 2px!important;
   }
 
-  #calendario.ccf-premium-181 .calendar-grid > *,
-  #calendario.ccf-premium-181 .b232261-grid > *{
-    font-size:9px!important;
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .week-head > *,
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181] .b232261-week > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .week-head > *,
+  .b434-module-host #calendario[data-ccf-premium-181] .b232261-week > *{
+    font-size:7px!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+}
+
+@media (min-width:721px){
+  #ccf-mobile-b43 .b434-module-host #calendario[data-ccf-premium-181],
+  .b434-module-host #calendario[data-ccf-premium-181]{
+    /* El módulo móvil no altera escritorio. */
   }
 }
 `;
@@ -1473,103 +1650,25 @@
     document.head.appendChild(style);
   }
 
-  function findSection() {
-    return document.getElementById('calendario');
-  }
-
-  function findCard(section) {
-    if (!section) return null;
-
-    return section.querySelector('.b232261-card') ||
-           section.querySelector('.calendar-card') ||
-           section;
-  }
-
-  function findGrid(section) {
-    if (!section) return null;
-
-    return section.querySelector('.b232261-grid') ||
-           section.querySelector('#calendarGrid') ||
-           section.querySelector('.calendar-grid');
-  }
-
-  function ensureMarker(section) {
-    if (!section) return;
-
-    var existing = document.getElementById(MARKER_ID);
-
-    if (existing && existing.parentNode === section) {
-      return;
-    }
-
-    if (existing) existing.remove();
-
-    var marker = document.createElement('div');
-    marker.id = MARKER_ID;
-    marker.setAttribute('data-version', VERSION);
-
-    var left = document.createElement('span');
-    left.textContent = 'Calendario móvil';
-
-    var right = document.createElement('strong');
-    right.textContent = 'PREMIUM 18.1';
-
-    marker.appendChild(left);
-    marker.appendChild(right);
-
-    section.insertBefore(marker, section.firstChild);
-  }
-
   function apply() {
-    if (applying) return;
+    if (!isMobile()) return false;
 
-    if (!mobile()) {
-      removePremium();
-      return;
-    }
+    var section = getCalendar();
+    if (!section) return false;
 
-    var section = findSection();
-    if (!section) return;
+    var grid = getGrid(section);
+    if (!grid) return false;
 
-    var card = findCard(section);
-    var grid = findGrid(section);
+    /*
+     * No mover el módulo.
+     * No crear host.
+     * No clonar.
+     * Solo marcar el DOM que B4.3 ya montó.
+     */
+    section.setAttribute(ATTR, VERSION);
+    section.classList.add('ccf-calendar-premium-181');
 
-    if (!card || !grid) return;
-
-    applying = true;
-
-    try {
-      section.classList.add('ccf-premium-181');
-
-      section.setAttribute(
-        'data-ccf-calendar-premium',
-        VERSION
-      );
-
-      ensureMarker(section);
-
-      /*
-       * No se cambia display, no se clona el calendario
-       * y no se reemplaza ningún botón.
-       *
-       * El motor original continúa siendo propietario
-       * de navegación, selección y datos.
-       */
-    } finally {
-      applying = false;
-    }
-  }
-
-  function removePremium() {
-    var section = findSection();
-
-    if (section) {
-      section.classList.remove('ccf-premium-181');
-      section.removeAttribute('data-ccf-calendar-premium');
-    }
-
-    var marker = document.getElementById(MARKER_ID);
-    if (marker) marker.remove();
+    return true;
   }
 
   function schedule(delay) {
@@ -1581,35 +1680,15 @@
   }
 
   function installObserver() {
-    if (observer || !document.body) return;
+    if (observer || !document.body || !window.MutationObserver) {
+      return;
+    }
 
     observer = new MutationObserver(function (mutations) {
       var relevant = false;
 
       for (var i = 0; i < mutations.length; i++) {
         var m = mutations[i];
-
-        if (!m.target) {
-          relevant = true;
-          break;
-        }
-
-        var target = m.target;
-
-        if (
-          target.id === MARKER_ID ||
-          (target.closest && target.closest('#' + MARKER_ID))
-        ) {
-          continue;
-        }
-
-        if (
-          target.id === 'calendario' ||
-          (target.closest && target.closest('#calendario'))
-        ) {
-          relevant = true;
-          break;
-        }
 
         if (m.addedNodes && m.addedNodes.length) {
           relevant = true;
@@ -1620,66 +1699,81 @@
           relevant = true;
           break;
         }
+
+        if (
+          m.target &&
+          m.target.id === 'calendario'
+        ) {
+          relevant = true;
+          break;
+        }
       }
 
-      if (relevant) schedule(80);
+      if (relevant) {
+        schedule(40);
+      }
     });
 
     observer.observe(document.body, {
-      childList: true,
-      subtree: true
+      childList:true,
+      subtree:true
     });
   }
 
   function installNavigationHook() {
-    document.addEventListener(
-      'click',
-      function (event) {
-        var target = event.target;
+    /*
+     * No reemplazamos navigate() de B4.3.
+     * Solo escuchamos sus botones para reaplicar
+     * la presentación después de que el módulo
+     * haya sido montado.
+     */
+    document.addEventListener('click', function (event) {
+      var target = event.target;
 
-        if (!target || !target.closest) return;
+      if (!target || !target.closest) return;
 
-        var calendarButton =
-          target.closest(
-            '#calPrev, #calNext, #calToday, ' +
-            '.b232261-actions button, ' +
-            '[data-tab="calendario"], ' +
-            '[data-module="calendario"]'
-          );
+      var button = target.closest(
+        '[data-tab="calendario"],' +
+        '[data-module="calendario"],' +
+        '#calPrev,' +
+        '#calNext,' +
+        '#calToday,' +
+        '.b232261-actions button'
+      );
 
-        if (calendarButton) {
-          schedule(50);
+      if (!button) return;
 
-          setTimeout(function () {
-            schedule(0);
-          }, 250);
+      schedule(60);
 
-          setTimeout(function () {
-            schedule(0);
-          }, 800);
-        }
-      },
-      true
-    );
+      setTimeout(function () {
+        schedule(0);
+      }, 220);
+
+      setTimeout(function () {
+        schedule(0);
+      }, 650);
+    }, true);
   }
 
   window.CCFCalendarMobilePremium = {
     version: VERSION,
 
     status: function () {
-      var section = findSection();
-      var grid = findGrid(section);
-      var marker = document.getElementById(MARKER_ID);
+      var section = getCalendar();
 
       return {
         version: VERSION,
-        mobile: mobile(),
+        mobile: isMobile(),
         calendarFound: !!section,
-        gridFound: !!grid,
-        premiumFound: !!marker,
-        premiumClass: !!(
+        gridFound: !!(section && getGrid(section)),
+        premiumApplied: !!(
           section &&
-          section.classList.contains('ccf-premium-181')
+          section.getAttribute(ATTR) === VERSION
+        ),
+        host: !!(
+          section &&
+          section.closest &&
+          section.closest('.b434-module-host')
         )
       };
     },
@@ -1689,7 +1783,12 @@
     },
 
     restore: function () {
-      removePremium();
+      var section = getCalendar();
+
+      if (section) {
+        section.removeAttribute(ATTR);
+        section.classList.remove('ccf-calendar-premium-181');
+      }
     }
   };
 
@@ -1698,51 +1797,27 @@
     installObserver();
     installNavigationHook();
 
-    schedule(0);
-
     /*
-     * Ventana corta de montaje para respetar el flujo
-     * existente sin dejar un polling permanente.
+     * B4.3 puede montar el módulo después de este script.
+     * Hacemos una ventana corta de detección, sin interferir
+     * con el montaje.
      */
     var attempts = 0;
 
-    var bootTimer = setInterval(function () {
+    var interval = setInterval(function () {
       attempts++;
-      apply();
 
-      if (
-        attempts >= 30 ||
-        (
-          document.getElementById(MARKER_ID) &&
-          document.getElementById('calendario')
-        )
-      ) {
-        clearInterval(bootTimer);
+      if (apply() || attempts >= 40) {
+        clearInterval(interval);
       }
-    }, 300);
-
-    window.addEventListener(
-      'resize',
-      function () {
-        schedule(100);
-      },
-      { passive: true }
-    );
-
-    window.addEventListener(
-      'orientationchange',
-      function () {
-        schedule(150);
-      },
-      { passive: true }
-    );
+    }, 250);
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener(
       'DOMContentLoaded',
       boot,
-      { once: true }
+      { once:true }
     );
   } else {
     boot();
