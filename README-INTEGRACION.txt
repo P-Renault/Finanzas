@@ -1,44 +1,46 @@
-CCF CALENDAR MOBILE B4.3.18.1
-PAQUETE DE INTEGRACIÓN — 01/10/2026
+CCF CALENDAR MOBILE B4.3.18.1 — INTEGRACIÓN FINAL
+=================================================
 
-ARQUITECTURA ELEGIDA
-Se utiliza una capa aislada propia del módulo calendario:
-- CCF-CALENDAR-MOBILE-B4.3.18.1.css
-- CCF-CALENDAR-MOBILE-B4.3.18.1.js
-
-No se modifica el motor financiero B232.26.4-calendario-safe.js.
-No se modifica Supabase.
-No se modifica CCF-MOBILE-B4.3.css/js.
-El bloque CCF CALENDAR MOBILE B4.3.17 permanece inline en index.html,
-sin alterar su contenido.
+OBJETIVO
+--------
+La vista móvil Premium B4.3.18.1 pasa a ser la ÚNICA representación
+visual del módulo Calendario.
 
 ORDEN VISUAL MÓVIL
-1. B4.3.18.1 Premium — vista principal, equivalente a la referencia 1.
-2. B232.26.4 — vista original/adaptada, visible debajo para validación,
-   equivalente a la referencia 2.
+------------------
+1. Barra azul .b434-header de la shell móvil.
+2. CCF-CALENDAR-MOBILE-B4.3.18.1 Premium.
+3. Navegación inferior móvil.
 
-B4.3.17 queda en DOM como fuente técnica para que B4.3.18.1 pueda leer
-su shell sin eliminar ni modificar el motor existente, pero se oculta
-visualmente para evitar una tercera representación duplicada.
+CAMBIO RESPECTO A LA PRUEBA ANTERIOR
+-------------------------------------
+- Se elimina visualmente la vista anterior B232.26.4.
+- Se elimina visualmente la vista intermedia B4.3.17.
+- Se oculta también cualquier host Bootstrap anterior.
+- B4.3.17 y B232.26.4 NO se eliminan del DOM: permanecen como fuentes
+  técnicas para que Premium 18.1 pueda leer los datos ya generados.
+- No se recalculan importes.
+- No se modifica Supabase.
+- No se modifica CCF-MOBILE-B4.3.js.
+- No se modifica CCF-MOBILE-B4.3.css.
+- No se modifica B232.26.4-calendario-safe.js.
 
-INTEGRACIÓN
-index.html carga, al final:
-<link rel="stylesheet" href="CCF-CALENDAR-MOBILE-B4.3.18.1.css?v=B4.3.18.1">
-<script src="CCF-CALENDAR-MOBILE-B4.3.18.1.js?v=B4.3.18.1"></script>
+ARCHIVOS
+--------
+index.html
+CCF-CALENDAR-MOBILE-B4.3.18.1.js
+CCF-CALENDAR-MOBILE-B4.3.18.1.css
+CCF-MOBILE-B4.3.js
+CCF-MOBILE-B4.3.css
 
-CONTROL DE REGRESIÓN
-- Escritorio: la capa B4.3.18.1 queda oculta.
-- Móvil: la capa Premium ocupa el primer lugar.
-- El calendario B232.26.4 original queda visible.
-- La vista Bootstrap paralela #ccf-bs-calendar-view se oculta para evitar
-  una tercera vista, sin eliminar su DOM ni modificar su motor.
-- La capa Premium no recalcula importes: clona la información generada
-  por B4.3.17/B232.26.4.
+FUENTE / PRESENTACIÓN
+---------------------
+B4.3.17 -> fuente DOM técnica
+B232.26.4 -> fuente DOM financiera existente
+B4.3.18.1 -> única presentación visual
 
-
-B4.3.18.1 — POSICIÓN CORREGIDA
-- La vista Premium se monta inmediatamente después de .b434-header (barra azul del menú móvil).
-- Solo se muestra cuando data-active-module=calendario.
-- No se monta en Resumen ni en otros módulos.
-- El calendario B232.26.4 permanece como vista secundaria dentro del host del módulo.
-- B4.3.17 se conserva como fuente técnica; no se duplica visualmente.
+POSICIÓN
+--------
+Premium se inserta inmediatamente después de .b434-header cuando el
+módulo activo es 'calendario'. Al salir del módulo, Premium se oculta.
+Al regresar, vuelve a colocarse inmediatamente después del header.

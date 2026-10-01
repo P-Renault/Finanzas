@@ -207,10 +207,15 @@
       }
     }
 
-    /* B4.3.17 queda como fuente técnica, no como tercera representación. */
+    /*
+     * MODO FINAL: la vista anterior NO se muestra.
+     * B4.3.17 y B232.26.4 permanecen únicamente como fuentes DOM
+     * para que Premium 18.1 pueda leer/copiar los datos existentes.
+     * La única representación visual del módulo Calendario es Premium.
+     */
     setImportant(base,'display','none');
     setImportant(bootstrap,'display','none');
-    setImportant(source,'display','block');
+    setImportant(source,'display','none');
   }
 
   function startPresentationBridge(){
@@ -314,7 +319,7 @@
   }
 
   window.CCFCalendarMobilePremium181 = {
-    version:'B4.3.18.1-PREMIUM-TEST-OVER-17',
+    version:'B4.3.18.1-PREMIUM-FINAL-OVER-HIDDEN-SOURCES',
     render:render,
     status:function(){
       return {
@@ -330,6 +335,11 @@
         secondaryVisible:!!(
           sourceCalendar() &&
           getComputedStyle(sourceCalendar()).display !== 'none'
+        ),
+        previousViewsHidden:!!(
+          (!sourceHost() || getComputedStyle(sourceHost()).display === 'none') &&
+          (!sourceCalendar() || getComputedStyle(sourceCalendar()).display === 'none') &&
+          (!document.getElementById('ccf-bs-calendar-view') || getComputedStyle(document.getElementById('ccf-bs-calendar-view')).display === 'none')
         )
       };
     }
