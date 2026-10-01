@@ -1226,1044 +1226,526 @@
        <script>
 /* ============================================================
    CCF MOBILE — CALENDARIO PREMIUM
-   B4.3.18.1
+   B4.3.18.1-RECONSTRUIDO
    ============================================================
 
-   OBJETIVO
-   --------
-   Adaptar visualmente el calendario B232.26.4 a móvil
-   sin modificar el motor original.
+   BASE:
+   - Mantiene el calendario funcional existente.
+   - No clona el motor.
+   - No crea una segunda fuente de datos.
+   - No modifica Supabase/Auth.
+   - Solo aplica presentación Premium al calendario móvil.
 
-   FUENTE DE DATOS
-   ---------------
-   #calendario
-   .b232261-card
-   .b232261-grid
-
-   PRINCIPIO
-   ---------
-   El calendario original sigue siendo el dueño de:
-   - datos
-   - navegación
-   - selección
-   - cálculos
-   - eventos
-   - detalle
-
-   Este módulo solamente presenta una COPIA VISUAL.
-
-   NO MODIFICA:
-   - B232.26.4-calendario-safe.js
-   - Supabase
-   - Auth
-   - motores financieros
-   - escritorio
+   ESTRATEGIA:
+   1. Esperar a que B232.26.4 / CCF-MOBILE termine de montar.
+   2. Detectar tanto la estructura B232 como la estructura base
+      del index actual.
+   3. Aplicar la presentación Premium directamente sobre el
+      módulo existente.
+   4. Reaplicar después de navegación, render y resize.
    ============================================================ */
 
 (function () {
   'use strict';
 
-  const VERSION = 'B4.3.18.1';
-  const HOST_ID = 'ccf-calendar-mobile-premium-b4-3-18';
-  const STYLE_ID = 'ccf-calendar-mobile-premium-style-b4-3-18';
+  var VERSION = 'B4.3.18.1-RECONSTRUIDO';
+  var STYLE_ID = 'ccf-calendar-premium-181-rebuilt-style';
+  var MARKER_ID = 'ccf-calendar-premium-181-rebuilt-marker';
 
-  let observer = null;
-  let renderTimer = null;
-  let rendering = false;
+  var timer = null;
+  var observer = null;
+  var applying = false;
 
-  /* ------------------------------------------------------------
-     1. DETECCIÓN MÓVIL
-     ------------------------------------------------------------ */
-
-  function isMobile() {
-    return window.matchMedia &&
-           window.matchMedia('(max-width: 720px)').matches;
+  function mobile() {
+    return window.matchMedia
+      ? window.matchMedia('(max-width:720px)').matches
+      : window.innerWidth <= 720;
   }
 
-  /* ------------------------------------------------------------
-     2. CSS PREMIUM
-     ------------------------------------------------------------ */
+  function installStyle() {
+    if (document.getElementById(STYLE_ID)) return;
 
-  function installStyles() {
-
-    if (document.getElementById(STYLE_ID)) {
-      return;
-    }
-
-    const style = document.createElement('style');
+    var style = document.createElement('style');
     style.id = STYLE_ID;
 
     style.textContent = `
-      /* ========================================================
-         CCF B4.3.18.1 — CONTENEDOR
-         ======================================================== */
-
-      #${HOST_ID} {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-        margin: 0 0 16px 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-      }
-
-      #${HOST_ID},
-      #${HOST_ID} * {
-        box-sizing: border-box;
-      }
-
-      /* --------------------------------------------------------
-         CARD
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .ccf-premium-card {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-
-        border-radius: 18px !important;
-        border: 1px solid rgba(148,163,184,.24) !important;
-
-        background:
-          linear-gradient(
-            180deg,
-            rgba(255,255,255,.98),
-            rgba(248,250,252,.98)
-          ) !important;
-
-        box-shadow:
-          0 8px 28px rgba(15,23,42,.10) !important;
-      }
-
-      /* --------------------------------------------------------
-         CONTENEDORES INTERNOS
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .b232261-scroll {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-
-        overflow: hidden !important;
-
-        border: 0 !important;
-        border-radius: 0 !important;
-      }
-
-      /* --------------------------------------------------------
-         LA GRILLA ES EL PUNTO CRÍTICO
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .b232261-grid {
-        display: grid !important;
-
-        grid-template-columns:
-          repeat(7, minmax(0, 1fr)) !important;
-
-        width: 100% !important;
-        max-width: 100% !important;
-
-        min-width: 0 !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
-
-        overflow: hidden !important;
-      }
-
-      /*
-       * IMPORTANTE:
-       * El motor original utiliza:
-       *
-       * repeat(7,minmax(110px,1fr))
-       * min-width:770px
-       *
-       * Estas propiedades quedan anuladas SOLAMENTE
-       * dentro del clon móvil.
-       */
-
-      #${HOST_ID} .b232261-grid.b232261-week {
-        grid-template-columns:
-          repeat(7, minmax(0, 1fr)) !important;
-
-        min-width: 0 !important;
-        width: 100% !important;
-      }
-
-      /* --------------------------------------------------------
-         CABECERA DE DÍAS
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .b232261-week > div {
-        min-width: 0 !important;
-
-        padding: 7px 2px !important;
-
-        font-size: 9px !important;
-        line-height: 1.1 !important;
-
-        text-align: center !important;
-
-        overflow: hidden !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-
-        border-right:
-          1px solid rgba(255,255,255,.10) !important;
-      }
-
-      /* --------------------------------------------------------
-         DÍAS
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .b232261-day {
-        min-width: 0 !important;
-        width: 100% !important;
-
-        min-height: 96px !important;
-
-        padding: 5px !important;
-
-        overflow: hidden !important;
-
-        word-break: break-word !important;
-        overflow-wrap: anywhere !important;
-
-        font-size: 10px !important;
-      }
-
-      /* --------------------------------------------------------
-         BOTONES DE DÍA
-         -------------------------------------------------------- */
-
-      #${HOST_ID} button {
-        max-width: 100% !important;
-      }
-
-      #${HOST_ID} .b232261-day button {
-        min-width: 0 !important;
-      }
-
-      /* --------------------------------------------------------
-         EVENTOS
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .b232261-event,
-      #${HOST_ID} .b232261-mini,
-      #${HOST_ID} .b232261-more {
-        max-width: 100% !important;
-
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-
-        word-break: break-word !important;
-        overflow-wrap: anywhere !important;
-      }
-
-      /* --------------------------------------------------------
-         DETALLE DEL DÍA
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .b232261-detail,
-      #${HOST_ID} .b232261-box {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-
-        overflow: hidden !important;
-      }
-
-      /* --------------------------------------------------------
-         TEXTOS
-         -------------------------------------------------------- */
-
-      #${HOST_ID} h1,
-      #${HOST_ID} h2,
-      #${HOST_ID} h3,
-      #${HOST_ID} h4,
-      #${HOST_ID} p,
-      #${HOST_ID} span,
-      #${HOST_ID} div {
-        max-width: 100%;
-      }
-
-      /* --------------------------------------------------------
-         SELECTED / FOCUS
-         -------------------------------------------------------- */
-
-      #${HOST_ID} button:focus-visible {
-        outline:
-          2px solid rgba(37,99,235,.75) !important;
-
-        outline-offset: 1px !important;
-      }
-
-      /* --------------------------------------------------------
-         DIAGNÓSTICO
-         -------------------------------------------------------- */
-
-      #${HOST_ID} .ccf-premium-debug {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-
-        gap: 8px !important;
-
-        padding: 7px 10px !important;
-
-        font-size: 9px !important;
-        font-weight: 800 !important;
-
-        letter-spacing: .03em !important;
-
-        color: #475569 !important;
-
-        background: rgba(241,245,249,.85) !important;
-
-        border-bottom:
-          1px solid rgba(148,163,184,.18) !important;
-      }
-
-      #${HOST_ID} .ccf-premium-debug strong {
-        color: #2563eb !important;
-      }
-
-      /* --------------------------------------------------------
-         ESCRITORIO
-         -------------------------------------------------------- */
-
-      @media (min-width: 721px) {
-
-        #${HOST_ID} {
-          display: none !important;
-        }
-
-      }
-
-      /* --------------------------------------------------------
-         TELÉFONOS PEQUEÑOS
-         -------------------------------------------------------- */
-
-      @media (max-width: 390px) {
-
-        #${HOST_ID} .b232261-day {
-          min-height: 88px !important;
-          padding: 4px !important;
-        }
-
-        #${HOST_ID} .b232261-week > div {
-          padding:
-            6px 1px !important;
-
-          font-size: 8px !important;
-        }
-
-      }
-
-    `;
+/* ============================================================
+   B4.3.18.1 RECONSTRUIDO — PREMIUM MOBILE
+   Solo #calendario en móvil
+   ============================================================ */
+
+@media (max-width:720px){
+
+  #calendario.ccf-premium-181{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-card,
+  #calendario.ccf-premium-181 .b232261-card{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    border-radius:20px!important;
+    border:1px solid rgba(148,163,184,.25)!important;
+    background:linear-gradient(180deg,#ffffff,#f8fafc)!important;
+    box-shadow:0 10px 30px rgba(15,23,42,.10)!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-toolbar,
+  #calendario.ccf-premium-181 .b232261-head{
+    width:100%!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Navegación */
+  #calendario.ccf-premium-181 .nav-month,
+  #calendario.ccf-premium-181 .b232261-actions button{
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* KPIs */
+  #calendario.ccf-premium-181 .calendar-metrics,
+  #calendario.ccf-premium-181 .b232261-kpis{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-metrics > *,
+  #calendario.ccf-premium-181 .b232261-kpis > *{
+    min-width:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Grilla legacy del index */
+  #calendario.ccf-premium-181 .calendar-scroll{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    border-radius:12px!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-grid{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-grid > *{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* Grilla B232 */
+  #calendario.ccf-premium-181 .b232261-scroll{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    border-radius:12px!important;
+  }
+
+  #calendario.ccf-premium-181 .b232261-grid{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #calendario.ccf-premium-181 .b232261-grid > *{
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #calendario.ccf-premium-181 .b232261-day{
+    min-width:0!important;
+    width:auto!important;
+    max-width:100%!important;
+    min-height:92px!important;
+    padding:5px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #calendario.ccf-premium-181 .b232261-week > div{
+    min-width:0!important;
+    width:auto!important;
+    max-width:100%!important;
+    padding:6px 1px!important;
+    font-size:8px!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  /* Detalle */
+  #calendario.ccf-premium-181 .calendar-day-details,
+  #calendario.ccf-premium-181 .b232261-detail{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-day-details *,
+  #calendario.ccf-premium-181 .b232261-detail *{
+    max-width:100%!important;
+    box-sizing:border-box!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Evitar scroll horizontal dentro del módulo */
+  #calendario.ccf-premium-181,
+  #calendario.ccf-premium-181 *{
+    scrollbar-width:none;
+  }
+
+  #calendario.ccf-premium-181::-webkit-scrollbar,
+  #calendario.ccf-premium-181 *::-webkit-scrollbar{
+    display:none;
+  }
+
+  /* Marcador discreto de prueba */
+  #${MARKER_ID}{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    margin:0 0 8px!important;
+    padding:7px 10px!important;
+    border-radius:10px!important;
+    background:#0f172a!important;
+    color:#fff!important;
+    font:700 10px/1.2 system-ui,sans-serif!important;
+    box-sizing:border-box!important;
+  }
+
+  #${MARKER_ID} span{
+    opacity:.72!important;
+    font-weight:600!important;
+  }
+
+  #${MARKER_ID} strong{
+    font-weight:800!important;
+  }
+}
+
+@media (max-width:390px){
+  #calendario.ccf-premium-181 .b232261-day{
+    min-height:84px!important;
+    padding:4px!important;
+  }
+
+  #calendario.ccf-premium-181 .calendar-grid > *,
+  #calendario.ccf-premium-181 .b232261-grid > *{
+    font-size:9px!important;
+  }
+}
+`;
 
     document.head.appendChild(style);
   }
 
-  /* ------------------------------------------------------------
-     3. LOCALIZAR CALENDARIO ORIGINAL
-     ------------------------------------------------------------ */
-
-  function findCalendar() {
-
-    const section =
-      document.getElementById('calendario') ||
-      document.querySelector('[id="calendario"]');
-
-    if (!section) {
-      return null;
-    }
-
-    const source =
-      section.querySelector('.b232261-card') ||
-      section.querySelector('[class*="b232261-card"]') ||
-      section;
-
-    const grid =
-      source.querySelector('.b232261-grid.b232261-week') ||
-      source.querySelector('.b232261-grid');
-
-    if (!grid) {
-      return {
-        section,
-        source,
-        grid: null
-      };
-    }
-
-    return {
-      section,
-      source,
-      grid
-    };
+  function findSection() {
+    return document.getElementById('calendario');
   }
 
-  /* ------------------------------------------------------------
-     4. ELIMINAR IDs DUPLICADOS DEL CLON
-     ------------------------------------------------------------ */
+  function findCard(section) {
+    if (!section) return null;
 
-  function removeDuplicateIds(root) {
-
-    root.querySelectorAll('[id]').forEach(function (element) {
-      element.removeAttribute('id');
-    });
-
-    if (root.id) {
-      root.removeAttribute('id');
-    }
+    return section.querySelector('.b232261-card') ||
+           section.querySelector('.calendar-card') ||
+           section;
   }
 
-  /* ------------------------------------------------------------
-     5. CONSTRUIR HOST
-     ------------------------------------------------------------ */
+  function findGrid(section) {
+    if (!section) return null;
 
-  function createHost(section) {
-
-    let host = document.getElementById(HOST_ID);
-
-    if (host && host.parentNode === section.parentNode) {
-      return host;
-    }
-
-    if (host) {
-      host.remove();
-    }
-
-    host = document.createElement('div');
-
-    host.id = HOST_ID;
-
-    host.setAttribute(
-      'data-ccf-calendar-premium',
-      VERSION
-    );
-
-    section.parentNode.insertBefore(
-      host,
-      section
-    );
-
-    return host;
+    return section.querySelector('.b232261-grid') ||
+           section.querySelector('#calendarGrid') ||
+           section.querySelector('.calendar-grid');
   }
 
-  /* ------------------------------------------------------------
-     6. CONECTAR BOTONES DEL CLON CON EL ORIGINAL
-     ------------------------------------------------------------ */
+  function ensureMarker(section) {
+    if (!section) return;
 
-  function bindCloneButtons(clone, source) {
+    var existing = document.getElementById(MARKER_ID);
 
-    const originalButtons =
-      Array.from(
-        source.querySelectorAll('button')
-      );
-
-    const cloneButtons =
-      Array.from(
-        clone.querySelectorAll('button')
-      );
-
-    cloneButtons.forEach(function (cloneButton, index) {
-
-      const originalButton =
-        originalButtons[index];
-
-      if (!originalButton) {
-        return;
-      }
-
-      cloneButton.addEventListener(
-        'click',
-        function (event) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-          originalButton.click();
-
-          /*
-           * El calendario original puede cambiar
-           * inmediatamente después del click.
-           *
-           * Programamos una nueva representación.
-           */
-
-          scheduleRender(80);
-        },
-        true
-      );
-
-    });
-  }
-
-  /* ------------------------------------------------------------
-     7. CONSTRUIR COPIA PREMIUM
-     ------------------------------------------------------------ */
-
-  function buildPremium(calendar) {
-
-    if (!calendar ||
-        !calendar.section ||
-        !calendar.source ||
-        !calendar.grid) {
-
-      return false;
-    }
-
-    const section = calendar.section;
-    const source = calendar.source;
-
-    const host = createHost(section);
-
-    /*
-     * Construimos el clon ANTES de ocultar
-     * el calendario original.
-     */
-
-    const clone =
-      source.cloneNode(true);
-
-    if (!clone) {
-      return false;
-    }
-
-    removeDuplicateIds(clone);
-
-    clone.classList.add(
-      'ccf-premium-card'
-    );
-
-    /*
-     * Marca técnica para comprobar
-     * visualmente que 18.1 está activo.
-     */
-
-    const debug =
-      document.createElement('div');
-
-    debug.className =
-      'ccf-premium-debug';
-
-    debug.innerHTML =
-      '<span>Calendario móvil</span>' +
-      '<strong>PREMIUM ' + VERSION + '</strong>';
-
-    /*
-     * Limpiamos host.
-     */
-
-    host.innerHTML = '';
-
-    host.appendChild(debug);
-    host.appendChild(clone);
-
-    /*
-     * Conectamos botones.
-     */
-
-    bindCloneButtons(
-      clone,
-      source
-    );
-
-    /*
-     * VALIDACIÓN MÍNIMA
-     *
-     * No exigimos 49 elementos.
-     * Solamente comprobamos que exista
-     * la estructura de grilla.
-     */
-
-    const clonedGrid =
-      clone.querySelector('.b232261-grid');
-
-    if (!clonedGrid) {
-
-      host.remove();
-
-      return false;
-    }
-
-    /*
-     * Contamos las columnas existentes.
-     *
-     * El resultado esperado normalmente será:
-     * 7 encabezados + días del período.
-     *
-     * No bloqueamos el montaje si todavía
-     * faltan elementos.
-     */
-
-    const cellCount =
-      clonedGrid.children.length;
-
-    host.setAttribute(
-      'data-grid-cells',
-      String(cellCount)
-    );
-
-    /*
-     * AHORA sí podemos ocultar
-     * el calendario original.
-     */
-
-    source.style.display =
-      'none';
-
-    host.setAttribute(
-      'data-mounted',
-      'true'
-    );
-
-    return true;
-  }
-
-  /* ------------------------------------------------------------
-     8. RESTAURAR ORIGINAL
-     ------------------------------------------------------------ */
-
-  function restoreOriginal() {
-
-    const calendar =
-      findCalendar();
-
-    if (!calendar ||
-        !calendar.source) {
+    if (existing && existing.parentNode === section) {
       return;
     }
 
-    calendar.source.style.display = '';
+    if (existing) existing.remove();
 
-    const host =
-      document.getElementById(HOST_ID);
+    var marker = document.createElement('div');
+    marker.id = MARKER_ID;
+    marker.setAttribute('data-version', VERSION);
 
-    if (host) {
-      host.remove();
-    }
+    var left = document.createElement('span');
+    left.textContent = 'Calendario móvil';
+
+    var right = document.createElement('strong');
+    right.textContent = 'PREMIUM 18.1';
+
+    marker.appendChild(left);
+    marker.appendChild(right);
+
+    section.insertBefore(marker, section.firstChild);
   }
 
-  /* ------------------------------------------------------------
-     9. RENDER PRINCIPAL
-     ------------------------------------------------------------ */
+  function apply() {
+    if (applying) return;
 
-  function render() {
-
-    if (rendering) {
+    if (!mobile()) {
+      removePremium();
       return;
     }
 
-    rendering = true;
+    var section = findSection();
+    if (!section) return;
+
+    var card = findCard(section);
+    var grid = findGrid(section);
+
+    if (!card || !grid) return;
+
+    applying = true;
 
     try {
+      section.classList.add('ccf-premium-181');
 
-      installStyles();
-
-      /*
-       * En escritorio:
-       * no hacemos absolutamente nada.
-       */
-
-      if (!isMobile()) {
-
-        restoreOriginal();
-
-        return;
-      }
-
-      const calendar =
-        findCalendar();
-
-      /*
-       * El módulo todavía puede no existir.
-       *
-       * Esto NO es un error.
-       *
-       * El MutationObserver seguirá esperando.
-       */
-
-      if (!calendar) {
-        return;
-      }
-
-      /*
-       * El módulo existe pero la grilla
-       * todavía está construyéndose.
-       */
-
-      if (!calendar.grid) {
-        return;
-      }
-
-      /*
-       * Si ya existe Premium, reconstruimos
-       * solamente cuando el calendario original
-       * haya cambiado.
-       *
-       * Para mantenerlo robusto durante esta
-       * fase de validación, reconstruimos.
-       */
-
-      buildPremium(calendar);
-
-    } catch (error) {
-
-      console.error(
-        '[CCF ' + VERSION + '] Error:',
-        error
+      section.setAttribute(
+        'data-ccf-calendar-premium',
+        VERSION
       );
 
+      ensureMarker(section);
+
+      /*
+       * No se cambia display, no se clona el calendario
+       * y no se reemplaza ningún botón.
+       *
+       * El motor original continúa siendo propietario
+       * de navegación, selección y datos.
+       */
     } finally {
-
-      rendering = false;
-
+      applying = false;
     }
   }
 
-  /* ------------------------------------------------------------
-     10. PROGRAMADOR DE RENDER
-     ------------------------------------------------------------ */
+  function removePremium() {
+    var section = findSection();
 
-  function scheduleRender(delay) {
+    if (section) {
+      section.classList.remove('ccf-premium-181');
+      section.removeAttribute('data-ccf-calendar-premium');
+    }
 
-    clearTimeout(renderTimer);
-
-    renderTimer =
-      setTimeout(
-        function () {
-          render();
-        },
-        typeof delay === 'number'
-          ? delay
-          : 120
-      );
+    var marker = document.getElementById(MARKER_ID);
+    if (marker) marker.remove();
   }
 
-  /* ------------------------------------------------------------
-     11. OBSERVADOR DINÁMICO
-     ------------------------------------------------------------ */
+  function schedule(delay) {
+    clearTimeout(timer);
+
+    timer = setTimeout(function () {
+      apply();
+    }, typeof delay === 'number' ? delay : 100);
+  }
 
   function installObserver() {
+    if (observer || !document.body) return;
 
-    if (observer) {
-      return;
-    }
+    observer = new MutationObserver(function (mutations) {
+      var relevant = false;
 
-    if (!document.body) {
-      return;
-    }
+      for (var i = 0; i < mutations.length; i++) {
+        var m = mutations[i];
 
-    observer =
-      new MutationObserver(
-        function (mutations) {
-
-          /*
-           * No reaccionar a cambios realizados
-           * exclusivamente dentro del Premium.
-           */
-
-          let relevant = false;
-
-          for (
-            let i = 0;
-            i < mutations.length;
-            i++
-          ) {
-
-            const mutation =
-              mutations[i];
-
-            /*
-             * Ignorar mutaciones internas
-             * del Premium.
-             */
-
-            if (
-              mutation.target &&
-              document.getElementById(HOST_ID) &&
-              document
-                .getElementById(HOST_ID)
-                .contains(mutation.target)
-            ) {
-              continue;
-            }
-
-            /*
-             * Si se agregó/eliminó el host,
-             * tampoco necesitamos otro render
-             * inmediatamente.
-             */
-
-            let onlyPremium = true;
-
-            mutation.addedNodes &&
-            mutation.addedNodes.forEach(
-              function (node) {
-
-                if (
-                  node.nodeType === 1 &&
-                  node.id !== HOST_ID &&
-                  !(
-                    document
-                      .getElementById(HOST_ID) &&
-                    document
-                      .getElementById(HOST_ID)
-                      .contains(node)
-                  )
-                ) {
-                  onlyPremium = false;
-                }
-
-              }
-            );
-
-            mutation.removedNodes &&
-            mutation.removedNodes.forEach(
-              function (node) {
-
-                if (
-                  node.nodeType === 1 &&
-                  node.id !== HOST_ID
-                ) {
-                  onlyPremium = false;
-                }
-
-              }
-            );
-
-            if (!onlyPremium) {
-              relevant = true;
-              break;
-            }
-
-          }
-
-          if (relevant) {
-            scheduleRender(100);
-          }
-
+        if (!m.target) {
+          relevant = true;
+          break;
         }
-      );
 
-    observer.observe(
-      document.body,
-      {
-        childList: true,
-        subtree: true
+        var target = m.target;
+
+        if (
+          target.id === MARKER_ID ||
+          (target.closest && target.closest('#' + MARKER_ID))
+        ) {
+          continue;
+        }
+
+        if (
+          target.id === 'calendario' ||
+          (target.closest && target.closest('#calendario'))
+        ) {
+          relevant = true;
+          break;
+        }
+
+        if (m.addedNodes && m.addedNodes.length) {
+          relevant = true;
+          break;
+        }
+
+        if (m.removedNodes && m.removedNodes.length) {
+          relevant = true;
+          break;
+        }
       }
+
+      if (relevant) schedule(80);
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  function installNavigationHook() {
+    document.addEventListener(
+      'click',
+      function (event) {
+        var target = event.target;
+
+        if (!target || !target.closest) return;
+
+        var calendarButton =
+          target.closest(
+            '#calPrev, #calNext, #calToday, ' +
+            '.b232261-actions button, ' +
+            '[data-tab="calendario"], ' +
+            '[data-module="calendario"]'
+          );
+
+        if (calendarButton) {
+          schedule(50);
+
+          setTimeout(function () {
+            schedule(0);
+          }, 250);
+
+          setTimeout(function () {
+            schedule(0);
+          }, 800);
+        }
+      },
+      true
     );
   }
 
-  /* ------------------------------------------------------------
-     12. CAMBIO DE TAMAÑO / ORIENTACIÓN
-     ------------------------------------------------------------ */
-
-  /*
-   * Entrada explícita al módulo Calendario.
-   * El observer cubre cambios estructurales; este hook cubre
-   * navegación por pestañas cuando el DOM ya existe.
-   */
-  document.addEventListener(
-    'click',
-    function (event) {
-
-      const tab =
-        event.target.closest &&
-        event.target.closest(
-          '[data-tab="calendario"]'
-        );
-
-      if (!tab) return;
-
-      scheduleRender(50);
-
-      setTimeout(function () {
-        scheduleRender(0);
-      }, 300);
-
-      setTimeout(function () {
-        scheduleRender(0);
-      }, 1000);
-
-    },
-    true
-  );
-
-  window.addEventListener(
-    'resize',
-    function () {
-
-      scheduleRender(150);
-
-    },
-    { passive: true }
-  );
-
-  window.addEventListener(
-    'orientationchange',
-    function () {
-
-      scheduleRender(250);
-
-    },
-    { passive: true }
-  );
-
-  /* ------------------------------------------------------------
-     13. API DE DIAGNÓSTICO
-     ------------------------------------------------------------ */
-
   window.CCFCalendarMobilePremium = {
-
     version: VERSION,
 
     status: function () {
-
-      const calendar =
-        findCalendar();
-
-      const host =
-        document.getElementById(
-          HOST_ID
-        );
-
-      const grid =
-        calendar &&
-        calendar.grid
-          ? calendar.grid
-          : null;
+      var section = findSection();
+      var grid = findGrid(section);
+      var marker = document.getElementById(MARKER_ID);
 
       return {
-
         version: VERSION,
-
-        mobile:
-          isMobile(),
-
-        calendarFound:
-          !!calendar,
-
-        sourceFound:
-          !!(
-            calendar &&
-            calendar.source
-          ),
-
-        gridFound:
-          !!grid,
-
-        originalCells:
-          grid
-            ? grid.children.length
-            : 0,
-
-        premiumFound:
-          !!host,
-
-        premiumMounted:
-          !!(
-            host &&
-            host.getAttribute(
-              'data-mounted'
-            ) === 'true'
-          ),
-
-        premiumCells:
-          host
-            ? host.getAttribute(
-                'data-grid-cells'
-              )
-            : null
-
+        mobile: mobile(),
+        calendarFound: !!section,
+        gridFound: !!grid,
+        premiumFound: !!marker,
+        premiumClass: !!(
+          section &&
+          section.classList.contains('ccf-premium-181')
+        )
       };
-
     },
 
     render: function () {
-      scheduleRender(0);
+      schedule(0);
     },
 
     restore: function () {
-      restoreOriginal();
+      removePremium();
     }
-
   };
 
-  /* ------------------------------------------------------------
-     14. ARRANQUE
-     ------------------------------------------------------------ */
-
   function boot() {
-
-    installStyles();
-
+    installStyle();
     installObserver();
+    installNavigationHook();
+
+    schedule(0);
 
     /*
-     * Primer intento.
+     * Ventana corta de montaje para respetar el flujo
+     * existente sin dejar un polling permanente.
      */
+    var attempts = 0;
 
-    scheduleRender(0);
+    var bootTimer = setInterval(function () {
+      attempts++;
+      apply();
 
-    /*
-     * El sistema puede cargar el módulo
-     * después del primer arranque.
-     *
-     * Por eso hacemos varios intentos
-     * cortos, no un único intento.
-     */
+      if (
+        attempts >= 30 ||
+        (
+          document.getElementById(MARKER_ID) &&
+          document.getElementById('calendario')
+        )
+      ) {
+        clearInterval(bootTimer);
+      }
+    }, 300);
 
-    let attempts = 0;
+    window.addEventListener(
+      'resize',
+      function () {
+        schedule(100);
+      },
+      { passive: true }
+    );
 
-    const bootTimer =
-      setInterval(
-        function () {
-
-          attempts++;
-
-          scheduleRender(0);
-
-          if (
-            attempts >= 40 ||
-            document.getElementById(HOST_ID)
-          ) {
-
-            clearInterval(
-              bootTimer
-            );
-
-          }
-
-        },
-        500
-      );
-
+    window.addEventListener(
+      'orientationchange',
+      function () {
+        schedule(150);
+      },
+      { passive: true }
+    );
   }
 
-  /*
-   * Esperar DOM.
-   */
-
-  if (
-    document.readyState ===
-    'loading'
-  ) {
-
+  if (document.readyState === 'loading') {
     document.addEventListener(
       'DOMContentLoaded',
       boot,
       { once: true }
     );
-
   } else {
-
     boot();
-
   }
 
 })();
