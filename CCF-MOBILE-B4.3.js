@@ -307,6 +307,38 @@ function observeCalendarMobile(){
   scheduleCalendarMobileAdapt();
 }
 
+function scheduleCalendarPremium181(){
+  /*
+   * B4.3.18.1 no puede depender del boot inicial del IIFE Premium:
+   * al cargar la aplicación #ccf-mobile-b43 y #calendario todavía pueden
+   * no existir porque la shell móvil se construye después de autenticación.
+   * La navegación al módulo Calendario es el punto fiable de montaje.
+   */
+  if(!mobile()) return false;
+  const tryStart=()=>{
+    const api=window.CCFCalendarMobilePremium181;
+    if(api && typeof api.start==='function'){
+      try{
+        if(api.start()) return true;
+      }catch(e){
+        console.warn('[CCF MOBILE] B4.3.18.1 start',e);
+      }
+    }
+    return false;
+  };
+
+  if(tryStart()) return true;
+
+  [80,180,350,600,1000,1600,2400,3200].forEach(ms=>setTimeout(()=>{
+    if(!mobile()) return;
+    const section=by('calendario');
+    if(!section || section.classList.contains('hidden')) return;
+    tryStart();
+  },ms));
+
+  return false;
+}
+
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
