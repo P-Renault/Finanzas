@@ -92,148 +92,6 @@
 </script>
 
 
-
-<!-- CCF B4.3.18.1 · Premium inline: se declara antes del módulo Calendario. -->
-<script type="text/javascript" id="ccf-calendar-mobile-premium-b4-3-18-1-after17">
-(function(){
-  'use strict';
-
-  var ID='ccf-calendar-mobile-premium-b4-3-18-1-after17';
-  var observer=null;
-  var rendering=false;
-  var retryTimer=null;
-
-  function mobile(){ return window.matchMedia('(max-width:720px)').matches; }
-  function section(){ return document.getElementById('calendario'); }
-  function source(){
-    var s=section();
-    return s ? s.querySelector('.b232261-card') : null;
-  }
-  function txt(el){ return String((el&&el.textContent)||'').replace(/\s+/g,' ').trim(); }
-
-  function mapClasses(clone){
-    var head=clone.querySelector('.b232261-head');
-    if(head){
-      head.classList.add('cm-head');
-      var h2=head.querySelector('h2'); if(h2) h2.classList.add('cm-title');
-      var sub=head.querySelector('.b232261-sub'); if(sub) sub.classList.add('cm-sub');
-      var actions=head.querySelector('.b232261-actions'); if(actions) actions.classList.add('cm-actions');
-    }
-
-    clone.querySelectorAll('.b232261-kpi').forEach(function(k){k.classList.add('cm-kpi');});
-
-    var grid=clone.querySelector('.b232261-grid.b232261-week');
-    if(grid){
-      grid.classList.add('cm-grid');
-      Array.prototype.forEach.call(grid.children,function(cell,i){
-        if(i<7){ cell.classList.add('cm-week'); }
-        else{
-          cell.classList.add('cm-day');
-          var top=cell.querySelector('.b232261-day-top'); if(top) top.classList.add('cm-day-top');
-          cell.querySelectorAll('.b232261-event').forEach(function(e){e.classList.add('cm-event');});
-          cell.querySelectorAll('.b232261-mini,.b232261-more').forEach(function(e){e.classList.add('cm-mini');});
-        }
-      });
-    }
-
-    var scope=clone.querySelector('.b232261-scope'); if(scope) scope.classList.add('cm-scope');
-    var detail=clone.querySelector('.b232261-detail');
-    if(detail){
-      detail.classList.add('cm-detail','p181-source-detail');
-      detail.querySelectorAll('.b232261-box').forEach(function(b){b.classList.add('cm-box');});
-    }
-  }
-
-  function wire(clone,original){
-    var a=clone.querySelectorAll('.b232261-actions button');
-    var b=original.querySelectorAll('.b232261-actions button');
-    for(var i=0;i<a.length&&i<b.length;i++){
-      (function(dst,src){dst.addEventListener('click',function(){src.click();schedule();});})(a[i],b[i]);
-    }
-    var da=clone.querySelectorAll('.b232261-day');
-    var db=original.querySelectorAll('.b232261-day');
-    for(var d=0;d<da.length&&d<db.length;d++){
-      (function(dst,src){dst.addEventListener('click',function(){src.click();schedule();});})(da[d],db[d]);
-    }
-  }
-
-  function hideOriginal(original){
-    original.dataset.ccfPremiumSource='1';
-    original.style.setProperty('display','none','important');
-  }
-
-  function restoreOriginal(){
-    var s=section(); if(!s)return;
-    var o=s.querySelector('.b232261-card[data-ccf-premium-source="1"]');
-    if(o){o.style.removeProperty('display');delete o.dataset.ccfPremiumSource;}
-  }
-
-  function render(){
-    if(rendering||!mobile())return false;
-    var s=section(), original=source();
-    if(!s||!original)return false;
-    rendering=true;
-    try{
-      var host=document.getElementById(ID);
-      if(!host){
-        host=document.createElement('section');
-        host.id=ID;
-        host.setAttribute('data-ccf-premium-calendar','1');
-        original.parentNode.insertBefore(host,original);
-      }
-      host.innerHTML='';
-      var clone=original.cloneNode(true);
-      clone.removeAttribute('id');
-      clone.classList.add('p181-shell');
-      clone.querySelectorAll('[id]').forEach(function(el){el.removeAttribute('id');});
-      mapClasses(clone);
-      host.appendChild(clone);
-      wire(clone,original);
-      hideOriginal(original);
-      return true;
-    }catch(e){
-      console.error('[CCF B4.3.18.1] render',e);
-      return false;
-    }finally{rendering=false;}
-  }
-
-  function observe(){
-    var s=section();
-    if(!s)return;
-    observer&&observer.disconnect();
-    observer=new MutationObserver(function(ms){
-      if(rendering)return;
-      var relevant=ms.some(function(m){return !(m.target&&m.target.closest&&m.target.closest('#'+ID));});
-      if(relevant){clearTimeout(observer.__timer);observer.__timer=setTimeout(render,120);}
-    });
-    observer.observe(s,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class','style']});
-  }
-
-  function schedule(){
-    [0,80,180,350,600,1000,1600].forEach(function(ms){setTimeout(function(){if(mobile())render();},ms);});
-    if(!retryTimer)retryTimer=setTimeout(function(){retryTimer=null;},1700);
-  }
-
-  function start(){
-    if(!mobile())return false;
-    var ok=render();
-    if(ok)observe();
-    else schedule();
-    return ok;
-  }
-
-  window.CCFCalendarMobilePremium181={
-    version:'B4.3.18.1-INTEGRATED-B232',
-    start:start,
-    render:render,
-    status:function(){
-      var s=section(),host=document.getElementById(ID),src=source();
-      return {section:!!s,source:!!src,premium:!!host,attached:!!(host&&s&&host.parentNode===s)};
-    }
-  };
-
-})();
-</script>
 </head>
 
 <body>
@@ -1366,6 +1224,150 @@
 <script src="B234-FINAL-RECONCILIACION.js?v=234.3-final"></script>
 
   <script src="CCF-MOBILE-B4.3.js?v=B4.3.10"></script>
+
+<!-- CCF B4.3.18.1 · Premium inline integrado al final del documento. NO es módulo ni archivo externo. -->
+<!-- CCF B4.3.18.1 · Premium inline: se declara antes del módulo Calendario. -->
+<script type="text/javascript" id="ccf-calendar-mobile-premium-b4-3-18-1-after17">
+(function(){
+  'use strict';
+
+  var ID='ccf-calendar-mobile-premium-b4-3-18-1-after17';
+  var observer=null;
+  var rendering=false;
+  var retryTimer=null;
+
+  function mobile(){ return window.matchMedia('(max-width:720px)').matches; }
+  function section(){ return document.getElementById('calendario'); }
+  function source(){
+    var s=section();
+    return s ? s.querySelector('.b232261-card') : null;
+  }
+  function txt(el){ return String((el&&el.textContent)||'').replace(/\s+/g,' ').trim(); }
+
+  function mapClasses(clone){
+    var head=clone.querySelector('.b232261-head');
+    if(head){
+      head.classList.add('cm-head');
+      var h2=head.querySelector('h2'); if(h2) h2.classList.add('cm-title');
+      var sub=head.querySelector('.b232261-sub'); if(sub) sub.classList.add('cm-sub');
+      var actions=head.querySelector('.b232261-actions'); if(actions) actions.classList.add('cm-actions');
+    }
+
+    clone.querySelectorAll('.b232261-kpi').forEach(function(k){k.classList.add('cm-kpi');});
+
+    var grid=clone.querySelector('.b232261-grid.b232261-week');
+    if(grid){
+      grid.classList.add('cm-grid');
+      Array.prototype.forEach.call(grid.children,function(cell,i){
+        if(i<7){ cell.classList.add('cm-week'); }
+        else{
+          cell.classList.add('cm-day');
+          var top=cell.querySelector('.b232261-day-top'); if(top) top.classList.add('cm-day-top');
+          cell.querySelectorAll('.b232261-event').forEach(function(e){e.classList.add('cm-event');});
+          cell.querySelectorAll('.b232261-mini,.b232261-more').forEach(function(e){e.classList.add('cm-mini');});
+        }
+      });
+    }
+
+    var scope=clone.querySelector('.b232261-scope'); if(scope) scope.classList.add('cm-scope');
+    var detail=clone.querySelector('.b232261-detail');
+    if(detail){
+      detail.classList.add('cm-detail','p181-source-detail');
+      detail.querySelectorAll('.b232261-box').forEach(function(b){b.classList.add('cm-box');});
+    }
+  }
+
+  function wire(clone,original){
+    var a=clone.querySelectorAll('.b232261-actions button');
+    var b=original.querySelectorAll('.b232261-actions button');
+    for(var i=0;i<a.length&&i<b.length;i++){
+      (function(dst,src){dst.addEventListener('click',function(){src.click();schedule();});})(a[i],b[i]);
+    }
+    var da=clone.querySelectorAll('.b232261-day');
+    var db=original.querySelectorAll('.b232261-day');
+    for(var d=0;d<da.length&&d<db.length;d++){
+      (function(dst,src){dst.addEventListener('click',function(){src.click();schedule();});})(da[d],db[d]);
+    }
+  }
+
+  function hideOriginal(original){
+    original.dataset.ccfPremiumSource='1';
+    original.style.setProperty('display','none','important');
+  }
+
+  function restoreOriginal(){
+    var s=section(); if(!s)return;
+    var o=s.querySelector('.b232261-card[data-ccf-premium-source="1"]');
+    if(o){o.style.removeProperty('display');delete o.dataset.ccfPremiumSource;}
+  }
+
+  function render(){
+    if(rendering||!mobile())return false;
+    var s=section(), original=source();
+    if(!s||!original)return false;
+    rendering=true;
+    try{
+      var host=document.getElementById(ID);
+      if(!host){
+        host=document.createElement('section');
+        host.id=ID;
+        host.setAttribute('data-ccf-premium-calendar','1');
+        original.parentNode.insertBefore(host,original);
+      }
+      host.innerHTML='';
+      var clone=original.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.classList.add('p181-shell');
+      clone.querySelectorAll('[id]').forEach(function(el){el.removeAttribute('id');});
+      mapClasses(clone);
+      host.appendChild(clone);
+      wire(clone,original);
+      hideOriginal(original);
+      return true;
+    }catch(e){
+      console.error('[CCF B4.3.18.1] render',e);
+      return false;
+    }finally{rendering=false;}
+  }
+
+  function observe(){
+    var s=section();
+    if(!s)return;
+    observer&&observer.disconnect();
+    observer=new MutationObserver(function(ms){
+      if(rendering)return;
+      var relevant=ms.some(function(m){return !(m.target&&m.target.closest&&m.target.closest('#'+ID));});
+      if(relevant){clearTimeout(observer.__timer);observer.__timer=setTimeout(render,120);}
+    });
+    observer.observe(s,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class','style']});
+  }
+
+  function schedule(){
+    [0,80,180,350,600,1000,1600].forEach(function(ms){setTimeout(function(){if(mobile())render();},ms);});
+    if(!retryTimer)retryTimer=setTimeout(function(){retryTimer=null;},1700);
+  }
+
+  function start(){
+    if(!mobile())return false;
+    var ok=render();
+    if(ok)observe();
+    else schedule();
+    return ok;
+  }
+
+  window.CCFCalendarMobilePremium181={
+    version:'B4.3.18.1-INTEGRATED-B232',
+    start:start,
+    render:render,
+    status:function(){
+      var s=section(),host=document.getElementById(ID),src=source();
+      return {section:!!s,source:!!src,premium:!!host,attached:!!(host&&s&&host.parentNode===s)};
+    }
+  };
+
+})();
+</script>
+
 
  
     
