@@ -331,12 +331,26 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptMovementsMobile,2500);
    }
    if(id==='calendario'){
+     /*
+      * B4.3.18.1 Premium: se acopla sobre la vista calendario existente.
+      * La vista/engine B232.26.4 no se sustituye ni recalcula.
+      * El script Premium permanece integrado en index.html.
+      */
      observeCalendarMobile();
      setTimeout(activateBootstrapCalendarView,120);
      setTimeout(adaptB232261CalendarMobile,50);
      setTimeout(adaptB232261CalendarMobile,150);
      setTimeout(adaptB232261CalendarMobile,350);
      setTimeout(adaptB232261CalendarMobile,800);
+     const mountPremium181=()=>{
+       const api=window.CCFCalendarMobilePremium181;
+       if(!api||typeof api.render!=='function')return false;
+       try{return !!api.render();}catch(e){console.warn('[CCF MOBILE] B4.3.18.1',e);return false;}
+     };
+     [180,400,800,1400,2200].forEach(ms=>setTimeout(()=>{
+       if(root?.id==='ccf-mobile-b43'&&by('calendario'))mountPremium181();
+     },ms));
+     mountPremium181();
    }
    setActive(id);
    return true;

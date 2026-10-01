@@ -2459,3 +2459,43 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   position:relative!important;
   z-index:20!important;
 }
+
+
+/* ============================================================
+   CCF B4.3.18.1 — INTEGRACIÓN PREMIUM SOBRE CALENDARIO EXISTENTE
+   La fuente funcional B232.26.4 permanece intacta. Estas reglas
+   solo garantizan acoplamiento y contención de la capa móvil.
+   ============================================================ */
+@media(max-width:720px){
+  #ccf-mobile-b43 #ccf-calendar-mobile-direct-b4-3-17,
+  #ccf-mobile-b43 #ccf-calendar-mobile-premium-b4-3-18-1-after17{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 #ccf-calendar-mobile-direct-b4-3-17{
+    margin-left:0!important;
+    margin-right:0!important;
+    overflow:hidden!important;
+  }
+  #ccf-mobile-b43 #ccf-calendar-mobile-premium-b4-3-18-1-after17{
+    margin-left:0!important;
+    margin-right:0!important;
+    overflow:hidden!important;
+  }
+  #ccf-mobile-b43 #ccf-calendar-mobile-premium-b4-3-18-1-after17 .p181-shell{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  #ccf-mobile-b43 #ccf-calendar-mobile-premium-b4-3-18-1-after17 .p181-shell .cm-calendar,
+  #ccf-mobile-b43 #ccf-calendar-mobile-premium-b4-3-18-1-after17 .p181-shell .cm-grid,
+  #ccf-mobile-b43 #ccf-calendar-mobile-premium-b4-3-18-1-after17 .p181-shell .cm-month-grid{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+}
