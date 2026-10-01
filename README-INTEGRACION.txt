@@ -34,3 +34,11 @@ CONTROL DE REGRESIÓN
   una tercera vista, sin eliminar su DOM ni modificar su motor.
 - La capa Premium no recalcula importes: clona la información generada
   por B4.3.17/B232.26.4.
+
+
+B4.3.18.1 — POSICIÓN CORREGIDA
+- La vista Premium se monta inmediatamente después de .b434-header (barra azul del menú móvil).
+- Solo se muestra cuando data-active-module=calendario.
+- No se monta en Resumen ni en otros módulos.
+- El calendario B232.26.4 permanece como vista secundaria dentro del host del módulo.
+- B4.3.17 se conserva como fuente técnica; no se duplica visualmente.

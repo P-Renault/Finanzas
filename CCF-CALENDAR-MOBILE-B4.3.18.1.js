@@ -92,15 +92,29 @@
     rendering = true;
 
     try{
+      /*
+       * POSICIÓN DEFINITIVA B4.3.18.1:
+       * el Premium pertenece visualmente al MÓDULO CALENDARIO, pero su
+       * contenedor se monta inmediatamente después de la barra azul
+       * .b434-header de la shell móvil.
+       *
+       * Esto evita que quede debajo del contenido del Resumen y evita
+       * que el calendario herede el orden vertical del módulo host.
+       */
+      var mobileRoot = document.getElementById('ccf-mobile-b43');
+      var blueHeader = mobileRoot && mobileRoot.querySelector('.b434-header');
       var host = document.getElementById(ID);
 
       if(!host){
         host = document.createElement('section');
         host.id = ID;
+      }
 
-        /* Integración: la vista Premium B4.3.18.1 es la vista principal.
-         * B4.3.17 permanece como motor/base técnico y se mantiene en DOM.
-         */
+      if(blueHeader && blueHeader.parentNode){
+        if(blueHeader.nextElementSibling !== host){
+          blueHeader.parentNode.insertBefore(host, blueHeader.nextElementSibling);
+        }
+      }else if(original.parentNode && host.parentNode !== original.parentNode){
         original.parentNode.insertBefore(host, original);
       }
 
@@ -174,12 +188,26 @@
     var premium=document.getElementById(ID);
     var source=sourceCalendar();
     var bootstrap=document.getElementById('ccf-bs-calendar-view');
+    var mobileRoot=document.getElementById('ccf-mobile-b43');
+    var moduleHost=mobileRoot && mobileRoot.querySelector('[data-module-host]');
+    var activeModule=moduleHost && moduleHost.getAttribute('data-active-module');
+    var calendarActive=activeModule==='calendario';
+    var blueHeader=mobileRoot && mobileRoot.querySelector('.b434-header');
 
-    if(premium && base && premium.parentNode===base.parentNode &&
-       base.previousElementSibling!==premium){
-      base.parentNode.insertBefore(premium,base);
+    /* La Premium solo se muestra cuando el usuario está dentro del módulo
+       Calendario. Nunca aparece en Resumen ni en otro módulo. */
+    if(premium){
+      if(calendarActive && blueHeader && blueHeader.parentNode){
+        if(blueHeader.nextElementSibling!==premium){
+          blueHeader.parentNode.insertBefore(premium,blueHeader.nextElementSibling);
+        }
+        setImportant(premium,'display','block');
+      }else{
+        setImportant(premium,'display','none');
+      }
     }
 
+    /* B4.3.17 queda como fuente técnica, no como tercera representación. */
     setImportant(base,'display','none');
     setImportant(bootstrap,'display','none');
     setImportant(source,'display','block');
@@ -205,6 +233,18 @@
     });
 
     section.__ccfB4318BridgeObserver=bridgeObserver;
+
+    /* El router móvil cambia data-active-module al navegar. Se observa
+       esa señal para ocultar Premium al salir de Calendario y volver a
+       colocarlo inmediatamente bajo la barra azul al regresar. */
+    if(mobileRoot && !mobileRoot.__ccfB4318RootObserver){
+      var rootObserver=new MutationObserver(function(){
+        window.clearTimeout(rootObserver.__timer);
+        rootObserver.__timer=window.setTimeout(maintainPresentation,20);
+      });
+      rootObserver.observe(mobileRoot,{subtree:true,attributes:true,attributeFilter:['data-active-module','class']});
+      mobileRoot.__ccfB4318RootObserver=rootObserver;
+    }
   }
 
   function observe(){
@@ -281,9 +321,10 @@
         base17:!!sourceHost(),
         premium181:!!document.getElementById(ID),
         primary:!!(
-          sourceHost() &&
           document.getElementById(ID) &&
-          sourceHost().previousElementSibling === document.getElementById(ID)
+          document.getElementById('ccf-mobile-b43') &&
+          document.getElementById('ccf-mobile-b43').querySelector('.b434-header') &&
+          document.getElementById('ccf-mobile-b43').querySelector('.b434-header').nextElementSibling === document.getElementById(ID)
         ),
         secondaryCalendar:!!sourceCalendar(),
         secondaryVisible:!!(
