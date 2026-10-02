@@ -92,17 +92,6 @@
     rendering = true;
 
     try{
-      /*
-       * POSICIÓN DEFINITIVA B4.3.18.1:
-       * el Premium pertenece visualmente al MÓDULO CALENDARIO, pero su
-       * contenedor se monta inmediatamente después de la barra azul
-       * .b434-header de la shell móvil.
-       *
-       * Esto evita que quede debajo del contenido del Resumen y evita
-       * que el calendario herede el orden vertical del módulo host.
-       */
-      var mobileRoot = document.getElementById('ccf-mobile-b43');
-      var blueHeader = mobileRoot && mobileRoot.querySelector('.b434-header');
       var host = document.getElementById(ID);
 
       if(!host){
@@ -110,11 +99,7 @@
         host.id = ID;
       }
 
-      if(blueHeader && blueHeader.parentNode){
-        if(blueHeader.nextElementSibling !== host){
-          blueHeader.parentNode.insertBefore(host, blueHeader.nextElementSibling);
-        }
-      }else if(original.parentNode && host.parentNode !== original.parentNode){
+      if(original.parentNode && host.parentNode !== original.parentNode){
         original.parentNode.insertBefore(host, original);
       }
 
@@ -187,21 +172,16 @@
     var base=document.getElementById(SOURCE);
     var premium=document.getElementById(ID);
     var source=sourceCalendar();
-    var allSources=document.querySelectorAll('#calendario .b232261-card');
     var bootstrap=document.getElementById('ccf-bs-calendar-view');
     var mobileRoot=document.getElementById('ccf-mobile-b43');
     var moduleHost=mobileRoot && mobileRoot.querySelector('[data-module-host]');
     var activeModule=moduleHost && moduleHost.getAttribute('data-active-module');
     var calendarActive=activeModule==='calendario';
-    var blueHeader=mobileRoot && mobileRoot.querySelector('.b434-header');
 
     /* La Premium solo se muestra cuando el usuario está dentro del módulo
        Calendario. Nunca aparece en Resumen ni en otro módulo. */
     if(premium){
-      if(calendarActive && blueHeader && blueHeader.parentNode){
-        if(blueHeader.nextElementSibling!==premium){
-          blueHeader.parentNode.insertBefore(premium,blueHeader.nextElementSibling);
-        }
+      if(calendarActive){
         setImportant(premium,'display','block');
       }else{
         setImportant(premium,'display','none');
@@ -216,16 +196,6 @@
      */
     setImportant(base,'display','none');
     setImportant(bootstrap,'display','none');
-    allSources.forEach(function(card){
-      setImportant(card,'display','none');
-      setImportant(card,'visibility','hidden');
-      setImportant(card,'height','0');
-      setImportant(card,'min-height','0');
-      setImportant(card,'margin','0');
-      setImportant(card,'padding','0');
-      setImportant(card,'overflow','hidden');
-      setImportant(card,'pointer-events','none');
-    });
     setImportant(source,'display','none');
   }
 
@@ -339,8 +309,7 @@
         primary:!!(
           document.getElementById(ID) &&
           document.getElementById('ccf-mobile-b43') &&
-          document.getElementById('ccf-mobile-b43').querySelector('.b434-header') &&
-          document.getElementById('ccf-mobile-b43').querySelector('.b434-header').nextElementSibling === document.getElementById(ID)
+          document.getElementById(ID).parentNode === document.getElementById('calendario')
         ),
         secondaryCalendar:!!sourceCalendar(),
         secondaryVisible:!!(
