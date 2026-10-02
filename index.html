@@ -611,89 +611,8 @@
          ========================================================= -->
     <section id="calendario" class="tab hidden">
 
-      <div class="card calendar-card">
+      <!-- Legacy calendar presentation removed. The #calendario host is intentionally empty; B232.26.4 remains the technical source and Premium 18.1 owns mobile presentation. -->
 
-        <div class="calendar-toolbar">
-          <button id="calPrev" class="nav-month">‹</button>
-
-          <div class="calendar-heading">
-            <h2 id="calendarMonth">Septiembre 2026</h2>
-            <span>Plan mensual de ingresos y pagos</span>
-          </div>
-
-          <button id="calNext" class="nav-month">›</button>
-        </div>
-
-        <button id="calToday"
-                class="secondary today-btn">
-          Ir a hoy
-        </button>
-
-        <div class="calendar-metrics">
-
-          <article>
-            <span>Ingresos registrados</span>
-            <strong id="calIncome">$0</strong>
-          </article>
-
-          <article>
-            <span>Gastos registrados</span>
-            <strong id="calExpenses">$0</strong>
-          </article>
-
-          <article>
-            <span>Pagos programados</span>
-            <strong id="calPayments">$0</strong>
-          </article>
-
-          <article>
-            <span>Saldo al cierre</span>
-            <strong id="calFinalBalance">$0</strong>
-          </article>
-
-        </div>
-
-        <div class="legend">
-          <span><i class="dot income-dot"></i>Ingreso</span>
-          <span><i class="dot expense-dot"></i>Gasto</span>
-          <span><i class="dot payment-dot"></i>Pago programado</span>
-          <span><i class="dot balance-dot"></i>Saldo acumulado</span>
-        </div>
-
-        <div class="calendar-scroll">
-
-          <div class="calendar-grid week-head">
-            <div>DOM</div>
-            <div>LUN</div>
-            <div>MAR</div>
-            <div>MIÉ</div>
-            <div>JUE</div>
-            <div>VIE</div>
-            <div>SÁB</div>
-          </div>
-
-          <div id="calendarGrid"
-               class="calendar-grid">
-          </div>
-
-        </div>
-
-        <p id="calMonthNote"
-           class="muted calendar-note">
-        </p>
-
-        <div id="calendarDayDetails"
-             class="calendar-day-details">
-          <p class="muted">
-            Selecciona un día del calendario para ver sus ingresos y gastos.
-          </p>
-        </div>
-
-        <p class="calendar-help">
-          Desliza horizontalmente si quieres ver el calendario completo en el teléfono.
-        </p>
-
-      </div>
 
     </section>
 
@@ -3626,17 +3545,761 @@
    antes de migrar CSS/JS a archivos independientes.
 ============================================================ -->
 
-<!-- ============================================================
- CCF CALENDAR MOBILE · B4.3.18.1
- CAPA PREMIUM AISLADA · VISTA PRINCIPAL DEL CALENDARIO MÓVIL
- - B4.3.17 permanece estático e intacto en este index.html.
- - Esta capa se carga desde archivos CSS/JS propios del módulo.
- - La vista B232.26.4 original permanece visible debajo como
-   vista secundaria de validación.
-============================================================ -->
-<link rel="stylesheet" href="CCF-CALENDAR-MOBILE-B4.3.18.1.css?v=B4.3.18.1">
-<script src="CCF-CALENDAR-MOBILE-B4.3.18.1.js?v=B4.3.18.1"></script>
+<script id="ccf-calendar-mobile-premium-b4-3-18-1-after17">
+(function(){
+  'use strict';
 
+  var ID = 'ccf-calendar-mobile-premium-b4-3-18-1-after17';
+  var SOURCE = 'ccf-calendar-mobile-direct-b4-3-17';
+  var timer = null;
+  var observer = null;
+  var rendering = false;
+
+  function sourceHost(){
+    return document.getElementById(SOURCE);
+  }
+
+  function css(){
+    if(document.getElementById(ID + '-style')) return;
+
+    var s = document.createElement('style');
+    s.id = ID + '-style';
+
+    s.textContent =
+      '#' + ID + '{' +
+        'display:block;' +
+        'width:100%;' +
+        'max-width:100%;' +
+        'min-width:0;' +
+        'margin:18px 0 18px;' +
+        'padding:0;' +
+        'box-sizing:border-box;' +
+      '}' +
+
+      '#' + ID + ' *{box-sizing:border-box;}' +
+
+      /* Contenedor Premium */
+      '#' + ID + ' .p181-shell{' +
+        'width:100%;' +
+        'max-width:100%;' +
+        'min-width:0;' +
+        'background:#fff;' +
+        'border:1px solid #dbe4ee;' +
+        'border-radius:20px;' +
+        'overflow:hidden;' +
+        'box-shadow:0 10px 30px rgba(15,39,71,.10);' +
+      '}' +
+
+      /* Cabecera */
+      '#' + ID + ' .cm-head{' +
+        'position:relative;' +
+        'padding:16px 12px 10px;' +
+        'min-height:76px;' +
+        'background:#fff;' +
+      '}' +
+
+      '#' + ID + ' .cm-eyebrow{' +
+        'margin:0 0 4px;' +
+        'font:900 9px/1 system-ui,sans-serif;' +
+        'letter-spacing:.05em;' +
+        'color:#64748b;' +
+        'text-transform:uppercase;' +
+      '}' +
+
+      '#' + ID + ' .cm-title{' +
+        'margin:0;' +
+        'padding-right:188px;' +
+        'font:900 24px/1.08 system-ui,sans-serif;' +
+        'letter-spacing:-.025em;' +
+        'color:#0f2747;' +
+      '}' +
+
+      '#' + ID + ' .cm-sub,' +
+      '#' + ID + ' .cm-status{' +
+        'display:none!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-actions{' +
+        'position:absolute;' +
+        'top:10px;' +
+        'right:10px;' +
+        'display:flex;' +
+        'gap:6px;' +
+        'align-items:center;' +
+      '}' +
+
+      '#' + ID + ' .cm-actions button{' +
+        'width:44px;' +
+        'min-width:44px;' +
+        'height:44px;' +
+        'min-height:44px;' +
+        'padding:0;' +
+        'border:0;' +
+        'border-radius:11px;' +
+        'background:#eef2f7;' +
+        'color:#122a49;' +
+        'font:900 23px/1 system-ui,sans-serif;' +
+        'cursor:pointer;' +
+      '}' +
+
+      '#' + ID + ' .cm-actions button:nth-child(2){' +
+        'width:74px;' +
+        'min-width:74px;' +
+        'background:#102b4d;' +
+        'color:#fff;' +
+        'font-size:15px;' +
+      '}' +
+
+      /* KPI: exactamente 2 arriba + 3 abajo */
+      '#' + ID + ' .cm-kpis{' +
+        'display:grid;' +
+        'grid-template-columns:repeat(6,minmax(0,1fr));' +
+        'gap:8px;' +
+        'padding:0 12px 9px;' +
+        'width:100%;' +
+        'min-width:0;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi{' +
+        'position:relative;' +
+        'grid-column:span 2!important;' +
+        'min-width:0;' +
+        'min-height:82px;' +
+        'padding:14px 60px 12px 15px;' +
+        'border-radius:16px;' +
+        'overflow:hidden;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(1),' +
+      '#' + ID + ' .cm-kpi:nth-child(2){' +
+        'grid-column:span 3!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(1){' +
+        'background:linear-gradient(135deg,#148cf0,#087ff0)!important;' +
+        'border-color:#148cf0!important;' +
+        'color:#fff!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(2){' +
+        'background:linear-gradient(135deg,#10c48a,#0bb77a)!important;' +
+        'border-color:#10c48a!important;' +
+        'color:#fff!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(3){' +
+        'background:linear-gradient(135deg,#ff3e53,#f5263d)!important;' +
+        'border-color:#ff3e53!important;' +
+        'color:#fff!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(4){' +
+        'background:#f5f7fb!important;' +
+        'border-color:#e7ebf1!important;' +
+        'color:#172033!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(5){' +
+        'background:linear-gradient(135deg,#1767b9,#0b5cae)!important;' +
+        'border-color:#1767b9!important;' +
+        'color:#fff!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi span{' +
+        'display:block;' +
+        'font:500 10px/1.2 system-ui,sans-serif;' +
+        'color:inherit!important;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi strong{' +
+        'display:block;' +
+        'margin-top:4px;' +
+        'font:900 22px/1.05 system-ui,sans-serif;' +
+        'color:inherit!important;' +
+        'overflow-wrap:anywhere;' +
+        'word-break:break-word;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:after{' +
+        'content:"";' +
+        'position:absolute;' +
+        'right:12px;' +
+        'top:50%;' +
+        'transform:translateY(-50%);' +
+        'width:42px;' +
+        'height:42px;' +
+        'border-radius:11px;' +
+        'background:rgba(255,255,255,.16);' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:before{' +
+        'position:absolute;' +
+        'z-index:2;' +
+        'right:23px;' +
+        'top:50%;' +
+        'transform:translateY(-50%);' +
+        'font:900 22px/1 system-ui,sans-serif;' +
+        'color:#fff;' +
+      '}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(1):before{content:"▥";}' +
+      '#' + ID + ' .cm-kpi:nth-child(2):before{content:"↑";}' +
+      '#' + ID + ' .cm-kpi:nth-child(3):before{content:"↓";}' +
+      '#' + ID + ' .cm-kpi:nth-child(4):before{content:"▣";color:#ef4960;}' +
+      '#' + ID + ' .cm-kpi:nth-child(5):before{content:"▤";}' +
+
+      '#' + ID + ' .cm-kpi:nth-child(4):after{' +
+        'background:#ffe8ed;' +
+      '}' +
+
+      /* Contexto */
+      '#' + ID + ' .cm-scope{' +
+        'position:relative;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'min-height:45px;' +
+        'margin:0 12px 10px;' +
+        'padding:10px 12px 10px 43px;' +
+        'border-radius:11px;' +
+        'background:#f1f6fc;' +
+        'color:#526173;' +
+        'font:500 10px/1.25 system-ui,sans-serif;' +
+        'overflow-wrap:anywhere;' +
+      '}' +
+
+      '#' + ID + ' .cm-scope:before{' +
+        'content:"▣";' +
+        'position:absolute;' +
+        'left:14px;' +
+        'top:50%;' +
+        'transform:translateY(-50%);' +
+        'font:900 18px/1 system-ui,sans-serif;' +
+        'color:#0877cf;' +
+      '}' +
+
+      /* Calendario */
+      '#' + ID + ' .cm-calendar-wrap{' +
+        'margin:0 12px 12px;' +
+        'border:1px solid #dfe6ee;' +
+        'border-radius:14px;' +
+        'overflow:hidden;' +
+        'width:calc(100% - 24px);' +
+        'min-width:0;' +
+      '}' +
+
+      '#' + ID + ' .cm-grid{' +
+        'display:grid!important;' +
+        'grid-template-columns:repeat(7,minmax(0,1fr))!important;' +
+        'width:100%!important;' +
+        'min-width:0!important;' +
+        'max-width:100%!important;' +
+        'overflow:hidden;' +
+        'gap:0;' +
+      '}' +
+
+      '#' + ID + ' .cm-week{' +
+        'width:100%;' +
+        'min-width:0;' +
+        'height:30px;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        'padding:4px 1px;' +
+        'background:#111827;' +
+        'color:#fff;' +
+        'font:900 8px/1 system-ui,sans-serif;' +
+        'overflow:hidden;' +
+      '}' +
+
+      '#' + ID + ' .cm-day{' +
+        'width:100%!important;' +
+        'min-width:0!important;' +
+        'max-width:100%!important;' +
+        'height:88px;' +
+        'margin:0;' +
+        'padding:4px 3px;' +
+        'border:0;' +
+        'border-right:1px solid #e5e7eb;' +
+        'border-bottom:1px solid #e5e7eb;' +
+        'border-radius:0;' +
+        'background:#fff;' +
+        'color:#334155;' +
+        'text-align:left;' +
+        'overflow:hidden;' +
+      '}' +
+
+      '#' + ID + ' .cm-day.out{' +
+        'background:#f8fafc;' +
+        'color:#94a3b8;' +
+      '}' +
+
+      '#' + ID + ' .cm-day.selected{' +
+        'outline:2px solid #0f7fe5;' +
+        'outline-offset:-2px;' +
+        'background:#f7fbff;' +
+      '}' +
+
+      '#' + ID + ' .cm-day-top{' +
+        'display:flex;' +
+        'justify-content:space-between;' +
+        'align-items:center;' +
+        'width:100%;' +
+        'min-width:0;' +
+        'font:800 10px/1 system-ui,sans-serif;' +
+      '}' +
+
+      '#' + ID + ' .cm-day-top small{' +
+        'font-size:6px;' +
+      '}' +
+
+      '#' + ID + ' .cm-event{' +
+        'display:block;' +
+        'width:100%;' +
+        'min-width:0;' +
+        'margin-top:2px;' +
+        'padding:2px;' +
+        'border-radius:3px;' +
+        'font:700 6px/1.05 system-ui,sans-serif;' +
+        'white-space:nowrap;' +
+        'overflow:hidden;' +
+        'text-overflow:ellipsis;' +
+      '}' +
+
+      '#' + ID + ' .cm-mini{' +
+        'display:block;' +
+        'width:100%;' +
+        'min-width:0;' +
+        'margin-top:2px;' +
+        'font:600 6px/1.05 system-ui,sans-serif;' +
+        'white-space:nowrap;' +
+        'overflow:hidden;' +
+        'text-overflow:ellipsis;' +
+      '}' +
+
+      /* Detalle inferior */
+      '#' + ID + ' .cm-detail{' +
+        'display:grid;' +
+        'grid-template-columns:1fr;' +
+        'gap:8px;' +
+        'padding:0 12px 12px;' +
+      '}' +
+
+      '#' + ID + ' .cm-box{' +
+        'width:100%;' +
+        'min-width:0;' +
+        'padding:12px;' +
+        'border:1px solid #e2e8f0;' +
+        'border-radius:13px;' +
+        'background:#fff;' +
+        'font:500 10px/1.4 system-ui,sans-serif;' +
+        'overflow:hidden;' +
+      '}' +
+
+      '#' + ID + ' .cm-box-income{' +
+        'background:#f0fdf4;' +
+        'border-color:#bbf7d0;' +
+      '}' +
+
+      '#' + ID + ' .cm-box-expense{' +
+        'background:#fff5f5;' +
+        'border-color:#fecaca;' +
+      '}' +
+
+      '#' + ID + ' .cm-box h3{' +
+        'margin:0 0 6px;' +
+        'font:900 10px/1.25 system-ui,sans-serif;' +
+      '}' +
+
+      '#' + ID + ' .cm-box-body{' +
+        'width:100%;' +
+        'min-width:0;' +
+        'overflow-wrap:anywhere;' +
+        'word-break:break-word;' +
+      '}' +
+
+      /* ==========================================================
+         DETALLE PREMIUM — DISEÑO REFERENCIA
+         ========================================================== */
+      '#' + ID + ' .p181-detail-wrap{' +
+        'width:100%;' +
+        'max-width:100%;' +
+        'min-width:0;' +
+        'padding:0 12px 14px;' +
+        'background:#fff;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'margin:0!important;' +
+        'padding:0!important;' +
+        'background:#fff!important;' +
+        'border:0!important;' +
+        'box-shadow:none!important;' +
+        'font-family:system-ui,sans-serif!important;' +
+      '}' +
+
+      /*
+       * Encabezado "Detalle del Jueves..." + fecha.
+       * El selector es flexible para no depender de una clase
+       * que pueda cambiar en B232.26.4.
+       */
+      '#' + ID + ' .p181-source-detail > :first-child{' +
+        'width:100%;' +
+        'min-width:0;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail h2,' +
+      '#' + ID + ' .p181-source-detail h3{' +
+        'color:#102b4d!important;' +
+      '}' +
+
+      /*
+       * Cada bloque financiero queda como tarjeta independiente.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box{' +
+        'display:block!important;' +
+        'width:100%!important;' +
+        'max-width:100%!important;' +
+        'min-width:0!important;' +
+        'margin:8px 0!important;' +
+        'padding:13px 12px!important;' +
+        'border:1px solid #e3e8ef!important;' +
+        'border-radius:15px!important;' +
+        'background:#fff!important;' +
+        'box-shadow:0 2px 8px rgba(15,39,71,.04)!important;' +
+        'overflow:hidden!important;' +
+        'font-size:10px!important;' +
+        'line-height:1.35!important;' +
+      '}' +
+
+      /*
+       * El primer bloque es el resumen superior.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:first-of-type{' +
+        'background:#fbfdff!important;' +
+        'border-color:#dce5ee!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-box h3{' +
+        'margin:0 0 7px!important;' +
+        'font-size:11px!important;' +
+        'font-weight:900!important;' +
+        'line-height:1.2!important;' +
+        'color:#122a49!important;' +
+      '}' +
+
+      /*
+       * Preservar las filas/valores originales.
+       * Se usa una combinación de selectores genéricos para que
+       * no se pierda la alineación derecha de los importes.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box > div,' +
+      '#' + ID + ' .p181-source-detail .b232261-box > p,' +
+      '#' + ID + ' .p181-source-detail .b232261-box > section{' +
+        'max-width:100%;' +
+        'min-width:0;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail strong{' +
+        'font-weight:900!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail small{' +
+        'color:#7b8796!important;' +
+      '}' +
+
+      /*
+       * Tarjeta de ingresos.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(2){' +
+        'background:#fff!important;' +
+        'border-color:#dfe6ee!important;' +
+      '}' +
+
+      /*
+       * Tarjeta de egresos/obligaciones.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(3){' +
+        'background:#fff!important;' +
+        'border-color:#dfe6ee!important;' +
+      '}' +
+
+      /*
+       * Control de caja: destacamos el flujo neto.
+       */
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(4){' +
+        'background:#f8fbff!important;' +
+        'border-color:#d8e4f1!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-box:nth-of-type(4) strong:last-child{' +
+        'color:#159447!important;' +
+      '}' +
+
+      '#' + ID + ' .p181-source-detail .b232261-note,' +
+      '#' + ID + ' .p181-source-detail .b232261-footnote{' +
+        'display:block;' +
+        'padding:0 3px 3px;' +
+        'color:#718096!important;' +
+        'font-size:9px!important;' +
+        'line-height:1.25!important;' +
+      '}' +
+
+      /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
+      '@media(max-width:480px){' +
+        '#' + ID + ' .p181-detail-wrap{' +
+          'padding:0 8px 10px;' +
+        '}' +
+        '#' + ID + ' .p181-source-detail .b232261-box{' +
+          'margin:7px 0!important;' +
+          'padding:12px 10px!important;' +
+          'border-radius:13px!important;' +
+        '}' +
+        '#' + ID + ' .p181-source-detail .b232261-box h3{' +
+          'font-size:10px!important;' +
+        '}' +
+      '}' +
+
+      /* En móvil, mantener proporción 2 + 3 sin desbordamiento */
+      '@media(max-width:480px){' +
+        '#' + ID + ' .cm-head{padding:13px 9px 7px;min-height:70px;}' +
+        '#' + ID + ' .cm-title{font-size:20px;padding-right:174px;}' +
+        '#' + ID + ' .cm-actions{top:8px;right:8px;gap:5px;}' +
+        '#' + ID + ' .cm-actions button{width:38px;min-width:38px;height:38px;min-height:38px;border-radius:9px;font-size:20px;}' +
+        '#' + ID + ' .cm-actions button:nth-child(2){width:55px;min-width:55px;font-size:13px;}' +
+        '#' + ID + ' .cm-kpis{gap:6px;padding:0 8px 8px;}' +
+        '#' + ID + ' .cm-kpi{min-height:72px;padding:11px 47px 10px 10px;border-radius:13px;}' +
+        '#' + ID + ' .cm-kpi strong{font-size:18px;}' +
+        '#' + ID + ' .cm-kpi:after{right:7px;width:35px;height:35px;border-radius:10px;}' +
+        '#' + ID + ' .cm-kpi:before{right:17px;font-size:18px;}' +
+        '#' + ID + ' .cm-scope{margin:0 8px 8px;min-height:40px;padding-left:38px;font-size:9px;}' +
+        '#' + ID + ' .cm-calendar-wrap{margin:0 8px 10px;width:calc(100% - 16px);}' +
+        '#' + ID + ' .cm-day{height:86px;padding:4px 2px;}' +
+        '#' + ID + ' .cm-detail{padding:0 8px 10px;}' +
+      '}' ;
+
+    document.head.appendChild(s);
+  }
+
+  function wireButtons(clone, original){
+    var a = clone.querySelectorAll('.cm-actions button');
+    var b = original.querySelectorAll('.cm-actions button');
+
+    for(var i=0;i<a.length && i<b.length;i++){
+      (function(dst,src){
+        dst.onclick = function(){
+          src.click();
+          setTimeout(render,120);
+        };
+      })(a[i],b[i]);
+    }
+
+    var daysA = clone.querySelectorAll('.cm-day');
+    var daysB = original.querySelectorAll('.cm-day');
+
+    for(var d=0;d<daysA.length && d<daysB.length;d++){
+      (function(dst,src){
+        dst.onclick = function(){
+          src.click();
+          setTimeout(render,100);
+        };
+      })(daysA[d],daysB[d]);
+    }
+  }
+
+  /*
+   * ============================================================
+   * DETALLE PREMIUM — FUENTE DIRECTA DEL CALENDARIO PROPIETARIO
+   *
+   * Esta sección no reconstruye importes.
+   * Copia la estructura completa de .b232261-detail que ya
+   * genera B232.26.4. De esta manera se conserva:
+   * - encabezado del día + fecha
+   * - resumen de rentabilidad
+   * - ingresos y rentabilidad
+   * - egresos, pagos y obligaciones
+   * - control de caja
+   * - textos auxiliares
+   * - valores reales/proyectados
+   *
+   * La capa Premium solamente cambia presentación.
+   * ============================================================
+   */
+  function appendPremiumDetail(host){
+    var section = document.getElementById('calendario');
+    if(!section) return;
+
+    var originalDetail = section.querySelector('.b232261-card .b232261-detail');
+    if(!originalDetail) return;
+
+    var wrap = document.createElement('section');
+    wrap.className = 'p181-detail-wrap';
+
+    var detail = originalDetail.cloneNode(true);
+
+    /* Evitar IDs duplicados. */
+    detail.querySelectorAll('[id]').forEach(function(el){
+      el.removeAttribute('id');
+    });
+
+    detail.classList.add('p181-source-detail');
+
+    wrap.appendChild(detail);
+    host.appendChild(wrap);
+  }
+
+  function render(){
+    if(rendering) return false;
+
+    var original = sourceHost();
+    if(!original) return false;
+
+    var shell = original.querySelector('.cm-shell');
+    if(!shell) return false;
+
+    rendering = true;
+
+    try{
+      css();
+
+      var host = document.getElementById(ID);
+
+      if(!host){
+        host = document.createElement('section');
+        host.id = ID;
+
+        /* IMPORTANTE: después de la vista B4.3.17. */
+        original.parentNode.insertBefore(host, original.nextSibling);
+      }
+
+      host.innerHTML = '';
+
+      var clone = shell.cloneNode(true);
+
+      /* Evitar IDs duplicados si aparecieran en futuras revisiones. */
+      clone.querySelectorAll('[id]').forEach(function(el){
+        el.removeAttribute('id');
+      });
+
+      clone.className = 'p181-shell';
+
+      /*
+       * La vista 18.1 conserva el calendario completo de B4.3.17.
+       * Su detalle resumido interno se elimina porque debajo
+       * construiremos el detalle Premium completo desde
+       * B232.26.4.
+       */
+      var oldDetail = clone.querySelector('.cm-detail');
+      if(oldDetail){
+        oldDetail.remove();
+      }
+
+      host.appendChild(clone);
+
+      wireButtons(clone, original);
+
+      /*
+       * A continuación del calendario:
+       * detalle completo con la estructura de la imagen de referencia.
+       */
+      appendPremiumDetail(host);
+
+      return true;
+
+    }catch(error){
+      console.error('[CCF B4.3.18.1 PREMIUM TEST]', error);
+      return false;
+    }finally{
+      rendering = false;
+    }
+  }
+
+  function observe(){
+    if(observer) return;
+
+    var original = sourceHost();
+    if(!original) return;
+
+    observer = new MutationObserver(function(mutations){
+      if(rendering) return;
+
+      var changed = false;
+
+      for(var i=0;i<mutations.length;i++){
+        var m = mutations[i];
+
+        if(m.target && typeof m.target.closest === 'function' &&
+           m.target.closest('#' + ID)){
+          continue;
+        }
+
+        changed = true;
+        break;
+      }
+
+      if(!changed) return;
+
+      clearTimeout(observer.__timer);
+      observer.__timer = setTimeout(function(){
+        render();
+      },120);
+    });
+
+    observer.observe(original,{
+      childList:true,
+      subtree:true,
+      characterData:true,
+      attributes:true,
+      attributeFilter:['class']
+    });
+  }
+
+  function boot(){
+    if(timer) clearInterval(timer);
+
+    var tries = 0;
+
+    timer = setInterval(function(){
+      if(render() || ++tries >= 40){
+        clearInterval(timer);
+        timer = null;
+
+        if(sourceHost()) observe();
+      }
+    },250);
+
+    render();
+
+    if(sourceHost()) observe();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded',boot,{once:true});
+  }else{
+    boot();
+  }
+
+  window.CCFCalendarMobilePremium181 = {
+    version:'B4.3.18.1-PREMIUM-TEST-OVER-17',
+    render:render,
+    status:function(){
+      return {
+        base17:!!sourceHost(),
+        premium181:!!document.getElementById(ID),
+        after17:!!(
+          sourceHost() &&
+          document.getElementById(ID) &&
+          sourceHost().nextElementSibling === document.getElementById(ID)
+        )
+      };
+    }
+  };
+
+})();
+</script>
 
 </body>
 </html>
