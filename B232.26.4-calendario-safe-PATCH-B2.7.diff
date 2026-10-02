@@ -1,0 +1,14 @@
+--- B232.26.4-calendario-safe.js
++++ B232.26.4-calendario-safe.js
+@@
+-function css(){if($('b232261Style'))return;const s=document.createElement('style');s.id='b232261Style';s.textContent=`
++function css(){if($('b232261Style'))return;const s=document.createElement('style');s.id='b232261Style';s.textContent=`
++.b232261-source{display:none!important}
+ .b232261-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+@@
+-host.innerHTML='<div class="b232261-card">...
++host.innerHTML='<div class="b232261-source" aria-hidden="true"><div class="b232261-card">...
+@@
+-</div>';
++</div></div>';
+ $('b232261Prev').onclick=()=>{month.setMonth(month.getMonth()-1);selected=key(new Date(month.getFullYear(),month.getMonth(),1));render()};
