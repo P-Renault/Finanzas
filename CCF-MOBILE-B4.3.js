@@ -844,6 +844,7 @@ function adaptB232261CalendarMobile(){
              section.querySelector('.b232261-grid');
   if(!card||!scroll||!grid) return false;
   styleCalendarMobile();
+  syncCalendarRealIndicators();
 
   /*
    * Bootstrap 5 grid aislado al calendario.
@@ -915,6 +916,67 @@ function adaptB232261CalendarMobile(){
 }
 
 
+
+function syncCalendarRealIndicators(data){
+  if(!calendarIsMobile()) return false;
+  const section=by('calendario');
+  if(!section) return false;
+
+  const selectedDay=section.querySelector('.b232261-day.selected');
+  const kpis=[...section.querySelectorAll('.b232261-kpi')];
+  if(!selectedDay||!kpis.length) return false;
+
+  const parseMoney=(text)=>{
+    const m=String(text||'').match(/-?\$\s*[\d.]+/);
+    if(!m) return 0;
+    const raw=m[0].replace(/\s/g,'').replace(/\$/g,'').replace(/\./g,'');
+    const n=Number(raw);
+    return Number.isFinite(n)?n:0;
+  };
+  const sum=(selector)=>{
+    let total=0;
+    selectedDay.querySelectorAll(selector).forEach(el=>{ total+=parseMoney(el.textContent); });
+    return total;
+  };
+  const money=(n)=>{
+    const sign=n<0?'-':'';
+    return sign+'$'+Math.abs(Math.round(n)).toLocaleString('es-CL');
+  };
+  const setKpi=(index,value)=>{
+    const strong=kpis[index]?.querySelector('strong');
+    if(strong) strong.textContent=money(value);
+  };
+
+  const realIn=sum('.b232261-real-in');
+  const projectedIn=sum('.b232261-plan-in');
+  const generated=sum('.b232261-gen');
+  const realOut=sum('.b232261-real-out');
+
+  /*
+   * Los cuatro KPI visibles en móvil representan exactamente las cuatro
+   * métricas superiores de la vista profesional:
+   * 1) ingresos reales
+   * 2) ingresos proyectados
+   * 3) ingresos netos (reales + proyectados + generación)
+   * 4) egresos reales
+   *
+   * No se reemplazan los datos de Supabase: se sincroniza la presentación
+   * con el día que B232 ya tiene seleccionado.
+   */
+  setKpi(0,realIn);
+  setKpi(1,projectedIn);
+  setKpi(2,realIn+projectedIn+generated);
+  setKpi(3,realOut);
+
+  return {
+    realIn,
+    projectedIn,
+    generated,
+    realOut,
+    netIn:realIn+projectedIn+generated
+  };
+}
+
 function rebuildCalendarProfessionalDetail(){
   if(!calendarIsMobile()) return false;
   const section=by('calendario');
@@ -933,8 +995,8 @@ function rebuildCalendarProfessionalDetail(){
   if(!positiveBox||!negativeBox) return false;
 
   const moneyValue=(text)=>{
-    const m=String(text||'').match(/-?\$\\s*[\\d.]+/);
-    return m?m[0].replace(/\\s/g,''):'$0';
+    const m=String(text||'').match(/-?\$\s*[\d.]+/);
+    return m?m[0].replace(/\s/g,''):'$0';
   };
   const numberValue=(text)=>{
     const v=moneyValue(text).replace(/[$.]/g,'');
@@ -957,10 +1019,22 @@ function rebuildCalendarProfessionalDetail(){
   const realOut=sumEvents('.b232261-real-out');
   const positiveTotal=numberValue(positiveBox.querySelector('.b232261-detail-total')?.textContent);
   const negativeTotal=numberValue(negativeBox.querySelector('.b232261-detail-total')?.textContent);
-  const obligations=Math.max(0,negativeTotal-realOut);
+
+  /*
+   * La conciliación del detalle parte de los totales que B232 ya calculó
+   * para el día seleccionado. Así evitamos depender de clases internas
+   * que pueden cambiar en el renderer.
+   */
+  const indicatorData=syncCalendarRealIndicators();
+  const reconciledRealIn=indicatorData?.realIn ?? realIn;
+  const reconciledRealOut=indicatorData?.realOut ?? realOut;
+  const reconciledPositive=positiveTotal;
+  const reconciledNegative=negativeTotal;
+  const obligations=Math.max(0,reconciledNegative-reconciledRealOut);
+  const reconciledFlow=reconciledPositive-reconciledNegative;
 
   const footerText=foot.textContent||'';
-  const footerMoney=[...footerText.matchAll(/-?\\$\\s*[\\d.]+/g)].map(x=>numberValue(x[0]));
+  const footerMoney=[...footerText.matchAll(/-?\\$\s*[\d.]+/g)].map(x=>numberValue(x[0]));
   const initialBalance=footerMoney[0]??0;
   const finalBalance=footerMoney[footerMoney.length-1]??initialBalance;
   const flow=finalBalance-initialBalance;
@@ -980,10 +1054,10 @@ function rebuildCalendarProfessionalDetail(){
     </div>
 
     <div class="ccf-cpd-kpis">
-      <div class="ccf-cpd-kpi green"><span>↑</span><small>Ingresos</small><strong>${money(realIn)}</strong></div>
-      <div class="ccf-cpd-kpi red"><span>↓</span><small>Egresos</small><strong>${money(realOut)}</strong></div>
+      <div class="ccf-cpd-kpi green"><span>↑</span><small>Ingresos</small><strong>${money(reconciledPositive)}</strong></div>
+      <div class="ccf-cpd-kpi red"><span>↓</span><small>Egresos</small><strong>${money(reconciledRealOut)}</strong></div>
       <div class="ccf-cpd-kpi violet"><span>▣</span><small>Obligaciones</small><strong>${money(obligations)}</strong></div>
-      <div class="ccf-cpd-kpi flow"><span>Σ</span><small>Flujo neto</small><strong>${money(flow)}</strong></div>
+      <div class="ccf-cpd-kpi flow"><span>Σ</span><small>Flujo neto</small><strong>${money(reconciledFlow)}</strong></div>
     </div>
 
     <div class="ccf-cpd-balances">
