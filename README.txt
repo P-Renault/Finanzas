@@ -1,41 +1,35 @@
-B232.67 — CORRECCIÓN MOVIMIENTOS → LIQUIDEZ
+CCF CALENDAR MOBILE B4.3.18.1 — CORRECCIÓN B2.7
 
-DIAGNÓSTICO CONFIRMADO
-El movimiento ID 80 ($8.474) quedó:
-- medio_pago = NULL
-- cuenta_id = NULL
-- naturaleza = NULL
-- liquidez_aplicada = false
+Objetivo:
+Corregir la condición de sincronización que permitía que la vista visual
+B232.26.4 quedara visible durante el primer ciclo de construcción del DOM.
 
-La causa es que app.js mantiene un handler legacy de movForm que inserta
-directamente en public.movimientos, sin usar el RPC B2.21.
+Evidencia de diagnóstico:
+- El botón circular ↻ de Premium delega en el botón original de B232.26.4.
+- Ese botón ejecuta B232.26.4 -> load() -> render().
+- Después de esa reconstrucción, la vista antigua desaparece.
+- Por tanto, la corrección se realiza en la sincronización de presentación,
+  no eliminando B232 ni modificando sus cálculos.
 
-SOLUCIÓN
-Este paquete instala un propietario de captura sobre movForm.
-Antes de que se ejecuten los handlers legacy:
-- intercepta el submit;
-- usa registrar_movimiento_liquidez_v1 para nuevos movimientos;
-- usa actualizar_movimiento_liquidez_v1 para ediciones;
-- aplica efectivo/cuenta bancaria;
-- aplica naturaleza;
-- impide doble registro;
-- conserva el comportamiento de fechas futuras.
+Cambio:
+- Se añade enforcePresentationSoon().
+- El puente de presentación se instala antes del primer render Premium.
+- La ocultación de la fuente se fuerza inmediatamente y en microciclos
+  posteriores (0/20/80 ms) para cubrir la reconstrucción inicial de B232.
+- El botón de navegación/actualización vuelve a imponer el estado oculto
+  después de delegar el click al motor B232.
+- No se modifica Supabase, B232.26.4, cálculos ni la estructura Premium.
 
-DESPLIEGUE
-Agregar en index.html, después de los módulos existentes:
+Validación local:
+- node --check: OK
 
-<script src="B232.67-MOVIMIENTOS-LIQUIDEZ.js?v=232.67"></script>
+Archivo objetivo:
+CCF-CALENDAR-MOBILE-B4.3.18.1.js
 
-No reemplaza B232.65 ni B232.66.
+Rama objetivo:
+Backup-2.7-adaptación-móvil
 
-PRUEBA
-1. Crear un gasto nuevo de $1.000 en efectivo.
-2. Debe crearse un solo movimiento.
-3. liquidez_aplicada debe quedar true.
-4. saldo_efectivo_actual debe bajar exactamente $1.000.
-5. No debe aparecer un segundo movimiento.
-6. Footer visible: B232.67-RELEASE-MOVIMIENTOS-LIQUIDEZ
-
-IMPORTANTE
-El movimiento histórico ID 80 no se corrige automáticamente. Primero se valida
-el nuevo circuito para evitar doble descuento del gasto que ya existe.
+NOTA:
+El repositorio GitHub no fue modificado automáticamente. La integración
+GitHub disponible devolvió previamente HTTP 403 para escritura.
+Este paquete es el archivo exacto listo para reemplazar el JS actual.

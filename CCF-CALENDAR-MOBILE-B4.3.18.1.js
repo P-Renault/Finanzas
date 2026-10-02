@@ -3,7 +3,7 @@
   'use strict';
 
   var ID = 'ccf-calendar-mobile-premium-b4-3-18-1-after17';
-  var SOURCE = 'ccf-calendar-mobile-direct-b4-3-17';
+  var SOURCE = 'ccf-calendar-mobile-direct-b4-3-17'; // technical source host only; never displayed
   var timer = null;
   var observer = null;
   var rendering = false;
@@ -21,7 +21,9 @@
       (function(dst,src){
         dst.onclick = function(){
           src.click();
+          enforcePresentationSoon();
           setTimeout(render,120);
+          setTimeout(enforcePresentationSoon,125);
         };
       })(a[i],b[i]);
     }
@@ -150,6 +152,10 @@
        */
       appendPremiumDetail(host);
 
+      /* La fuente B232 puede quedar visible durante su primer render.
+         Imponemos el estado final inmediatamente y tras el ciclo DOM. */
+      enforcePresentationSoon();
+
       return true;
 
     }catch(error){
@@ -181,6 +187,18 @@
        el.style.getPropertyPriority(property)!=='important'){
       el.style.setProperty(property,value,'important');
     }
+  }
+
+  function enforcePresentationSoon(){
+    /*
+     * B232.26.4 puede reconstruir #calendario después de que Premium
+     * haya arrancado. La vista antigua debe quedar oculta en el mismo
+     * ciclo de reconstrucción, sin depender de pulsar ↻.
+     */
+    maintainPresentation();
+    window.setTimeout(maintainPresentation,0);
+    window.setTimeout(maintainPresentation,20);
+    window.setTimeout(maintainPresentation,80);
   }
 
   function maintainPresentation(){
@@ -227,7 +245,7 @@
 
     var bridgeObserver=new MutationObserver(function(){
       window.clearTimeout(bridgeObserver.__timer);
-      bridgeObserver.__timer=window.setTimeout(maintainPresentation,20);
+      bridgeObserver.__timer=window.setTimeout(enforcePresentationSoon,0);
     });
 
     bridgeObserver.observe(section,{
@@ -245,7 +263,7 @@
     if(mobileRoot && !mobileRoot.__ccfB4318RootObserver){
       var rootObserver=new MutationObserver(function(){
         window.clearTimeout(rootObserver.__timer);
-        rootObserver.__timer=window.setTimeout(maintainPresentation,20);
+        rootObserver.__timer=window.setTimeout(enforcePresentationSoon,0);
       });
       rootObserver.observe(mobileRoot,{subtree:true,attributes:true,attributeFilter:['data-active-module','class']});
       mobileRoot.__ccfB4318RootObserver=rootObserver;
@@ -306,10 +324,14 @@
       }
     },250);
 
+    /* Instalar primero el puente de presentación para que la primera
+       construcción de B232 quede oculta desde su primer ciclo. */
+    startPresentationBridge();
+
     render();
 
     if(sourceHost()) observe();
-    startPresentationBridge();
+    enforcePresentationSoon();
   }
 
   if(document.readyState === 'loading'){
@@ -319,7 +341,7 @@
   }
 
   window.CCFCalendarMobilePremium181 = {
-    version:'B4.3.18.1-PREMIUM-FINAL-OVER-HIDDEN-SOURCES',
+    version:'B4.3.18.1-PREMIUM-SINGLE-VIEW',
     render:render,
     status:function(){
       return {
