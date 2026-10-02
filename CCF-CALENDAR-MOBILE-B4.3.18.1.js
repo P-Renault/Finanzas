@@ -187,6 +187,7 @@
     var base=document.getElementById(SOURCE);
     var premium=document.getElementById(ID);
     var source=sourceCalendar();
+    var allSources=document.querySelectorAll('#calendario .b232261-card');
     var bootstrap=document.getElementById('ccf-bs-calendar-view');
     var mobileRoot=document.getElementById('ccf-mobile-b43');
     var moduleHost=mobileRoot && mobileRoot.querySelector('[data-module-host]');
@@ -215,6 +216,16 @@
      */
     setImportant(base,'display','none');
     setImportant(bootstrap,'display','none');
+    allSources.forEach(function(card){
+      setImportant(card,'display','none');
+      setImportant(card,'visibility','hidden');
+      setImportant(card,'height','0');
+      setImportant(card,'min-height','0');
+      setImportant(card,'margin','0');
+      setImportant(card,'padding','0');
+      setImportant(card,'overflow','hidden');
+      setImportant(card,'pointer-events','none');
+    });
     setImportant(source,'display','none');
   }
 
