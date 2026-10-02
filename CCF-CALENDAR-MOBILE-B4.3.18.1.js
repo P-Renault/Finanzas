@@ -92,6 +92,17 @@
     rendering = true;
 
     try{
+      /*
+       * POSICIÓN DEFINITIVA B4.3.18.1:
+       * el Premium pertenece visualmente al MÓDULO CALENDARIO, pero su
+       * contenedor se monta inmediatamente después de la barra azul
+       * .b434-header de la shell móvil.
+       *
+       * Esto evita que quede debajo del contenido del Resumen y evita
+       * que el calendario herede el orden vertical del módulo host.
+       */
+      var mobileRoot = document.getElementById('ccf-mobile-b43');
+      var blueHeader = mobileRoot && mobileRoot.querySelector('.b434-header');
       var host = document.getElementById(ID);
 
       if(!host){
@@ -99,7 +110,11 @@
         host.id = ID;
       }
 
-      if(original.parentNode && host.parentNode !== original.parentNode){
+      if(blueHeader && blueHeader.parentNode){
+        if(blueHeader.nextElementSibling !== host){
+          blueHeader.parentNode.insertBefore(host, blueHeader.nextElementSibling);
+        }
+      }else if(original.parentNode && host.parentNode !== original.parentNode){
         original.parentNode.insertBefore(host, original);
       }
 
@@ -134,6 +149,7 @@
        * detalle completo con la estructura de la imagen de referencia.
        */
       appendPremiumDetail(host);
+      hideNativeCalendarCardsMobile();
 
       return true;
 
@@ -168,7 +184,39 @@
     }
   }
 
+  /*
+   * VISUAL POLICY B4.3.18.1:
+   * B232.26.4 sigue construyendo .b232261-card porque Premium 18.1
+   * utiliza esa estructura como fuente de datos. En móvil, sin embargo,
+   * esa representación nativa de escritorio no debe quedar visible.
+   *
+   * No elimina ni altera el constructor B232.26.4: únicamente cambia su
+   * presentación cuando existe la shell móvil. Se reaplica después de
+   * mutaciones porque el constructor nativo puede reconstruir el card.
+   */
+  function hideNativeCalendarCardsMobile(){
+    var mobileRoot=document.getElementById('ccf-mobile-b43');
+    var section=document.getElementById('calendario');
+
+    if(!mobileRoot || !section) return;
+
+    section.classList.add('ccf-calendar-mobile-mode');
+
+    var cards=section.querySelectorAll('.b232261-card');
+    cards.forEach(function(card){
+      setImportant(card,'display','none');
+      setImportant(card,'visibility','hidden');
+      setImportant(card,'height','0');
+      setImportant(card,'min-height','0');
+      setImportant(card,'margin','0');
+      setImportant(card,'padding','0');
+      setImportant(card,'overflow','hidden');
+    });
+  }
+
   function maintainPresentation(){
+    hideNativeCalendarCardsMobile();
+
     var base=document.getElementById(SOURCE);
     var premium=document.getElementById(ID);
     var source=sourceCalendar();
@@ -177,11 +225,15 @@
     var moduleHost=mobileRoot && mobileRoot.querySelector('[data-module-host]');
     var activeModule=moduleHost && moduleHost.getAttribute('data-active-module');
     var calendarActive=activeModule==='calendario';
+    var blueHeader=mobileRoot && mobileRoot.querySelector('.b434-header');
 
     /* La Premium solo se muestra cuando el usuario está dentro del módulo
        Calendario. Nunca aparece en Resumen ni en otro módulo. */
     if(premium){
-      if(calendarActive){
+      if(calendarActive && blueHeader && blueHeader.parentNode){
+        if(blueHeader.nextElementSibling!==premium){
+          blueHeader.parentNode.insertBefore(premium,blueHeader.nextElementSibling);
+        }
         setImportant(premium,'display','block');
       }else{
         setImportant(premium,'display','none');
@@ -197,6 +249,7 @@
     setImportant(base,'display','none');
     setImportant(bootstrap,'display','none');
     setImportant(source,'display','none');
+    hideNativeCalendarCardsMobile();
   }
 
   function startPresentationBridge(){
@@ -309,7 +362,8 @@
         primary:!!(
           document.getElementById(ID) &&
           document.getElementById('ccf-mobile-b43') &&
-          document.getElementById(ID).parentNode === document.getElementById('calendario')
+          document.getElementById('ccf-mobile-b43').querySelector('.b434-header') &&
+          document.getElementById('ccf-mobile-b43').querySelector('.b434-header').nextElementSibling === document.getElementById(ID)
         ),
         secondaryCalendar:!!sourceCalendar(),
         secondaryVisible:!!(

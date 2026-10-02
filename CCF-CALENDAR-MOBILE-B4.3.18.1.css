@@ -26,20 +26,11 @@
     display:none!important;
   }
 
-  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
   #calendario .b232261-card{
     display:none!important;
-    visibility:hidden!important;
-    opacity:0!important;
-    width:0!important;
-    max-width:0!important;
+    width:100%!important;
+    max-width:100%!important;
     min-width:0!important;
-    height:0!important;
-    min-height:0!important;
-    margin:0!important;
-    padding:0!important;
-    overflow:hidden!important;
-    pointer-events:none!important;
   }
 }
 
@@ -66,5 +57,20 @@
 @media (min-width:721px){
   #ccf-calendar-mobile-premium-b4-3-18-1-after17{
     display:none!important;
+  }
+}
+
+
+/* B4.3.18.1 — política de presentación móvil del constructor B232.26.4.
+   El card nativo permanece en el DOM como fuente técnica; no se elimina. */
+@media (max-width:720px){
+  #calendario.ccf-calendar-mobile-mode .b232261-card{
+    display:none!important;
+    visibility:hidden!important;
+    height:0!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
   }
 }
