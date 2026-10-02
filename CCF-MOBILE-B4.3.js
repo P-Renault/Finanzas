@@ -1034,10 +1034,17 @@ function rebuildCalendarProfessionalDetail(){
   const reconciledFlow=reconciledPositive-reconciledNegative;
 
   const footerText=foot.textContent||'';
-  const footerMoney=[...footerText.matchAll(/-?\\$\s*[\d.]+/g)].map(x=>numberValue(x[0]));
-  const initialBalance=footerMoney[0]??0;
-  const finalBalance=footerMoney[footerMoney.length-1]??initialBalance;
-  const flow=finalBalance-initialBalance;
+  const footerMoney=[...footerText.matchAll(/-?\$\s*[\d.]+/g)].map(x=>numberValue(x[0]));
+  const realClosingBalance=footerMoney[0]??0;
+
+  /*
+   * B232 muestra en el pie el saldo acumulado REAL al cierre del día.
+   * Para el indicador "Saldo inicial" debemos retroceder los movimientos
+   * reales del mismo día, sin volver a sumar/restar el historial completo.
+   */
+  const initialBalance=realClosingBalance-realIn+realOut;
+  const finalBalance=initialBalance+reconciledPositive-reconciledNegative;
+  const flow=reconciledPositive-reconciledNegative;
 
   const positiveClone=positiveBox.cloneNode(true);
   const negativeClone=negativeBox.cloneNode(true);
@@ -1135,8 +1142,9 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptB232261CalendarMobile,150);
      setTimeout(adaptB232261CalendarMobile,350);
      setTimeout(adaptB232261CalendarMobile,800);
-     setTimeout(rebuildCalendarProfessionalDetail,900);
-     setTimeout(rebuildCalendarProfessionalDetail,1400);
+     setTimeout(()=>{adaptB232261CalendarMobile();syncCalendarRealIndicators();rebuildCalendarProfessionalDetail()},900);
+     setTimeout(()=>{adaptB232261CalendarMobile();syncCalendarRealIndicators();rebuildCalendarProfessionalDetail()},1400);
+     setTimeout(()=>{syncCalendarRealIndicators();rebuildCalendarProfessionalDetail()},2000);
    }
    setActive(id);
    return true;
