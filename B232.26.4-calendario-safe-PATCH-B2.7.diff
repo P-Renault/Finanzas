@@ -1,8 +1,7 @@
---- B232.26.4-calendario-safe.js
-+++ B232.26.4-calendario-safe.js
+--- a/B232.26.4-calendario-safe.js
++++ b/B232.26.4-calendario-safe.js
 @@
--function css(){if($('b232261Style'))return;const s=document.createElement('style');s.id='b232261Style';s.textContent=`
-+function css(){if($('b232261Style'))return;const s=document.createElement('style');s.id='b232261Style';s.textContent=`
+ function css(){if($('b232261Style'))return;const s=document.createElement('style');s.id='b232261Style';s.textContent=`
 +.b232261-source{display:none!important}
  .b232261-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
 @@
