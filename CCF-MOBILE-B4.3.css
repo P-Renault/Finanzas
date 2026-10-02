@@ -2459,3 +2459,48 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   position:relative!important;
   z-index:20!important;
 }
+
+/* ============================================================
+   B4.3.11 SINGLE VIEW — HARD VISUAL KILL OF LEGACY CALENDAR
+   The B232.26.4 calendar remains in DOM only as a data source.
+   Premium B4.3.18.1 is the only mobile calendar presentation.
+   IMPORTANT: this block is intentionally LAST to override legacy
+   B4.3.10 rules that force .b232261-card / Bootstrap visible.
+============================================================ */
+@media (max-width:720px){
+  #ccf-mobile-b43 .b434-module-host #calendario .b232261-card,
+  #ccf-mobile-b43 #calendario .b232261-card,
+  #calendario .b232261-card,
+  #ccf-bs-calendar-view,
+  #ccf-mobile-b43 .b434-module-host #calendario #ccf-bs-calendar-view{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    position:absolute!important;
+    left:-100000px!important;
+    top:auto!important;
+    width:0!important;
+    max-width:0!important;
+    min-width:0!important;
+    height:0!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+  }
+
+  #ccf-mobile-b43 > #ccf-calendar-mobile-premium-b4-3-18-1-after17{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:relative!important;
+    left:auto!important;
+    width:100%!important;
+    max-width:100%!important;
+    height:auto!important;
+    margin:0 0 18px!important;
+    padding:0!important;
+    pointer-events:auto!important;
+  }
+}
