@@ -217,124 +217,367 @@ function styleCalendarMobile(){
     style=document.createElement('style');
     style.id='ccf-calendar-mobile-polish';
     style.textContent=`
-      #ccf-mobile-b43 #calendario{width:100%!important;max-width:100%!important;margin:0!important;padding:0!important}
+      /* CCF CALENDAR MOBILE · UI PRO V2
+         Presentación únicamente. No modifica B232.26.4, datos ni cálculos. */
+
+      #ccf-mobile-b43 #calendario{
+        width:100%!important;
+        max-width:100%!important;
+        margin:0!important;
+        padding:0!important;
+      }
+
       #ccf-mobile-b43 #calendario .b232261-card{
-        width:100%!important;max-width:100%!important;margin:0!important;padding:14px!important;
-        border:1px solid #e2e8f0!important;border-radius:20px!important;background:#fff!important;
-        box-shadow:0 6px 20px rgba(15,23,42,.06)!important
+        width:100%!important;
+        max-width:100%!important;
+        margin:0!important;
+        padding:16px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:22px!important;
+        background:#fff!important;
+        box-shadow:0 8px 28px rgba(15,23,42,.07)!important;
       }
+
+      /* Cabecera */
       #ccf-mobile-b43 #calendario .b232261-head{
-        display:flex!important;flex-direction:column!important;align-items:stretch!important;
-        gap:10px!important;margin-bottom:10px!important
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:stretch!important;
+        gap:7px!important;
+        margin:0 0 12px!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-head h2{
-        margin:2px 0 4px!important;font-size:23px!important;line-height:1.1!important;
-        color:#172033!important;letter-spacing:-.02em!important
+        order:2!important;
+        margin:0!important;
+        font-size:25px!important;
+        line-height:1.08!important;
+        letter-spacing:-.035em!important;
+        color:#172033!important;
       }
-      #ccf-mobile-b43 #calendario .b232261-sub{font-size:10px!important;line-height:1.35!important;color:#64748b!important}
+
+      #ccf-mobile-b43 #calendario .b232261-head .b232261-sub:first-child{
+        order:1!important;
+        margin:0!important;
+        font-size:9px!important;
+        line-height:1.2!important;
+        font-weight:800!important;
+        letter-spacing:.07em!important;
+        text-transform:uppercase!important;
+        color:#2563eb!important;
+      }
+
+      #ccf-mobile-b43 #calendario .b232261-head .b232261-sub:last-child{
+        order:3!important;
+        margin:0!important;
+        max-width:95%!important;
+        font-size:10px!important;
+        line-height:1.4!important;
+        color:#64748b!important;
+      }
+
+      /* Navegación */
       #ccf-mobile-b43 #calendario .b232261-actions{
-        display:grid!important;grid-template-columns:42px 1fr 42px 1.45fr!important;
-        gap:7px!important;width:100%!important
+        display:grid!important;
+        grid-template-columns:42px 1fr 42px 1.55fr!important;
+        gap:7px!important;
+        width:100%!important;
+        margin-top:4px!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-actions button{
-        min-width:0!important;min-height:42px!important;padding:8px 5px!important;
-        border-radius:11px!important;font-size:13px!important;font-weight:800!important;box-shadow:none!important
+        min-width:0!important;
+        min-height:44px!important;
+        padding:8px 5px!important;
+        border:1px solid transparent!important;
+        border-radius:12px!important;
+        font-size:13px!important;
+        font-weight:800!important;
+        letter-spacing:-.01em!important;
+        box-shadow:none!important;
       }
+
+      #ccf-mobile-b43 #calendario .b232261-actions button.secondary{
+        background:#eef2f7!important;
+        color:#172033!important;
+        border-color:#e2e8f0!important;
+      }
+
+      /* Estado y día seleccionado */
       #ccf-mobile-b43 #calendario .b232261-status{
-        margin:8px 0!important;padding:9px 11px!important;border-radius:11px!important;
-        font-size:10px!important;line-height:1.35!important
+        margin:10px 0 8px!important;
+        padding:10px 12px!important;
+        border-radius:12px!important;
+        font-size:10px!important;
+        line-height:1.35!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-status.ok{
-        background:#ecfdf5!important;color:#166534!important;border:1px solid #bbf7d0!important
+        background:#ecfdf5!important;
+        color:#166534!important;
+        border:1px solid #bbf7d0!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-status.warn{
-        background:#fff7ed!important;color:#9a3412!important;border:1px solid #fed7aa!important
+        background:#fff7ed!important;
+        color:#9a3412!important;
+        border:1px solid #fed7aa!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-scope{
-        margin:8px 0 10px!important;padding:9px 11px!important;border:1px solid #e2e8f0!important;
-        border-radius:11px!important;background:#f8fafc!important;font-size:10px!important
+        display:flex!important;
+        justify-content:space-between!important;
+        align-items:center!important;
+        gap:10px!important;
+        margin:8px 0 12px!important;
+        padding:10px 12px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:12px!important;
+        background:#f8fafc!important;
+        font-size:10px!important;
+        line-height:1.25!important;
       }
+
+      #ccf-mobile-b43 #calendario .b232261-scope span{
+        color:#64748b!important;
+      }
+
+      /* KPIs: mismo lenguaje de tarjetas del resto del sistema */
       #ccf-mobile-b43 #calendario .b232261-kpis{
-        grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin:10px 0!important
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:9px!important;
+        margin:0 0 13px!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-kpi{
-        min-width:0!important;padding:10px!important;border:1px solid #e2e8f0!important;
-        border-radius:13px!important;background:#f8fafc!important;box-shadow:none!important
+        min-width:0!important;
+        min-height:74px!important;
+        padding:11px 12px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:15px!important;
+        background:#f8fafc!important;
+        box-shadow:0 2px 7px rgba(15,23,42,.025)!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-kpi span,
       #ccf-mobile-b43 #calendario .b232261-kpi small{
-        font-size:9px!important;line-height:1.25!important;color:#64748b!important
+        font-size:9px!important;
+        line-height:1.25!important;
+        color:#64748b!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-kpi strong{
-        margin-top:4px!important;font-size:16px!important;line-height:1.1!important;
-        color:#172033!important;overflow-wrap:anywhere!important
+        display:block!important;
+        margin-top:5px!important;
+        font-size:17px!important;
+        line-height:1.05!important;
+        letter-spacing:-.02em!important;
+        color:#172033!important;
+        overflow-wrap:anywhere!important;
       }
+
+      /* Contenedor mensual */
       #ccf-mobile-b43 #calendario .b232261-scroll{
-        width:100%!important;margin-top:10px!important;padding:0!important;
-        border:1px solid #dbe3ec!important;border-radius:15px!important;background:#f8fafc!important;
-        box-shadow:none!important
+        width:100%!important;
+        margin:0!important;
+        padding:5px!important;
+        border:1px solid #dbe3ec!important;
+        border-radius:17px!important;
+        background:#f1f5f9!important;
+        box-shadow:inset 0 1px 2px rgba(15,23,42,.03)!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-grid{
-        gap:2px!important;background:#dbe3ec!important
+        gap:3px!important;
+        background:transparent!important;
       }
+
+      /* Encabezado de días */
       #ccf-mobile-b43 #calendario .b232261-week>div{
-        min-width:0!important;min-height:31px!important;padding:8px 1px!important;
-        display:flex!important;align-items:center!important;justify-content:center!important;
-        background:#0f172a!important;color:#fff!important;font-size:8px!important;letter-spacing:.02em!important
+        min-width:0!important;
+        min-height:31px!important;
+        padding:7px 1px!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        background:#111827!important;
+        color:#fff!important;
+        font-size:8px!important;
+        font-weight:800!important;
+        letter-spacing:.035em!important;
       }
+
+      #ccf-mobile-b43 #calendario .b232261-week>div:first-child{
+        border-radius:10px 0 0 10px!important;
+      }
+
+      #ccf-mobile-b43 #calendario .b232261-week>div:last-child{
+        border-radius:0 10px 10px 0!important;
+      }
+
+      /* Días como mini tarjetas */
       #ccf-mobile-b43 #calendario .b232261-day{
-        min-height:88px!important;height:88px!important;padding:5px!important;border:0!important;
-        border-radius:9px!important;background:#fff!important;
-        box-shadow:inset 0 0 0 1px #e2e8f0!important
+        min-height:91px!important;
+        height:91px!important;
+        padding:6px!important;
+        border:0!important;
+        border-radius:10px!important;
+        background:#fff!important;
+        box-shadow:0 1px 4px rgba(15,23,42,.05)!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-day.out{
-        background:#f1f5f9!important;color:#94a3b8!important
+        background:#e9eef5!important;
+        color:#94a3b8!important;
+        box-shadow:none!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-day.selected{
-        outline:2px solid #0f172a!important;outline-offset:-2px!important;
-        box-shadow:inset 0 0 0 1px #0f172a,0 2px 8px rgba(15,23,42,.12)!important
+        outline:2px solid #111827!important;
+        outline-offset:-2px!important;
+        background:#fff!important;
+        box-shadow:0 3px 10px rgba(15,23,42,.13)!important;
       }
-      #ccf-mobile-b43 #calendario .b232261-day-top{font-size:10px!important;line-height:1!important}
-      #ccf-mobile-b43 #calendario .b232261-day-top strong{font-size:11px!important;color:#334155!important}
+
+      #ccf-mobile-b43 #calendario .b232261-day-top{
+        min-height:16px!important;
+        display:flex!important;
+        justify-content:space-between!important;
+        align-items:center!important;
+        gap:3px!important;
+        font-size:10px!important;
+        line-height:1!important;
+      }
+
+      #ccf-mobile-b43 #calendario .b232261-day-top strong{
+        font-size:12px!important;
+        font-weight:800!important;
+        color:#334155!important;
+      }
+
       #ccf-mobile-b43 #calendario .b232261-day-top small{
-        font-size:6px!important;font-weight:900!important;color:#2563eb!important
+        font-size:6px!important;
+        line-height:1!important;
+        font-weight:900!important;
+        letter-spacing:.03em!important;
+        color:#2563eb!important;
       }
+
+      /* Información financiera compacta y legible */
       #ccf-mobile-b43 #calendario .b232261-event{
-        margin-top:3px!important;padding:3px 4px!important;border-radius:5px!important;
-        font-size:7px!important;line-height:1.05!important;font-weight:700!important
+        display:block!important;
+        max-width:100%!important;
+        margin-top:3px!important;
+        padding:3px 4px!important;
+        border-radius:5px!important;
+        font-size:7px!important;
+        line-height:1.05!important;
+        font-weight:750!important;
+        white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-more,
       #ccf-mobile-b43 #calendario .b232261-mini{
-        margin-top:3px!important;font-size:7px!important;line-height:1.05!important;
-        white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
+        display:block!important;
+        max-width:100%!important;
+        margin-top:3px!important;
+        font-size:7px!important;
+        line-height:1.05!important;
+        white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
       }
+
+      /* Detalle inferior */
       #ccf-mobile-b43 #calendario .b232261-detail{
-        grid-template-columns:1fr!important;gap:10px!important;margin-top:12px!important
+        grid-template-columns:1fr!important;
+        gap:10px!important;
+        margin-top:13px!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-box{
-        padding:12px!important;border:1px solid #e2e8f0!important;border-radius:15px!important;
-        background:#fff!important;box-shadow:0 2px 8px rgba(15,23,42,.04)!important
+        padding:13px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:16px!important;
+        background:#fff!important;
+        box-shadow:0 3px 10px rgba(15,23,42,.04)!important;
       }
-      #ccf-mobile-b43 #calendario .b232261-positive-box{border-top:4px solid #15803d!important}
-      #ccf-mobile-b43 #calendario .b232261-negative-box{border-top:4px solid #b91c1c!important}
+
+      #ccf-mobile-b43 #calendario .b232261-positive-box{
+        border-top:4px solid #15803d!important;
+      }
+
+      #ccf-mobile-b43 #calendario .b232261-negative-box{
+        border-top:4px solid #b91c1c!important;
+      }
+
       #ccf-mobile-b43 #calendario .b232261-box h3{
-        font-size:13px!important;line-height:1.3!important;margin:0 0 8px!important;color:#1e293b!important
+        font-size:13px!important;
+        line-height:1.3!important;
+        margin:0 0 8px!important;
+        color:#1e293b!important;
       }
-      #ccf-mobile-b43 #calendario .b232261-detail-total{padding:8px 0!important;font-size:12px!important}
-      #ccf-mobile-b43 #calendario .b232261-row{padding:8px 0!important;font-size:10px!important}
+
+      #ccf-mobile-b43 #calendario .b232261-detail-total{
+        padding:8px 0!important;
+        margin-bottom:3px!important;
+        font-size:12px!important;
+      }
+
+      #ccf-mobile-b43 #calendario .b232261-row{
+        padding:8px 0!important;
+        font-size:10px!important;
+      }
+
       #ccf-mobile-b43 #calendario .b232261-foot{
-        margin-top:10px!important;padding:10px 2px 0!important;border-top:1px solid #e2e8f0!important;
-        font-size:9px!important;line-height:1.4!important
+        margin-top:11px!important;
+        padding:10px 2px 0!important;
+        border-top:1px solid #e2e8f0!important;
+        font-size:9px!important;
+        line-height:1.4!important;
       }
+
       @media(max-width:390px){
-        #ccf-mobile-b43 #calendario .b232261-card{padding:11px!important;border-radius:17px!important}
-        #ccf-mobile-b43 #calendario .b232261-kpis{gap:6px!important}
-        #ccf-mobile-b43 #calendario .b232261-kpi{padding:8px!important}
-        #ccf-mobile-b43 #calendario .b232261-kpi strong{font-size:14px!important}
-        #ccf-mobile-b43 #calendario .b232261-day{height:82px!important;min-height:82px!important;padding:4px!important}
-        #ccf-mobile-b43 #calendario .b232261-event{font-size:6px!important;padding:2px 3px!important}
+        #ccf-mobile-b43 #calendario .b232261-card{
+          padding:12px!important;
+          border-radius:19px!important;
+        }
+
+        #ccf-mobile-b43 #calendario .b232261-actions{
+          grid-template-columns:40px 1fr 40px 1.45fr!important;
+          gap:6px!important;
+        }
+
+        #ccf-mobile-b43 #calendario .b232261-kpis{
+          gap:7px!important;
+        }
+
+        #ccf-mobile-b43 #calendario .b232261-kpi{
+          padding:9px!important;
+          min-height:70px!important;
+        }
+
+        #ccf-mobile-b43 #calendario .b232261-kpi strong{
+          font-size:15px!important;
+        }
+
+        #ccf-mobile-b43 #calendario .b232261-day{
+          height:84px!important;
+          min-height:84px!important;
+          padding:5px!important;
+        }
+
+        #ccf-mobile-b43 #calendario .b232261-event{
+          font-size:6.5px!important;
+          padding:2px 3px!important;
+        }
+
         #ccf-mobile-b43 #calendario .b232261-more,
-        #ccf-mobile-b43 #calendario .b232261-mini{font-size:6px!important}
+        #ccf-mobile-b43 #calendario .b232261-mini{
+          font-size:6.5px!important;
+        }
       }
     `;
     document.head.appendChild(style);
