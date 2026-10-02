@@ -603,6 +603,200 @@ function styleCalendarMobile(){
         font-size:8px!important;
       }
 
+
+      /* Detalle inferior reconstruido según referencia 3 */
+      #ccf-mobile-b43 #calendario .ccf-calendar-professional-detail{
+        margin-top:14px!important;
+        padding:0!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-head{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:space-between!important;
+        gap:10px!important;
+        margin:0 0 10px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-head h3{
+        margin:0!important;
+        font-size:18px!important;
+        line-height:1.2!important;
+        color:#172033!important;
+        letter-spacing:-.02em!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-day-btn{
+        flex:0 0 auto!important;
+        min-height:38px!important;
+        padding:8px 11px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:11px!important;
+        background:#fff!important;
+        color:#334155!important;
+        font-size:10px!important;
+        font-weight:800!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpis{
+        display:grid!important;
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
+        gap:8px!important;
+        margin:0 0 10px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi{
+        min-width:0!important;
+        min-height:70px!important;
+        padding:9px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:14px!important;
+        background:#fff!important;
+        box-shadow:0 2px 8px rgba(15,23,42,.035)!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi>span{
+        display:inline-flex!important;
+        width:27px!important;
+        height:27px!important;
+        align-items:center!important;
+        justify-content:center!important;
+        margin-bottom:5px!important;
+        border-radius:50%!important;
+        color:#fff!important;
+        font-size:12px!important;
+        font-weight:900!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi.green>span{background:#20a66a!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi.red>span{background:#e53935!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi.violet>span{background:#5146d8!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi.flow>span{background:#ef4444!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi small{
+        display:block!important;
+        color:#64748b!important;
+        font-size:8px!important;
+        line-height:1.1!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-kpi strong{
+        display:block!important;
+        margin-top:3px!important;
+        color:#172033!important;
+        font-size:15px!important;
+        line-height:1.05!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-balances{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:8px!important;
+        margin-bottom:10px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-balance{
+        display:flex!important;
+        align-items:center!important;
+        gap:9px!important;
+        min-width:0!important;
+        padding:10px!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:14px!important;
+        background:#fff!important;
+        box-shadow:0 2px 8px rgba(15,23,42,.035)!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-icon{
+        flex:0 0 36px!important;
+        width:36px!important;
+        height:36px!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        border-radius:50%!important;
+        color:#fff!important;
+        font-size:14px!important;
+        font-weight:900!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-icon.gray{background:#94a3b8!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-icon.blue{background:#1987e5!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-balance small{
+        display:block!important;
+        color:#64748b!important;
+        font-size:8px!important;
+        line-height:1.15!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-balance strong{
+        display:block!important;
+        margin-top:2px!important;
+        color:#334155!important;
+        font-size:15px!important;
+        line-height:1.05!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-lower{
+        display:grid!important;
+        grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        gap:10px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel{
+        min-width:0!important;
+        border:1px solid #e2e8f0!important;
+        border-radius:15px!important;
+        background:#fff!important;
+        overflow:hidden!important;
+        box-shadow:0 2px 8px rgba(15,23,42,.035)!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel.positive{border-top:4px solid #20a66a!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel.negative{border-top:4px solid #e53935!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-head{
+        display:grid!important;
+        grid-template-columns:30px 1fr auto!important;
+        align-items:center!important;
+        gap:7px!important;
+        padding:10px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-head b{
+        font-size:11px!important;
+        line-height:1.15!important;
+        color:#1e293b!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-head>strong{
+        font-size:11px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel.positive .ccf-cpd-panel-head>strong{color:#16834f!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel.negative .ccf-cpd-panel-head>strong{color:#c62828!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-round{
+        display:flex!important;
+        width:29px!important;
+        height:29px!important;
+        align-items:center!important;
+        justify-content:center!important;
+        border-radius:50%!important;
+        color:#fff!important;
+        font-size:12px!important;
+        font-weight:900!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-round.green{background:#20a66a!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-round.red{background:#e53935!important}
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body{
+        padding:0 10px 10px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body .b232261-box{
+        margin:0!important;
+        padding:0!important;
+        border:0!important;
+        border-radius:0!important;
+        box-shadow:none!important;
+        background:transparent!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body .b232261-box h3,
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body .b232261-detail-total{
+        display:none!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body .b232261-row{
+        padding:7px 0!important;
+        font-size:9px!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body .b232261-empty{
+        padding:11px 4px!important;
+        border-radius:10px!important;
+        background:#f8fafc!important;
+        font-size:9px!important;
+        line-height:1.35!important;
+      }
+      #ccf-mobile-b43 #calendario .ccf-cpd-panel-body .b232261-row strong{
+        font-size:10px!important;
+      }
+
       @media(max-width:390px){
         #ccf-mobile-b43 #calendario .b232261-card{
           padding:12px!important;
@@ -715,6 +909,107 @@ function adaptB232261CalendarMobile(){
     imp(day,'overflow','hidden');
   });
 
+  rebuildCalendarProfessionalDetail();
+
+  return true;
+}
+
+
+function rebuildCalendarProfessionalDetail(){
+  if(!calendarIsMobile()) return false;
+  const section=by('calendario');
+  if(!section) return false;
+
+  const old=section.querySelector('.b232261-detail');
+  const foot=section.querySelector('.b232261-foot');
+  const scope=section.querySelector('.b232261-scope');
+  if(!old||!foot||!scope) return false;
+
+  const selectedKey=scope.querySelector('span')?.textContent?.trim()||'';
+  if(old.dataset.ccfProfessionalDetail===selectedKey) return true;
+
+  const positiveBox=old.querySelector('.b232261-positive-box');
+  const negativeBox=old.querySelector('.b232261-negative-box');
+  if(!positiveBox||!negativeBox) return false;
+
+  const moneyValue=(text)=>{
+    const m=String(text||'').match(/-?\$\\s*[\\d.]+/);
+    return m?m[0].replace(/\\s/g,''):'$0';
+  };
+  const numberValue=(text)=>{
+    const v=moneyValue(text).replace(/[$.]/g,'');
+    const n=Number(v);
+    return Number.isFinite(n)?n:0;
+  };
+  const money=(n)=>{
+    const sign=n<0?'-':'';
+    return sign+'$'+Math.abs(Math.round(n)).toLocaleString('es-CL');
+  };
+  const sumEvents=(selector)=>{
+    let total=0;
+    section.querySelectorAll('.b232261-day.selected '+selector).forEach(el=>{
+      total+=numberValue(el.textContent);
+    });
+    return total;
+  };
+
+  const realIn=sumEvents('.b232261-real-in');
+  const realOut=sumEvents('.b232261-real-out');
+  const positiveTotal=numberValue(positiveBox.querySelector('.b232261-detail-total')?.textContent);
+  const negativeTotal=numberValue(negativeBox.querySelector('.b232261-detail-total')?.textContent);
+  const obligations=Math.max(0,negativeTotal-realOut);
+
+  const footerText=foot.textContent||'';
+  const footerMoney=[...footerText.matchAll(/-?\\$\\s*[\\d.]+/g)].map(x=>numberValue(x[0]));
+  const initialBalance=footerMoney[0]??0;
+  const finalBalance=footerMoney[footerMoney.length-1]??initialBalance;
+  const flow=finalBalance-initialBalance;
+
+  const positiveClone=positiveBox.cloneNode(true);
+  const negativeClone=negativeBox.cloneNode(true);
+
+  const detail=document.createElement('div');
+  detail.className='ccf-calendar-professional-detail';
+  detail.dataset.ccfProfessionalDetail=selectedKey;
+
+  const title=scope.querySelector('span')?.textContent?.trim()||'Día seleccionado';
+  detail.innerHTML=`
+    <div class="ccf-cpd-head">
+      <h3>${esc(title)}</h3>
+      <button type="button" class="ccf-cpd-day-btn">▣&nbsp; Ver día completo</button>
+    </div>
+
+    <div class="ccf-cpd-kpis">
+      <div class="ccf-cpd-kpi green"><span>↑</span><small>Ingresos</small><strong>${money(realIn)}</strong></div>
+      <div class="ccf-cpd-kpi red"><span>↓</span><small>Egresos</small><strong>${money(realOut)}</strong></div>
+      <div class="ccf-cpd-kpi violet"><span>▣</span><small>Obligaciones</small><strong>${money(obligations)}</strong></div>
+      <div class="ccf-cpd-kpi flow"><span>Σ</span><small>Flujo neto</small><strong>${money(flow)}</strong></div>
+    </div>
+
+    <div class="ccf-cpd-balances">
+      <div class="ccf-cpd-balance"><span class="ccf-cpd-icon gray">▣</span><div><small>Saldo inicial</small><strong>${money(initialBalance)}</strong></div></div>
+      <div class="ccf-cpd-balance"><span class="ccf-cpd-icon blue">▣</span><div><small>Saldo final (proyectado)</small><strong>${money(finalBalance)}</strong></div></div>
+    </div>
+
+    <div class="ccf-cpd-lower">
+      <div class="ccf-cpd-panel positive">
+        <div class="ccf-cpd-panel-head"><span class="ccf-cpd-round green">↑</span><b>Movimientos positivos</b><strong>${money(positiveTotal)}</strong></div>
+        <div class="ccf-cpd-panel-body"></div>
+      </div>
+      <div class="ccf-cpd-panel negative">
+        <div class="ccf-cpd-panel-head"><span class="ccf-cpd-round red">↓</span><b>Gastos y obligaciones</b><strong>${money(negativeTotal)}</strong></div>
+        <div class="ccf-cpd-panel-body"></div>
+      </div>
+    </div>
+  `;
+
+  detail.querySelector('.ccf-cpd-panel.positive .ccf-cpd-panel-body').appendChild(positiveClone);
+  detail.querySelector('.ccf-cpd-panel.negative .ccf-cpd-panel-body').appendChild(negativeClone);
+
+  const btn=detail.querySelector('.ccf-cpd-day-btn');
+  btn?.addEventListener('click',()=>detail.scrollIntoView({behavior:'smooth',block:'start'}));
+
+  old.replaceWith(detail);
   return true;
 }
 
@@ -766,6 +1061,8 @@ function showModuleAfterNavigation(id){
      setTimeout(adaptB232261CalendarMobile,150);
      setTimeout(adaptB232261CalendarMobile,350);
      setTimeout(adaptB232261CalendarMobile,800);
+     setTimeout(rebuildCalendarProfessionalDetail,900);
+     setTimeout(rebuildCalendarProfessionalDetail,1400);
    }
    setActive(id);
    return true;
