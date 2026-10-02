@@ -2459,3 +2459,99 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
   position:relative!important;
   z-index:20!important;
 }
+
+/* ================================================================
+   CCF MOBILE B4.3 — HEADER MÓVIL CONSOLIDADO
+   - Oculta exclusivamente la cabecera desktop en viewport móvil.
+   - El header CCF secundario pasa a ser la cabecera principal móvil.
+   - El botón Salir se incorpora junto al perfil.
+   - Sin impacto en escritorio.
+   ================================================================ */
+@media(max-width:720px){
+  body>.topbar,
+  .topbar{
+    display:none!important;
+  }
+
+  #ccf-mobile-b43 .b434-header{
+    height:76px!important;
+    min-height:76px!important;
+    padding:9px 12px!important;
+    gap:9px!important;
+    position:sticky!important;
+    top:0!important;
+    z-index:2147480001!important;
+    box-shadow:0 5px 18px rgba(7,27,52,.20)!important;
+  }
+
+  #ccf-mobile-b43 .b434-logo{
+    width:48px!important;
+    height:48px!important;
+    min-height:48px!important;
+    border-radius:13px!important;
+    font-size:15px!important;
+    flex:0 0 48px!important;
+  }
+
+  #ccf-mobile-b43 .b434-header>div{
+    flex:1 1 auto!important;
+    min-width:0!important;
+  }
+
+  #ccf-mobile-b43 .b434-header strong{
+    font-size:14px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #ccf-mobile-b43 .b434-header small{
+    font-size:9px!important;
+    line-height:1.2!important;
+    margin-top:4px!important;
+  }
+
+  #ccf-mobile-b43 .b434-bell{
+    flex:0 0 30px!important;
+    width:30px!important;
+    height:36px!important;
+    min-height:36px!important;
+    margin-left:0!important;
+    padding:0!important;
+    font-size:17px!important;
+  }
+
+  #ccf-mobile-b43 .b434-avatar{
+    flex:0 0 40px!important;
+    width:40px!important;
+    height:40px!important;
+    min-height:40px!important;
+    margin-left:0!important;
+    font-size:15px!important;
+    box-shadow:0 1px 3px rgba(15,23,42,.12)!important;
+  }
+
+  #ccf-mobile-b43 .b434-mobile-logout{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:52px!important;
+    height:40px!important;
+    min-height:40px!important;
+    margin:0!important;
+    padding:0 10px!important;
+    border:1px solid rgba(255,255,255,.38)!important;
+    border-radius:10px!important;
+    background:rgba(255,255,255,.08)!important;
+    color:#fff!important;
+    font-size:10px!important;
+    font-weight:850!important;
+    line-height:1!important;
+    box-shadow:none!important;
+  }
+
+  #ccf-mobile-b43 .b434-mobile-logout:active{
+    transform:scale(.97)!important;
+    background:rgba(255,255,255,.16)!important;
+  }
+}
