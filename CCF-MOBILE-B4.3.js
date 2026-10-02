@@ -1113,6 +1113,191 @@ function observeCalendarMobile(){
   scheduleCalendarMobileAdapt();
 }
 
+
+/* ================================================================
+   CCF MOBILE B4.3 — DEUDAS · ACCIONES Y DETALLE EN CONTEXTO
+   Solo móvil. No modifica los motores B220/B231/B232 ni escritorio.
+   - Eleva modales de pago/abono por encima de la shell móvil.
+   - Mantiene los modales como overlays, sin quedar detrás de .b434 root.
+   - Inserta el detalle inmediatamente después de la deuda seleccionada.
+   ================================================================ */
+let debtMobileDetailAnchor=null;
+let debtMobileDetailObserver=null;
+let debtMobileListObserver=null;
+let debtMobileFixInstalled=false;
+
+function styleDebtMobileActions(){
+  if(!mobile()) return;
+  let style=by('ccf-debt-mobile-actions-fix');
+  if(style) return;
+
+  style=document.createElement('style');
+  style.id='ccf-debt-mobile-actions-fix';
+  style.textContent=`
+    @media(max-width:720px){
+      /* La shell móvil usa z-index 2147480000. Los motores de deuda
+         crean sus overlays directamente en body con z-index menor.
+         Elevarlos evita que queden detrás de las tarjetas. */
+      body #b220Modal,
+      body #b2313-abono-modal,
+      body #b23266fix-abono-modal{
+        position:fixed!important;
+        z-index:2147483647!important;
+      }
+
+      body #b220Modal .b220-modal,
+      body #b2313-abono-modal>div,
+      body #b23266fix-abono-modal>div{
+        position:relative!important;
+        z-index:2147483647!important;
+        max-width:calc(100vw - 24px)!important;
+        box-sizing:border-box!important;
+      }
+
+      body:has(#b220Modal),
+      body:has(#b2313-abono-modal),
+      body:has(#b23266fix-abono-modal){
+        overflow:hidden!important;
+      }
+
+      /* El detalle forma parte de la secuencia de la deuda seleccionada. */
+      #ccf-mobile-b43 .b434-module-host #deudas #deudaDetalle{
+        width:100%!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+        margin:10px 0 12px!important;
+        clear:both!important;
+        position:relative!important;
+        z-index:1!important;
+      }
+
+      #ccf-mobile-b43 .b434-module-host #deudas .debt-card + #deudaDetalle{
+        scroll-margin-top:76px!important;
+      }
+
+      #ccf-mobile-b43 .b434-module-host #deudas .debt-card{
+        position:relative!important;
+        z-index:1!important;
+      }
+
+      /* Acciones de cada deuda permanecen siempre utilizables. */
+      #ccf-mobile-b43 .b434-module-host #deudas .form-actions{
+        position:relative!important;
+        z-index:3!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function moveDebtDetailAfterSelected(){
+  if(!mobile()) return false;
+  const detail=by('deudaDetalle');
+  const anchor=debtMobileDetailAnchor;
+
+  if(!detail||!anchor||!anchor.isConnected||!anchor.parentNode) return false;
+
+  if(anchor.nextElementSibling!==detail){
+    anchor.parentNode.insertBefore(detail,anchor.nextSibling);
+  }
+
+  detail.dataset.ccfDebtDetailContext='selected';
+  detail.style.display='block';
+  return true;
+}
+
+function focusDebtDetailAfterSelected(){
+  if(!moveDebtDetailAfterSelected()) return false;
+  const detail=by('deudaDetalle');
+  if(detail){
+    requestAnimationFrame(()=>{
+      if(detail.isConnected){
+        detail.scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    });
+  }
+  return true;
+}
+
+function armDebtDetailContext(card){
+  if(!mobile()||!card) return;
+  debtMobileDetailAnchor=card;
+
+  const detail=by('deudaDetalle');
+  if(detail&&!debtMobileDetailObserver){
+    debtMobileDetailObserver=new MutationObserver(()=>{
+      if(!mobile()||!debtMobileDetailAnchor)return;
+      setTimeout(()=>moveDebtDetailAfterSelected(),0);
+    });
+    debtMobileDetailObserver.observe(detail,{childList:true,subtree:true});
+  }
+
+  [0,80,220,500,900,1400].forEach(ms=>{
+    setTimeout(()=>{
+      if(mobile()&&debtMobileDetailAnchor===card) focusDebtDetailAfterSelected();
+    },ms);
+  });
+}
+
+function installDebtMobileBehavior(){
+  if(!mobile()) return;
+  styleDebtMobileActions();
+
+  const section=by('deudas');
+  if(!section) return;
+
+  if(debtMobileFixInstalled&&section.dataset.ccfDebtMobileActions==='1') return;
+  debtMobileFixInstalled=true;
+  section.dataset.ccfDebtMobileActions='1';
+
+  /*
+   * Capture para identificar la tarjeta antes de que el onclick nativo
+   * ejecute verDeuda23(). No reemplazamos la función original.
+   */
+  section.addEventListener('click',event=>{
+    const button=event.target?.closest?.('button');
+    if(!button) return;
+
+    const card=button.closest('.debt-card');
+    if(!card) return;
+
+    const onclick=button.getAttribute('onclick')||'';
+    const text=String(button.textContent||'').trim().toLowerCase();
+
+    if(
+      text==='ver detalle' ||
+      onclick.includes('verDeuda23(') ||
+      onclick.includes('verDeuda(')
+    ){
+      armDebtDetailContext(card);
+    }
+  },true);
+
+  /*
+   * Los motores B220/B231 pueden insertar o reconstruir acciones
+   * después de cargar la lista. No intervenimos en sus handlers.
+   * Solo aseguramos que el detalle conserve la posición contextual.
+   */
+  debtMobileListObserver=new MutationObserver(()=>{
+    if(debtMobileDetailAnchor?.isConnected){
+      setTimeout(()=>moveDebtDetailAfterSelected(),20);
+    }
+    styleDebtMobileActions();
+  });
+  debtMobileListObserver.observe(section,{childList:true,subtree:true});
+}
+
+function cleanupDebtMobileBehavior(){
+  debtMobileDetailObserver?.disconnect();
+  debtMobileDetailObserver=null;
+  debtMobileListObserver?.disconnect();
+  debtMobileListObserver=null;
+  debtMobileListObserver?.disconnect();
+  debtMobileListObserver=null;
+  debtMobileDetailAnchor=null;
+  debtMobileFixInstalled=false;
+}
+
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
@@ -1129,6 +1314,12 @@ function showModuleAfterNavigation(id){
    content?.classList.add('b434-view-hidden');
    host?.classList.add('open');
    host?.setAttribute('data-active-module',id);
+   if(id==='deudas'){
+     setTimeout(installDebtMobileBehavior,50);
+     setTimeout(installDebtMobileBehavior,300);
+     setTimeout(installDebtMobileBehavior,900);
+     setTimeout(installDebtMobileBehavior,1800);
+   }
    if(id==='movimientos'){
      adaptMovementsMobile();
      setTimeout(adaptMovementsMobile,250);
@@ -1386,7 +1577,7 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
