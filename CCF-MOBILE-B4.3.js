@@ -217,8 +217,9 @@ function styleCalendarMobile(){
     style=document.createElement('style');
     style.id='ccf-calendar-mobile-polish';
     style.textContent=`
-      /* CCF CALENDAR MOBILE · UI PROFESIONAL V2 · DISEÑO REFERENCIA
-         Presentación móvil. No modifica B232.26.4, datos ni cálculos. */
+      /* CCF MOBILE B4.3 · CALENDARIO UI INTEGRADA
+         Capa de presentación interna de B4.3.
+         No modifica B232.26.4, datos, cálculos ni Supabase. */
 
       #ccf-mobile-b43 #calendario{
         width:100%!important;
@@ -238,7 +239,7 @@ function styleCalendarMobile(){
         box-shadow:0 8px 28px rgba(15,23,42,.07)!important;
       }
 
-      /* Cabecera: CCF 360° + mes + descripción */
+      /* Encabezado */
       #ccf-mobile-b43 #calendario .b232261-head{
         display:flex!important;
         flex-direction:column!important;
@@ -301,7 +302,7 @@ function styleCalendarMobile(){
         border-color:#e2e8f0!important;
       }
 
-      /* Estado y scope */
+      /* Estado */
       #ccf-mobile-b43 #calendario .b232261-status{
         margin:0 0 8px!important;
         padding:9px 11px!important;
@@ -335,7 +336,7 @@ function styleCalendarMobile(){
         font-size:10px!important;
       }
 
-      /* Resumen superior: 4 tarjetas */
+      /* Resumen superior: cuatro tarjetas */
       #ccf-mobile-b43 #calendario .b232261-kpis{
         grid-template-columns:repeat(4,minmax(0,1fr))!important;
         gap:8px!important;
@@ -370,25 +371,11 @@ function styleCalendarMobile(){
         overflow-wrap:anywhere!important;
       }
 
-      /* Acentos discretos nas 4 métricas */
-      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(1){
-        border-top:3px solid #22a66f!important;
-      }
-      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(2){
-        border-top:3px solid #ef4444!important;
-      }
-      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(3){
-        border-top:3px solid #5146d8!important;
-      }
-      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(4){
-        border-top:3px solid #1987e5!important;
-      }
-
-      /* Si el motor entrega más de 4 KPIs, la vista mobile conserva
-         los cuatro indicadores principales de la arquitectura visual. */
-      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(n+5){
-        display:none!important;
-      }
+      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(1){border-top:3px solid #22a66f!important}
+      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(2){border-top:3px solid #ef4444!important}
+      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(3){border-top:3px solid #5146d8!important}
+      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(4){border-top:3px solid #1987e5!important}
+      #ccf-mobile-b43 #calendario .b232261-kpi:nth-child(n+5){display:none!important}
 
       /* Calendario mensual */
       #ccf-mobile-b43 #calendario .b232261-scroll{
@@ -428,7 +415,7 @@ function styleCalendarMobile(){
         border-radius:0 10px 10px 0!important;
       }
 
-      /* Días */
+      /* Días como mini-tarjetas */
       #ccf-mobile-b43 #calendario .b232261-day{
         min-height:86px!important;
         height:86px!important;
@@ -476,7 +463,7 @@ function styleCalendarMobile(){
         color:#1976d2!important;
       }
 
-      /* Chips financieros: compactos y muy limpios */
+      /* Información financiera */
       #ccf-mobile-b43 #calendario .b232261-event{
         display:block!important;
         max-width:100%!important;
@@ -495,22 +482,23 @@ function styleCalendarMobile(){
         background:#e9f9f0!important;
         color:#17834f!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-real-out{
         background:#fff0f1!important;
         color:#c62828!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-plan-in{
         background:#eef7ff!important;
         color:#1976d2!important;
       }
+
       #ccf-mobile-b43 #calendario .b232261-plan-out{
         background:#fff5ea!important;
         color:#b45309!important;
       }
-      #ccf-mobile-b43 #calendario .b232261-gen{
-        background:#f3f0ff!important;
-        color:#5146d8!important;
-      }
+
+      #ccf-mobile-b43 #calendario .b232261-gen,
       #ccf-mobile-b43 #calendario .b232261-debt{
         background:#f0efff!important;
         color:#5146d8!important;
@@ -530,16 +518,15 @@ function styleCalendarMobile(){
 
       /* Leyenda */
       #ccf-mobile-b43 #calendario .b232261-foot{
-        position:relative!important;
         margin-top:8px!important;
-        padding:15px 5px 2px 5px!important;
+        padding:15px 5px 2px!important;
         border-top:1px solid #e2e8f0!important;
         font-size:9px!important;
         line-height:1.4!important;
         color:#64748b!important;
       }
 
-      /* Detalle del día: arquitectura de tarjetas */
+      /* Detalle diario como tarjetas */
       #ccf-mobile-b43 #calendario .b232261-detail{
         grid-template-columns:repeat(2,minmax(0,1fr))!important;
         gap:10px!important;
@@ -585,7 +572,6 @@ function styleCalendarMobile(){
         font-size:8px!important;
       }
 
-      /* En móviles angostos, volver a una columna para no comprimir */
       @media(max-width:390px){
         #ccf-mobile-b43 #calendario .b232261-card{
           padding:12px!important;
