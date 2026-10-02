@@ -173,48 +173,6 @@ function refreshMovementView(){
  });
 }
 
-function ensureMobileCalendarSourceGuard(){
- const id='ccf-mobile-calendar-source-guard-style';
- if(document.getElementById(id))return;
- const st=document.createElement('style');
- st.id=id;
- st.textContent=`
-   #calendario.ccf-mobile-calendar-source-hidden{
-     display:none!important;
-     visibility:hidden!important;
-     width:0!important;
-     max-width:0!important;
-     min-width:0!important;
-     height:0!important;
-     min-height:0!important;
-     max-height:0!important;
-     margin:0!important;
-     padding:0!important;
-     border:0!important;
-     overflow:hidden!important;
-     position:absolute!important;
-     left:-100000px!important;
-     top:-100000px!important;
-     clip:rect(0 0 0 0)!important;
-     pointer-events:none!important;
-   }
- `;
- (document.head||document.documentElement).appendChild(st);
-}
-
-function quarantineMobileCalendarSource(){
- const section=by('calendario');
- if(!section)return false;
- ensureMobileCalendarSourceGuard();
- section.classList.add('ccf-mobile-calendar-source-hidden');
- return true;
-}
-
-function releaseMobileCalendarSource(){
- const section=by('calendario');
- if(section)section.classList.remove('ccf-mobile-calendar-source-hidden');
-}
-
 function adaptDesktopModule(id){
  const host=moduleHost();
  if(!host)return false;
@@ -231,24 +189,6 @@ function adaptDesktopModule(id){
  if(!section){
    return false;
  }
-
- /*
-  * CALENDARIO MÓVIL: no montar nunca el módulo propietario B232.26.4
-  * dentro de la shell móvil. Ese montaje es el que produce la tarjeta
-  * "B232 · CALENDARIO FINANCIERO" que aparece debajo de Premium.
-  *
-  * El #calendario permanece en el DOM como fuente técnica oculta para
-  * B4.3.17 / Premium 18.1, pero no entra al moduleHost móvil.
-  */
- if(id==='calendario' && mobile()){
-   quarantineMobileCalendarSource();
-   host.replaceChildren();
-   activeModule=null;
-   host.classList.add('open');
-   return true;
- }
-
- releaseMobileCalendarSource();
  moduleMarker=document.createComment('CCF B4.3.4 module '+id);
  section.parentNode?.insertBefore(moduleMarker,section);
  section.classList.remove('hidden');
@@ -258,17 +198,12 @@ function adaptDesktopModule(id){
  host.classList.add('open');
  return true;
 }
-/* CCF MOBILE B4.3.10 — CALENDARIO · BOOTSTRAP GRID AISLADO
-   Bootstrap 5.3 grid aplicado únicamente a #calendario.
-   No modifica B232.26.4-calendario-safe.js ni otros módulos.
-*/
 function showModuleAfterNavigation(id){
  const content=$('[data-content]',root);
  const host=moduleHost();
  if(id==='dashboard'){
    restoreActiveModule();
    host?.classList.remove('open');
-   host?.removeAttribute('data-active-module');
    content?.classList.remove('b434-view-hidden');
    summary();
    setActive('dashboard');
@@ -526,10 +461,11 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();releaseMobileCalendarSource();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+
 
 })();
