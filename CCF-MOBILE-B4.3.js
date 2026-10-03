@@ -28,22 +28,7 @@ function moveReal(id,host){
 }
 function restoreReal(){for(const x of moved.slice().reverse()){delete x.el.dataset.b434Moved;if(x.marker.parentNode)x.marker.parentNode.insertBefore(x.el,x.marker.nextSibling);x.marker.remove()}moved=[]}
 function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
-/* CCF MOBILE B4.3.10 · RESTAURAR RESUMEN INICIAL */
-function ensureDashboardSummary(){
- if(!root||!mobile()||!ready())return;
- const content=$('[data-content]',root), host=moduleHost();
- if(!content||activeModule)return;
- content.classList.remove('b434-view-hidden');
- host?.classList.remove('open');
- if(!content.children.length)summary();
- mirrorAll();
-}
-function scheduleDashboardSummaryRestore(){
- [0,80,250,600,1200].forEach(ms=>setTimeout(()=>{
-   if(root&&mobile()&&!activeModule)ensureDashboardSummary();
- },ms));
-}
-function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));by('ccf-profile-overlay')?.classList.remove('ccf-open');document.body.classList.remove('b434-lock');scheduleDashboardSummaryRestore()}
+function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));document.body.classList.remove('b434-lock')}
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
@@ -1472,7 +1457,6 @@ function navigate(id){
  if(id==='dashboard'){
    nativeTab('dashboard');
    showModuleAfterNavigation('dashboard');
-   scheduleDashboardSummaryRestore();
    return;
  }
  const native=nativeTab(id);
@@ -1487,122 +1471,7 @@ function navigate(id){
  if(!native && !META[id])notice(id);
 }
 function openMore(){populateMore();$('.b434-overlay[data-overlay="more"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
-
-/* CCF MOBILE B4.3 · PERFIL UNIFICADO
-   En móvil no se crea un segundo formulario de perfil.
-   Se utiliza CCF-PERFIL-USUARIO-B1.0 y se presenta como bottom-sheet,
-   igual al patrón visual de los overlays móviles.
-*/
-function styleUnifiedProfileMobile(){
- const id='ccf-profile-mobile-sheet-style';
- if(by(id))return;
- const style=document.createElement('style');
- style.id=id;
- style.textContent=`
-   @media(max-width:720px){
-     body #ccf-profile-overlay{
-       position:fixed!important;
-       inset:0!important;
-       z-index:2147483647!important;
-       display:none;
-       align-items:flex-end!important;
-       justify-content:center!important;
-       padding:0!important;
-       background:rgba(15,23,42,.58)!important;
-       overflow:hidden!important;
-     }
-     body #ccf-profile-overlay.ccf-open{
-       display:flex!important;
-     }
-     body #ccf-profile-overlay #ccf-profile-card{
-       width:100%!important;
-       max-width:none!important;
-       max-height:88vh!important;
-       margin:0!important;
-       border-radius:22px 22px 0 0!important;
-       padding:18px 16px 22px!important;
-       box-sizing:border-box!important;
-       overflow:auto!important;
-       overscroll-behavior:contain!important;
-       box-shadow:0 -10px 40px rgba(0,0,0,.28)!important;
-     }
-     body #ccf-profile-overlay #ccf-profile-card .ccf-profile-head{
-       position:sticky!important;
-       top:-18px!important;
-       z-index:3!important;
-       margin:-18px -16px 14px!important;
-       padding:16px!important;
-       background:#fff!important;
-       border-radius:22px 22px 0 0!important;
-     }
-     body #ccf-profile-overlay #ccf-profile-card .ccf-profile-actions{
-       position:sticky!important;
-       bottom:-22px!important;
-       z-index:3!important;
-       margin:18px -16px -22px!important;
-       padding:12px 16px!important;
-       background:#fff!important;
-       border-top:1px solid #e5e7eb!important;
-     }
-     body #ccf-profile-overlay #ccf-profile-card .ccf-profile-logout{
-       display:block!important;
-       width:100%!important;
-       min-height:48px!important;
-       margin:10px 0 0!important;
-       border:0!important;
-       border-radius:12px!important;
-       background:#fee2e2!important;
-       color:#991b1b!important;
-       font-weight:800!important;
-       font-size:15px!important;
-       cursor:pointer!important;
-     }
-   }
- `;
- document.head.appendChild(style);
-}
-function ensureMobileProfileLogout(){
- const card=by('ccf-profile-card');
- if(!card)return;
- if(card.querySelector('[data-ccf-mobile-profile-logout]'))return;
- const actions=card.querySelector('.ccf-profile-actions');
- const btn=document.createElement('button');
- btn.type='button';
- btn.className='ccf-profile-logout';
- btn.dataset.ccfMobileProfileLogout='1';
- btn.textContent='Cerrar sesión';
- btn.addEventListener('click',()=>by('logoutBtn')?.click());
- if(actions)actions.appendChild(btn);else card.appendChild(btn);
-}
-
-function bindProfileCloseRestore(){
- const overlay=by('ccf-profile-overlay');
- if(!overlay||overlay.dataset.ccfDashboardRestore==='1')return;
- overlay.dataset.ccfDashboardRestore='1';
- ['ccf-profile-close','ccf-profile-cancel'].forEach(id=>by(id)?.addEventListener('click',()=>scheduleDashboardSummaryRestore(),{capture:true}));
-}
-function openUnifiedProfile(){
- styleUnifiedProfileMobile();
- bindProfileCloseRestore();
- /* El overlay antiguo de B4.3 deja de utilizarse como perfil. */
- const old=$('.b434-overlay[data-overlay="profile"]',root);
- old?.classList.remove('open');
- const profileButton=by('ccf-profile-button');
- if(profileButton){
-   profileButton.click();
-   [0,80,180,350,700].forEach(ms=>setTimeout(ensureMobileProfileLogout,ms));
-   return true;
- }
- let attempts=0;
- const retry=()=>{
-   const btn=by('ccf-profile-button');
-   if(btn){btn.click();return;}
-   if(++attempts<15)setTimeout(retry,150);
- };
- retry();
- return false;
-}
-function openProfile(){openUnifiedProfile()}
+function openProfile(){$('.b434-overlay[data-overlay="profile"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 
 function populateMore(){
  const g=$('[data-more-grid]',root);if(!g)return;g.innerHTML='';
@@ -1807,11 +1676,12 @@ function build(){
  if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';
  root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
  <div class="b434-overlay" data-overlay="more"><div class="b434-backdrop" data-close></div><section><header><strong>Todos los módulos</strong><button data-close>×</button></header><div class="b434-module-grid" data-more-grid></div></section></div>
+ <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
- $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openUnifiedProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();$('[data-mobile-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');scheduleDashboardSummaryRestore();
+ $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();$('[data-mobile-logout]',root).onclick=()=>by('logoutBtn')?.click();
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
@@ -1819,9 +1689,35 @@ function observe(){
 }
 function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
+function bootAfterAuthentication(){
+  if(!mobile())return;
+  let tries=0;
+  const run=()=>{
+    if(!ready()){if(++tries<30)setTimeout(run,100);return;}
+    if(!built){build();observe();}
+    /* El Resumen es siempre la primera vista después de autenticar. */
+    activeModule=null;
+    nativeTab('dashboard');
+    showModuleAfterNavigation('dashboard');
+    scheduleDashboardSummaryRestore();
+    refreshNativeSummaryData();
+    scheduleMobileFlowAdapt();
+    mirrorAll();
+  };
+  run();
+}
+window.addEventListener('ccf:app-ready',bootAfterAuthentication);
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
+/* Observa la transición login → app para no depender de un resize o refresh del navegador. */
+function observeAuthReveal(){
+  const a=app(); if(!a||!window.MutationObserver)return;
+  const fire=()=>{if(!a.classList.contains('hidden'))window.dispatchEvent(new Event('ccf:app-ready'));};
+  new MutationObserver(fire).observe(a,{attributes:true,attributeFilter:['class','style']});
+  fire();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observeAuthReveal,{once:true});else observeAuthReveal();
+window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{bootAfterAuthentication();mirrorAll();syncConsolidatedReport()},disable:restore};
 
 
 })();
