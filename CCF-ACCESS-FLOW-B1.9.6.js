@@ -7,8 +7,12 @@
 */
 (()=>{
 'use strict';
-if(window.__CCF_B23016_AUTH_BOOT__)return;
-window.__CCF_B23016_AUTH_BOOT__=true;
+if(window.__CCF_B1_9_6_ACCESS_FLOW__)return;
+window.__CCF_B1_9_6_ACCESS_FLOW__=true;
+
+/* Guard propio: CCF-AUTH-BOOT-FINAL.js usa otro namespace.
+   Este controlador debe ejecutarse siempre para eliminar el portal/landing B230
+   del flujo final y dejar LOGIN como única entrada. */
 
 const VERSION='B2.31.2-FIX-2026.09.26';
 const SUPABASE_URL='https://xgxvdbgmwvncmfdcxgsf.supabase.co';
