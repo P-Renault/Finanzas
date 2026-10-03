@@ -533,9 +533,35 @@ function installForms(){
 }
 
 async function boot(){
+  /*
+   * B1.9.6 DEFINITIVO V3
+   * Flujo único: ABRIR CCF -> LOGIN -> RESUMEN.
+   * El LOGIN se monta inmediatamente y la autenticación se inicializa
+   * en segundo plano. No se utiliza MutationObserver global.
+   */
   installAccessBaseStyle();
   hideLegacy();
 
+  /* B230 no forma parte del flujo final. Se retira inmediatamente. */
+  $('ccf-b230-final')?.remove();
+
+  /* LOGIN es la única superficie visible antes de autenticarse. */
+  let gate=$('ccf-auth-gate');
+  if(!gate){
+    portal();
+    gate=$('ccf-auth-gate');
+  }
+  if(gate){
+    mode='login';
+    setMode('login');
+    gate.style.display='';
+    gate.style.visibility='visible';
+    gate.removeAttribute('aria-hidden');
+    installForms();
+    requestAnimationFrame(()=>$('ccf-email')?.focus());
+  }
+
+  /* Nunca bloqueamos la pantalla de acceso esperando a Supabase. */
   try{
     await waitClient();
     const {data,error}=await client.auth.getSession();
@@ -546,29 +572,17 @@ async function boot(){
       return;
     }
 
-    /* Flujo final: sin sesión -> LOGIN inmediato. */
-    showLoginOnly();
+    status('Ingresa con tu cuenta.');
   }catch(e){
     console.error('[CCF AUTH] boot',e);
-    /* Incluso si la sesión no pudo recuperarse, el usuario debe recibir
-       el acceso; nunca se muestra configuración técnica ni landing. */
-    try{
-      await waitClient();
-      showLoginOnly();
-    }catch(_){
-      showLoginOnly();
-    }
+    /* El formulario continúa disponible aunque Supabase tarde o falle. */
+    status('Ingresa con tu cuenta.',false);
   }
 }
 
 function showLoginOnly(){
   installAccessBaseStyle();
   hideLegacy();
-
-  /* El flujo de acceso final no utiliza landing ni configuración técnica. */
-  $('configPanel')?.classList.add('hidden');
-  $('app')?.classList.add('hidden');
-  $('logoutBtn')?.classList.add('hidden');
   $('ccf-b230-final')?.remove();
 
   let gate=$('ccf-auth-gate');
@@ -583,49 +597,16 @@ function showLoginOnly(){
   gate.style.display='';
   gate.style.visibility='visible';
   gate.removeAttribute('aria-hidden');
-  gate.dataset.ccfAccessUserOpened='1';
   installForms();
-
-  /* El formulario de login es la única superficie de acceso visible. */
-  document.querySelectorAll('[data-b230-open="login"],[data-b230-open="register"]').forEach(el=>{
-    el.style.display='none';
-  });
-
-  requestAnimationFrame(()=>{
-    $('ccf-email')?.focus();
-  });
+  requestAnimationFrame(()=>$('ccf-email')?.focus());
 }
 
-/* Mantener cualquier superficie técnica/landing fuera del flujo final. */
-function installAccessGuard(){
-  if(document.__CCF_FINAL_ACCESS_GUARD__)return;
-  document.__CCF_FINAL_ACCESS_GUARD__=true;
-
-  const observer=new MutationObserver(()=>{
-    const ready=document.body.classList.contains('ccf-access-app-ready');
-    if(ready)return;
-
-    $('configPanel')?.classList.add('hidden');
-    $('logoutBtn')?.classList.add('hidden');
-    $('ccf-b230-final')?.remove();
-
-    const gate=$('ccf-auth-gate');
-    if(gate){
-      gate.style.display='';
-      gate.style.visibility='visible';
-      gate.removeAttribute('aria-hidden');
-    }
-  });
-
-  observer.observe(document.body,{
-    childList:true,
-    subtree:true,
-    attributes:true,
-    attributeFilter:['class','style','hidden','aria-hidden']
-  });
-}
-
-installAccessGuard();
+/*
+ * No instalar un MutationObserver global aquí.
+ * La versión anterior observaba class/style/aria-hidden y luego modificaba
+ * esos mismos atributos, generando un ciclo de mutaciones que podía
+ * congelar la interfaz móvil.
+ */
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
