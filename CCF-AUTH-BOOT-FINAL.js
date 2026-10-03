@@ -25,6 +25,7 @@ function hideLegacy(){
 }
 
 function revealApp(){
+ document.body?.classList.add('ccf-access-authenticated');
  $('configPanel')?.classList.add('hidden');
  const app=$('app');
  if(app){
@@ -89,6 +90,7 @@ function portal(){
  style.id='ccf-auth-boot-style';
  style.textContent=`
  #ccf-auth-gate{
+   display:none;
    position:fixed;
    inset:0;
    z-index:2147483646;
@@ -214,6 +216,20 @@ function portal(){
  document.head.appendChild(style);
 
  $('ccf-switch').onclick=()=>setMode(mode==='login'?'register':'login');
+
+ // B230 es el portal visible inicial. Al pulsar uno de sus CTA,
+ // este controlador único muestra el formulario real de autenticación.
+ if(!window.__CCF_AUTH_B230_BRIDGE__){
+   document.addEventListener('click',event=>{
+     const trigger=event.target.closest?.('[data-b230-open]');
+     if(!trigger)return;
+     const gate=$('ccf-auth-gate');
+     if(!gate)return;
+     gate.style.display='block';
+     gate.style.visibility='visible';
+   },true);
+   window.__CCF_AUTH_B230_BRIDGE__=true;
+ }
 }
 
 function setMode(next){
@@ -366,36 +382,35 @@ async function waitClient(){
 
 async function openApp(){
  /*
-  * B2.31.3 — el acceso no debe quedar bloqueado esperando
-  * conexiones, probes o módulos financieros.
-  * Primero mostramos la aplicación; después dejamos que los
-  * motores financieros se inicialicen en segundo plano.
+  * B2.31.3 — acceso único:
+  * 1) la sesión Supabase ya está validada;
+  * 2) se muestra siempre Resumen;
+  * 3) recién después se inicializa el motor financiero.
   */
  revealApp();
+
+ try{
+   localStorage.setItem('cf_active_tab_v2','dashboard');
+ }catch(_){ }
+
+ document.querySelectorAll('.tab').forEach(section=>{
+   section.classList.toggle('hidden',section.id!=='dashboard');
+ });
+ document.querySelectorAll('.tabs button[data-tab]').forEach(button=>{
+   button.classList.toggle('active',button.dataset.tab==='dashboard');
+ });
 
  const gate=$('ccf-auth-gate');
  if(gate) gate.remove();
 
- const app=$('app');
- if(app){
-   app.classList.remove('hidden','b230-hidden-app');
-   app.style.removeProperty('display');
-   app.removeAttribute('aria-hidden');
- }
-
  try{
    if(typeof window.connect==='function'){
-     window.connect().catch(e=>console.warn('[CCF AUTH] connect',e));
+     await window.connect();
    }
  }catch(e){
    console.warn('[CCF AUTH] connect',e);
  }
 
- /*
-  * Un segundo intento de refresco permite que los módulos que se
-  * cargan dinámicamente encuentren el cliente autenticado.
-  * Nunca bloquea la visualización de la aplicación.
-  */
  setTimeout(()=>{
    try{
      if(typeof window.refresh==='function'){
@@ -447,9 +462,6 @@ async function submitAuth(){
 
      if(data?.session){
        await openApp();
-       setTimeout(()=>revealApp(),0);
-       setTimeout(()=>revealApp(),500);
-       setTimeout(()=>revealApp(),1500);
      }else{
        status(
          'Cuenta creada. Revisa tu correo para confirmar la cuenta y luego inicia sesión.'
@@ -471,9 +483,6 @@ async function submitAuth(){
      }
 
      await openApp();
-     setTimeout(()=>revealApp(),0);
-     setTimeout(()=>revealApp(),500);
-     setTimeout(()=>revealApp(),1500);
    }
 
  }catch(e){
@@ -522,6 +531,7 @@ function installForms(){
 }
 
 async function boot(){
+ document.body?.classList.remove('ccf-access-authenticated');
  hideLegacy();
  portal();
  installForms();
@@ -539,9 +549,6 @@ async function boot(){
 
    if(data?.session){
      await openApp();
-     setTimeout(()=>revealApp(),0);
-     setTimeout(()=>revealApp(),500);
-     setTimeout(()=>revealApp(),1500);
    }else{
      status(
        'Sin sesión activa. Inicia sesión o crea una cuenta.'

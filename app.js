@@ -67,35 +67,38 @@
   }
 
   async function connect() {
-    const url = $('supabaseUrl')?.value.trim() || '';
-    const key = $('supabaseKey')?.value.trim() || '';
+    /*
+     * B232.23 — El cliente válido es el creado por CCF-AUTH-BOOT-FINAL.js.
+     * La existencia de sf_url/sf_key en localStorage NO equivale a una
+     * sesión autenticada y nunca debe abrir ni conectar la aplicación por sí sola.
+     */
+    const authClient = window.supabaseClient || window.db || null;
 
-    if (!url || !key) {
-      msg('configMsg','Completa ambos campos.');
+    if (!authClient || !authClient.auth || typeof authClient.auth.getSession !== 'function') {
+      console.warn('[B232.23] connect: cliente autenticado aún no disponible.');
       return false;
     }
 
-    const btn = $('saveConfig');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Conectando...';
-    }
-
     try {
-      if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-        throw new Error('La biblioteca de Supabase no está disponible.');
+      const { data, error } = await authClient.auth.getSession();
+      if (error) throw error;
+
+      if (!data?.session) {
+        console.warn('[B232.23] connect: no existe una sesión autenticada.');
+        return false;
       }
 
-      db = window.supabase.createClient(url, key, {
-        auth: { persistSession:false, autoRefreshToken:false }
-      });
+      db = authClient;
 
-      localStorage.setItem('sf_url', url);
-      localStorage.setItem('sf_key', key);
+      const btn = $('saveConfig');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Conectando...';
+      }
 
-      // CRÍTICO: la interfaz se revela ANTES del probe.
+      // La interfaz ya fue autorizada por CCF-AUTH-BOOT-FINAL.js.
       revealApp();
-      setStatus('Supabase conectado. Verificando datos...');
+      setStatus('Sesión autenticada. Verificando datos...');
 
       const probe = await db.from('movimientos').select('id').limit(1);
 
@@ -112,12 +115,15 @@
     } catch (e) {
       console.error('[B232.23] connect', e);
 
-      // Nunca volver a ocultar la aplicación por un fallo de conexión.
-      revealApp();
-      setStatus('Interfaz disponible. Error de conexión: ' + (e?.message || e));
+      // Un fallo de probe no debe volver a mostrar la configuración técnica.
+      if (document.body.classList.contains('ccf-access-authenticated')) {
+        revealApp();
+        setStatus('Interfaz disponible. Error de conexión: ' + (e?.message || e));
+      }
       return false;
 
     } finally {
+      const btn = $('saveConfig');
       if (btn) {
         btn.disabled = false;
         btn.textContent = 'Conectar';
@@ -484,10 +490,8 @@
     loadConfig();
     installForms();
 
-    const saved = localStorage.getItem('sf_url') && localStorage.getItem('sf_key');
-    if (saved) {
-      connect();
-    }
+    // No se conecta automáticamente por la existencia de sf_url/sf_key.
+    // La conexión se realiza únicamente después de una sesión Supabase válida.
 
     // El botón se instala aquí y queda protegido contra handlers duplicados.
     const btn=$('saveConfig');
@@ -509,7 +513,12 @@
     }
 
     const savedTab=localStorage.getItem('cf_active_tab_v2');
-    if (savedTab) setTimeout(()=>navigateTab(savedTab),900);
+    if (savedTab && savedTab !== 'dashboard') {
+      setTimeout(()=>{
+        if (document.body.classList.contains('ccf-access-authenticated')) return;
+        navigateTab(savedTab);
+      },900);
+    }
   }
 
   if (document.readyState === 'loading') {
