@@ -1605,114 +1605,138 @@ function syncConsolidatedReport(){
  target.replaceChildren(fragment);
 }
 
+function findMobileFlowSource(){
+ const hosts=[...document.querySelectorAll('#b234Chart')];
+ let best=null,bestScore=-1;
+ hosts.forEach(h=>{
+   const svgs=[...h.querySelectorAll('svg')];
+   svgs.forEach(svg=>{
+     const verticals=[...svg.querySelectorAll('line')].filter(l=>{
+       const x1=Number(l.getAttribute('x1')),x2=Number(l.getAttribute('x2'));
+       const y1=Number(l.getAttribute('y1')),y2=Number(l.getAttribute('y2'));
+       return Number.isFinite(x1)&&Number.isFinite(x2)&&Number.isFinite(y1)&&Number.isFinite(y2)
+         &&Math.abs(x1-x2)<0.01&&y2>y1+2;
+     });
+     const colored=[...svg.querySelectorAll('line,rect,path')].filter(el=>{
+       const st=(el.getAttribute('stroke')||'').toLowerCase();
+       const fill=(el.getAttribute('fill')||'').toLowerCase();
+       return /16a34a|ef4444|22, 163, 74|239, 68, 68/.test(st+' '+fill);
+     }).length;
+     const score=verticals.length*10+colored;
+     if(score>bestScore){bestScore=score;best=svg;}
+   });
+ });
+ return best;
+}
+
 function adaptMobileFlowCandles(){
  const host=$('[data-flow]',root);if(!host||!mobile())return false;
- const source=by('b234Chart')?.querySelector('svg');
- const report=by('b234-report');
- if(!report||!source)return false;
+ const source=findMobileFlowSource();
+ if(!source)return false;
+
+ const NS='http://www.w3.org/2000/svg';
+ const vb=(source.getAttribute('viewBox')||'0 0 900 300').trim().split(/\s+/).map(Number);
+ const W=Number.isFinite(vb[2])?vb[2]:900;
+ const H=Number.isFinite(vb[3])?vb[3]:300;
+ const L=52,R=18,T=22,B=42,base=H-B;
+ const svg=document.createElementNS(NS,'svg');
+ svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ svg.setAttribute('width','100%');svg.setAttribute('height','100%');
+ svg.setAttribute('role','img');svg.setAttribute('data-ccf-flow-chart','1');
+ svg.setAttribute('aria-label','Flujo mensual: ingresos verdes y egresos rojos');
+ svg.style.cssText='display:block;width:100%;height:100%;';
+
+ /* Conservamos exactamente la escala y la cuadrícula del gráfico fuente. */
+ [...source.children].forEach(el=>{
+   if(el.tagName.toLowerCase()==='line'){
+     const x1=Number(el.getAttribute('x1')),x2=Number(el.getAttribute('x2'));
+     const y1=Number(el.getAttribute('y1')),y2=Number(el.getAttribute('y2'));
+     const horizontal=Number.isFinite(x1)&&Number.isFinite(x2)&&Number.isFinite(y1)&&Number.isFinite(y2)&&Math.abs(y1-y2)<0.01;
+     if(horizontal){
+       const c=el.cloneNode(true);c.removeAttribute('id');
+       c.setAttribute('stroke','#e5e7eb');c.setAttribute('stroke-width','1');
+       svg.appendChild(c);
+     }
+   } else if(el.tagName.toLowerCase()==='text'){
+     const txt=String(el.textContent||'').trim();
+     if(!/^\d{2}$/.test(txt)){const c=el.cloneNode(true);c.removeAttribute('id');svg.appendChild(c);}
+   }
+ });
 
  /*
-  * Fuente única: B232.34 / #b234Chart.
-  * B232.34 renderDaily() dibuja dos líneas verticales por día:
-  *   izquierda = ingreso
-  *   derecha   = egreso
-  * Incluso si otro CSS/motor cambia temporalmente el color a negro,
-  * la geometría conserva esa separación. Por eso no dependemos del
-  * atributo stroke para determinar el tipo de movimiento.
-  */
- const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
+    B232.34 representa cada día mediante dos líneas verticales:
+    x-4 = ingreso, x+4 = egreso. No dependemos del color original.
+    Si un motor externo altera los strokes, la geometría sigue siendo válida.
+ */
  const verticals=[...source.querySelectorAll('line')].filter(l=>{
    const x1=Number(l.getAttribute('x1')),x2=Number(l.getAttribute('x2'));
    const y1=Number(l.getAttribute('y1')),y2=Number(l.getAttribute('y2'));
    return Number.isFinite(x1)&&Number.isFinite(x2)&&Number.isFinite(y1)&&Number.isFinite(y2)
      &&Math.abs(x1-x2)<0.01&&y2>y1+2;
  });
- if(!verticals.length)return false;
-
- const NS='http://www.w3.org/2000/svg';
- const svg=document.createElementNS(NS,'svg');
- svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
- svg.setAttribute('width','100%');
- svg.setAttribute('height','100%');
- svg.setAttribute('role','img');
- svg.setAttribute('data-ccf-flow-chart','1');
- svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
- svg.style.display='block';
- svg.style.width='100%';
- svg.style.height='100%';
-
- /* Cuadrícula y escala del gráfico original. */
- [...source.querySelectorAll('line')].filter(l=>{
-   const y1=l.getAttribute('y1'),y2=l.getAttribute('y2');
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return y1===y2 && (stroke==='#e5e7eb'||stroke==='#e5e7ebff'||stroke==='rgb(229, 231, 235)');
- }).forEach(l=>svg.appendChild(l.cloneNode(true)));
- [...source.querySelectorAll('text')].forEach(t=>{
-   const txt=String(t.textContent||'').trim();
-   if(/^\d{2}$/.test(txt))return;
-   const c=t.cloneNode(true);
-   c.removeAttribute('id');
-   svg.appendChild(c);
- });
-
- const axis=document.createElementNS(NS,'g');
- axis.setAttribute('class','mobile-month-axis');
- for(let d=1;d<=days;d++){
-   if(d===1||d%3===0||d===days){
-     const x=L+(d-1)*step;
-     const t=document.createElementNS(NS,'text');
-     t.setAttribute('x',x);t.setAttribute('y',H-15);
-     t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
-     t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');
-     t.textContent=String(d).padStart(2,'0');
-     axis.appendChild(t);
-   }
- }
- svg.appendChild(axis);
-
- const candles=[];
+ const xs=verticals.map(l=>Number(l.getAttribute('x1'))).sort((a,b)=>a-b);
+ const minX=xs.length?xs[0]:L;
+ const maxX=xs.length?xs[xs.length-1]:W-R;
+ const spacing=Math.max(1,(maxX-minX)/Math.max(1,new Set(xs.map(x=>Math.round(x))).size-1));
+ const tolerance=Math.max(1.5,spacing*.35);
+ const groups=[];
  verticals.forEach(l=>{
-   const x=Number(l.getAttribute('x1')),y=Number(l.getAttribute('y1'));
-   const day=Math.round((x-L)/step)+1;
-   if(day<1||day>days)return;
-   const center=L+(day-1)*step;
-   /* B232.34: x-4 = ingreso; x+4 = egreso. */
-   const green=x<center;
-   const height=Math.max(2,base-y);
-   candles.push({day,green,y,height});
+   const x=Number(l.getAttribute('x1'));
+   let g=groups.find(q=>Math.abs(q.x-x)<tolerance);
+   if(!g){g={x,items:[]};groups.push(g)}
+   g.items.push(l);
+ });
+ groups.sort((a,b)=>a.x-b.x);
+
+ /* El gráfico objetivo usa únicamente los días con movimiento. */
+ const candles=[];
+ groups.forEach(g=>{
+   const center=g.x;
+   g.items.forEach(l=>{
+     const y=Number(l.getAttribute('y1'));
+     const green=Number(l.getAttribute('x1'))<=center;
+     candles.push({x:Number(l.getAttribute('x1')),y,green});
+   });
  });
 
- /* Evita duplicar elementos si un motor externo dibuja más de una vez. */
- const byKey=new Map();
- candles.forEach(c=>byKey.set(`${c.day}-${c.green?'in':'out'}`,c));
- [...byKey.values()].forEach(c=>{
-   const x=L+(c.day-1)*step+(c.green?-5:5);
+ /* B232.34 ya entrega x-4/x+4; usamos esa separación para no perder días. */
+ const seen=new Set();
+ candles.forEach(c=>{
+   const key=`${Math.round(c.x*10)/10}-${c.green?'in':'out'}`;
+   if(seen.has(key))return;seen.add(key);
+   const x=c.x;
+   const y=Math.max(T,c.y);
+   const h=Math.max(2,base-y);
+
    const wick=document.createElementNS(NS,'line');
    wick.setAttribute('x1',x);wick.setAttribute('x2',x);
-   wick.setAttribute('y1',Math.max(T,c.y-7));wick.setAttribute('y2',base);
+   wick.setAttribute('y1',Math.max(T,y-8));wick.setAttribute('y2',base);
    wick.setAttribute('stroke',c.green?'#16a34a':'#ef4444');
-   wick.setAttribute('stroke-width','2.5');
-   wick.setAttribute('stroke-linecap','round');
-   wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');
+   wick.setAttribute('stroke-width','2.5');wick.setAttribute('stroke-linecap','round');
    svg.appendChild(wick);
 
    const body=document.createElementNS(NS,'rect');
-   const bodyH=Math.max(10,Math.min(18,c.height*0.12));
-   body.setAttribute('x',x-5);body.setAttribute('y',Math.max(T,c.y));
-   body.setAttribute('width','10');body.setAttribute('height',bodyH);
-   body.setAttribute('rx','2');
-   body.setAttribute('fill',c.green?'#16a34a':'#ef4444');
-   body.setAttribute('stroke',c.green?'#15803d':'#dc2626');
-   body.setAttribute('stroke-width','1.5');
-   body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
+   body.setAttribute('x',x-5);body.setAttribute('y',Math.max(T,y));
+   body.setAttribute('width','10');body.setAttribute('height',Math.max(10,Math.min(18,h*.12)));
+   body.setAttribute('rx','2');body.setAttribute('fill',c.green?'#16a34a':'#ef4444');
+   body.setAttribute('stroke',c.green?'#15803d':'#dc2626');body.setAttribute('stroke-width','1.5');
    svg.appendChild(body);
  });
 
- const title=document.createElementNS(NS,'text');
- title.setAttribute('x',L);title.setAttribute('y','17');
- title.setAttribute('fill','#1f2937');title.setAttribute('font-size','10');
- title.setAttribute('font-weight','700');title.textContent='Ingresos vs egresos';
- svg.appendChild(title);
+ /* Etiquetas de día tomadas del gráfico fuente, preservando su distribución. */
+ const labels=[...source.querySelectorAll('text')].filter(t=>/^\d{2}$/.test(String(t.textContent||'').trim()));
+ if(labels.length){
+   labels.forEach(t=>{const c=t.cloneNode(true);c.removeAttribute('id');c.setAttribute('fill','#64748b');c.setAttribute('font-size','10');svg.appendChild(c)});
+ }else{
+   const axis=document.createElementNS(NS,'g');
+   const unique=[...new Set(candles.map(c=>Math.round((c.x-L)/(W-L-R)*29)+1))].sort((a,b)=>a-b);
+   unique.forEach(d=>{
+     const x=L+(d-1)*(W-L-R)/29;
+     const t=document.createElementNS(NS,'text');t.setAttribute('x',x);t.setAttribute('y',H-15);t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');t.setAttribute('text-anchor','middle');t.textContent=String(d).padStart(2,'0');axis.appendChild(t);
+   });
+   svg.appendChild(axis);
+ }
+ const title=document.createElementNS(NS,'text');title.setAttribute('x',L);title.setAttribute('y','17');title.setAttribute('fill','#1f2937');title.setAttribute('font-size','10');title.setAttribute('font-weight','700');title.textContent='Ingresos vs egresos';svg.appendChild(title);
 
  flowRenderLock=true;
  try{host.replaceChildren(svg)}finally{flowRenderLock=false}
