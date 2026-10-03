@@ -38,7 +38,7 @@
       #ccf-mobile-b43 #ccf-profile-overlay {
         position: fixed !important;
         inset: 0 !important;
-        z-index: 100000 !important;
+        z-index: 2147483000 !important;
         display: none !important;
         align-items: flex-end !important;
         justify-content: center !important;
@@ -54,13 +54,13 @@
         position: relative !important;
         width: 100% !important;
         max-width: 720px !important;
-        height: min(76dvh, 760px) !important;
-        max-height: min(76dvh, 760px) !important;
+        height: min(72dvh, 1040px) !important;
+        max-height: min(72dvh, 1040px) !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
         box-sizing: border-box !important;
         margin: 0 !important;
-        padding: 14px 16px 14px !important;
+        padding: 12px 16px 12px !important;
         border-radius: 22px 22px 0 0 !important;
         background: #fff !important;
         color: #111827 !important;
@@ -69,12 +69,15 @@
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-profile-head {
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-profile-head h2 {
         margin-bottom: 3px !important;
         font-size: 22px !important;
+      }
+      #ccf-mobile-b43 #ccf-profile-card .ccf-profile-head {
+        padding-top: 0 !important;
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-profile-head p {
@@ -82,12 +85,12 @@
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-profile-avatar-wrap {
-        margin: 2px 0 10px !important;
+        margin: 2px 0 8px !important;
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-profile-avatar {
-        width: 62px !important;
-        height: 62px !important;
+        width: 58px !important;
+        height: 58px !important;
         font-size: 20px !important;
       }
 
@@ -108,8 +111,8 @@
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-profile-field input {
-        min-height: 40px !important;
-        padding: 8px 11px !important;
+        min-height: 38px !important;
+        padding: 7px 11px !important;
       }
 
       #ccf-mobile-b43 #ccf-profile-card .ccf-phone-group {
@@ -123,8 +126,8 @@
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 7px !important;
-        margin: 8px -16px -14px !important;
-        padding: 8px 16px calc(8px + env(safe-area-inset-bottom)) !important;
+        margin: 6px -16px -12px !important;
+        padding: 7px 16px calc(7px + env(safe-area-inset-bottom)) !important;
         background: rgba(255,255,255,.98) !important;
         border-top: 1px solid #e5e7eb !important;
         backdrop-filter: blur(8px) !important;
@@ -133,7 +136,7 @@
       #ccf-mobile-b43 #ccf-profile-card #ccf-profile-save,
       #ccf-mobile-b43 #ccf-profile-card #ccf-profile-cancel,
       #ccf-mobile-b43 #ccf-profile-card #ccf-profile-mobile-logout {
-        min-height: 40px !important;
+        min-height: 38px !important;
         border-radius: 9px !important;
       }
 
