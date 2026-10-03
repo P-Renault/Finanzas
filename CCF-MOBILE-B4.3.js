@@ -2090,6 +2090,11 @@ function observe(){
 }
 function restore(){clearTimeout(reportTimer);flowSourceObserver?.disconnect();flowHostObserver?.disconnect();flowSourceObserver=null;flowHostObserver=null;observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
+/* CCF MOBILE B4.3.10 · POST-AUTH BOOT FIX
+   El flujo de autenticación revela #app y emite ccf:app-ready.
+   El shell móvil se monta inmediatamente en ese momento, sin depender
+   de un resize/orientationchange posterior. */
+window.addEventListener('ccf:app-ready',()=>setTimeout(boot,0));
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
