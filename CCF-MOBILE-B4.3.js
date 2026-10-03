@@ -1504,8 +1504,13 @@ function syncMobileProfileAvatar(){
      img.style.width='100%';
      img.style.height='100%';
      img.style.objectFit='cover';
+     img.style.objectPosition='center center';
      img.style.borderRadius='50%';
      img.style.display='block';
+     img.style.transform='scale(2.0)';
+     img.style.transformOrigin='center center';
+     el.style.overflow='hidden';
+     el.style.padding='0';
      el.appendChild(img);
      el.classList.add('has-photo');
    });
