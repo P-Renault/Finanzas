@@ -1,10 +1,16 @@
-/* FINANZAS B2.3.5 — Corrección navegación y detalle Centro de Deudas */
+/* FINANZAS B2.3.5 — Corrección navegación y detalle Centro de Deudas
+   V5 — DETALLE CONTEXTUAL REAL
+   - El detalle queda inmediatamente después de la deuda seleccionada.
+   - No se hace scroll al inicio ni al final de la lista.
+   - No modifica datos ni Supabase.
+*/
 (() => {
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(Number(n)||0);
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
   let client=null;
+  let bound=false;
 
   async function db(){
     if(client)return client;
@@ -25,21 +31,82 @@
     if(debts)debts.classList.remove('hidden');
     if(dashboard)dashboard.classList.add('hidden');
 
-    if(debts)window.scrollTo({top:0,behavior:'smooth'});
+    // IMPORTANTE: no hacer scroll aquí. La deuda seleccionada conserva
+    // exactamente la posición desde la que el usuario pulsó “Ver detalle”.
+  }
+
+  function debtCardById(id){
+    const section=$('deudas');
+    if(!section)return null;
+    const cards=[...section.querySelectorAll('.debt-card')];
+    return cards.find(card=>[...card.querySelectorAll('button')].some(button=>{
+      const oc=button.getAttribute('onclick')||'';
+      const m=oc.match(/(?:window\.)?verDeuda23\s*\(\s*(\d+)/i);
+      return m && Number(m[1])===Number(id);
+    }))||null;
+  }
+
+  function detailContextNode(){
+    const detail=$('deudaDetalle');
+    if(!detail)return null;
+
+    // Normalmente #deudaDetalle está dentro de una tarjeta contenedora.
+    // Movemos esa tarjeta completa para que no quede un contenedor vacío
+    // al final de la lista.
+    const outer=detail.closest('.card');
+    if(outer && outer!==$('deudas') && !outer.classList.contains('debt-card')){
+      outer.classList.add('fin235-detail-context-card');
+      return outer;
+    }
+    return detail;
+  }
+
+  function placeDetailAfterDebt(id){
+    const card=debtCardById(id);
+    const node=detailContextNode();
+    if(!card||!node||!card.parentNode)return false;
+
+    if(card.nextElementSibling!==node){
+      card.parentNode.insertBefore(node,card.nextElementSibling);
+    }
+
+    node.style.display='block';
+    node.dataset.fin235ContextDebt=String(id);
+    const detail=$('deudaDetalle');
+    if(detail){
+      detail.style.display='block';
+      detail.dataset.fin235ContextDebt=String(id);
+    }
+    return true;
+  }
+
+  function placeDetailAfterDebtRepeatedly(id){
+    [0,30,80,150,300,600,1000,1600].forEach(ms=>setTimeout(()=>{
+      if(placeDetailAfterDebt(id)) return;
+    },ms));
   }
 
   async function showDebt(id){
+    // Conservamos la posición exacta de lectura. Ninguna parte de esta
+    // función debe llevar al usuario al inicio de #deudas.
+    const scrollY=window.scrollY || window.pageYOffset || 0;
     openDebts();
 
     const detail=$('deudaDetalle');
     if(!detail)return;
 
     detail.innerHTML='<p class="muted">Cargando detalle de la deuda…</p>';
-    detail.scrollIntoView({behavior:'smooth',block:'start'});
+    detail.style.display='block';
+
+    // Coloca inmediatamente el contenedor de detalle junto a la deuda
+    // seleccionada, incluso mientras la consulta asíncrona está pendiente.
+    placeDetailAfterDebt(id);
 
     const c=await db();
     if(!c){
       detail.innerHTML='<p class="status">Conecta Supabase para consultar el detalle.</p>';
+      placeDetailAfterDebtRepeatedly(id);
+      restoreScroll(scrollY);
       return;
     }
 
@@ -50,11 +117,15 @@
 
     if(debt.error){
       detail.innerHTML=`<p class="status">${esc(debt.error.message)}</p>`;
+      placeDetailAfterDebtRepeatedly(id);
+      restoreScroll(scrollY);
       return;
     }
 
     if(!debt.data){
       detail.innerHTML='<p class="muted">No se encontró la deuda solicitada.</p>';
+      placeDetailAfterDebtRepeatedly(id);
+      restoreScroll(scrollY);
       return;
     }
 
@@ -67,6 +138,8 @@
 
     if(q.error){
       detail.innerHTML=`<p class="status">${esc(q.error.message)}</p>`;
+      placeDetailAfterDebtRepeatedly(id);
+      restoreScroll(scrollY);
       return;
     }
 
@@ -111,9 +184,22 @@
         }</div>` : '<p class="muted">No existen cuotas registradas.</p>'}
       </div>`;
 
-    $('fin235Back').onclick=()=>{openDebts(); detail.scrollIntoView({behavior:'smooth',block:'start'});};
+    $('fin235Back').onclick=()=>{
+      openDebts();
+      // Volver tampoco hace scroll automático.
+    };
 
-    window.scrollTo({top:0,behavior:'smooth'});
+    // Este es el punto definitivo: después de que Supabase terminó y el
+    // HTML quedó renderizado, el bloque completo se inserta inmediatamente
+    // después de la tarjeta de la deuda seleccionada.
+    placeDetailAfterDebtRepeatedly(id);
+    restoreScroll(scrollY);
+  }
+
+  function restoreScroll(y){
+    // Restauración instantánea únicamente para neutralizar cualquier otro
+    // listener externo que haya intentado llevar la página a otra posición.
+    try{ window.scrollTo(0,y); }catch(_){ }
   }
 
   function injectStyles(){
@@ -133,6 +219,7 @@
       .fin235-quota div{display:flex;flex-direction:column;gap:3px}
       .fin235-quota span{font-size:12px;color:#6b7280}
       .fin235-quota.paid{opacity:.72}
+      .fin235-detail-context-card{width:100%;box-sizing:border-box}
       @media(max-width:680px){
         .fin235-detail-head{flex-direction:column}
         .fin235-detail-grid{grid-template-columns:repeat(2,1fr)}
@@ -143,6 +230,8 @@
   }
 
   function bind(){
+    if(bound)return;
+    bound=true;
     injectStyles();
 
     window.fin235OpenDebts=openDebts;
@@ -170,15 +259,17 @@
       }
     });
 
-    // Refuerza los botones que ya renderiza el módulo V2.3.3.
+    // Captura los botones reales de la lista. Se detiene el flujo nativo
+    // y se llama UNA sola vez a showDebt(), evitando el salto del handler
+    // original y garantizando la colocación contextual.
     document.addEventListener('click',e=>{
       const b=e.target.closest('#deudasLista button');
       if(!b)return;
       const onclick=b.getAttribute('onclick')||'';
-      const m=onclick.match(/verDeuda23\((\d+)\)/);
+      const m=onclick.match(/(?:window\.)?verDeuda23\s*\(\s*(\d+)/i);
       if(m){
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         showDebt(Number(m[1]));
       }
     },true);
