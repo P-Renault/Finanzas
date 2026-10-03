@@ -1,4 +1,5 @@
-/* CCF B2.31.2 — AUTH CLIENT BRIDGE — FIX 2026.09.26
+/* CCF ACCESS FLOW B1.9.6 — LANDING -> LOGIN -> RESUMEN — FINAL 2026.10.03
+   CCF B2.31.2 — AUTH CLIENT BRIDGE — FIX 2026.09.26
    Corrección:
    - Un único cliente Supabase autenticado.
    - Carga robusta de @supabase/supabase-js si el bundle principal no quedó disponible.
@@ -9,10 +10,6 @@
 'use strict';
 if(window.__CCF_B1_9_6_ACCESS_FLOW__)return;
 window.__CCF_B1_9_6_ACCESS_FLOW__=true;
-
-/* Guard propio: CCF-AUTH-BOOT-FINAL.js usa otro namespace.
-   Este controlador debe ejecutarse siempre para eliminar el portal/landing B230
-   del flujo final y dejar LOGIN como única entrada. */
 
 const VERSION='B2.31.2-FIX-2026.09.26';
 const SUPABASE_URL='https://xgxvdbgmwvncmfdcxgsf.supabase.co';
@@ -64,6 +61,7 @@ function revealApp(){
  $('ccf-b230-final')?.remove();
  document.body.classList.add('ccf-access-app-ready');
  try{ window.dispatchEvent(new Event('ccf:app-ready')); }catch(_){}
+ releaseConnectGate();
  try{ window.CCFMobileB43?.refresh?.(); }catch(_){}
  return !!app;
 }
@@ -535,6 +533,17 @@ function installForms(){
 async function boot(){
   installAccessBaseStyle();
   hideLegacy();
+  installForms();
+  installConnectGate();
+
+  /*
+   * Flujo oficial:
+   * LANDING -> LOGIN -> RESUMEN
+   *
+   * La landing debe ser visible aunque Supabase todavía esté inicializando.
+   * La configuración técnica nunca forma parte del flujo de usuario.
+   */
+  installLandingAccess();
 
   try{
     await waitClient();
@@ -546,86 +555,97 @@ async function boot(){
       return;
     }
 
-    /* Flujo final: sin sesión -> LOGIN inmediato. */
-    showLoginOnly();
+    /* Sin sesión: B230 permanece visible hasta que el usuario pulse Ingresar. */
   }catch(e){
     console.error('[CCF AUTH] boot',e);
-    /* Incluso si la sesión no pudo recuperarse, el usuario debe recibir
-       el acceso; nunca se muestra configuración técnica ni landing. */
-    try{
-      await waitClient();
-      showLoginOnly();
-    }catch(_){
-      showLoginOnly();
-    }
+    /* El fallo de inicialización no debe mostrar Configuración ni congelar la landing. */
   }
 }
 
-function showLoginOnly(){
+function installConnectGate(){
+  if(window.__CCF_CONNECT_GATE_INSTALLED__)return;
+  window.__CCF_CONNECT_GATE_INSTALLED__=true;
+
+  /*
+   * app.js puede intentar ejecutar connect() automáticamente si encuentra
+   * sf_url/sf_key en localStorage. Eso NO constituye autenticación.
+   * Mientras no exista una sesión autenticada, connect() queda bloqueado.
+   * Después del login se libera y se ejecuta el connect() original.
+   */
+  const original=window.connect;
+  if(typeof original!=='function')return;
+
+  window.__CCF_ORIGINAL_CONNECT__=original;
+  window.connect=function(){
+    if(!document.body.classList.contains('ccf-access-app-ready')){
+      return Promise.resolve(false);
+    }
+    try{
+      return Promise.resolve(original.apply(this,arguments));
+    }catch(e){
+      return Promise.reject(e);
+    }
+  };
+}
+
+function releaseConnectGate(){
+  const original=window.__CCF_ORIGINAL_CONNECT__;
+  if(typeof original==='function'){
+    window.connect=function(){
+      try{return Promise.resolve(original.apply(this,arguments));}
+      catch(e){return Promise.reject(e);}
+    };
+  }
+}
+
+function installLandingAccess(){
   installAccessBaseStyle();
   hideLegacy();
 
-  /* El flujo de acceso final no utiliza landing ni configuración técnica. */
-  $('configPanel')?.classList.add('hidden');
-  $('app')?.classList.add('hidden');
-  $('logoutBtn')?.classList.add('hidden');
-  $('ccf-b230-final')?.remove();
-
-  let gate=$('ccf-auth-gate');
-  if(!gate){
-    portal();
-    gate=$('ccf-auth-gate');
-  }
-  if(!gate)return;
-
-  mode='login';
-  setMode('login');
-  gate.style.display='';
-  gate.style.visibility='visible';
-  gate.removeAttribute('aria-hidden');
-  gate.dataset.ccfAccessUserOpened='1';
-  installForms();
-
-  /* El formulario de login es la única superficie de acceso visible. */
-  document.querySelectorAll('[data-b230-open="login"],[data-b230-open="register"]').forEach(el=>{
-    el.style.display='none';
-  });
-
-  requestAnimationFrame(()=>{
-    $('ccf-email')?.focus();
-  });
-}
-
-/* Mantener cualquier superficie técnica/landing fuera del flujo final. */
-function installAccessGuard(){
-  if(document.__CCF_FINAL_ACCESS_GUARD__)return;
-  document.__CCF_FINAL_ACCESS_GUARD__=true;
-
-  const observer=new MutationObserver(()=>{
-    const ready=document.body.classList.contains('ccf-access-app-ready');
-    if(ready)return;
-
-    $('configPanel')?.classList.add('hidden');
-    $('logoutBtn')?.classList.add('hidden');
-    $('ccf-b230-final')?.remove();
-
-    const gate=$('ccf-auth-gate');
-    if(gate){
-      gate.style.display='';
-      gate.style.visibility='visible';
-      gate.removeAttribute('aria-hidden');
+  const launch=(requestedMode)=>{
+    let gate=$('ccf-auth-gate');
+    if(!gate){
+      portal();
+      gate=$('ccf-auth-gate');
     }
-  });
+    if(!gate)return;
 
-  observer.observe(document.body,{
-    childList:true,
-    subtree:true,
-    attributes:true,
-    attributeFilter:['class','style','hidden','aria-hidden']
-  });
+    /* El login reemplaza temporalmente la landing. */
+    $('ccf-b230-final')?.remove();
+    gate.dataset.ccfAccessUserOpened='1';
+    mode=requestedMode==='register'?'register':'login';
+    setMode(mode);
+    gate.style.display='';
+    gate.style.visibility='visible';
+    gate.removeAttribute('aria-hidden');
+    requestAnimationFrame(()=>{
+      $('ccf-email')?.focus();
+    });
+  };
+
+  if(!document.__CCF_ACCESS_LAUNCH_BOUND__){
+    document.__CCF_ACCESS_LAUNCH_BOUND__=true;
+    document.addEventListener('click',e=>{
+      const b=e.target.closest?.('[data-b230-open="login"],[data-b230-open="register"]');
+      if(!b)return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      launch(b.dataset.b230Open);
+    },true);
+  }
+
+  /* Si AUTH-BOOT creó el gate antes de que B230 termine de montar,
+     debe permanecer oculto hasta la acción explícita del usuario. */
+  const gate=$('ccf-auth-gate');
+  if(gate && !gate.dataset.ccfAccessUserOpened){
+    gate.style.display='none';
+    gate.style.visibility='hidden';
+    gate.setAttribute('aria-hidden','true');
+  }
 }
 
-installAccessGuard();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
