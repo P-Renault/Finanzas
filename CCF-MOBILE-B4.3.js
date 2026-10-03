@@ -1985,9 +1985,57 @@ function summary(){
  mirrorAll();scheduleReportSync();scheduleSummaryHydration();
 }
 
+function installUserManualMobileStyle(){
+ const id='ccf-mobile-user-manual-style';
+ if(document.getElementById(id))return;
+ const style=document.createElement('style');
+ style.id=id;
+ style.textContent=`
+   #ccf-mobile-b43 .b434-manual{
+     display:inline-flex;
+     align-items:center;
+     justify-content:center;
+     gap:5px;
+     min-width:44px;
+     height:36px;
+     padding:0 9px;
+     border:1px solid rgba(255,255,255,.18);
+     border-radius:10px;
+     background:rgba(255,255,255,.10);
+     color:#fff;
+     text-decoration:none;
+     font-size:10px;
+     line-height:1;
+     font-weight:800;
+     white-space:nowrap;
+     box-sizing:border-box;
+     cursor:pointer;
+   }
+   #ccf-mobile-b43 .b434-manual span{
+     font-size:15px;
+     line-height:1;
+   }
+   #ccf-mobile-b43 .b434-manual:active{
+     transform:scale(.97);
+   }
+   @media(max-width:390px){
+     #ccf-mobile-b43 .b434-manual{
+       min-width:36px;
+       width:36px;
+       padding:0;
+     }
+     #ccf-mobile-b43 .b434-manual small{
+       display:none;
+     }
+   }
+ `;
+ document.head.appendChild(style);
+}
+
 function build(){
  if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';
- root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
+ installUserManualMobileStyle();
+ root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><a class="b434-manual" href="Manual_Usabilidad_CCF_Somos_Software.pdf" download="Manual_Usabilidad_CCF_Somos_Software.pdf" aria-label="Descargar manual de usuario" title="Descargar manual de usuario"><span>▤</span><small>Manual</small></a><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
  <div class="b434-overlay" data-overlay="more"><div class="b434-backdrop" data-close></div><section><header><strong>Todos los módulos</strong><button data-close>×</button></header><div class="b434-module-grid" data-more-grid></div></section></div>
  <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
