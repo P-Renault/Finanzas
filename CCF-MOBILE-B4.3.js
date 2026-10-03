@@ -10,7 +10,7 @@ const by=id=>document.getElementById(id), tab=id=>$('.tabs button[data-tab="'+CS
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const META={presupuesto:['Presupuesto','Plan, ejecución y proyección','◒'],planificacion:['Planificación','Escenario de 30 días','◈'],futuros:['Pagos futuros','Vencimientos y compromisos','◷'],calendario:['Calendario','Vista mensual','▦'],ahorro:['Ahorro','Aportes e historial','◎'],operaciones:['Operaciones','Liquidez y operaciones','⇄'],ingresos:['Motor Multifuente','Generación de ingresos','↗'],jornadas:['Control de Jornada','Resultado financiero','◷'],'ia-financiera':['IA Financiera','Análisis y recomendaciones','✦']};
 const PRIMARY=[['dashboard','Resumen','⌂'],['movimientos','Movimientos','↕'],['deudas','Deudas','▣'],['cuentas','Cuentas','▤']];
-let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null;
+let root=null,built=false,moved=[],observer=null,reportTimer=null,activeModule=null,moduleMarker=null,flowSourceObserver=null,flowHostObserver=null,flowRenderLock=false;
 
 function ready(){return mobile()&&app()&&!app().classList.contains('hidden')}
 function mirror(id){const src=by(id);if(!src||!root)return;$$('.b434-mirror[data-source="'+id+'"]',root).forEach(n=>n.textContent=src.textContent?.trim()||'—')}
@@ -1606,17 +1606,21 @@ function syncConsolidatedReport(){
 }
 
 function adaptMobileFlowCandles(){
- const host=by('chart-flow');if(!host)return false;
- /* B232.34 debe ser la única fuente del gráfico. Nunca reconstruir
-    desde un SVG anterior/incompleto de #chart-flow. */
- const report=by('b234-report');
+ const host=$('[data-flow]',root);if(!host||!mobile())return false;
+ /*
+  * B232.34 es la ÚNICA fuente autorizada del gráfico móvil "Flujo del mes".
+  * Nunca usamos #chart-flow de B232.35/ExecutiveDashboard: ese gráfico puede
+  * ser reconstruido después y no representa la comparativa que exige la vista.
+  */
  const source=by('b234Chart')?.querySelector('svg');
+ const report=by('b234-report');
  if(!report||!source)return false;
  const lines=[...source.querySelectorAll('line')].filter(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
    return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
  });
  if(!lines.length)return false;
+
  const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
  const NS='http://www.w3.org/2000/svg';
  const svg=document.createElementNS(NS,'svg');
@@ -1624,18 +1628,22 @@ function adaptMobileFlowCandles(){
  svg.setAttribute('width','100%');
  svg.setAttribute('height','100%');
  svg.setAttribute('role','img');
+ svg.setAttribute('data-ccf-flow-chart','1');
  svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
+
  const grid=[...source.querySelectorAll('line')].filter(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
    return stroke==='#e5e7eb';
  });
  grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
+
  [...source.querySelectorAll('text')].forEach(t=>{
    const clone=t.cloneNode(true);
    const txt=String(t.textContent||'').trim();
    if(/^\d{2}$/.test(txt))return;
    svg.appendChild(clone);
  });
+
  const axis=document.createElementNS(NS,'g');
  axis.setAttribute('class','mobile-month-axis');
  for(let d=1;d<=days;d++){
@@ -1651,6 +1659,7 @@ function adaptMobileFlowCandles(){
    }
  }
  svg.appendChild(axis);
+
  const candleData=[];
  lines.forEach(l=>{
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
@@ -1664,6 +1673,7 @@ function adaptMobileFlowCandles(){
    const amountHeight=Math.max(2,base-y);
    candleData.push({day,green,y,height:amountHeight});
  });
+
  candleData.forEach(c=>{
    const x=L+(c.day-1)*step+(c.green?-5:5);
    const bodyH=Math.max(9,Math.min(18,c.height*0.12));
@@ -1680,13 +1690,52 @@ function adaptMobileFlowCandles(){
    body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
    svg.appendChild(body);
  });
+
  const title=document.createElementNS(NS,'text');
  title.setAttribute('x',L);title.setAttribute('y','17');
  title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';
  svg.appendChild(title);
- host.replaceChildren(svg);
+
+ flowRenderLock=true;
+ try{host.replaceChildren(svg)}finally{flowRenderLock=false}
  return true;
 }
+
+function installMobileFlowObservers(){
+ if(!root||!mobile())return;
+ flowSourceObserver?.disconnect();
+ flowHostObserver?.disconnect();
+ flowSourceObserver=null;
+ flowHostObserver=null;
+
+ const attachSourceObserver=()=>{
+   if(!root||!mobile())return;
+   const dashboard=by('dashboard');
+   if(!dashboard)return;
+   flowSourceObserver?.disconnect();
+   flowSourceObserver=new MutationObserver(mutations=>{
+     if(mutations.some(m=>m.type==='childList')){
+       [0,80,220,500].forEach(ms=>setTimeout(()=>{
+         if(!flowRenderLock)adaptMobileFlowCandles();
+       },ms));
+     }
+   });
+   flowSourceObserver.observe(dashboard,{childList:true,subtree:true});
+ };
+ attachSourceObserver();
+
+ const host=$('[data-flow]',root);
+ if(host){
+   flowHostObserver=new MutationObserver(()=>{
+     if(flowRenderLock)return;
+     const chart=host.querySelector('svg[data-ccf-flow-chart="1"]');
+     if(!chart)setTimeout(()=>adaptMobileFlowCandles(),0);
+   });
+   flowHostObserver.observe(host,{childList:true,subtree:false});
+ }
+ setTimeout(()=>adaptMobileFlowCandles(),0);
+}
+
 function refreshNativeSummaryData(){
  if(!mobile()||typeof window.B23234Resumen?.refresh!=='function')return;
  try{window.B23234Resumen.refresh();}catch(e){console.warn('[CCF MOBILE] B232.34 refresh',e);}
@@ -1742,7 +1791,7 @@ function mountExecutiveRealCharts(){
  if(!root||!mobile())return;
  const execHost=$('[data-exec]',root);
  if(!execHost)return;
- const ids=['chart-liquidity','chart-flow','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
+ const ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
 
  ids.forEach(id=>{
    const el=by(id);
@@ -1813,7 +1862,7 @@ function summary(){
  <section class="b434-decision"><article><span>PRÓXIMA NECESIDAD</span><div data-next></div></article><article><span>ACCIONES PRIORITARIAS</span><div data-priority></div></article></section>
  <section class="b434-card"><header><strong>Análisis ejecutivo</strong><small class="b434-mirror" data-source="executive-risk-summary">—</small></header><div class="b434-insights">
  ${[['Liquidez','exec-liquidity-reading'],['Obligaciones','exec-obligation-reading'],['Flujo próximo','exec-flow-reading'],['Generación requerida','exec-generation-reading']].map(x=>`<article><span>${x[0]}</span><strong class="b434-mirror" data-source="${x[1]}">—</strong></article>`).join('')}</div><div class="b434-charts" data-exec></div></section>`;
- const flow=by('chart-flow');if(flow){moveReal('chart-flow',$('[data-flow]',c));setTimeout(()=>window.dispatchEvent(new Event('resize')),180);setTimeout(()=>window.dispatchEvent(new Event('resize')),650);refreshNativeSummaryData();scheduleMobileFlowAdapt();}
+ const flowHost=$('[data-flow]',c);if(flowHost){flowHost.replaceChildren();installMobileFlowObservers();refreshNativeSummaryData();scheduleMobileFlowAdapt();setTimeout(()=>adaptMobileFlowCandles(),100);setTimeout(()=>adaptMobileFlowCandles(),350);setTimeout(()=>adaptMobileFlowCandles(),800);}
  ['future-income-list','future-expense-list','projection-table','next-need','priority-actions'].forEach(id=>moveReal(id,$(`[data-${id==='projection-table'?'projection':id==='future-income-list'?'income-list':id==='future-expense-list'?'expense-list':id==='next-need'?'next':'priority'}]`,c)));
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
  ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
@@ -1836,7 +1885,7 @@ function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
-function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
+function restore(){clearTimeout(reportTimer);flowSourceObserver?.disconnect();flowHostObserver?.disconnect();flowSourceObserver=null;flowHostObserver=null;observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
