@@ -59,9 +59,25 @@ function revealApp(){
  $('ccf-auth-gate')?.remove();
  $('ccf-b230-final')?.remove();
  document.body.classList.add('ccf-access-app-ready');
+ suppressBrowserCredentialSurfaces();
  try{ window.dispatchEvent(new Event('ccf:app-ready')); }catch(_){}
  try{ window.CCFMobileB43?.refresh?.(); }catch(_){}
  return !!app;
+}
+
+function suppressBrowserCredentialSurfaces(){
+  try{
+    const form=$('ccf-auth-form');
+    if(form){
+      form.setAttribute('autocomplete','off');
+      form.querySelectorAll('input').forEach(i=>{
+        i.setAttribute('autocomplete','off');
+        i.setAttribute('data-lpignore','true');
+        i.setAttribute('data-1p-ignore','true');
+        i.setAttribute('data-bwignore','true');
+      });
+    }
+  }catch(_){}
 }
 
 function status(t,error=false){
@@ -91,15 +107,15 @@ function portal(){
    <h2 id="ccf-auth-title">Iniciar sesión</h2>
    <p id="ccf-auth-help">Accede a tu sistema financiero y continúa donde lo dejaste.</p>
 
-   <form id="ccf-auth-form" novalidate>
+   <form id="ccf-auth-form" novalidate autocomplete="off">
     <label>
       Correo electrónico
-      <input id="ccf-email" type="email" autocomplete="email" required>
+      <input id="ccf-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" required>
     </label>
 
     <label>
       Contraseña
-      <input id="ccf-password" type="password" autocomplete="current-password" minlength="8" required>
+      <input id="ccf-password" type="password" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" minlength="8" required>
     </label>
 
     <button type="submit" id="ccf-submit">Ingresar al sistema</button>
@@ -111,6 +127,7 @@ function portal(){
  </div>`;
 
  document.body.appendChild(gate);
+ suppressBrowserCredentialSurfaces();
 
  const style=document.createElement('style');
  style.id='ccf-auth-boot-style';
@@ -257,14 +274,14 @@ function setMode(next){
    help.textContent='Crea tu acceso al sistema financiero con una contraseña de al menos 8 caracteres.';
    submit.textContent='Crear cuenta';
    sw.textContent='Volver a iniciar sesión';
-   pw.autocomplete='new-password';
+   pw.autocomplete='off';
    status('Completa los datos para crear tu cuenta.');
  }else{
    title.textContent='Iniciar sesión';
    help.textContent='Accede a tu sistema financiero y continúa donde lo dejaste.';
    submit.textContent='Ingresar al sistema';
    sw.textContent='Crear una cuenta';
-   pw.autocomplete='current-password';
+   pw.autocomplete='off';
    status('Ingresa con tu cuenta.');
  }
 }
