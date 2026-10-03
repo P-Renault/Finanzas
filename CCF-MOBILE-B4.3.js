@@ -1122,6 +1122,7 @@ function observeCalendarMobile(){
    - Inserta el detalle inmediatamente después de la deuda seleccionada.
    ================================================================ */
 let debtMobileDetailAnchor=null;
+let debtMobileDetailKey=null;
 let debtMobileDetailObserver=null;
 let debtMobileListObserver=null;
 let debtMobileFixInstalled=false;
@@ -1190,18 +1191,37 @@ function styleDebtMobileActions(){
   document.head.appendChild(style);
 }
 
+function findDebtDetailAnchor(){
+  if(debtMobileDetailAnchor?.isConnected&&debtMobileDetailAnchor.parentNode){
+    return debtMobileDetailAnchor;
+  }
+  if(!debtMobileDetailKey) return null;
+  const section=by('deudas');
+  if(!section) return null;
+
+  const buttons=Array.from(section.querySelectorAll('.debt-card button'));
+  const match=buttons.find(button=>{
+    const onclick=button.getAttribute('onclick')||'';
+    return onclick.includes(debtMobileDetailKey);
+  });
+  const card=match?.closest('.debt-card')||null;
+  if(card) debtMobileDetailAnchor=card;
+  return card;
+}
+
 function moveDebtDetailAfterSelected(){
   if(!mobile()) return false;
   const detail=by('deudaDetalle');
-  const anchor=debtMobileDetailAnchor;
+  const anchor=findDebtDetailAnchor();
 
-  if(!detail||!anchor||!anchor.isConnected||!anchor.parentNode) return false;
+  if(!detail||!anchor||!anchor.parentNode) return false;
 
   if(anchor.nextElementSibling!==detail){
     anchor.parentNode.insertBefore(detail,anchor.nextSibling);
   }
 
   detail.dataset.ccfDebtDetailContext='selected';
+  detail.dataset.ccfDebtDetailKey=debtMobileDetailKey||'';
   detail.style.display='block';
   return true;
 }
@@ -1222,6 +1242,10 @@ function focusDebtDetailAfterSelected(){
 function armDebtDetailContext(card){
   if(!mobile()||!card) return;
   debtMobileDetailAnchor=card;
+  const trigger=card.querySelector('button[onclick*="verDeuda23("],button[onclick*="verDeuda("]');
+  const onclick=trigger?.getAttribute('onclick')||'';
+  const match=onclick.match(/(?:verDeuda23|verDeuda)\s*\(\s*([^,)]+)/i);
+  debtMobileDetailKey=match?`verDeuda23(${String(match[1]).trim()}`:null;
 
   const detail=by('deudaDetalle');
   if(detail&&!debtMobileDetailObserver){
@@ -1295,6 +1319,7 @@ function cleanupDebtMobileBehavior(){
   debtMobileListObserver?.disconnect();
   debtMobileListObserver=null;
   debtMobileDetailAnchor=null;
+  debtMobileDetailKey=null;
   debtMobileFixInstalled=false;
 }
 
