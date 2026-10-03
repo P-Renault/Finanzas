@@ -59,25 +59,9 @@ function revealApp(){
  $('ccf-auth-gate')?.remove();
  $('ccf-b230-final')?.remove();
  document.body.classList.add('ccf-access-app-ready');
- suppressBrowserCredentialSurfaces();
  try{ window.dispatchEvent(new Event('ccf:app-ready')); }catch(_){}
  try{ window.CCFMobileB43?.refresh?.(); }catch(_){}
  return !!app;
-}
-
-function suppressBrowserCredentialSurfaces(){
-  try{
-    const form=$('ccf-auth-form');
-    if(form){
-      form.setAttribute('autocomplete','off');
-      form.querySelectorAll('input').forEach(i=>{
-        i.setAttribute('autocomplete','off');
-        i.setAttribute('data-lpignore','true');
-        i.setAttribute('data-1p-ignore','true');
-        i.setAttribute('data-bwignore','true');
-      });
-    }
-  }catch(_){}
 }
 
 function status(t,error=false){
@@ -107,15 +91,15 @@ function portal(){
    <h2 id="ccf-auth-title">Iniciar sesión</h2>
    <p id="ccf-auth-help">Accede a tu sistema financiero y continúa donde lo dejaste.</p>
 
-   <form id="ccf-auth-form" novalidate autocomplete="off">
+   <form id="ccf-auth-form" novalidate>
     <label>
       Correo electrónico
-      <input id="ccf-email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+      <input id="ccf-email" type="email" autocomplete="email" required>
     </label>
 
     <label>
       Contraseña
-      <input id="ccf-password" type="password" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" minlength="8" required>
+      <input id="ccf-password" type="password" autocomplete="current-password" minlength="8" required>
     </label>
 
     <button type="submit" id="ccf-submit">Ingresar al sistema</button>
@@ -127,7 +111,6 @@ function portal(){
  </div>`;
 
  document.body.appendChild(gate);
- suppressBrowserCredentialSurfaces();
 
  const style=document.createElement('style');
  style.id='ccf-auth-boot-style';
@@ -274,14 +257,14 @@ function setMode(next){
    help.textContent='Crea tu acceso al sistema financiero con una contraseña de al menos 8 caracteres.';
    submit.textContent='Crear cuenta';
    sw.textContent='Volver a iniciar sesión';
-   pw.autocomplete='off';
+   pw.autocomplete='new-password';
    status('Completa los datos para crear tu cuenta.');
  }else{
    title.textContent='Iniciar sesión';
    help.textContent='Accede a tu sistema financiero y continúa donde lo dejaste.';
    submit.textContent='Ingresar al sistema';
    sw.textContent='Crear una cuenta';
-   pw.autocomplete='off';
+   pw.autocomplete='current-password';
    status('Ingresa con tu cuenta.');
  }
 }
@@ -546,84 +529,99 @@ function installForms(){
 }
 
 async function boot(){
- installAccessBaseStyle();
- hideLegacy();
- installForms();
+  installAccessBaseStyle();
+  hideLegacy();
 
- try{
-   await waitClient();
-   const {data,error}=await client.auth.getSession();
-   if(error)throw error;
+  try{
+    await waitClient();
+    const {data,error}=await client.auth.getSession();
+    if(error)throw error;
 
-   if(data?.session){
-     revealApp();
-     setTimeout(revealApp,0);
-     setTimeout(revealApp,200);
-     setTimeout(revealApp,700);
-     return;
-   }
+    if(data?.session){
+      await openApp();
+      return;
+    }
 
-   /* No session: B230 remains the only visible entry screen. */
-   installLandingAccess();
- }catch(e){
-   console.error('[CCF AUTH] boot',e);
-   installLandingAccess();
- }
+    /* Flujo final: sin sesión -> LOGIN inmediato. */
+    showLoginOnly();
+  }catch(e){
+    console.error('[CCF AUTH] boot',e);
+    /* Incluso si la sesión no pudo recuperarse, el usuario debe recibir
+       el acceso; nunca se muestra configuración técnica ni landing. */
+    try{
+      await waitClient();
+      showLoginOnly();
+    }catch(_){
+      showLoginOnly();
+    }
+  }
 }
 
-function installLandingAccess(){
- installAccessBaseStyle();
- hideLegacy();
- const launch=()=>{
-   let gate=$('ccf-auth-gate');
-   if(!gate){ portal(); gate=$('ccf-auth-gate'); }
-   if(!gate)return;
-   const landing=$('ccf-b230-final');
-   if(landing)landing.remove();
-   gate.dataset.ccfAccessUserOpened='1';
-   setMode('login');
-   gate.style.display='';
-   gate.style.visibility='visible';
-   gate.removeAttribute('aria-hidden');
-   $('ccf-email')?.focus();
- };
+function showLoginOnly(){
+  installAccessBaseStyle();
+  hideLegacy();
 
- if(!document.__CCF_ACCESS_LAUNCH_BOUND__){
-   document.__CCF_ACCESS_LAUNCH_BOUND__=true;
-   document.addEventListener('click',e=>{
-     const b=e.target.closest?.('[data-b230-open="login"],[data-b230-open="register"]');
-     if(!b)return;
-     e.preventDefault();
-     e.stopImmediatePropagation();
-     launch();
-   },true);
- }
+  /* El flujo de acceso final no utiliza landing ni configuración técnica. */
+  $('configPanel')?.classList.add('hidden');
+  $('app')?.classList.add('hidden');
+  $('logoutBtn')?.classList.add('hidden');
+  $('ccf-b230-final')?.remove();
 
- /* CCF-AUTH-BOOT may have created its gate before the landing loaded.
-    It must never be visible before the CTA is pressed. */
- const gate=$('ccf-auth-gate');
- if(gate){
-   gate.style.display='none';
-   gate.style.visibility='hidden';
-   gate.setAttribute('aria-hidden','true');
- }
+  let gate=$('ccf-auth-gate');
+  if(!gate){
+    portal();
+    gate=$('ccf-auth-gate');
+  }
+  if(!gate)return;
 
- /* If B230 appears later, keep legacy surfaces hidden. */
- const observer=new MutationObserver(()=>{
-   if($('app')?.classList.contains('hidden')){
-     $('configPanel')?.classList.add('hidden');
-     document.querySelector('.topbar')?.classList.add('ccf-access-hidden');
-   }
-   const g=$('ccf-auth-gate');
-   if(g && !$('app')?.classList.contains('hidden')===false && !document.body.classList.contains('ccf-access-app-ready')){
-     if(!g.dataset.ccfAccessUserOpened){
-       g.style.display='none';
-       g.style.visibility='hidden';
-     }
-   }
- });
- observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+  mode='login';
+  setMode('login');
+  gate.style.display='';
+  gate.style.visibility='visible';
+  gate.removeAttribute('aria-hidden');
+  gate.dataset.ccfAccessUserOpened='1';
+  installForms();
+
+  /* El formulario de login es la única superficie de acceso visible. */
+  document.querySelectorAll('[data-b230-open="login"],[data-b230-open="register"]').forEach(el=>{
+    el.style.display='none';
+  });
+
+  requestAnimationFrame(()=>{
+    $('ccf-email')?.focus();
+  });
 }
+
+/* Mantener cualquier superficie técnica/landing fuera del flujo final. */
+function installAccessGuard(){
+  if(document.__CCF_FINAL_ACCESS_GUARD__)return;
+  document.__CCF_FINAL_ACCESS_GUARD__=true;
+
+  const observer=new MutationObserver(()=>{
+    const ready=document.body.classList.contains('ccf-access-app-ready');
+    if(ready)return;
+
+    $('configPanel')?.classList.add('hidden');
+    $('logoutBtn')?.classList.add('hidden');
+    $('ccf-b230-final')?.remove();
+
+    const gate=$('ccf-auth-gate');
+    if(gate){
+      gate.style.display='';
+      gate.style.visibility='visible';
+      gate.removeAttribute('aria-hidden');
+    }
+  });
+
+  observer.observe(document.body,{
+    childList:true,
+    subtree:true,
+    attributes:true,
+    attributeFilter:['class','style','hidden','aria-hidden']
+  });
+}
+
+installAccessGuard();
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
