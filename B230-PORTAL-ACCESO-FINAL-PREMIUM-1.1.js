@@ -334,7 +334,7 @@ async function watchAuth(){
   await sleep(100);
  }
 }
-function loadPwaInstaller(){if(window.__CCF_PWA_INSTALL_B11__)return;var s=document.createElement('script');s.src='/CCF-PWA-INSTALL-B1.1.js';s.async=true;s.onerror=function(){console.warn('[CCF] No se pudo cargar el instalador PWA.');};document.head.appendChild(s)}
+function loadPwaInstaller(){if(window.__CCF_PWA_INSTALL_B13__)return;var s=document.createElement('script');s.src='/CCF-PWA-INSTALL-B1.3.js';s.async=true;s.onerror=function(){console.warn('[CCF] No se pudo cargar el instalador PWA.');};document.head.appendChild(s)}
 function boot(){style();if(!document.getElementById(ID))document.body.insertAdjacentHTML('afterbegin',html());animatePremiumHero();bind();mountInteractiveContent();watchAuth();loadPwaInstaller()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

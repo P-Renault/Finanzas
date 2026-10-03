@@ -1,14 +1,13 @@
 {
   "name": "Control Financiero",
   "short_name": "Control Financiero",
-  "description": "Centro de Control Financiero de Somos Software.",
+  "description": "Centro de Control Financiero",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
-  "theme_color": "#0757e8",
-  "lang": "es-CL",
+  "background_color": "#07111a",
+  "theme_color": "#07111a",
   "icons": [
     {
       "src": "/icons/ccf-192.png",
