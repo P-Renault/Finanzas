@@ -1470,6 +1470,62 @@ function navigate(id){
  setTimeout(mount,120);
  if(!native && !META[id])notice(id);
 }
+function syncMobileProfileAvatar(){
+ const avatars=root?$$('.b434-avatar',root):[];
+ if(!avatars.length)return false;
+ const source=document.querySelector('#ccf-profile-avatar img')||document.querySelector('#ccf-profile-mini-avatar img');
+ const mini=document.getElementById('ccf-profile-mini-avatar');
+ if(source?.src){
+   avatars.forEach(el=>{
+     el.innerHTML='';
+     const img=document.createElement('img');
+     img.src=source.src;
+     img.alt='Foto de perfil';
+     el.appendChild(img);
+     el.classList.add('has-photo');
+   });
+   return true;
+ }
+ if(mini){
+   const initialsText=mini.textContent?.trim();
+   if(initialsText){
+     avatars.forEach(el=>{
+       el.textContent=initialsText;
+       el.classList.remove('has-photo');
+     });
+     return true;
+   }
+ }
+ return false;
+}
+
+function hydrateMobileProfileAvatar(){
+ if(!root||!mobile())return;
+ syncMobileProfileAvatar();
+ const api=window.CCFPerfilUsuario;
+ if(api?.refresh){
+   Promise.resolve(api.refresh())
+     .then(()=>syncMobileProfileAvatar())
+     .catch(e=>console.warn('[CCF MOBILE] perfil avatar',e));
+   return;
+ }
+ let tries=0;
+ const retry=()=>{
+   tries++;
+   if(!root||!mobile())return;
+   if(window.CCFPerfilUsuario?.refresh){
+     Promise.resolve(window.CCFPerfilUsuario.refresh())
+       .then(()=>syncMobileProfileAvatar())
+       .catch(e=>console.warn('[CCF MOBILE] perfil avatar',e));
+     return;
+   }
+   if(tries<12)setTimeout(retry,250);
+ };
+ setTimeout(retry,250);
+}
+
+document.addEventListener('ccf:profile-updated',()=>setTimeout(syncMobileProfileAvatar,0));
+
 function openMore(){populateMore();$('.b434-overlay[data-overlay="more"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 function openProfile(){$('.b434-overlay[data-overlay="profile"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
 
@@ -1755,7 +1811,7 @@ function build(){
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();$('[data-mobile-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');hydrateMobileProfileAvatar();
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
