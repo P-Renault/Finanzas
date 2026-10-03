@@ -1471,7 +1471,23 @@ function navigate(id){
  if(!native && !META[id])notice(id);
 }
 function openMore(){populateMore();$('.b434-overlay[data-overlay="more"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
-function openProfile(){$('.b434-overlay[data-overlay="profile"]',root)?.classList.add('open');document.body.classList.add('b434-lock')}
+/* CCF MOBILE B4.3 · PERFIL
+   Reutiliza CCF-PERFIL-USUARIO-B1.0 ya cargado por index.html.
+   No duplica Auth, Supabase ni el formulario de perfil.
+*/
+function openUnifiedProfile(){
+ const profileButton=by('ccf-profile-button');
+ if(profileButton){profileButton.click();return true}
+ let attempts=0;
+ const retry=()=>{
+   const btn=by('ccf-profile-button');
+   if(btn){btn.click();return}
+   if(++attempts<12)setTimeout(retry,150);
+ };
+ retry();
+ return false;
+}
+function openProfile(){openUnifiedProfile()}
 
 function populateMore(){
  const g=$('[data-more-grid]',root);if(!g)return;g.innerHTML='';
@@ -1680,7 +1696,7 @@ function build(){
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
- $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();$('[data-mobile-logout]',root).onclick=()=>by('logoutBtn')?.click();
+ $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openUnifiedProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();$('[data-mobile-logout]',root).onclick=()=>by('logoutBtn')?.click();
  populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
 }
 function observe(){
