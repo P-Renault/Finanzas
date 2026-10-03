@@ -1995,47 +1995,87 @@ function installUserManualMobileStyle(){
      display:inline-flex;
      align-items:center;
      justify-content:center;
-     gap:5px;
-     min-width:44px;
-     height:36px;
-     padding:0 9px;
-     border:1px solid rgba(255,255,255,.18);
-     border-radius:10px;
-     background:rgba(255,255,255,.10);
+     gap:7px;
+     min-width:108px;
+     height:40px;
+     padding:0 12px;
+     border:1px solid rgba(255,255,255,.28);
+     border-radius:12px;
+     background:rgba(255,255,255,.12);
      color:#fff;
      text-decoration:none;
-     font-size:10px;
+     font-size:11px;
      line-height:1;
-     font-weight:800;
+     font-weight:850;
+     letter-spacing:.1px;
      white-space:nowrap;
      box-sizing:border-box;
      cursor:pointer;
+     box-shadow:0 2px 8px rgba(0,0,0,.10);
+     transition:background .18s ease,transform .18s ease,border-color .18s ease;
    }
    #ccf-mobile-b43 .b434-manual span{
-     font-size:15px;
+     display:grid;
+     place-items:center;
+     width:20px;
+     height:20px;
+     flex:0 0 20px;
+   }
+   #ccf-mobile-b43 .b434-manual svg{
+     width:19px;
+     height:19px;
+     display:block;
+     fill:none;
+     stroke:currentColor;
+     stroke-width:2.25;
+     stroke-linecap:round;
+     stroke-linejoin:round;
+   }
+   #ccf-mobile-b43 .b434-manual small{
+     font-size:11px;
      line-height:1;
+     font-weight:850;
+   }
+   #ccf-mobile-b43 .b434-manual:hover{
+     background:rgba(255,255,255,.18);
+     border-color:rgba(255,255,255,.42);
    }
    #ccf-mobile-b43 .b434-manual:active{
      transform:scale(.97);
    }
-   @media(max-width:390px){
+   @media(max-width:430px){
      #ccf-mobile-b43 .b434-manual{
-       min-width:36px;
-       width:36px;
-       padding:0;
+       min-width:94px;
+       height:38px;
+       padding:0 9px;
+       gap:6px;
      }
      #ccf-mobile-b43 .b434-manual small{
-       display:none;
+       font-size:10px;
+     }
+   }
+   @media(max-width:380px){
+     #ccf-mobile-b43 .b434-manual{
+       min-width:78px;
+       width:78px;
+       padding:0 7px;
+       gap:5px;
+     }
+     #ccf-mobile-b43 .b434-manual small{
+       font-size:9px;
+     }
+     #ccf-mobile-b43 .b434-manual svg{
+       width:17px;
+       height:17px;
      }
    }
  `;
  document.head.appendChild(style);
 }
-
 function build(){
  if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';
  installUserManualMobileStyle();
- root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><a class="b434-manual" href="Manual_Usabilidad_CCF_Somos_Software.pdf" download="Manual_Usabilidad_CCF_Somos_Software.pdf" aria-label="Descargar manual de usuario" title="Descargar manual de usuario"><span>▤</span><small>Manual</small></a><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
+ root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><a class="b434-manual" href="Manual_Usabilidad_CCF_Somos_Software.pdf" download="Manual_Usabilidad_CCF_Somos_Software.pdf" aria-label="Descargar manual de usuario" title="Descargar manual de usuario"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg></span><small>Descargar manual</small></a><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
  <div class="b434-overlay" data-overlay="more"><div class="b434-backdrop" data-close></div><section><header><strong>Todos los módulos</strong><button data-close>×</button></header><div class="b434-module-grid" data-more-grid></div></section></div>
  <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
