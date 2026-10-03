@@ -22,19 +22,46 @@ function hideLegacy(){
  $('configPanel')?.classList.add('hidden');
  $('app')?.classList.add('hidden');
  $('logoutBtn')?.classList.add('hidden');
+ document.querySelector('.topbar')?.classList.add('ccf-access-hidden');
+ document.querySelector('.container')?.classList.add('ccf-access-preauth');
 }
 
+function installAccessBaseStyle(){
+ if(document.getElementById('ccf-access-base-style'))return;
+ const s=document.createElement('style');
+ s.id='ccf-access-base-style';
+ s.textContent=`
+  .ccf-access-hidden{display:none!important}
+  .ccf-access-preauth{visibility:hidden!important}
+  #configPanel,#app,#logoutBtn{visibility:hidden}
+  #ccf-auth-gate{z-index:2147483646!important}
+  #ccf-b230-final{z-index:2147483647!important}
+  body.ccf-access-app-ready .ccf-access-preauth{visibility:visible!important}
+  body.ccf-access-app-ready #app{visibility:visible!important}
+ `;
+ document.head.appendChild(s);
+}
+
+
 function revealApp(){
+ installAccessBaseStyle();
  $('configPanel')?.classList.add('hidden');
  const app=$('app');
  if(app){
-   app.classList.remove('hidden');
-   app.classList.remove('b230-hidden-app');
+   app.classList.remove('hidden','b230-hidden-app');
    app.style.removeProperty('display');
    app.removeAttribute('aria-hidden');
+   app.style.visibility='visible';
  }
+ document.querySelector('.container')?.classList.remove('ccf-access-preauth');
+ document.querySelector('.topbar')?.classList.add('ccf-access-hidden');
  $('logoutBtn')?.classList.remove('hidden');
  $('ccf-auth-gate')?.remove();
+ $('ccf-b230-final')?.remove();
+ document.body.classList.add('ccf-access-app-ready');
+ try{ window.dispatchEvent(new Event('ccf:app-ready')); }catch(_){}
+ try{ window.CCFMobileB43?.refresh?.(); }catch(_){}
+ return !!app;
 }
 
 function status(t,error=false){
@@ -365,46 +392,26 @@ async function waitClient(){
 }
 
 async function openApp(){
- /*
-  * B2.31.3 — el acceso no debe quedar bloqueado esperando
-  * conexiones, probes o módulos financieros.
-  * Primero mostramos la aplicación; después dejamos que los
-  * motores financieros se inicialicen en segundo plano.
-  */
+ /* B1.9.6 FINAL: no intermediate configuration/blank state. */
  revealApp();
 
- const gate=$('ccf-auth-gate');
- if(gate) gate.remove();
+ /* Allow the mobile shell to mount Resumen immediately. */
+ try{ window.dispatchEvent(new Event('ccf:app-ready')); }catch(_){}
+ try{ window.CCFMobileB43?.refresh?.(); }catch(_){}
 
- const app=$('app');
- if(app){
-   app.classList.remove('hidden','b230-hidden-app');
-   app.style.removeProperty('display');
-   app.removeAttribute('aria-hidden');
- }
-
- try{
-   if(typeof window.connect==='function'){
-     window.connect().catch(e=>console.warn('[CCF AUTH] connect',e));
-   }
- }catch(e){
-   console.warn('[CCF AUTH] connect',e);
- }
-
- /*
-  * Un segundo intento de refresco permite que los módulos que se
-  * cargan dinámicamente encuentren el cliente autenticado.
-  * Nunca bloquea la visualización de la aplicación.
-  */
+ /* Data connection remains asynchronous and never gates the UI. */
  setTimeout(()=>{
    try{
-     if(typeof window.refresh==='function'){
-       window.refresh().catch(e=>console.warn('[CCF AUTH] refresh',e));
-     }
-   }catch(e){
-     console.warn('[CCF AUTH] refresh',e);
-   }
- },250);
+     if(typeof window.connect==='function') window.connect().catch(()=>{});
+   }catch(_){}
+ },0);
+
+ setTimeout(()=>{
+   try{
+     if(typeof window.refresh==='function') window.refresh().catch(()=>{});
+   }catch(_){}
+   try{ window.CCFMobileB43?.refresh?.(); }catch(_){}
+ },350);
 
  return true;
 }
@@ -522,177 +529,87 @@ function installForms(){
 }
 
 async function boot(){
+ installAccessBaseStyle();
  hideLegacy();
- portal();
  installForms();
-
- status('Conectando con el servicio de acceso…');
 
  try{
    await waitClient();
-
-   status('Verificando sesión…');
-
    const {data,error}=await client.auth.getSession();
-
    if(error)throw error;
 
    if(data?.session){
-     await openApp();
-     setTimeout(()=>revealApp(),0);
-     setTimeout(()=>revealApp(),500);
-     setTimeout(()=>revealApp(),1500);
-   }else{
-     status(
-       'Sin sesión activa. Inicia sesión o crea una cuenta.'
-     );
+     revealApp();
+     setTimeout(revealApp,0);
+     setTimeout(revealApp,200);
+     setTimeout(revealApp,700);
+     return;
    }
 
+   /* No session: B230 remains the only visible entry screen. */
+   installLandingAccess();
  }catch(e){
    console.error('[CCF AUTH] boot',e);
-
-   status(
-     e?.message||
-     'No fue posible inicializar el acceso.',
-     true
-   );
+   installLandingAccess();
  }
 }
 
-if(document.readyState==='loading'){
- document.addEventListener(
-   'DOMContentLoaded',
-   boot,
-   {once:true}
- );
-}else{
- boot();
+function installLandingAccess(){
+ installAccessBaseStyle();
+ hideLegacy();
+ const launch=()=>{
+   let gate=$('ccf-auth-gate');
+   if(!gate){ portal(); gate=$('ccf-auth-gate'); }
+   if(!gate)return;
+   const landing=$('ccf-b230-final');
+   if(landing)landing.remove();
+   gate.dataset.ccfAccessUserOpened='1';
+   setMode('login');
+   gate.style.display='';
+   gate.style.visibility='visible';
+   gate.removeAttribute('aria-hidden');
+   $('ccf-email')?.focus();
+ };
+
+ if(!document.__CCF_ACCESS_LAUNCH_BOUND__){
+   document.__CCF_ACCESS_LAUNCH_BOUND__=true;
+   document.addEventListener('click',e=>{
+     const b=e.target.closest?.('[data-b230-open="login"],[data-b230-open="register"]');
+     if(!b)return;
+     e.preventDefault();
+     e.stopImmediatePropagation();
+     launch();
+   },true);
+ }
+
+ /* CCF-AUTH-BOOT may have created its gate before the landing loaded.
+    It must never be visible before the CTA is pressed. */
+ const gate=$('ccf-auth-gate');
+ if(gate){
+   gate.style.display='none';
+   gate.style.visibility='hidden';
+   gate.setAttribute('aria-hidden','true');
+ }
+
+ /* If B230 appears later, keep legacy surfaces hidden. */
+ const observer=new MutationObserver(()=>{
+   if($('app')?.classList.contains('hidden')){
+     $('configPanel')?.classList.add('hidden');
+     document.querySelector('.topbar')?.classList.add('ccf-access-hidden');
+   }
+   const g=$('ccf-auth-gate');
+   if(g && !$('app')?.classList.contains('hidden')===false && !document.body.classList.contains('ccf-access-app-ready')){
+     if(!g.dataset.ccfAccessUserOpened){
+       g.style.display='none';
+       g.style.visibility='hidden';
+     }
+   }
+ });
+ observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
 }
+
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
 
 })();
 
-/* B1.9.6 ACCESS ORCHESTRATOR — LANDING → LOGIN → RESUMEN
-   Mantiene el nombre/versión de integración. No modifica módulos financieros.
-   Objetivo: una sola ruta de acceso y cero pantallas blancas durante el cambio.
-*/
-(function(){
-'use strict';
-if(window.__CCF_ACCESS_ORCHESTRATOR_196__) return;
-window.__CCF_ACCESS_ORCHESTRATOR_196__=true;
-
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const $=id=>document.getElementById(id);
-
-function showApp(){
-  const app=$('app');
-  if(!app)return false;
-  app.classList.remove('hidden','b230-hidden-app');
-  app.style.removeProperty('display');
-  app.removeAttribute('aria-hidden');
-  $('configPanel')?.classList.add('hidden');
-  $('logoutBtn')?.classList.remove('hidden');
-  document.getElementById('ccf-auth-gate')?.remove();
-  document.getElementById('ccf-b230-final')?.remove();
-  try{ window.dispatchEvent(new Event('ccf:app-ready')); }catch(_){ }
-  return true;
-}
-
-function hasSessionClient(){
-  return window.supabaseClient||window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__||null;
-}
-
-async function sessionExists(){
-  const c=hasSessionClient();
-  if(!c?.auth?.getSession)return false;
-  try{return !!(await c.auth.getSession()).data?.session}catch(_){return false}
-}
-
-function setGateVisible(visible){
-  const gate=$('ccf-auth-gate');
-  if(!gate)return false;
-  gate.style.display=visible?'':'none';
-  gate.style.visibility=visible?'visible':'hidden';
-  gate.setAttribute('aria-hidden',visible?'false':'true');
-  return true;
-}
-
-function installLandingLoginBridge(){
-  /* B230 es la landing. Mientras no haya sesión, el login queda oculto
-     hasta que el usuario pulse una CTA de acceso. */
-  const apply=()=>{
-    const gate=$('ccf-auth-gate');
-    const landing=$('ccf-b230-final');
-    if(!gate)return;
-    if(landing && !gate.dataset.ccfAccessReleased){
-      gate.style.display='none';
-      gate.style.visibility='hidden';
-      gate.setAttribute('aria-hidden','true');
-    }
-  };
-
-  apply();
-
-  if(!document.__ccfAccessLandingCapture){
-    document.__ccfAccessLandingCapture=true;
-    document.addEventListener('click',event=>{
-      const btn=event.target.closest?.('[data-b230-open="login"],[data-b230-open="register"]');
-      if(!btn)return;
-      const gate=$('ccf-auth-gate');
-      if(gate){
-        gate.dataset.ccfAccessReleased='1';
-        setGateVisible(true);
-      }
-    },true);
-  }
-}
-
-function installAuthStateBridge(){
-  const c=hasSessionClient();
-  if(!c?.auth?.onAuthStateChange || c.__ccfAccess196Bound)return;
-  c.__ccfAccess196Bound=true;
-  c.auth.onAuthStateChange((_event,session)=>{
-    if(session){
-      /* No esperamos a connect(), probes ni refresh para liberar la UI. */
-      showApp();
-      setTimeout(showApp,0);
-      setTimeout(showApp,150);
-      setTimeout(showApp,500);
-    }
-  });
-}
-
-async function orchestrate(){
-  /* Esperar solo al DOM/client; nunca bloquear la pantalla por Supabase. */
-  for(let i=0;i<80;i++){
-    installAuthStateBridge();
-    installLandingLoginBridge();
-    const landing=$('ccf-b230-final');
-    const gate=$('ccf-auth-gate');
-    if(landing||gate)break;
-    await sleep(50);
-  }
-
-  const session=await sessionExists();
-  if(session){
-    showApp();
-    return;
-  }
-
-  /* Sin sesión: la primera pantalla funcional es la landing. */
-  installLandingLoginBridge();
-
-  /* El portal de autenticación ya puede existir, pero no debe tapar la landing. */
-  for(let i=0;i<30;i++){
-    installLandingLoginBridge();
-    installAuthStateBridge();
-    await sleep(100);
-    if($('ccf-b230-final'))break;
-  }
-}
-
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',orchestrate,{once:true});
-}else{
-  orchestrate();
-}
-})();
