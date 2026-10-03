@@ -1492,20 +1492,33 @@ function navigate(id){
 function syncMobileProfileAvatar(){
  const avatars=root?$$('.b434-avatar',root):[];
  if(!avatars.length)return false;
- const source=document.querySelector('#ccf-profile-avatar img')||document.querySelector('#ccf-profile-mini-avatar img');
- const mini=document.getElementById('ccf-profile-mini-avatar');
- if(source?.src){
+
+ const applyPhoto=(url)=>{
+   if(!url)return false;
    avatars.forEach(el=>{
      el.innerHTML='';
      const img=document.createElement('img');
-     img.src=source.src;
+     img.src=String(url);
      img.alt='Foto de perfil';
+     img.style.width='100%';
+     img.style.height='100%';
+     img.style.objectFit='cover';
+     img.style.borderRadius='50%';
+     img.style.display='block';
      el.appendChild(img);
      el.classList.add('has-photo');
    });
    return true;
- }
+ };
+
+ const source=document.querySelector('#ccf-profile-avatar img')||document.querySelector('#ccf-profile-mini-avatar img');
+ if(source?.src)return applyPhoto(source.src);
+
+ const mini=document.getElementById('ccf-profile-mini-avatar');
  if(mini){
+   const miniImg=mini.querySelector('img');
+   if(miniImg?.src)return applyPhoto(miniImg.src);
+
    const initialsText=mini.textContent?.trim();
    if(initialsText){
      avatars.forEach(el=>{
@@ -1515,6 +1528,23 @@ function syncMobileProfileAvatar(){
      return true;
    }
  }
+
+ /*
+  * El perfil puede cargarse después de B4.3. En ese caso el DOM del
+  * módulo todavía no contiene #ccf-profile-avatar. Recuperamos primero
+  * la foto desde la sesión Auth ya persistida, sin consultar profiles
+  * ni esperar a que se abra el módulo Perfil.
+  */
+ const client=window.supabaseClient||window.db||window.__db||window.__B23269_CLIENT__;
+ const auth=client?.auth;
+ if(auth?.getSession){
+   Promise.resolve(auth.getSession()).then(r=>{
+     const user=r?.data?.session?.user;
+     const url=user?.user_metadata?.ccf_avatar_url||user?.user_metadata?.avatar_url||'';
+     if(url)applyPhoto(url);
+   }).catch(()=>{});
+ }
+
  return false;
 }
 
