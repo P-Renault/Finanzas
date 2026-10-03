@@ -1236,21 +1236,39 @@ function findDebtDetailAnchor(){
   return null;
 }
 
+function getDebtDetailContextNode(){
+  const detail=by('deudaDetalle');
+  if(!detail) return null;
+
+  /* #deudaDetalle normalmente vive dentro de una tarjeta/contenedor.
+     Movemos el contenedor visual completo para que el bloque DETALLE
+     quede realmente entre la deuda seleccionada y la siguiente deuda. */
+  const outer=detail.closest('.card');
+  if(outer && outer!==by('deudas') && !outer.classList.contains('debt-card')){
+    outer.classList.add('ccf-debt-detail-context-card');
+    return outer;
+  }
+
+  return detail;
+}
+
 function moveDebtDetailAfterSelected(){
   if(!mobile()) return false;
   const detail=by('deudaDetalle');
+  const contextNode=getDebtDetailContextNode();
   const anchor=findDebtDetailAnchor();
-  if(!detail||!anchor||!anchor.parentNode) return false;
+  if(!detail||!contextNode||!anchor||!anchor.parentNode) return false;
 
-  /* No usamos scrollIntoView: el detalle debe aparecer en contexto,
-     sin desplazar la pantalla hacia el inicio del módulo. */
-  if(anchor.nextElementSibling!==detail){
-    anchor.parentNode.insertBefore(detail,anchor.nextSibling);
+  /* No usamos scrollIntoView: el detalle debe aparecer EN CONTEXTO,
+     inmediatamente después de la deuda pulsada. */
+  if(anchor.nextElementSibling!==contextNode){
+    anchor.parentNode.insertBefore(contextNode,anchor.nextSibling);
   }
 
   detail.dataset.ccfDebtDetailContext='selected';
   detail.dataset.ccfDebtDetailKey=debtMobileDetailKey||'';
   detail.style.display='block';
+  contextNode.style.display='block';
   return true;
 }
 
@@ -1265,26 +1283,79 @@ function armDebtDetailContext(card){
   debtMobileDetailAnchor=card;
   debtMobileDetailIndex=Math.max(0,cards.indexOf(card));
   debtMobileDetailSignature=debtCardSignature(card);
-
   const trigger=card.querySelector('button[onclick*="verDeuda23("],button[onclick*="verDeuda("]');
-  const onclick=trigger?.getAttribute('onclick')||'';
-  /* Guardamos el onclick completo, no una versión reconstruida. */
-  debtMobileDetailKey=onclick.trim()||null;
-
-  /* El motor nativo puede pintar el detalle después del click. La
-     observación del módulo garantiza que lo reubiquemos después de cada
-     reconstrucción, pero nunca provoca un scroll automático. */
+  debtMobileDetailKey=(trigger?.getAttribute('onclick')||'').trim()||null;
   scheduleDebtDetailMove();
+}
+
+let debtMobileVerDeudaBridge=null;
+let debtMobileVerDeuda23Bridge=null;
+
+function installDebtDetailContextBridge(){
+  if(!mobile()) return;
+
+  const install=(name)=>{
+    const current=window[name];
+    if(typeof current!=='function' || current.__ccfMobileContextBridge) return;
+
+    const wrapped=async function(id,...args){
+      const cards=getDebtCards();
+      const card=cards.find(c=>[...c.querySelectorAll('button')].some(b=>{
+        const oc=b.getAttribute('onclick')||'';
+        const m=oc.match(/(?:window\.)?verDeuda(?:23)?\s*\(\s*(\d+)/i);
+        return m && Number(m[1])===Number(id);
+      }));
+      if(card) armDebtDetailContext(card);
+
+      /* B235 showDebt() ejecuta scrollIntoView() y window.scrollTo()
+         durante la apertura. En móvil esas instrucciones provocan el
+         salto al inicio/final del módulo. Se neutralizan únicamente
+         mientras se ejecuta esta acción. */
+      const originalScrollTo=window.scrollTo;
+      const originalScrollBy=window.scrollBy;
+      const originalIntoView=Element.prototype.scrollIntoView;
+      const noop=()=>{};
+      try{
+        window.scrollTo=noop;
+        window.scrollBy=noop;
+        Element.prototype.scrollIntoView=noop;
+        const result=await current.apply(this,[id,...args]);
+
+        /* showDebt() termina de renderizar #deudaDetalle después de
+           consultar Supabase. Reubicar después garantiza que quede
+           inmediatamente debajo de la deuda pulsada. */
+        [0,20,60,120,250,500,900,1400].forEach(ms=>setTimeout(()=>{
+          if(mobile()) moveDebtDetailAfterSelected();
+        },ms));
+        return result;
+      } finally {
+        window.scrollTo=originalScrollTo;
+        window.scrollBy=originalScrollBy;
+        Element.prototype.scrollIntoView=originalIntoView;
+      }
+    };
+
+    wrapped.__ccfMobileContextBridge=true;
+    wrapped.__ccfMobileOriginal=current;
+    window[name]=wrapped;
+    if(name==='verDeuda23') debtMobileVerDeuda23Bridge=wrapped;
+    if(name==='verDeuda') debtMobileVerDeudaBridge=wrapped;
+  };
+
+  install('verDeuda23');
+  install('verDeuda');
 }
 
 function installDebtMobileBehavior(){
   if(!mobile()) return;
   styleDebtMobileActions();
+  installDebtDetailContextBridge();
 
   const section=by('deudas');
   if(!section) return;
 
   if(debtMobileFixInstalled&&section.dataset.ccfDebtMobileActions==='1'){
+    installDebtDetailContextBridge();
     scheduleDebtDetailMove();
     return;
   }
@@ -1292,33 +1363,28 @@ function installDebtMobileBehavior(){
   debtMobileFixInstalled=true;
   section.dataset.ccfDebtMobileActions='1';
 
-  /* Capturamos la deuda antes de que el handler nativo ejecute
-     verDeuda23()/verDeuda(). */
   section.addEventListener('click',event=>{
     const button=event.target?.closest?.('button');
     if(!button) return;
     const card=button.closest('.debt-card');
     if(!card) return;
-
     const onclick=button.getAttribute('onclick')||'';
     const text=String(button.textContent||'').trim().toLowerCase();
     if(text==='ver detalle'||onclick.includes('verDeuda23(')||onclick.includes('verDeuda(')){
       armDebtDetailContext(card);
-      /* El handler original sigue ejecutándose; nosotros solo fijamos
-         el contexto de la deuda seleccionada. */
     }
   },true);
 
-  /* Observa TODO el módulo porque el motor de deudas puede destruir y
-     reconstruir #deudaDetalle o la lista completa después del click. */
   debtMobileListObserver=new MutationObserver(()=>{
+    /* B219/B235 puede reinstalar window.verDeuda23 después de nuestra
+       primera instalación. Por eso se intenta envolver nuevamente. */
+    installDebtDetailContextBridge();
     if(debtMobileDetailKey||debtMobileDetailSignature||debtMobileDetailIndex>=0){
       scheduleDebtDetailMove();
     }
     styleDebtMobileActions();
   });
   debtMobileListObserver.observe(section,{childList:true,subtree:true});
-
   scheduleDebtDetailMove();
 }
 
@@ -1327,6 +1393,14 @@ function cleanupDebtMobileBehavior(){
   debtMobileMoveTimer=null;
   debtMobileListObserver?.disconnect();
   debtMobileListObserver=null;
+  if(debtMobileVerDeuda23Bridge?.__ccfMobileOriginal && window.verDeuda23===debtMobileVerDeuda23Bridge){
+    window.verDeuda23=debtMobileVerDeuda23Bridge.__ccfMobileOriginal;
+  }
+  if(debtMobileVerDeudaBridge?.__ccfMobileOriginal && window.verDeuda===debtMobileVerDeudaBridge){
+    window.verDeuda=debtMobileVerDeudaBridge.__ccfMobileOriginal;
+  }
+  debtMobileVerDeuda23Bridge=null;
+  debtMobileVerDeudaBridge=null;
   debtMobileDetailAnchor=null;
   debtMobileDetailKey=null;
   debtMobileDetailIndex=-1;
