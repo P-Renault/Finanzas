@@ -1634,6 +1634,80 @@ function scheduleReportSync(){
  };
  reportTimer=setTimeout(attempt,180);
 }
+
+/* CCF MOBILE B4.3.11 — REHIDRATACIÓN DEL RESUMEN
+   El Resumen móvil no reemplaza los gráficos originales.
+   Espera a que B232.35 termine de cargar FinancialSummary +
+   ExecutiveDashboard y vuelve a renderizar los componentes reales
+   dentro de la shell móvil.
+*/
+let summaryHydrationTimer=null;
+function hydrateRealSummary(){
+ if(!mobile()||!ready()||!root)return;
+ try{
+   if(window.FinancialSummary?.init){
+     Promise.resolve(window.FinancialSummary.init())
+       .then(()=>{
+         mirrorAll();
+         mountExecutiveRealCharts();
+       })
+       .catch(e=>console.warn('[CCF MOBILE] FinancialSummary hydration',e));
+   }
+ }catch(e){console.warn('[CCF MOBILE] FinancialSummary hydration',e);}
+ try{
+   if(window.B23235ResumenEjecutivo?.refresh){
+     Promise.resolve(window.B23235ResumenEjecutivo.refresh())
+       .then(()=>{mirrorAll();mountExecutiveRealCharts();})
+       .catch(e=>console.warn('[CCF MOBILE] B23235 hydration',e));
+   }
+ }catch(e){}
+}
+
+function mountExecutiveRealCharts(){
+ if(!root||!mobile())return;
+ const execHost=$('[data-exec]',root);
+ if(!execHost)return;
+ const ids=['chart-liquidity','chart-flow','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
+
+ ids.forEach(id=>{
+   const el=by(id);
+   if(!el)return;
+   /* Si el elemento ya está dentro de la shell móvil, no se mueve ni se duplica. */
+   if(root.contains(el))return;
+   const card=document.createElement('article');
+   card.className='b434-chart-card';
+   const sourceTitle=el.closest('.executive-chart')?.querySelector('h3')?.textContent;
+   card.innerHTML='<strong>'+esc(sourceTitle||id)+'</strong>';
+   execHost.appendChild(card);
+   moveReal(id,card);
+ });
+
+ /* La proyección y decisiones también son contenido real, no placeholders. */
+ const targets=[
+   ['projection-table','projection'],
+   ['next-need','next'],
+   ['priority-actions','priority']
+ ];
+ targets.forEach(([id,slot])=>{
+   const el=by(id);
+   const hostSlot=$('[data-'+slot+']',root);
+   if(!el||!hostSlot||root.contains(el))return;
+   moveReal(id,hostSlot);
+ });
+}
+
+function scheduleSummaryHydration(){
+ clearTimeout(summaryHydrationTimer);
+ const delays=[0,250,600,1000,1600,2400,3500,5000];
+ delays.forEach(ms=>{
+   summaryHydrationTimer=setTimeout(()=>{
+     hydrateRealSummary();
+     refreshNativeSummaryData();
+     adaptMobileFlowCandles();
+     syncConsolidatedReport();
+   },ms);
+ });
+}
 function summary(){
  const c=$('[data-content]',root);c.innerHTML=`
  <section class="b434-period"><div><span>PERÍODO</span><strong class="b434-mirror" data-source="future-month-label">—</strong></div><button type="button" data-period>⌄</button></section>
@@ -1669,7 +1743,7 @@ function summary(){
  const execHost=$('[data-exec]',c),ids=['chart-liquidity','chart-obligations','chart-candles','chart-risk','chart-gap','chart-debt-month','chart-debt-planning'];
  ids.forEach(id=>{const el=by(id);if(!el||!execHost)return;const card=document.createElement('article');card.className='b434-chart-card';card.innerHTML='<strong>'+esc(el.closest('.executive-chart')?.querySelector('h3')?.textContent||id)+'</strong>';execHost.appendChild(card);moveReal(id,card)});
  $$('[data-quick]',c).forEach(b=>b.onclick=()=>quick(b.dataset.quick));$('[data-period]',c).onclick=()=>notice('Selector de período');
- mirrorAll();scheduleReportSync();
+ mirrorAll();scheduleReportSync();scheduleSummaryHydration();
 }
 
 function build(){
@@ -1689,35 +1763,9 @@ function observe(){
 }
 function restore(){clearTimeout(reportTimer);observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
 function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
-function bootAfterAuthentication(){
-  if(!mobile())return;
-  let tries=0;
-  const run=()=>{
-    if(!ready()){if(++tries<30)setTimeout(run,100);return;}
-    if(!built){build();observe();}
-    /* El Resumen es siempre la primera vista después de autenticar. */
-    activeModule=null;
-    nativeTab('dashboard');
-    showModuleAfterNavigation('dashboard');
-    scheduleDashboardSummaryRestore();
-    refreshNativeSummaryData();
-    scheduleMobileFlowAdapt();
-    mirrorAll();
-  };
-  run();
-}
-window.addEventListener('ccf:app-ready',bootAfterAuthentication);
 window.addEventListener('resize',()=>setTimeout(boot,100));window.addEventListener('orientationchange',()=>setTimeout(boot,150));
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-/* Observa la transición login → app para no depender de un resize o refresh del navegador. */
-function observeAuthReveal(){
-  const a=app(); if(!a||!window.MutationObserver)return;
-  const fire=()=>{if(!a.classList.contains('hidden'))window.dispatchEvent(new Event('ccf:app-ready'));};
-  new MutationObserver(fire).observe(a,{attributes:true,attributeFilter:['class','style']});
-  fire();
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observeAuthReveal,{once:true});else observeAuthReveal();
-window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{bootAfterAuthentication();mirrorAll();syncConsolidatedReport()},disable:restore};
+window.CCFMobileB43={version:'4.3.4-stage1-correction',refresh:()=>{mirrorAll();syncConsolidatedReport()},disable:restore};
 
 
 })();
