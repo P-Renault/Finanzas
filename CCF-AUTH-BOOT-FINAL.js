@@ -382,16 +382,28 @@ async function waitClient(){
 
 async function openApp(){
  /*
-  * B2.31.3 — acceso único:
+  * B2.31.4 — transición post-login sin pantalla blanca:
   * 1) la sesión Supabase ya está validada;
-  * 2) se muestra siempre Resumen;
-  * 3) recién después se inicializa el motor financiero.
+  * 2) la interfaz se hace visible INMEDIATAMENTE;
+  * 3) Resumen queda seleccionado como primera vista;
+  * 4) connect()/refresh() se ejecutan después, sin bloquear el render.
   */
  revealApp();
 
  try{
    localStorage.setItem('cf_active_tab_v2','dashboard');
  }catch(_){ }
+
+ const app=$('app');
+ if(app){
+   app.classList.remove('hidden');
+   app.classList.remove('b230-hidden-app');
+   app.style.removeProperty('display');
+   app.style.removeProperty('visibility');
+   app.removeAttribute('aria-hidden');
+ }
+
+ document.body?.classList.add('ccf-access-authenticated');
 
  document.querySelectorAll('.tab').forEach(section=>{
    section.classList.toggle('hidden',section.id!=='dashboard');
@@ -403,18 +415,29 @@ async function openApp(){
  const gate=$('ccf-auth-gate');
  if(gate) gate.remove();
 
- try{
-   if(typeof window.connect==='function'){
-     await window.connect();
+ /*
+  * No esperamos a connect().
+  * Si la consulta/probe tarda o un módulo financiero falla,
+  * el usuario sigue viendo Resumen en lugar de una pantalla blanca.
+  */
+ setTimeout(()=>{
+   try{
+     if(typeof window.connect==='function'){
+       Promise.resolve(window.connect()).catch(e=>{
+         console.warn('[CCF AUTH] connect',e);
+       });
+     }
+   }catch(e){
+     console.warn('[CCF AUTH] connect',e);
    }
- }catch(e){
-   console.warn('[CCF AUTH] connect',e);
- }
+ },0);
 
  setTimeout(()=>{
    try{
      if(typeof window.refresh==='function'){
-       window.refresh().catch(e=>console.warn('[CCF AUTH] refresh',e));
+       Promise.resolve(window.refresh()).catch(e=>{
+         console.warn('[CCF AUTH] refresh',e);
+       });
      }
    }catch(e){
      console.warn('[CCF AUTH] refresh',e);
