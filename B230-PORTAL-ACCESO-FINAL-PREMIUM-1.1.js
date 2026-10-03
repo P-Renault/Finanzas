@@ -10,8 +10,8 @@ window.__CCF_B230_PREMIUM_11__=true;
 const ID='ccf-b230-final';
 const $=(s,r=document)=>r.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const IMG_HERO_DESKTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-desktop.jpg';
-const IMG_HERO_MOBILE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-mobile.jpg';
+const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-laptop.jpg';
+const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-phone.jpg';
 const IMG_AUDIENCES='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/audiences.jpg';
 const IMG_RESUMEN='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/01-resumen.png';
 const IMG_CALENDARIO='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/02-calendario.png';
@@ -177,26 +177,29 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #${ID} .section{padding:48px 0}.grid{grid-template-columns:1fr;gap:10px}.feature{min-height:auto;padding:19px}
 #${ID} .cta{padding:34px 18px;margin-bottom:45px}.cta .btn{width:100%}}
 
-/* B230 PREMIUM 1.1 — REAL MODULE GALLERY + LIGHTBOX */
-#ccf-b230-final .moduleGallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:30px}
-#ccf-b230-final .moduleCard{position:relative;overflow:hidden;border:1px solid rgba(91,216,255,.14);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018));box-shadow:0 18px 48px rgba(0,0,0,.18);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
-#ccf-b230-final .moduleCard:hover{transform:translateY(-6px);border-color:rgba(91,216,255,.42);box-shadow:0 25px 60px rgba(0,0,0,.3)}
-#ccf-b230-final .moduleImageButton{display:block;width:100%;padding:0;border:0;background:#eef3f7;cursor:zoom-in;position:relative;overflow:hidden}
-#ccf-b230-final .moduleImageButton img{display:block;width:100%;height:270px;object-fit:cover;object-position:top center;transition:transform .45s ease,filter .45s ease}
-#ccf-b230-final .moduleImageButton:hover img{transform:scale(1.025);filter:brightness(1.04)}
-#ccf-b230-final .zoomHint{position:absolute;right:12px;top:12px;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;background:rgba(4,15,27,.82);border:1px solid rgba(255,255,255,.16);font-size:18px;backdrop-filter:blur(10px)}
-#ccf-b230-final .moduleInfo{padding:18px 18px 20px}.moduleInfo b{display:block;font-size:17px;color:#edf6ff}.moduleInfo p{margin:7px 0 0;color:#8197ad;font-size:12px;line-height:1.6}
-#ccf-b230-final .moduleTag{display:inline-flex;margin-bottom:10px;padding:5px 8px;border-radius:999px;color:#70d9ff;background:rgba(43,178,225,.07);border:1px solid rgba(80,210,255,.15);font-size:8px;letter-spacing:.12em;font-weight:900;text-transform:uppercase}
-#ccf-b230-final .realHero{position:relative;overflow:hidden;padding:10px;border-radius:25px;border:1px solid rgba(255,255,255,.13);background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.025));box-shadow:0 32px 90px rgba(0,0,0,.38);transform:perspective(1100px) rotateY(-5deg) rotateX(2deg);animation:b230in .8s ease both}
-#ccf-b230-final .realHero picture{display:block}
-#ccf-b230-final .realHero img{display:block;width:100%;height:auto;border-radius:18px;background:#fff}
-#ccf-b230-final .realHeroBadge{position:absolute;left:24px;bottom:24px;padding:9px 12px;border-radius:999px;background:rgba(4,15,27,.86);border:1px solid rgba(91,216,255,.28);color:#dff8ff;font-size:10px;font-weight:900;backdrop-filter:blur(10px)}
+/* B230 PREMIUM 1.1 — REAL MODULE GALLERY + LIGHTBOX · REFINED PRESENTATION */
+#ccf-b230-final .moduleGallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:28px;align-items:start}
+#ccf-b230-final .moduleCard{position:relative;overflow:hidden;border:1px solid rgba(91,216,255,.12);border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));box-shadow:0 12px 34px rgba(0,0,0,.16);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+#ccf-b230-final .moduleCard:hover{transform:translateY(-3px);border-color:rgba(91,216,255,.30);box-shadow:0 18px 42px rgba(0,0,0,.23)}
+#ccf-b230-final .moduleImageButton{display:flex;align-items:center;justify-content:center;width:100%;height:164px;padding:8px;border:0;background:linear-gradient(180deg,#f4f7fa,#e8eef3);cursor:zoom-in;position:relative;overflow:hidden}
+#ccf-b230-final .moduleImageButton::after{content:"";position:absolute;inset:8px;border:1px solid rgba(5,24,40,.10);border-radius:10px;pointer-events:none}
+#ccf-b230-final .moduleImageButton img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:9px;transition:transform .35s ease,filter .35s ease}
+#ccf-b230-final .moduleImageButton:hover img{transform:scale(1.018);filter:brightness(1.035)}
+#ccf-b230-final .zoomHint{position:absolute;right:15px;top:15px;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;background:rgba(4,15,27,.76);border:1px solid rgba(255,255,255,.15);font-size:15px;backdrop-filter:blur(9px);z-index:2;opacity:.94}
+#ccf-b230-final .moduleInfo{padding:13px 15px 15px}.moduleInfo b{display:block;font-size:15px;color:#edf6ff}.moduleInfo p{margin:5px 0 0;color:#8197ad;font-size:10px;line-height:1.5}
+#ccf-b230-final .moduleTag{display:inline-flex;margin-bottom:7px;padding:4px 7px;border-radius:999px;color:#70d9ff;background:rgba(43,178,225,.055);border:1px solid rgba(80,210,255,.12);font-size:7px;letter-spacing:.11em;font-weight:900;text-transform:uppercase}
+#ccf-b230-final .heroVisual{position:relative;min-height:390px;display:flex;align-items:center;justify-content:center;padding:8px;border-radius:26px;border:1px solid rgba(255,255,255,.13);background:radial-gradient(circle at 78% 28%,rgba(48,191,255,.14),transparent 34%),linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));box-shadow:0 32px 90px rgba(0,0,0,.38);overflow:hidden;transform:perspective(1100px) rotateY(-5deg) rotateX(2deg);animation:b230in .8s ease both}
+#ccf-b230-final .heroLaptop{position:relative;width:100%;line-height:0;border-radius:20px;overflow:hidden}
+#ccf-b230-final .heroLaptop img{display:block;width:100%;height:auto;border-radius:20px;background:#fff}
+#ccf-b230-final .heroPhone{position:absolute;z-index:3;right:3.5%;bottom:2.5%;width:27%;line-height:0;border-radius:28px;overflow:hidden;filter:drop-shadow(0 24px 35px rgba(0,0,0,.48));transform:rotate(1.5deg)}
+#ccf-b230-final .heroPhone img{display:block;width:100%;height:auto;border-radius:28px}
+#ccf-b230-final .heroDeviceBadge{position:absolute;z-index:5;left:18px;bottom:18px;padding:8px 11px;border-radius:999px;background:rgba(4,15,27,.88);border:1px solid rgba(91,216,255,.28);color:#dff8ff;font-size:9px;font-weight:900;backdrop-filter:blur(10px)}
 #ccf-b230-final .audienceVisual{margin-top:26px;padding:10px;border-radius:20px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);overflow:hidden}
 #ccf-b230-final .audienceVisual img{display:block;width:100%;height:auto;border-radius:14px}
 #ccf-b230-final .lightbox{position:fixed;inset:0;z-index:2147483646;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(1,7,14,.88);backdrop-filter:blur(14px)}
 #ccf-b230-final .lightbox.isOpen{display:flex;animation:b230LbIn .2s ease both}
-#ccf-b230-final .lightboxPanel{position:relative;max-width:min(1180px,96vw);max-height:94vh;display:flex;flex-direction:column;align-items:center;gap:10px}
-#ccf-b230-final .lightboxPanel img{display:block;max-width:96vw;max-height:86vh;width:auto;height:auto;object-fit:contain;border-radius:18px;box-shadow:0 35px 100px rgba(0,0,0,.6);background:#fff}
+#ccf-b230-final .lightboxPanel{position:relative;max-width:min(1320px,96vw);max-height:94vh;display:flex;flex-direction:column;align-items:center;gap:10px}
+#ccf-b230-final .lightboxPanel img{display:block;max-width:96vw;max-height:86vh;width:auto;height:auto;object-fit:contain;border-radius:14px;box-shadow:0 35px 100px rgba(0,0,0,.6);background:#fff}
 #ccf-b230-final .lightboxClose{position:absolute;right:-8px;top:-48px;width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#0b1c2e;color:#fff;cursor:pointer;font-size:24px;line-height:1}
 #ccf-b230-final .lightboxTitle{color:#fff;font-size:14px;font-weight:900;text-align:center}
 #ccf-b230-final .lightboxCaption{color:#9db0c4;font-size:11px;text-align:center}
@@ -212,8 +215,10 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #ccf-b230-final .dynamicCta h2{font-size:clamp(26px,3.8vw,40px);line-height:1.05;margin:7px 0 10px}.dynamicCta p{margin:0;color:#91a7bb;font-size:13px;line-height:1.65;max-width:700px}
 #ccf-b230-final .dynamicCta .btn{white-space:nowrap;min-width:205px}
 @keyframes b230LbIn{from{opacity:0}to{opacity:1}}
-@media(max-width:900px){#ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}#ccf-b230-final .flowGrid{grid-template-columns:repeat(3,1fr)}#ccf-b230-final .audienceGrid{grid-template-columns:repeat(3,1fr)}#ccf-b230-final .faqGrid{grid-template-columns:1fr}#ccf-b230-final .dynamicCta{grid-template-columns:1fr}}
-@media(max-width:640px){#ccf-b230-final .realHero{transform:none}.realHeroBadge{left:17px!important;bottom:17px!important}.moduleGallery{grid-template-columns:1fr!important}.moduleImageButton img{height:330px}.flowGrid{grid-template-columns:1fr 1fr!important}.audienceGrid{grid-template-columns:1fr 1fr!important}.lightbox{padding:12px!important}.lightboxPanel img{max-width:96vw;max-height:80vh}.lightboxClose{right:0!important;top:-48px!important}.dynamicCta{padding:28px 20px!important}.dynamicCta .btn{width:100%}}
+@media(max-width:900px){#ccf-b230-final .moduleGallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}#ccf-b230-final .moduleImageButton{height:138px;padding:7px}#ccf-b230-final .moduleImageButton::after{inset:7px}#ccf-b230-final .moduleInfo{padding:11px 12px 13px}#ccf-b230-final .moduleInfo b{font-size:13px}#ccf-b230-final .moduleInfo p{font-size:9px}#ccf-b230-final .flowGrid{grid-template-columns:repeat(3,1fr)}#ccf-b230-final .audienceGrid{grid-template-columns:repeat(3,1fr)}#ccf-b230-final .faqGrid{grid-template-columns:1fr}#ccf-b230-final .dynamicCta{grid-template-columns:1fr}}
+@media(max-width:480px){#ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#ccf-b230-final .moduleImageButton{height:132px}#ccf-b230-final .zoomHint{right:11px;top:11px;width:28px;height:28px;font-size:14px}#ccf-b230-final .flowGrid{grid-template-columns:1fr 1fr!important}.audienceGrid{grid-template-columns:1fr 1fr!important}}
+@media(max-width:360px){#ccf-b230-final .moduleGallery{grid-template-columns:1fr}#ccf-b230-final .moduleImageButton{height:170px}}
+@media(max-width:640px){#ccf-b230-final .heroVisual{transform:none;min-height:300px;padding:6px;border-radius:21px}.heroLaptop{border-radius:16px!important}.heroLaptop img{border-radius:16px!important}.heroPhone{right:2.5%!important;bottom:1.8%!important;width:29%!important;border-radius:22px!important}.heroPhone img{border-radius:22px!important}.heroDeviceBadge{left:11px!important;bottom:11px!important;font-size:8px!important;padding:7px 9px!important}.lightbox{padding:12px!important}.lightboxPanel img{max-width:96vw;max-height:80vh}.lightboxClose{right:0!important;top:-48px!important}.dynamicCta{padding:28px 20px!important}.dynamicCta .btn{width:100%}}
 
 @media(prefers-reduced-motion:reduce){#${ID} *,#${ID} *:before,#${ID} *:after{animation:none!important;transition:none!important}}
 `;
@@ -240,7 +245,11 @@ function html(){
  <p>Registra movimientos, organiza compromisos, controla deudas, proyecta tu liquidez y toma decisiones con una visión financiera integrada desde un solo lugar.</p>
  <div class="heroCta"><button class="btn primary" data-b230-open="login">Entrar al sistema →</button><button class="btn" data-b230-open="register">Crear mi cuenta</button></div>
  <div class="proof"><span><i></i>Datos centralizados</span><span><i></i>Proyección financiera</span><span><i></i>Experiencia móvil</span></div></div>
- <div class="realHero"><picture><source media="(max-width:640px)" srcset="${IMG_HERO_MOBILE}"><img src="${IMG_HERO_DESKTOP}" alt="Centro de Control Financiero en computador y teléfono, vista de resumen financiero"></picture><span class="realHeroBadge">Vista real del sistema · Resumen financiero</span></div></section>
+ <div class="heroVisual" aria-label="Vista real del Centro de Control Financiero en computador y teléfono">
+  <div class="heroLaptop"><img src="${IMG_HERO_LAPTOP}" alt="Vista completa del Centro de Control Financiero en computador"></div>
+  <div class="heroPhone"><img src="${IMG_HERO_PHONE}" alt="Vista completa del Centro de Control Financiero en celular"></div>
+  <span class="heroDeviceBadge">Vista real del sistema · Escritorio + móvil</span>
+</div></section>
  <section class="strip"><div class="stripItem"><i class="stripDot"></i><div><strong>Registro</strong><span>Información financiera ordenada</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Análisis</strong><span>Lectura de liquidez y obligaciones</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Anticipación</strong><span>Proyección para decidir con datos</span></div></div></section>
  <section class="section"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales.</h2><p>Herramientas conectadas para comprender tu presente, ordenar tu información y proyectar lo que viene. Pulsa cualquier captura para verla con mayor detalle.</p></div>
  <div class="moduleGallery"><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="resumen" aria-label="Ampliar Resumen"><img src="${IMG_RESUMEN}" alt="Resumen — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Resumen</b><p>Panel financiero con liquidez, ingresos, gastos y resultado.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="calendario" aria-label="Ampliar Calendario"><img src="${IMG_CALENDARIO}" alt="Calendario — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Calendario</b><p>Visualiza compromisos, pagos y eventos por fecha.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="movimientos" aria-label="Ampliar Movimientos"><img src="${IMG_MOVIMIENTOS}" alt="Movimientos — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Movimientos</b><p>Registra y consulta ingresos y gastos de forma ordenada.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="presupuesto" aria-label="Ampliar Presupuesto"><img src="${IMG_PRESUPUESTO}" alt="Presupuesto — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Presupuesto</b><p>Compara planificación, ejecución y compromisos.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="deudas" aria-label="Ampliar Deudas"><img src="${IMG_DEUDAS}" alt="Deudas — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Deudas</b><p>Controla saldos, cuotas, vencimientos y obligaciones.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="planificacion" aria-label="Ampliar Planificación"><img src="${IMG_PLANIFICACION}" alt="Planificación — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Planificación</b><p>Anticipa escenarios financieros y necesidades futuras.</p></div></article></div></section>
