@@ -1607,21 +1607,28 @@ function syncConsolidatedReport(){
 
 function adaptMobileFlowCandles(){
  const host=$('[data-flow]',root);if(!host||!mobile())return false;
- /*
-  * B232.34 es la ÚNICA fuente autorizada del gráfico móvil "Flujo del mes".
-  * Nunca usamos #chart-flow de B232.35/ExecutiveDashboard: ese gráfico puede
-  * ser reconstruido después y no representa la comparativa que exige la vista.
-  */
  const source=by('b234Chart')?.querySelector('svg');
  const report=by('b234-report');
  if(!report||!source)return false;
- const lines=[...source.querySelectorAll('line')].filter(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return stroke==='#16a34a'||stroke==='#ef4444'||stroke==='rgb(22, 163, 74)'||stroke==='rgb(239, 68, 68)';
- });
- if(!lines.length)return false;
 
+ /*
+  * Fuente única: B232.34 / #b234Chart.
+  * B232.34 renderDaily() dibuja dos líneas verticales por día:
+  *   izquierda = ingreso
+  *   derecha   = egreso
+  * Incluso si otro CSS/motor cambia temporalmente el color a negro,
+  * la geometría conserva esa separación. Por eso no dependemos del
+  * atributo stroke para determinar el tipo de movimiento.
+  */
  const W=900,H=300,L=52,R=18,T=22,B=42,base=H-B,days=30,step=(W-L-R)/(days-1);
+ const verticals=[...source.querySelectorAll('line')].filter(l=>{
+   const x1=Number(l.getAttribute('x1')),x2=Number(l.getAttribute('x2'));
+   const y1=Number(l.getAttribute('y1')),y2=Number(l.getAttribute('y2'));
+   return Number.isFinite(x1)&&Number.isFinite(x2)&&Number.isFinite(y1)&&Number.isFinite(y2)
+     &&Math.abs(x1-x2)<0.01&&y2>y1+2;
+ });
+ if(!verticals.length)return false;
+
  const NS='http://www.w3.org/2000/svg';
  const svg=document.createElementNS(NS,'svg');
  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
@@ -1630,18 +1637,22 @@ function adaptMobileFlowCandles(){
  svg.setAttribute('role','img');
  svg.setAttribute('data-ccf-flow-chart','1');
  svg.setAttribute('aria-label','Flujo mensual: velas verdes de ingresos y velas rojas de egresos');
+ svg.style.display='block';
+ svg.style.width='100%';
+ svg.style.height='100%';
 
- const grid=[...source.querySelectorAll('line')].filter(l=>{
+ /* Cuadrícula y escala del gráfico original. */
+ [...source.querySelectorAll('line')].filter(l=>{
+   const y1=l.getAttribute('y1'),y2=l.getAttribute('y2');
    const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   return stroke==='#e5e7eb';
- });
- grid.forEach(l=>svg.appendChild(l.cloneNode(true)));
-
+   return y1===y2 && (stroke==='#e5e7eb'||stroke==='#e5e7ebff'||stroke==='rgb(229, 231, 235)');
+ }).forEach(l=>svg.appendChild(l.cloneNode(true)));
  [...source.querySelectorAll('text')].forEach(t=>{
-   const clone=t.cloneNode(true);
    const txt=String(t.textContent||'').trim();
    if(/^\d{2}$/.test(txt))return;
-   svg.appendChild(clone);
+   const c=t.cloneNode(true);
+   c.removeAttribute('id');
+   svg.appendChild(c);
  });
 
  const axis=document.createElementNS(NS,'g');
@@ -1650,50 +1661,57 @@ function adaptMobileFlowCandles(){
    if(d===1||d%3===0||d===days){
      const x=L+(d-1)*step;
      const t=document.createElementNS(NS,'text');
-     t.setAttribute('x',x);
-     t.setAttribute('y',H-12);
+     t.setAttribute('x',x);t.setAttribute('y',H-15);
      t.setAttribute('text-anchor',d===1?'start':d===days?'end':'middle');
-     t.setAttribute('class','chart-axis');
+     t.setAttribute('fill','#64748b');t.setAttribute('font-size','10');
      t.textContent=String(d).padStart(2,'0');
      axis.appendChild(t);
    }
  }
  svg.appendChild(axis);
 
- const candleData=[];
- lines.forEach(l=>{
-   const stroke=(l.getAttribute('stroke')||'').toLowerCase();
-   const green=stroke==='#16a34a'||stroke==='rgb(22, 163, 74)';
-   const x=Number(l.getAttribute('x1'));
-   const y=Number(l.getAttribute('y1'));
-   if(!Number.isFinite(x)||!Number.isFinite(y))return;
-   const baseX=x+(green?4:-4);
-   const day=Math.round((baseX-L)/step)+1;
+ const candles=[];
+ verticals.forEach(l=>{
+   const x=Number(l.getAttribute('x1')),y=Number(l.getAttribute('y1'));
+   const day=Math.round((x-L)/step)+1;
    if(day<1||day>days)return;
-   const amountHeight=Math.max(2,base-y);
-   candleData.push({day,green,y,height:amountHeight});
+   const center=L+(day-1)*step;
+   /* B232.34: x-4 = ingreso; x+4 = egreso. */
+   const green=x<center;
+   const height=Math.max(2,base-y);
+   candles.push({day,green,y,height});
  });
 
- candleData.forEach(c=>{
+ /* Evita duplicar elementos si un motor externo dibuja más de una vez. */
+ const byKey=new Map();
+ candles.forEach(c=>byKey.set(`${c.day}-${c.green?'in':'out'}`,c));
+ [...byKey.values()].forEach(c=>{
    const x=L+(c.day-1)*step+(c.green?-5:5);
-   const bodyH=Math.max(9,Math.min(18,c.height*0.12));
-   const bodyY=Math.max(T,c.y);
    const wick=document.createElementNS(NS,'line');
    wick.setAttribute('x1',x);wick.setAttribute('x2',x);
-   wick.setAttribute('y1',Math.max(T,bodyY-7));wick.setAttribute('y2',base);
+   wick.setAttribute('y1',Math.max(T,c.y-7));wick.setAttribute('y2',base);
+   wick.setAttribute('stroke',c.green?'#16a34a':'#ef4444');
+   wick.setAttribute('stroke-width','2.5');
+   wick.setAttribute('stroke-linecap','round');
    wick.setAttribute('class',c.green?'mobile-flow-income-wick':'mobile-flow-expense-wick');
    svg.appendChild(wick);
+
    const body=document.createElementNS(NS,'rect');
-   body.setAttribute('x',x-5);body.setAttribute('y',bodyY);
+   const bodyH=Math.max(10,Math.min(18,c.height*0.12));
+   body.setAttribute('x',x-5);body.setAttribute('y',Math.max(T,c.y));
    body.setAttribute('width','10');body.setAttribute('height',bodyH);
    body.setAttribute('rx','2');
+   body.setAttribute('fill',c.green?'#16a34a':'#ef4444');
+   body.setAttribute('stroke',c.green?'#15803d':'#dc2626');
+   body.setAttribute('stroke-width','1.5');
    body.setAttribute('class',c.green?'mobile-flow-income':'mobile-flow-expense');
    svg.appendChild(body);
  });
 
  const title=document.createElementNS(NS,'text');
  title.setAttribute('x',L);title.setAttribute('y','17');
- title.setAttribute('class','chart-title');title.textContent='Ingresos vs egresos';
+ title.setAttribute('fill','#1f2937');title.setAttribute('font-size','10');
+ title.setAttribute('font-weight','700');title.textContent='Ingresos vs egresos';
  svg.appendChild(title);
 
  flowRenderLock=true;
@@ -1742,7 +1760,7 @@ function refreshNativeSummaryData(){
 }
 function scheduleMobileFlowAdapt(){
  if(!mobile())return;
- [450,1000,1800,3000].forEach(ms=>setTimeout(()=>{
+ [350,700,1200,1800,2600,3800,5200].forEach(ms=>setTimeout(()=>{
    refreshNativeSummaryData();
    adaptMobileFlowCandles();
  },ms));
