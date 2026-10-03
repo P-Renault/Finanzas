@@ -365,23 +365,48 @@ async function waitClient(){
 }
 
 async function openApp(){
+ /*
+  * B2.31.3 — el acceso no debe quedar bloqueado esperando
+  * conexiones, probes o módulos financieros.
+  * Primero mostramos la aplicación; después dejamos que los
+  * motores financieros se inicialicen en segundo plano.
+  */
+ revealApp();
+
+ const gate=$('ccf-auth-gate');
+ if(gate) gate.remove();
+
+ const app=$('app');
+ if(app){
+   app.classList.remove('hidden','b230-hidden-app');
+   app.style.removeProperty('display');
+   app.removeAttribute('aria-hidden');
+ }
+
  try{
    if(typeof window.connect==='function'){
-     await window.connect();
+     window.connect().catch(e=>console.warn('[CCF AUTH] connect',e));
    }
  }catch(e){
    console.warn('[CCF AUTH] connect',e);
  }
 
- revealApp();
-
- try{
-   if(typeof window.refresh==='function'){
-     await window.refresh();
+ /*
+  * Un segundo intento de refresco permite que los módulos que se
+  * cargan dinámicamente encuentren el cliente autenticado.
+  * Nunca bloquea la visualización de la aplicación.
+  */
+ setTimeout(()=>{
+   try{
+     if(typeof window.refresh==='function'){
+       window.refresh().catch(e=>console.warn('[CCF AUTH] refresh',e));
+     }
+   }catch(e){
+     console.warn('[CCF AUTH] refresh',e);
    }
- }catch(e){
-   console.warn('[CCF AUTH] refresh',e);
- }
+ },250);
+
+ return true;
 }
 
 async function submitAuth(){
@@ -422,6 +447,9 @@ async function submitAuth(){
 
      if(data?.session){
        await openApp();
+       setTimeout(()=>revealApp(),0);
+       setTimeout(()=>revealApp(),500);
+       setTimeout(()=>revealApp(),1500);
      }else{
        status(
          'Cuenta creada. Revisa tu correo para confirmar la cuenta y luego inicia sesión.'
@@ -443,6 +471,9 @@ async function submitAuth(){
      }
 
      await openApp();
+     setTimeout(()=>revealApp(),0);
+     setTimeout(()=>revealApp(),500);
+     setTimeout(()=>revealApp(),1500);
    }
 
  }catch(e){
@@ -490,28 +521,41 @@ function installForms(){
  }
 }
 
-/* ACCESS FLOW FIX: hide technical configuration before authentication resolves. */
-hideLegacy();
-
 async function boot(){
  hideLegacy();
+ portal();
  installForms();
+
+ status('Conectando con el servicio de acceso…');
+
  try{
-  await waitClient();
-  const {data,error}=await client.auth.getSession();
-  if(error)throw error;
-  if(data?.session){
-   await openApp();
-   return;
-  }
-  portal();
-  installForms();
-  status('Sin sesión activa. Inicia sesión o crea una cuenta.');
+   await waitClient();
+
+   status('Verificando sesión…');
+
+   const {data,error}=await client.auth.getSession();
+
+   if(error)throw error;
+
+   if(data?.session){
+     await openApp();
+     setTimeout(()=>revealApp(),0);
+     setTimeout(()=>revealApp(),500);
+     setTimeout(()=>revealApp(),1500);
+   }else{
+     status(
+       'Sin sesión activa. Inicia sesión o crea una cuenta.'
+     );
+   }
+
  }catch(e){
-  console.error('[CCF B2.30.16] boot',e);
-  portal();
-  installForms();
-  status(e?.message||'No fue posible inicializar el acceso.',true);
+   console.error('[CCF AUTH] boot',e);
+
+   status(
+     e?.message||
+     'No fue posible inicializar el acceso.',
+     true
+   );
  }
 }
 
