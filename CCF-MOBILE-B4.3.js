@@ -1985,24 +1985,157 @@ function summary(){
  mirrorAll();scheduleReportSync();scheduleSummaryHydration();
 }
 
+function installCCFHeaderLogo(){
+ const id='ccf-header-logo-style';
+ if(!document.getElementById(id)){
+  const style=document.createElement('style');
+  style.id=id;
+  style.textContent=`
+   .topbar .ccf-desktop-logo{
+     width:58px;height:58px;min-width:58px;display:block;object-fit:contain;
+     border-radius:14px;flex:0 0 58px;
+   }
+   .topbar .ccf-desktop-brand{
+     display:flex;align-items:center;gap:13px;min-width:0;
+   }
+   #ccf-mobile-b43 .b434-header .b434-logo{
+     background:transparent!important;border:0!important;padding:0!important;
+     box-shadow:none!important;overflow:hidden!important;border-radius:16px!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-logo img{
+     display:block;width:100%;height:100%;object-fit:contain;border-radius:16px;
+   }
+  `;
+  document.head.appendChild(style);
+ }
+ const top=document.querySelector('.topbar');
+ if(top && !top.querySelector('.ccf-desktop-logo')){
+   const brand=top.querySelector(':scope > div');
+   if(brand){
+     brand.classList.add('ccf-desktop-brand');
+     const img=document.createElement('img');
+     img.className='ccf-desktop-logo';
+     img.src='CCF-LOGO-OFICIAL.png';
+     img.alt='CCF · Centro de Control Financiero';
+     brand.insertBefore(img,brand.firstChild);
+   }
+ }
+}
 function installUserManualMobileStyle(){
  const id='ccf-mobile-user-manual-style';
  if(document.getElementById(id))return;
  const style=document.createElement('style');
  style.id=id;
  style.textContent=`
-   #ccf-mobile-b43 .b434-manual{
-     display:inline-flex;
-     align-items:center;
-     justify-content:center;
-     gap:7px;
-     min-width:108px;
-     height:40px;
-     padding:0 12px;
+   /* CCF MOBILE B4.3 · CABECERA PRINCIPAL · REORDENACIÓN MÓVIL
+      Mantiene el contenido y las acciones existentes, pero reserva más
+      espacio vertical para que el nombre y la descripción del sistema
+      permanezcan completamente legibles. El manual queda debajo de Salir. */
+   #ccf-mobile-b43 .b434-header{
+     min-height:126px!important;
+     height:126px!important;
+     padding:12px 12px!important;
+     box-sizing:border-box!important;
+     display:grid!important;
+     grid-template-columns:68px minmax(0,1fr) 30px 48px 82px!important;
+     grid-template-rows:44px 40px!important;
+     column-gap:7px!important;
+     row-gap:5px!important;
+     align-items:center!important;
+     overflow:visible!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-logo{
+     grid-column:1!important;
+     grid-row:1 / span 2!important;
+     width:64px!important;
+     height:64px!important;
+     min-width:64px!important;
+     min-height:64px!important;
+     align-self:center!important;
+     background:transparent!important;
+     border:0!important;
+     padding:0!important;
+     box-shadow:none!important;
+     overflow:hidden!important;
+     border-radius:16px!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-logo img{
+     display:block!important;
+     width:100%!important;
+     height:100%!important;
+     object-fit:contain!important;
+     border-radius:16px!important;
+   }
+   #ccf-mobile-b43 .b434-header>div{
+     grid-column:2!important;
+     grid-row:1 / span 2!important;
+     min-width:0!important;
+     align-self:center!important;
+     overflow:visible!important;
+   }
+   #ccf-mobile-b43 .b434-header>div strong{
+     display:block!important;
+     max-width:none!important;
+     white-space:normal!important;
+     overflow:visible!important;
+     text-overflow:clip!important;
+     font-size:15px!important;
+     line-height:1.12!important;
+     letter-spacing:-.015em!important;
+   }
+   #ccf-mobile-b43 .b434-header>div small{
+     display:block!important;
+     max-width:none!important;
+     white-space:normal!important;
+     overflow:visible!important;
+     text-overflow:clip!important;
+     margin-top:5px!important;
+     font-size:10px!important;
+     line-height:1.25!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-bell{
+     grid-column:3!important;
+     grid-row:1!important;
+     width:30px!important;
+     height:30px!important;
+     min-width:30px!important;
+     padding:0!important;
+     align-self:center!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-avatar{
+     grid-column:4!important;
+     grid-row:1!important;
+     width:46px!important;
+     height:46px!important;
+     min-width:46px!important;
+     min-height:46px!important;
+     align-self:center!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-mobile-logout{
+     grid-column:5!important;
+     grid-row:1!important;
+     width:82px!important;
+     height:38px!important;
+     min-width:82px!important;
+     padding:0 8px!important;
+     align-self:center!important;
+   }
+   #ccf-mobile-b43 .b434-header .b434-manual{
+     grid-column:5!important;
+     grid-row:2!important;
+     justify-self:center!important;
+     display:inline-flex!important;
+     align-items:center!important;
+     justify-content:center!important;
+     gap:4px!important;
+     width:78px!important;
+     min-width:78px!important;
+     height:28px!important;
+     padding:0 6px!important;
      border:1px solid rgba(255,255,255,.28);
      border-radius:12px;
-     background:rgba(255,255,255,.12);
-     color:#fff;
+     background:#f59e0b;
+     color:#102a43;
      text-decoration:none;
      font-size:11px;
      line-height:1;
@@ -2037,45 +2170,41 @@ function installUserManualMobileStyle(){
      font-weight:850;
    }
    #ccf-mobile-b43 .b434-manual:hover{
-     background:rgba(255,255,255,.18);
-     border-color:rgba(255,255,255,.42);
+     background:#fbbf24;
+     border-color:#fde68a;
    }
    #ccf-mobile-b43 .b434-manual:active{
      transform:scale(.97);
    }
-   @media(max-width:430px){
-     #ccf-mobile-b43 .b434-manual{
-       min-width:94px;
-       height:38px;
-       padding:0 9px;
-       gap:6px;
-     }
-     #ccf-mobile-b43 .b434-manual small{
-       font-size:10px;
-     }
+   #ccf-mobile-b43 .b434-manual:focus-visible{
+     outline:3px solid rgba(251,191,36,.45);
+     outline-offset:2px;
    }
    @media(max-width:380px){
-     #ccf-mobile-b43 .b434-manual{
-       min-width:78px;
-       width:78px;
-       padding:0 7px;
-       gap:5px;
+     #ccf-mobile-b43 .b434-header{
+       grid-template-columns:60px minmax(0,1fr) 26px 44px 76px!important;
+       column-gap:5px!important;
+       padding:10px 9px!important;
      }
-     #ccf-mobile-b43 .b434-manual small{
-       font-size:9px;
+     #ccf-mobile-b43 .b434-header .b434-logo{
+       width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
      }
-     #ccf-mobile-b43 .b434-manual svg{
-       width:17px;
-       height:17px;
-     }
+     #ccf-mobile-b43 .b434-header>div strong{font-size:14px!important}
+     #ccf-mobile-b43 .b434-header>div small{font-size:9px!important}
+     #ccf-mobile-b43 .b434-header .b434-avatar{width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important}
+     #ccf-mobile-b43 .b434-header .b434-mobile-logout{width:76px!important;min-width:76px!important}
+     #ccf-mobile-b43 .b434-header .b434-manual{width:72px!important;min-width:72px!important}
+     #ccf-mobile-b43 .b434-manual small{font-size:8px!important}
+     #ccf-mobile-b43 .b434-manual svg{width:15px!important;height:15px!important}
    }
  `;
  document.head.appendChild(style);
 }
 function build(){
  if(built||!ready())return;built=true;root=document.createElement('div');root.id='ccf-mobile-b43';
+ installCCFHeaderLogo();
  installUserManualMobileStyle();
- root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home>CCF</button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><a class="b434-manual" href="Manual_Usabilidad_CCF_Somos_Software.pdf" download="Manual_Usabilidad_CCF_Somos_Software.pdf" aria-label="Descargar manual de usuario" title="Descargar manual de usuario"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg></span><small>Descargar manual</small></a><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
+ root.innerHTML=`<header class="b434-header"><button class="b434-logo" data-home aria-label="Inicio"><img src="CCF-LOGO-OFICIAL.png" alt="CCF · Centro de Control Financiero"></button><div><strong>Centro de Control Financiero</strong><small>Tu vida financiera en un solo lugar</small></div><a class="b434-manual" href="Manual_Usabilidad_CCF_Somos_Software.pdf" download="Manual_Usabilidad_CCF_Somos_Software.pdf" aria-label="Descargar manual de usuario" title="Descargar manual de usuario"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v11"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg></span><small>Manual</small></a><button class="b434-bell" aria-label="Notificaciones">♧</button><button class="b434-avatar" data-profile aria-label="Perfil">P</button><button class="b434-mobile-logout" data-mobile-logout type="button" aria-label="Salir">Salir</button></header><main data-content></main><section class="b434-module-host" data-module-host aria-live="polite"></section><nav class="b434-bottom">${PRIMARY.map(x=>`<button data-nav="${x[0]}"><span>${x[2]}</span><small>${x[1]}</small></button>`).join('')}<button data-more><span>☰</span><small>Más</small></button></nav>
  <div class="b434-overlay" data-overlay="more"><div class="b434-backdrop" data-close></div><section><header><strong>Todos los módulos</strong><button data-close>×</button></header><div class="b434-module-grid" data-more-grid></div></section></div>
  <div class="b434-overlay" data-overlay="profile"><div class="b434-backdrop" data-close></div><section><header><strong>Perfil</strong><button data-close>×</button></header><div class="b434-profile">Cuenta autenticada en Centro de Control Financiero.</div><button class="b434-danger" data-logout>Cerrar sesión</button></section></div>
  <div class="b434-overlay" data-overlay="form"><div class="b434-backdrop" data-close></div><section><header><strong data-form-title>Registrar movimiento</strong><button data-close>×</button></header><div data-form-slot></div></section></div>
@@ -2089,7 +2218,12 @@ function observe(){
  observer=new MutationObserver(()=>{mirrorAll();syncConsolidatedReport()});ids.map(by).filter(Boolean).forEach(n=>observer.observe(n,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style','class']}));
 }
 function restore(){clearTimeout(reportTimer);flowSourceObserver?.disconnect();flowHostObserver?.disconnect();flowSourceObserver=null;flowHostObserver=null;observer?.disconnect();observer=null;calendarObserver?.disconnect();calendarObserver=null;calendarAdaptScheduled=false;cleanupDebtMobileBehavior();closeAll();restoreActiveModule();restoreReal();root?.remove();root=null;built=false;document.body.classList.remove('b434-lock')}
-function boot(){if(!mobile()){restore();return}if(!ready()){if(built)restore();return}if(!built){build();observe()}}
+function boot(){
+ installCCFHeaderLogo();
+ if(!mobile()){restore();return}
+ if(!ready()){if(built)restore();return}
+ if(!built){build();observe()}
+}
 /* CCF MOBILE B4.3.10 · POST-AUTH BOOT FIX
    El flujo de autenticación revela #app y emite ccf:app-ready.
    El shell móvil se monta inmediatamente en ese momento, sin depender
