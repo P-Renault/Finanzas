@@ -28,7 +28,22 @@ function moveReal(id,host){
 }
 function restoreReal(){for(const x of moved.slice().reverse()){delete x.el.dataset.b434Moved;if(x.marker.parentNode)x.marker.parentNode.insertBefore(x.el,x.marker.nextSibling);x.marker.remove()}moved=[]}
 function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
-function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));by('ccf-profile-overlay')?.classList.remove('ccf-open');document.body.classList.remove('b434-lock')}
+/* CCF MOBILE B4.3.10 · RESTAURAR RESUMEN INICIAL */
+function ensureDashboardSummary(){
+ if(!root||!mobile()||!ready())return;
+ const content=$('[data-content]',root), host=moduleHost();
+ if(!content||activeModule)return;
+ content.classList.remove('b434-view-hidden');
+ host?.classList.remove('open');
+ if(!content.children.length)summary();
+ mirrorAll();
+}
+function scheduleDashboardSummaryRestore(){
+ [0,80,250,600,1200].forEach(ms=>setTimeout(()=>{
+   if(root&&mobile()&&!activeModule)ensureDashboardSummary();
+ },ms));
+}
+function closeAll(){$$('.b434-overlay.open',root).forEach(x=>x.classList.remove('open'));by('ccf-profile-overlay')?.classList.remove('ccf-open');document.body.classList.remove('b434-lock');scheduleDashboardSummaryRestore()}
 function notice(name){const o=$('.b434-overlay[data-overlay="notice"]',root);if(!o)return;o.querySelector('[data-notice]').textContent=name;o.classList.add('open');document.body.classList.add('b434-lock')}
 function setActive(id){$$('[data-nav]',root).forEach(b=>b.classList.toggle('active',b.dataset.nav===id))}
 function restoreActiveModule(){
@@ -1457,6 +1472,7 @@ function navigate(id){
  if(id==='dashboard'){
    nativeTab('dashboard');
    showModuleAfterNavigation('dashboard');
+   scheduleDashboardSummaryRestore();
    return;
  }
  const native=nativeTab(id);
@@ -1559,8 +1575,15 @@ function ensureMobileProfileLogout(){
  if(actions)actions.appendChild(btn);else card.appendChild(btn);
 }
 
+function bindProfileCloseRestore(){
+ const overlay=by('ccf-profile-overlay');
+ if(!overlay||overlay.dataset.ccfDashboardRestore==='1')return;
+ overlay.dataset.ccfDashboardRestore='1';
+ ['ccf-profile-close','ccf-profile-cancel'].forEach(id=>by(id)?.addEventListener('click',()=>scheduleDashboardSummaryRestore(),{capture:true}));
+}
 function openUnifiedProfile(){
  styleUnifiedProfileMobile();
+ bindProfileCloseRestore();
  /* El overlay antiguo de B4.3 deja de utilizarse como perfil. */
  const old=$('.b434-overlay[data-overlay="profile"]',root);
  old?.classList.remove('open');
@@ -1788,7 +1811,7 @@ function build(){
  <div class="b434-overlay" data-overlay="notice"><div class="b434-backdrop" data-close></div><section class="b434-notice"><strong>Integración por etapas</strong><p>El módulo <b data-notice>—</b> conserva su implementación original y se habilita progresivamente.</p><button data-close>Continuar</button></section></div>`;
  app().prepend(root);
  $$('[data-nav]',root).forEach(b=>b.onclick=()=>navigate(b.dataset.nav));$('[data-more]',root).onclick=openMore;$('[data-profile]',root).onclick=openUnifiedProfile;$('[data-home]',root).onclick=()=>navigate('dashboard');$$('[data-close]',root).forEach(b=>b.onclick=closeAll);$('[data-logout]',root).onclick=()=>by('logoutBtn')?.click();$('[data-mobile-logout]',root).onclick=()=>by('logoutBtn')?.click();
- populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');
+ populateMore();nativeTab('dashboard');summary();refreshNativeSummaryData();scheduleMobileFlowAdapt();setActive('dashboard');scheduleDashboardSummaryRestore();
 }
 function observe(){
  observer?.disconnect();const ids=['future-month-label','month-income-total','month-expense-total','kpi-real-balance','kpi-assured','kpi-projected','kpi-committed','kpi-projected-balance','kpi-gap','margin-status','margin-maximum','margin-spent','margin-remaining','margin-percent','margin-projection','summary-status-text','executive-risk-summary','exec-liquidity-reading','exec-obligation-reading','exec-flow-reading','exec-generation-reading'];
