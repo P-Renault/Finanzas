@@ -1498,7 +1498,8 @@ function syncMobileProfileAvatar(){
    avatars.forEach(el=>{
      el.innerHTML='';
      const img=document.createElement('img');
-     img.src=String(url);
+     const displayUrl=String(url).includes('?')?String(url)+'&v='+Date.now():String(url)+'?v='+Date.now();
+     img.src=displayUrl;
      img.alt='Foto de perfil';
      img.style.width='100%';
      img.style.height='100%';
@@ -1511,6 +1512,7 @@ function syncMobileProfileAvatar(){
    return true;
  };
 
+ /* 1) Si el módulo Perfil ya está montado, reutilizamos su imagen. */
  const source=document.querySelector('#ccf-profile-avatar img')||document.querySelector('#ccf-profile-mini-avatar img');
  if(source?.src)return applyPhoto(source.src);
 
@@ -1518,36 +1520,72 @@ function syncMobileProfileAvatar(){
  if(mini){
    const miniImg=mini.querySelector('img');
    if(miniImg?.src)return applyPhoto(miniImg.src);
+ }
 
+ /*
+  * 2) La foto NO vive en Auth metadata: CCF-PERFIL-USUARIO-B1.1
+  * guarda la URL definitiva en profiles.avatar_url.
+  * Consultamos directamente ese registro con la sesión autenticada.
+  * Esto evita depender de que el módulo Perfil se abra primero.
+  */
+ const client=window.supabaseClient||window.db||window.__db||window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__;
+ const auth=client?.auth;
+ if(auth?.getUser&&client?.from){
+   Promise.resolve(auth.getUser()).then(async r=>{
+     const user=r?.data?.user;
+     if(!user?.id)return;
+     try{
+       const q=await client.from('profiles').select('avatar_url').eq('id',user.id).maybeSingle();
+       const url=q?.data?.avatar_url||'';
+       if(url){
+         try{localStorage.setItem('ccf_avatar_url_'+user.id,String(url))}catch(_){ }
+         applyPhoto(url);
+         return;
+       }
+     }catch(_){ }
+
+     /* Fallback: caché local de una foto ya resuelta previamente. */
+     try{
+       const cached=localStorage.getItem('ccf_avatar_url_'+user.id)||'';
+       if(cached)applyPhoto(cached);
+     }catch(_){ }
+   }).catch(()=>{});
+ }else{
+   /* El cliente puede estar terminando de inicializarse. */
+   let tries=0;
+   const retry=()=>{
+     tries++;
+     if(!root||!mobile())return;
+     const c=window.supabaseClient||window.db||window.__db||window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__;
+     if(c?.auth?.getUser&&c?.from){
+       Promise.resolve(c.auth.getUser()).then(async r=>{
+         const user=r?.data?.user;
+         if(!user?.id)return;
+         try{
+           const q=await c.from('profiles').select('avatar_url').eq('id',user.id).maybeSingle();
+           const url=q?.data?.avatar_url||'';
+           if(url)applyPhoto(url);
+         }catch(_){ }
+       }).catch(()=>{});
+       return;
+     }
+     if(tries<20)setTimeout(retry,250);
+   };
+   setTimeout(retry,250);
+ }
+
+ /* 3) Iniciales solo como fallback visual mientras llega la URL. */
+ if(mini){
    const initialsText=mini.textContent?.trim();
    if(initialsText){
      avatars.forEach(el=>{
        el.textContent=initialsText;
        el.classList.remove('has-photo');
      });
-     return true;
    }
  }
-
- /*
-  * El perfil puede cargarse después de B4.3. En ese caso el DOM del
-  * módulo todavía no contiene #ccf-profile-avatar. Recuperamos primero
-  * la foto desde la sesión Auth ya persistida, sin consultar profiles
-  * ni esperar a que se abra el módulo Perfil.
-  */
- const client=window.supabaseClient||window.db||window.__db||window.__B23269_CLIENT__;
- const auth=client?.auth;
- if(auth?.getSession){
-   Promise.resolve(auth.getSession()).then(r=>{
-     const user=r?.data?.session?.user;
-     const url=user?.user_metadata?.ccf_avatar_url||user?.user_metadata?.avatar_url||'';
-     if(url)applyPhoto(url);
-   }).catch(()=>{});
- }
-
  return false;
 }
-
 function hydrateMobileProfileAvatar(){
  if(!root||!mobile())return;
  syncMobileProfileAvatar();
