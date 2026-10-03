@@ -1123,9 +1123,11 @@ function observeCalendarMobile(){
    ================================================================ */
 let debtMobileDetailAnchor=null;
 let debtMobileDetailKey=null;
-let debtMobileDetailObserver=null;
+let debtMobileDetailIndex=-1;
+let debtMobileDetailSignature='';
 let debtMobileListObserver=null;
 let debtMobileFixInstalled=false;
+let debtMobileMoveTimer=null;
 
 function styleDebtMobileActions(){
   if(!mobile()) return;
@@ -1136,9 +1138,6 @@ function styleDebtMobileActions(){
   style.id='ccf-debt-mobile-actions-fix';
   style.textContent=`
     @media(max-width:720px){
-      /* La shell móvil usa z-index 2147480000. Los motores de deuda
-         crean sus overlays directamente en body con z-index menor.
-         Elevarlos evita que queden detrás de las tarjetas. */
       body #b220Modal,
       body #b2313-abono-modal,
       body #b23266fix-abono-modal{
@@ -1161,7 +1160,8 @@ function styleDebtMobileActions(){
         overflow:hidden!important;
       }
 
-      /* El detalle forma parte de la secuencia de la deuda seleccionada. */
+      /* El detalle debe ser un elemento hermano inmediato de la deuda
+         seleccionada. No se fija al final del módulo. */
       #ccf-mobile-b43 .b434-module-host #deudas #deudaDetalle{
         width:100%!important;
         max-width:100%!important;
@@ -1169,11 +1169,8 @@ function styleDebtMobileActions(){
         margin:10px 0 12px!important;
         clear:both!important;
         position:relative!important;
-        z-index:1!important;
-      }
-
-      #ccf-mobile-b43 .b434-module-host #deudas .debt-card + #deudaDetalle{
-        scroll-margin-top:76px!important;
+        z-index:2!important;
+        scroll-margin-top:84px!important;
       }
 
       #ccf-mobile-b43 .b434-module-host #deudas .debt-card{
@@ -1181,7 +1178,6 @@ function styleDebtMobileActions(){
         z-index:1!important;
       }
 
-      /* Acciones de cada deuda permanecen siempre utilizables. */
       #ccf-mobile-b43 .b434-module-host #deudas .form-actions{
         position:relative!important;
         z-index:3!important;
@@ -1191,31 +1187,63 @@ function styleDebtMobileActions(){
   document.head.appendChild(style);
 }
 
+function debtCardSignature(card){
+  if(!card) return '';
+  const title=card.querySelector('h1,h2,h3,h4,h5,strong')?.textContent?.trim()||'';
+  const subtitle=card.querySelector('p,.debt-description,small')?.textContent?.trim()||'';
+  return (title+'|'+subtitle).replace(/\\s+/g,' ').trim().slice(0,220);
+}
+
+function getDebtCards(){
+  const section=by('deudas');
+  return section?[...section.querySelectorAll('.debt-card')]:[];
+}
+
 function findDebtDetailAnchor(){
   if(debtMobileDetailAnchor?.isConnected&&debtMobileDetailAnchor.parentNode){
     return debtMobileDetailAnchor;
   }
-  if(!debtMobileDetailKey) return null;
-  const section=by('deudas');
-  if(!section) return null;
 
-  const buttons=Array.from(section.querySelectorAll('.debt-card button'));
-  const match=buttons.find(button=>{
-    const onclick=button.getAttribute('onclick')||'';
-    return onclick.includes(debtMobileDetailKey);
-  });
-  const card=match?.closest('.debt-card')||null;
-  if(card) debtMobileDetailAnchor=card;
-  return card;
+  const cards=getDebtCards();
+  if(!cards.length) return null;
+
+  /* 1. Identidad exacta del handler original. */
+  if(debtMobileDetailKey){
+    const exact=cards.find(card=>[...card.querySelectorAll('button')].some(button=>
+      (button.getAttribute('onclick')||'').trim()===debtMobileDetailKey
+    ));
+    if(exact){
+      debtMobileDetailAnchor=exact;
+      return exact;
+    }
+  }
+
+  /* 2. Firma de la deuda seleccionada. */
+  if(debtMobileDetailSignature){
+    const bySignature=cards.find(card=>debtCardSignature(card)===debtMobileDetailSignature);
+    if(bySignature){
+      debtMobileDetailAnchor=bySignature;
+      return bySignature;
+    }
+  }
+
+  /* 3. Como último recurso, conserva la misma posición de la lista. */
+  if(debtMobileDetailIndex>=0 && cards[debtMobileDetailIndex]){
+    debtMobileDetailAnchor=cards[debtMobileDetailIndex];
+    return debtMobileDetailAnchor;
+  }
+
+  return null;
 }
 
 function moveDebtDetailAfterSelected(){
   if(!mobile()) return false;
   const detail=by('deudaDetalle');
   const anchor=findDebtDetailAnchor();
-
   if(!detail||!anchor||!anchor.parentNode) return false;
 
+  /* No usamos scrollIntoView: el detalle debe aparecer en contexto,
+     sin desplazar la pantalla hacia el inicio del módulo. */
   if(anchor.nextElementSibling!==detail){
     anchor.parentNode.insertBefore(detail,anchor.nextSibling);
   }
@@ -1226,41 +1254,27 @@ function moveDebtDetailAfterSelected(){
   return true;
 }
 
-function focusDebtDetailAfterSelected(){
-  if(!moveDebtDetailAfterSelected()) return false;
-  const detail=by('deudaDetalle');
-  if(detail){
-    requestAnimationFrame(()=>{
-      if(detail.isConnected){
-        detail.scrollIntoView({behavior:'smooth',block:'start'});
-      }
-    });
-  }
-  return true;
+function scheduleDebtDetailMove(){
+  clearTimeout(debtMobileMoveTimer);
+  debtMobileMoveTimer=setTimeout(()=>moveDebtDetailAfterSelected(),0);
 }
 
 function armDebtDetailContext(card){
   if(!mobile()||!card) return;
+  const cards=getDebtCards();
   debtMobileDetailAnchor=card;
+  debtMobileDetailIndex=Math.max(0,cards.indexOf(card));
+  debtMobileDetailSignature=debtCardSignature(card);
+
   const trigger=card.querySelector('button[onclick*="verDeuda23("],button[onclick*="verDeuda("]');
   const onclick=trigger?.getAttribute('onclick')||'';
-  const match=onclick.match(/(?:verDeuda23|verDeuda)\s*\(\s*([^,)]+)/i);
-  debtMobileDetailKey=match?`verDeuda23(${String(match[1]).trim()}`:null;
+  /* Guardamos el onclick completo, no una versión reconstruida. */
+  debtMobileDetailKey=onclick.trim()||null;
 
-  const detail=by('deudaDetalle');
-  if(detail&&!debtMobileDetailObserver){
-    debtMobileDetailObserver=new MutationObserver(()=>{
-      if(!mobile()||!debtMobileDetailAnchor)return;
-      setTimeout(()=>moveDebtDetailAfterSelected(),0);
-    });
-    debtMobileDetailObserver.observe(detail,{childList:true,subtree:true});
-  }
-
-  [0,80,220,500,900,1400].forEach(ms=>{
-    setTimeout(()=>{
-      if(mobile()&&debtMobileDetailAnchor===card) focusDebtDetailAfterSelected();
-    },ms);
-  });
+  /* El motor nativo puede pintar el detalle después del click. La
+     observación del módulo garantiza que lo reubiquemos después de cada
+     reconstrucción, pero nunca provoca un scroll automático. */
+  scheduleDebtDetailMove();
 }
 
 function installDebtMobileBehavior(){
@@ -1270,56 +1284,53 @@ function installDebtMobileBehavior(){
   const section=by('deudas');
   if(!section) return;
 
-  if(debtMobileFixInstalled&&section.dataset.ccfDebtMobileActions==='1') return;
+  if(debtMobileFixInstalled&&section.dataset.ccfDebtMobileActions==='1'){
+    scheduleDebtDetailMove();
+    return;
+  }
+
   debtMobileFixInstalled=true;
   section.dataset.ccfDebtMobileActions='1';
 
-  /*
-   * Capture para identificar la tarjeta antes de que el onclick nativo
-   * ejecute verDeuda23(). No reemplazamos la función original.
-   */
+  /* Capturamos la deuda antes de que el handler nativo ejecute
+     verDeuda23()/verDeuda(). */
   section.addEventListener('click',event=>{
     const button=event.target?.closest?.('button');
     if(!button) return;
-
     const card=button.closest('.debt-card');
     if(!card) return;
 
     const onclick=button.getAttribute('onclick')||'';
     const text=String(button.textContent||'').trim().toLowerCase();
-
-    if(
-      text==='ver detalle' ||
-      onclick.includes('verDeuda23(') ||
-      onclick.includes('verDeuda(')
-    ){
+    if(text==='ver detalle'||onclick.includes('verDeuda23(')||onclick.includes('verDeuda(')){
       armDebtDetailContext(card);
+      /* El handler original sigue ejecutándose; nosotros solo fijamos
+         el contexto de la deuda seleccionada. */
     }
   },true);
 
-  /*
-   * Los motores B220/B231 pueden insertar o reconstruir acciones
-   * después de cargar la lista. No intervenimos en sus handlers.
-   * Solo aseguramos que el detalle conserve la posición contextual.
-   */
+  /* Observa TODO el módulo porque el motor de deudas puede destruir y
+     reconstruir #deudaDetalle o la lista completa después del click. */
   debtMobileListObserver=new MutationObserver(()=>{
-    if(debtMobileDetailAnchor?.isConnected){
-      setTimeout(()=>moveDebtDetailAfterSelected(),20);
+    if(debtMobileDetailKey||debtMobileDetailSignature||debtMobileDetailIndex>=0){
+      scheduleDebtDetailMove();
     }
     styleDebtMobileActions();
   });
   debtMobileListObserver.observe(section,{childList:true,subtree:true});
+
+  scheduleDebtDetailMove();
 }
 
 function cleanupDebtMobileBehavior(){
-  debtMobileDetailObserver?.disconnect();
-  debtMobileDetailObserver=null;
-  debtMobileListObserver?.disconnect();
-  debtMobileListObserver=null;
+  clearTimeout(debtMobileMoveTimer);
+  debtMobileMoveTimer=null;
   debtMobileListObserver?.disconnect();
   debtMobileListObserver=null;
   debtMobileDetailAnchor=null;
   debtMobileDetailKey=null;
+  debtMobileDetailIndex=-1;
+  debtMobileDetailSignature='';
   debtMobileFixInstalled=false;
 }
 
