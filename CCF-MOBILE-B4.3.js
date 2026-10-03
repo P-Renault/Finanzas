@@ -22,9 +22,28 @@ function mirrorAll(){[
 const p=by('margin-progress'),q=$('[data-progress]',root);if(p&&q)q.style.width=p.style.width||'0%';}
 
 function moveReal(id,host){
- const el=by(id);if(!el||!host||el.dataset.b434Moved==='1')return el;
- const marker=document.createComment('CCF B4.3.4 '+id);el.parentNode?.insertBefore(marker,el);host.appendChild(el);
- el.dataset.b434Moved='1';moved.push({el,marker});return el;
+ if(!host)return null;
+ /*
+  * Un resumen móvil puede reconstruirse varias veces al navegar:
+  * Más → Resumen, Resumen → otro módulo → Resumen.
+  * En ese ciclo el host anterior se elimina del DOM, pero los elementos
+  * reales movidos siguen registrados en `moved`. Buscar también allí evita
+  * perder #chart-flow y demás gráficos al reconstruir la vista.
+  */
+ const existing=moved.find(x=>x?.el?.id===id)?.el||null;
+ const el=by(id)||existing;
+ if(!el)return null;
+
+ if(el.dataset.b434Moved!=='1'){
+   const originalParent=el.parentNode;
+   const marker=document.createComment('CCF B4.3.4 '+id);
+   if(originalParent&&originalParent!==host)originalParent.insertBefore(marker,el);
+   el.dataset.b434Moved='1';
+   moved.push({el,marker});
+ }
+
+ if(el.parentNode!==host)host.appendChild(el);
+ return el;
 }
 function restoreReal(){for(const x of moved.slice().reverse()){delete x.el.dataset.b434Moved;if(x.marker.parentNode)x.marker.parentNode.insertBefore(x.el,x.marker.nextSibling);x.marker.remove()}moved=[]}
 function nativeTab(id){const b=tab(id);if(b){b.click();return true}return false}
