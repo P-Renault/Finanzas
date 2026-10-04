@@ -2576,3 +2576,28 @@ main[data-content]{padding:10px 10px 92px;box-sizing:border-box;min-width:0}
     margin:0!important;
   }
 }
+
+
+/* CCF MOBILE B4.3.10 — AJUSTE HEADER MÓVIL
+   - Foto de perfil centrada verticalmente respecto a Salir + Manual.
+   - Manual amarillo con texto/icono negro.
+   - Solo viewport móvil. */
+@media(max-width:720px){
+  #ccf-mobile-b43 .b434-header .b434-avatar{
+    grid-row:1 / span 2!important;
+    align-self:center!important;
+  }
+
+  #ccf-mobile-b43 .b434-header .b434-manual{
+    background:#fbbf24!important;
+    color:#000!important;
+  }
+
+  #ccf-mobile-b43 .b434-header .b434-manual small{
+    color:#000!important;
+  }
+
+  #ccf-mobile-b43 .b434-header .b434-manual svg{
+    color:#000!important;
+  }
+}

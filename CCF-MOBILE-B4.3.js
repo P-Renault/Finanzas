@@ -2104,7 +2104,7 @@ function installUserManualMobileStyle(){
    }
    #ccf-mobile-b43 .b434-header .b434-avatar{
      grid-column:4!important;
-     grid-row:1!important;
+     grid-row:1 / span 2!important;
      width:46px!important;
      height:46px!important;
      min-width:46px!important;
@@ -2134,8 +2134,8 @@ function installUserManualMobileStyle(){
      padding:0 6px!important;
      border:1px solid rgba(255,255,255,.28);
      border-radius:12px;
-     background:#f59e0b;
-     color:#102a43;
+     background:#fbbf24;
+     color:#000;
      text-decoration:none;
      font-size:11px;
      line-height:1;
@@ -2168,9 +2168,10 @@ function installUserManualMobileStyle(){
      font-size:11px;
      line-height:1;
      font-weight:850;
+     color:#000!important;
    }
    #ccf-mobile-b43 .b434-manual:hover{
-     background:#fbbf24;
+     background:#fcd34d;
      border-color:#fde68a;
    }
    #ccf-mobile-b43 .b434-manual:active{
