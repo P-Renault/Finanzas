@@ -60,7 +60,14 @@ background:#55d8b1;box-shadow:0 0 0 5px rgba(85,216,177,.09)}
 #${ID} h1{font-size:clamp(42px,6vw,78px);line-height:.96;letter-spacing:-.055em;margin:18px 0 22px}
 #${ID} .grad{background:linear-gradient(110deg,#fff,#a9eaff 52%,#70e2bd);-webkit-background-clip:text;background-clip:text;color:transparent}
 #${ID} .hero p{max-width:670px;color:#9db0c4;font-size:17px;line-height:1.72;margin:0}
-#${ID} .heroCta{display:flex;gap:11px;flex-wrap:wrap;margin-top:28px}
+#${ID} .heroCta{display:flex;gap:11px;flex-wrap:wrap;margin-top:28px}#${ID} .heroCta a[href="https://apk.controlfinanciero.cl/app-control-financiero.apk"]{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  text-decoration:none;
+}
+
 #${ID} .proof{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px;color:#7890a7;font-size:11px}
 #${ID} .proof span{display:inline-flex;align-items:center;gap:7px}.proof i{width:7px;height:7px;border-radius:50%;
 background:#55d8b1;display:block}
@@ -167,23 +174,7 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 @keyframes b230in{from{opacity:0;transform:perspective(1100px) rotateY(-10deg) translateY(18px)}to{opacity:1;transform:perspective(1100px) rotateY(-5deg) translateY(0)}}
 @keyframes b230float{0%,100%{transform:translateY(0)}50%{transform:translateY(-24px)}}
 @media(max-width:900px){#${ID} .hero{grid-template-columns:1fr;gap:36px;padding:55px 0 45px}#${ID} .dash{max-width:680px;width:100%;margin:auto;transform:none}#${ID} .grid{grid-template-columns:1fr 1fr}#${ID} .strip{grid-template-columns:1fr}}
-@media(max-width:640px){
-  #${ID} .nav .actions{
-    margin-left:auto;
-    justify-content:flex-end;
-    align-items:flex-end;
-    flex-direction:column;
-    flex-wrap:nowrap;
-    flex:0 0 auto;
-  }
-  #${ID} .nav .actions .btn{
-    align-self:flex-end;
-  }
-  #${ID} .nav .brand{
-    min-width:0;
-    flex:1 1 auto;
-  }
-  #${ID} .wrap{width:min(100% - 22px,1180px)}#${ID} .nav{min-height:68px;padding:10px 0}
+@media(max-width:640px){#${ID} .wrap{width:min(100% - 22px,1180px)}#${ID} .nav{min-height:68px;padding:10px 0}
 #${ID} .mark{width:38px;height:38px}#${ID} .brand b{font-size:12px}.brand small{font-size:8px}
 #${ID} .nav .actions .btn:first-child{display:none}#${ID} .nav .actions .btn{min-height:40px;padding:9px 12px;font-size:11px}
 #${ID} .hero{padding:40px 0 35px;gap:29px}#${ID} h1{font-size:clamp(40px,12vw,56px)}
