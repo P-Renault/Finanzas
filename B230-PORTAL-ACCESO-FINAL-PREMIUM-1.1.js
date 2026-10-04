@@ -60,12 +60,13 @@ background:#55d8b1;box-shadow:0 0 0 5px rgba(85,216,177,.09)}
 #${ID} h1{font-size:clamp(42px,6vw,78px);line-height:.96;letter-spacing:-.055em;margin:18px 0 22px}
 #${ID} .grad{background:linear-gradient(110deg,#fff,#a9eaff 52%,#70e2bd);-webkit-background-clip:text;background-clip:text;color:transparent}
 #${ID} .hero p{max-width:670px;color:#9db0c4;font-size:17px;line-height:1.72;margin:0}
-#${ID} .heroCta{display:flex;gap:11px;flex-wrap:wrap;margin-top:28px}#${ID} .heroCta a[href="https://apk.controlfinanciero.cl/app-control-financiero.apk"]{
+#${ID} .heroCta{display:flex;gap:11px;flex-wrap:wrap;margin-top:28px}#${ID} a[href="https://apk.controlfinanciero.cl/app-control-financiero.apk"]{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   text-align:center;
   text-decoration:none;
+  white-space:nowrap;
 }
 
 #${ID} .proof{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px;color:#7890a7;font-size:11px}
@@ -174,7 +175,27 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 @keyframes b230in{from{opacity:0;transform:perspective(1100px) rotateY(-10deg) translateY(18px)}to{opacity:1;transform:perspective(1100px) rotateY(-5deg) translateY(0)}}
 @keyframes b230float{0%,100%{transform:translateY(0)}50%{transform:translateY(-24px)}}
 @media(max-width:900px){#${ID} .hero{grid-template-columns:1fr;gap:36px;padding:55px 0 45px}#${ID} .dash{max-width:680px;width:100%;margin:auto;transform:none}#${ID} .grid{grid-template-columns:1fr 1fr}#${ID} .strip{grid-template-columns:1fr}}
-@media(max-width:640px){#${ID} .wrap{width:min(100% - 22px,1180px)}#${ID} .nav{min-height:68px;padding:10px 0}
+@media(max-width:640px){
+  #${ID} .nav{
+    position:relative;
+  }
+  #${ID} .nav .brand{
+    min-width:0;
+    flex:1 1 auto;
+  }
+  #${ID} .nav .actions{
+    margin-left:auto;
+    margin-right:0;
+    justify-content:flex-end;
+    align-items:flex-end;
+    flex-direction:column;
+    flex-wrap:nowrap;
+    flex:0 0 auto;
+  }
+  #${ID} .nav .actions .btn{
+    align-self:flex-end;
+  }
+  #${ID} .wrap{width:min(100% - 22px,1180px)}#${ID} .nav{min-height:68px;padding:10px 0}
 #${ID} .mark{width:38px;height:38px}#${ID} .brand b{font-size:12px}.brand small{font-size:8px}
 #${ID} .nav .actions .btn:first-child{display:none}#${ID} .nav .actions .btn{min-height:40px;padding:9px 12px;font-size:11px}
 #${ID} .hero{padding:40px 0 35px;gap:29px}#${ID} h1{font-size:clamp(40px,12vw,56px)}
@@ -232,7 +253,7 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #${ID} .priceBadge{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:999px;background:rgba(91,230,183,.10);border:1px solid rgba(91,230,183,.20);color:#73e5c0;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
 #${ID} .priceTitle{margin:12px 0 8px;font-size:clamp(26px,4vw,42px);line-height:1.05;letter-spacing:-.035em}.priceText{color:#9db0c4;line-height:1.65;margin:0;max-width:680px}
 #${ID} .priceValue{font-size:52px;font-weight:950;letter-spacing:-.05em;margin:0}.priceSmall{color:#8299af;font-size:11px;line-height:1.5;margin:4px 0 18px}.priceActions{display:flex;gap:10px;flex-wrap:wrap}
-#${ID} .installHint{margin-top:10px;color:#7890a7;font-size:10px;line-height:1.5}.installBtn{position:relative}
+#${ID} .installBtn{position:relative}
 @media(max-width:760px){#${ID} .priceGrid{grid-template-columns:1fr}#${ID} .priceSection{padding:24px 18px}}
 @media(prefers-reduced-motion:reduce){#${ID} *,#${ID} *:before,#${ID} *:after{animation:none!important;transition:none!important}}
 `;
@@ -270,7 +291,7 @@ function html(){
  <section class="section"><div class="sectionHead"><span class="eyebrow">DE LOS DATOS A LA DECISIÓN</span><h2>Una visión financiera conectada.</h2><p>El sistema relaciona tus registros para pasar de información dispersa a una lectura integrada de tu situación financiera.</p></div><div class="flowGrid"><article class="flowStep"><em>01</em><b>REGISTRA</b><p>Ingresos, gastos, cuentas y deudas.</p></article><article class="flowStep"><em>02</em><b>ORGANIZA</b><p>Clasifica y estructura tu información.</p></article><article class="flowStep"><em>03</em><b>PLANIFICA</b><p>Define presupuestos y objetivos.</p></article><article class="flowStep"><em>04</em><b>PROYECTA</b><p>Visualiza escenarios de liquidez.</p></article><article class="flowStep"><em>05</em><b>ANALIZA</b><p>Identifica brechas y necesidades.</p></article><article class="flowStep"><em>06</em><b>DECIDE</b><p>Toma decisiones con mayor claridad.</p></article></div></section>
 
  <section class="section"><div class="faqGrid"><div class="sectionHead"><span class="eyebrow">PREGUNTAS FRECUENTES</span><h2>¿Tienes dudas? Aquí te ayudamos.</h2><p>Respuestas rápidas sobre el propósito, uso y experiencia del Centro de Control Financiero.</p></div><div class="faqList"><div class="faqItem"><button class="faqQ" type="button"><span>¿Qué puedo controlar con el sistema?</span><span>＋</span></button><div class="faqA">Puedes organizar movimientos, cuentas, deudas, presupuesto, calendario, ahorro, planificación y proyección dentro de una misma estructura.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Puedo usarlo desde mi celular?</span><span>＋</span></button><div class="faqA">Sí. El portal está diseñado para ofrecer una experiencia responsive y el sistema cuenta con vistas adaptadas a dispositivos móviles.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Cómo se relacionan los módulos?</span><span>＋</span></button><div class="faqA">Los módulos trabajan sobre una estructura financiera común para conservar trazabilidad entre registros, compromisos y proyecciones.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Mis datos permanecen privados?</span><span>＋</span></button><div class="faqA">El portal de acceso no crea una autenticación paralela: deriva el acceso al flujo de autenticación existente del sistema.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Necesito conocimientos financieros?</span><span>＋</span></button><div class="faqA">No. La propuesta está orientada a transformar información cotidiana en una lectura más clara y accionable.</div></div></div></div></section>
- <section class="section"><div class="sectionHead"><span class="eyebrow">DISEÑADO PARA DISTINTAS REALIDADES</span><h2>Una herramienta que se adapta a tu forma de administrar dinero.</h2><p>El mismo centro de control puede acompañar distintas fuentes de ingresos, obligaciones y objetivos.</p></div><div class="audienceVisual"><img src="${IMG_AUDIENCES}" alt="Perfiles para quienes está dirigido el sistema de Control Financiero" loading="lazy"></div><div class="audienceGrid"><article class="audienceCard"><strong>Finanzas personales</strong><span>Organiza ingresos, gastos, cuentas y obligaciones.</span></article><article class="audienceCard"><strong>Ingresos variables</strong><span>Controla jornadas y diferentes fuentes de generación.</span></article><article class="audienceCard"><strong>Independientes</strong><span>Consolida múltiples fuentes de ingresos y gastos.</span></article><article class="audienceCard"><strong>Planificación</strong><span>Construye escenarios y anticipa necesidades futuras.</span></article><article class="audienceCard"><strong>Gestión patrimonial</strong><span>Integra deuda, liquidez, ahorro y planificación.</span></article></div></section> <section class="priceSection" aria-labelledby="ccf-price-title"><div class="priceGrid"><div><span class="priceBadge">Oferta de lanzamiento</span><h2 id="ccf-price-title" class="priceTitle">Control Financiero es gratis por tiempo limitado.</h2><p class="priceText">Accede al Centro de Control Financiero durante nuestro período inicial sin costo. Puedes utilizarlo desde el navegador o descargar la aplicación Android directamente desde este sitio.</p></div><div><p class="priceValue">$0</p><p class="priceSmall">Durante el período promocional.<br>Descarga directa para Android.</p><div class="priceActions"><a class="btn primary installBtn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">Descargar APK Android</a><button class="btn" data-b230-open="register">Comenzar gratis</button></div><p class="installHint">La descarga es directa desde Cloudflare y permite instalar la APK en dispositivos Android.</p></div></div></section> <section class="dynamicCta"><div><span class="eyebrow">CENTRO DE CONTROL FINANCIERO</span><h2>Comienza hoy a controlar tus finanzas.</h2><p>Registra. Organiza. Planifica. Proyecta. Accede al sistema y construye una visión integrada de tu presente y de los escenarios que vienen.</p></div><button class="btn primary" data-b230-open="login">Crear mi cuenta →</button></section>
+ <section class="section"><div class="sectionHead"><span class="eyebrow">DISEÑADO PARA DISTINTAS REALIDADES</span><h2>Una herramienta que se adapta a tu forma de administrar dinero.</h2><p>El mismo centro de control puede acompañar distintas fuentes de ingresos, obligaciones y objetivos.</p></div><div class="audienceVisual"><img src="${IMG_AUDIENCES}" alt="Perfiles para quienes está dirigido el sistema de Control Financiero" loading="lazy"></div><div class="audienceGrid"><article class="audienceCard"><strong>Finanzas personales</strong><span>Organiza ingresos, gastos, cuentas y obligaciones.</span></article><article class="audienceCard"><strong>Ingresos variables</strong><span>Controla jornadas y diferentes fuentes de generación.</span></article><article class="audienceCard"><strong>Independientes</strong><span>Consolida múltiples fuentes de ingresos y gastos.</span></article><article class="audienceCard"><strong>Planificación</strong><span>Construye escenarios y anticipa necesidades futuras.</span></article><article class="audienceCard"><strong>Gestión patrimonial</strong><span>Integra deuda, liquidez, ahorro y planificación.</span></article></div></section> <section class="priceSection" aria-labelledby="ccf-price-title"><div class="priceGrid"><div><span class="priceBadge">Oferta de lanzamiento</span><h2 id="ccf-price-title" class="priceTitle">Control Financiero es gratis por tiempo limitado.</h2><p class="priceText">Accede al Centro de Control Financiero durante nuestro período inicial sin costo. Puedes utilizarlo desde el navegador o descargar la aplicación Android directamente desde este sitio.</p></div><div><p class="priceValue">$0</p><p class="priceSmall">Durante el período promocional.<br>Descarga directa para Android.</p><div class="priceActions"><a class="btn primary installBtn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">Descargar APK Android</a><button class="btn" data-b230-open="register">Comenzar gratis</button></div></div></div></section> <section class="dynamicCta"><div><span class="eyebrow">CENTRO DE CONTROL FINANCIERO</span><h2>Comienza hoy a controlar tus finanzas.</h2><p>Registra. Organiza. Planifica. Proyecta. Accede al sistema y construye una visión integrada de tu presente y de los escenarios que vienen.</p></div><button class="btn primary" data-b230-open="login">Crear mi cuenta →</button></section>
  </main><footer class="footer"><strong>CCF · Centro de Control Financiero</strong><span>Producto desarrollado por Somos Software · Innovación Digital</span></footer>
  </div></div></div>`;
 }
