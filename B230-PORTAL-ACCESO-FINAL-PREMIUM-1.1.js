@@ -10,8 +10,8 @@ window.__CCF_B230_PREMIUM_11__=true;
 const ID='ccf-b230-final';
 const $=(s,r=document)=>r.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dashboard-desktop.jpg';
-const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dashboard-mobile.jpg';
+const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-laptop.jpg';
+const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-phone.jpg';
 const IMG_AUDIENCES='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/audiences.jpg';
 const IMG_RESUMEN='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/01-resumen.png';
 const IMG_CALENDARIO='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/02-calendario.png';
@@ -256,81 +256,233 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #${ID} .installBtn{position:relative}
 @media(max-width:760px){#${ID} .priceGrid{grid-template-columns:1fr}#${ID} .priceSection{padding:24px 18px}}
 @media(prefers-reduced-motion:reduce){#${ID} *,#${ID} *:before,#${ID} *:after{animation:none!important;transition:none!important}}
+/* B230 PREMIUM 2.9.2 — VISUAL SYSTEM MATCHED TO APPROVED DESIGN */
+#ccf-b230-final{background:radial-gradient(ellipse at 78% 14%,rgba(0,150,255,.19),transparent 30%),radial-gradient(ellipse at 10% 45%,rgba(0,205,190,.09),transparent 30%),linear-gradient(145deg,#03101f 0%,#061a2c 54%,#031020 100%)}
+#ccf-b230-final .wrap{width:min(1440px,calc(100% - 72px))}
+#ccf-b230-final .nav{min-height:74px;padding:0 8px;gap:22px}
+#ccf-b230-final .brand{text-decoration:none;color:#f4f8ff;flex:0 0 auto}
+#ccf-b230-final .brand b{font-size:20px;letter-spacing:-.025em;text-transform:none}
+#ccf-b230-final .brand small{font-size:10px;letter-spacing:.02em}
+#ccf-b230-final .mark{width:46px;height:46px;border-radius:13px;color:#fff;background:linear-gradient(135deg,#078aff,#0878e9);box-shadow:0 8px 24px rgba(0,128,255,.25);font-size:17px}
+#ccf-b230-final .navLinks{display:flex;align-items:center;justify-content:center;gap:clamp(13px,2.3vw,36px);flex:1}
+#ccf-b230-final .navLinks a{position:relative;color:#e4edf8;text-decoration:none;font-size:12px;font-weight:650;padding:28px 0 25px;white-space:nowrap}
+#ccf-b230-final .navLinks a:hover,#ccf-b230-final .navLinks a.active{color:#fff}
+#ccf-b230-final .navLinks a.active:after{content:"";position:absolute;bottom:14px;left:0;right:0;height:3px;border-radius:3px;background:#00d9ed;box-shadow:0 0 12px #00d9ed}
+#ccf-b230-final .actions{flex:0 0 auto;gap:10px;flex-wrap:nowrap}
+#ccf-b230-final .actions .btn{min-height:42px;padding:10px 16px;border-radius:12px;font-size:12px;white-space:nowrap}
+#ccf-b230-final .actions .primary{background:linear-gradient(105deg,#00d7e8,#1689f4);color:#031324}
+#ccf-b230-final .hero{grid-template-columns:minmax(390px,.88fr) minmax(520px,1.12fr);gap:36px;padding:42px 0 26px;min-height:520px}
+#ccf-b230-final .heroCopy{position:relative;z-index:4}
+#ccf-b230-final .kicker{padding:7px 13px;border-color:#087ba8;background:rgba(0,195,226,.07);font-size:10px}
+#ccf-b230-final h1{font-size:clamp(43px,4.2vw,66px);line-height:1.01;letter-spacing:-.055em;margin:22px 0 18px;font-weight:850}
+#ccf-b230-final .heroTitle .grad{background:linear-gradient(95deg,#00d9ee,#20baf9 54%,#43e4c4);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ccf-b230-final .hero p{max-width:590px;color:#b5c6d8;font-size:15px;line-height:1.65}
+#ccf-b230-final .heroCta{gap:13px;margin-top:25px}
+#ccf-b230-final .heroCta .btn{min-height:48px;padding:13px 21px;border-radius:12px;font-size:13px}
+#ccf-b230-final .heroCta .primary{background:linear-gradient(105deg,#00d7e8,#138cf5);color:#031324}
+#ccf-b230-final .demoBtn{display:inline-flex;align-items:center;text-decoration:none;border-color:#b9d6ee;color:#f3f8ff;background:rgba(3,19,35,.45)}
+#ccf-b230-final .proof{gap:20px;margin-top:22px;color:#d4e4f2;font-size:10px}
+#ccf-b230-final .proof span{white-space:nowrap}
+#ccf-b230-final .heroVisual{min-height:420px;padding:0;border:0;border-radius:28px;background:radial-gradient(ellipse at 54% 52%,rgba(0,164,255,.25),transparent 65%);box-shadow:none;overflow:visible;transform:none;animation:none}
+#ccf-b230-final .heroLaptop{width:100%;border-radius:18px;filter:drop-shadow(0 22px 30px rgba(0,0,0,.4))}
+#ccf-b230-final .heroLaptop img{width:100%;max-height:430px;object-fit:contain;object-position:center;border-radius:16px;background:transparent}
+#ccf-b230-final .heroPhone{right:auto;left:-5%;bottom:-3%;width:25%;border:4px solid #18283a;border-radius:25px;box-shadow:0 16px 36px rgba(0,0,0,.55);transform:rotate(-2deg)}
+#ccf-b230-final .heroPhone img{border-radius:20px}
+#ccf-b230-final .heroDeviceBadge{display:none}
+#ccf-b230-final .benefitStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;margin:0 0 28px;padding:15px 20px;border:1px solid rgba(87,181,232,.18);border-radius:17px;background:linear-gradient(105deg,rgba(20,65,96,.72),rgba(15,48,75,.65));box-shadow:0 12px 30px rgba(0,0,0,.12)}
+#ccf-b230-final .benefitStrip article{display:flex;align-items:center;gap:15px;padding:3px 16px;border-right:1px solid rgba(174,216,242,.22);min-width:0}
+#ccf-b230-final .benefitStrip article:last-child{border-right:0}
+#ccf-b230-final .benefitIcon{font-size:34px;line-height:1;color:#00d8ef;min-width:38px;text-align:center}
+#ccf-b230-final .benefitStrip b{display:block;color:#f1f7ff;font-size:12px}
+#ccf-b230-final .benefitStrip small{display:block;color:#a9c1d6;font-size:10px;margin-top:4px}
+#ccf-b230-final .section{padding:28px 0 36px}
+#ccf-b230-final .sectionTitleRow{display:flex;align-items:center;justify-content:space-between;gap:25px}
+#ccf-b230-final .sectionHead{max-width:680px}
+#ccf-b230-final .eyebrow{font-size:10px;color:#00d9ed;letter-spacing:.16em}
+#ccf-b230-final .section h2,#ccf-b230-final .faqBlock h2{font-size:clamp(28px,3.2vw,42px);line-height:1.05;letter-spacing:-.04em;margin:9px 0 10px}
+#ccf-b230-final .sectionHead p{font-size:13px;color:#b0c4d7;max-width:650px}
+#ccf-b230-final .outlineLink{display:inline-flex;align-items:center;padding:10px 16px;border:1px solid rgba(220,239,255,.7);border-radius:11px;color:#f2f8ff;text-decoration:none;font-size:12px;font-weight:750;white-space:nowrap}
+#ccf-b230-final .moduleGallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+#ccf-b230-final .moduleCard{display:grid;grid-template-columns:74px 1fr;align-items:center;min-height:92px;border:1px solid rgba(75,170,221,.25);border-radius:14px;background:linear-gradient(115deg,rgba(20,54,79,.88),rgba(9,31,51,.82));box-shadow:0 8px 22px rgba(0,0,0,.12)}
+#ccf-b230-final .moduleImageButton{height:100%;min-height:90px;width:74px;padding:9px;background:transparent;overflow:hidden}
+#ccf-b230-final .moduleImageButton:after{display:none}
+#ccf-b230-final .moduleImageButton img{height:58px;width:58px;object-fit:cover;border-radius:10px}
+#ccf-b230-final .zoomHint{display:none}
+#ccf-b230-final .moduleInfo{padding:12px 12px 12px 2px}
+#ccf-b230-final .moduleInfo b{font-size:13px;color:#f4f8ff}
+#ccf-b230-final .moduleInfo p{font-size:10px;color:#c0d0df;line-height:1.4;margin-top:4px}
+#ccf-b230-final .audienceSection{display:grid;grid-template-columns:.88fr 1.12fr;column-gap:25px;align-items:center}
+#ccf-b230-final .audienceIntro{grid-row:span 2}
+#ccf-b230-final .audienceIntro h2{font-size:clamp(25px,3vw,36px)}
+#ccf-b230-final .audienceIntro p{font-size:12px;color:#b0c4d7;line-height:1.6}
+#ccf-b230-final .audienceVisual{margin:0;padding:7px;border-radius:16px}
+#ccf-b230-final .audienceVisual img{max-height:170px;object-fit:cover}
+#ccf-b230-final .audienceGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+#ccf-b230-final .audienceCard{padding:11px 10px;border-radius:12px;background:rgba(16,44,66,.8)}
+#ccf-b230-final .audienceCard strong{font-size:10px}
+#ccf-b230-final .audienceCard span{font-size:9px;line-height:1.4}
+#ccf-b230-final .lowerBenefits{margin-top:4px;margin-bottom:24px}
+#ccf-b230-final .offerFaq{display:grid;grid-template-columns:1.28fr .72fr;gap:26px;align-items:center;margin:10px 0 28px}
+#ccf-b230-final .priceSection{margin:0;padding:23px 24px;border-color:rgba(0,198,235,.28);background:linear-gradient(115deg,rgba(13,48,73,.92),rgba(5,32,54,.9));box-shadow:0 15px 35px rgba(0,0,0,.15)}
+#ccf-b230-final .priceGrid{grid-template-columns:1.2fr .8fr;gap:18px}
+#ccf-b230-final .priceTitle{font-size:clamp(22px,2.5vw,30px)}
+#ccf-b230-final .priceText{font-size:11px;line-height:1.55}
+#ccf-b230-final .priceValue{font-size:50px;color:#00d9ed;line-height:1}
+#ccf-b230-final .priceSmall{font-size:10px;margin:5px 0 12px}
+#ccf-b230-final .priceActions{display:grid;gap:8px}
+#ccf-b230-final .priceActions .btn{min-height:38px;padding:9px 12px;font-size:10px}
+#ccf-b230-final .faqBlock h2{font-size:clamp(22px,2.5vw,29px);margin-bottom:12px}
+#ccf-b230-final .faqList{gap:6px}
+#ccf-b230-final .faqItem{border-radius:11px;background:rgba(21,52,75,.75)}
+#ccf-b230-final .faqQ{padding:11px 13px;font-size:10px}
+#ccf-b230-final .faqA{font-size:10px;padding:0 13px 12px}
+#ccf-b230-final .dynamicCta{grid-template-columns:1fr auto;min-height:120px;padding:24px 34px;margin:0 0 24px;border-radius:18px;background:radial-gradient(ellipse at 80% 20%,rgba(0,211,244,.35),transparent 44%),linear-gradient(105deg,#102b80,#075b9a 52%,#007caa);border-color:rgba(55,200,255,.55);box-shadow:inset 0 0 50px rgba(0,201,255,.1)}
+#ccf-b230-final .dynamicCta h2{font-size:clamp(23px,2.8vw,32px);margin:0 0 7px}
+#ccf-b230-final .dynamicCta p{font-size:11px;color:#e0f1ff;max-width:760px}
+#ccf-b230-final .dynamicCta .btn{min-width:195px;background:linear-gradient(100deg,#00d8e8,#188cf5);color:#031324}
+#ccf-b230-final .footer{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0 28px;text-align:left}
+#ccf-b230-final .footerBrand{display:flex;align-items:center;gap:10px;color:#fff}
+#ccf-b230-final .footerBrand .mark{width:38px;height:38px;font-size:13px}
+#ccf-b230-final .footerBrand b{display:block;font-size:12px}
+#ccf-b230-final .footerBrand small{display:block;font-size:9px;color:#92a9bd}
+#ccf-b230-final .footer>span{margin:0;font-size:9px}
+#ccf-b230-final .footerLinks{display:flex;gap:14px}
+#ccf-b230-final .footerLinks a{color:#a7bbce;text-decoration:none;font-size:9px;white-space:nowrap}
+@media(max-width:1100px){
+ #ccf-b230-final .wrap{width:calc(100% - 44px)}
+ #ccf-b230-final .navLinks{gap:12px}
+ #ccf-b230-final .navLinks a{font-size:10px}
+ #ccf-b230-final .brand b{font-size:16px}
+ #ccf-b230-final .hero{grid-template-columns:.9fr 1.1fr;gap:18px}
+ #ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceSection{grid-template-columns:1fr}
+ #ccf-b230-final .audienceIntro{grid-row:auto}
+ #ccf-b230-final .audienceVisual{margin-top:15px}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ #ccf-b230-final .wrap{width:calc(100% - 28px)}
+ #ccf-b230-final .nav{flex-wrap:wrap;min-height:auto;padding:12px 0}
+ #ccf-b230-final .navLinks{order:3;flex:1 0 100%;justify-content:space-between;overflow-x:auto;gap:18px}
+ #ccf-b230-final .navLinks a{padding:9px 0;font-size:10px}
+ #ccf-b230-final .navLinks a.active:after{bottom:2px}
+ #ccf-b230-final .actions{margin-left:auto}
+ #ccf-b230-final .actions .downloadNav{display:none}
+ #ccf-b230-final .hero{grid-template-columns:1fr;gap:24px;padding:34px 0 24px}
+ #ccf-b230-final h1{font-size:clamp(38px,9vw,54px)}
+ #ccf-b230-final .hero p{font-size:14px}
+ #ccf-b230-final .heroVisual{min-height:0;padding:0;max-width:620px;margin:auto}
+ #ccf-b230-final .heroLaptop img{max-height:none}
+ #ccf-b230-final .heroPhone{width:22%;left:-2%;bottom:-2%}
+ #ccf-b230-final .benefitStrip{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+ #ccf-b230-final .benefitStrip article{border:0;padding:5px}
+ #ccf-b230-final .benefitIcon{font-size:28px;min-width:30px}
+ #ccf-b230-final .sectionTitleRow{align-items:flex-start;flex-direction:column}
+ #ccf-b230-final .outlineLink{display:none}
+ #ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .offerFaq{grid-template-columns:1fr;gap:24px}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr  .65fr}
+ #ccf-b230-final .dynamicCta{grid-template-columns:1fr;gap:15px;padding:22px}
+ #ccf-b230-final .dynamicCta .btn{width:100%}
+ #ccf-b230-final .footer{flex-wrap:wrap}
+ #ccf-b230-final .footerLinks{width:100%;flex-wrap:wrap}
+}
+@media(max-width:480px){
+ #ccf-b230-final .nav .brand b{font-size:13px}
+ #ccf-b230-final .nav .brand small{font-size:8px}
+ #ccf-b230-final .nav .actions .btn{min-height:37px;padding:8px 10px;font-size:10px}
+ #ccf-b230-final .hero{padding-top:26px}
+ #ccf-b230-final h1{font-size:clamp(36px,10.3vw,46px);line-height:1.02}
+ #ccf-b230-final .heroCta{display:flex;flex-direction:column}
+ #ccf-b230-final .heroCta .btn{width:100%;justify-content:center}
+ #ccf-b230-final .proof{gap:8px 12px;font-size:9px}
+ #ccf-b230-final .benefitStrip{margin-bottom:20px}
+ #ccf-b230-final .benefitStrip article{gap:9px}
+ #ccf-b230-final .benefitStrip b{font-size:10px}
+ #ccf-b230-final .benefitStrip small{font-size:9px}
+ #ccf-b230-final .moduleGallery{grid-template-columns:1fr}
+ #ccf-b230-final .moduleCard{grid-template-columns:68px 1fr;min-height:84px}
+ #ccf-b230-final .moduleImageButton{width:68px;min-height:84px}
+ #ccf-b230-final .moduleImageButton img{width:52px;height:52px}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceVisual img{max-height:125px}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr}
+ #ccf-b230-final .priceSection{padding:20px 17px}
+ #ccf-b230-final .priceActions{grid-template-columns:1fr 1fr}
+ #ccf-b230-final .footer{gap:12px}
+ #ccf-b230-final .footer>span{width:100%}
+}
+@media(prefers-reduced-motion:reduce){#ccf-b230-final .heroLaptop,#ccf-b230-final .heroPhone{animation:none!important}}
+
 `;
-  document.head.appendChild(s);
-  if(!document.getElementById('ccf-b230-premium-revamp')){
-   const p=document.createElement('style');p.id='ccf-b230-premium-revamp';p.textContent=`
-   #${ID}{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#eff7ff}
-   #${ID} .wrap{width:min(1240px,calc(100% - 64px))}
-   #${ID} .nav{min-height:76px;border-bottom:1px solid rgba(120,205,255,.13);position:relative;z-index:8}
-   #${ID} .navLinks{display:flex;align-items:center;justify-content:center;gap:clamp(14px,2vw,30px);flex:1}
-   #${ID} .navLinks a{color:#d6e6f7;text-decoration:none;font-size:12px;font-weight:650;white-space:nowrap;transition:color .2s}
-   #${ID} .navLinks a:hover{color:#21d9f4}
-   #${ID} .brand b{font-size:15px;letter-spacing:.015em}#${ID} .brand small{font-size:9px;letter-spacing:.12em}
-   #${ID} .hero{grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);gap:42px;padding:62px 0 48px;min-height:510px}
-   #${ID} .heroTitle{font-size:clamp(44px,5.2vw,68px);line-height:.99;letter-spacing:-.055em;max-width:650px}
-   #${ID} .hero p{max-width:570px;font-size:15px;line-height:1.7;color:#a8bdd1}
-   #${ID} .heroCta{gap:12px;margin-top:26px}#${ID} .heroCta .btn{min-height:48px}
-   #${ID} .heroVisual{min-height:390px;transform:none;border-radius:28px;padding:12px;background:radial-gradient(ellipse at 55% 38%,rgba(0,196,255,.2),transparent 60%),linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.025));border-color:rgba(86,209,255,.22);box-shadow:0 25px 80px rgba(0,0,0,.38),0 0 55px rgba(0,174,255,.11)}
-   #${ID} .heroLaptop{width:100%;border-radius:14px;overflow:hidden;box-shadow:0 16px 45px rgba(0,0,0,.4)}
-   #${ID} .heroLaptop img{width:100%;height:360px;object-fit:cover;object-position:top center;border-radius:14px}
-   #${ID} .heroPhone{right:2.5%;bottom:3%;width:20%;border:5px solid #091827;border-radius:23px;background:#071321;box-shadow:0 18px 42px rgba(0,0,0,.6)}
-   #${ID} .heroPhone img{display:block;width:100%;height:auto;border-radius:17px}
-   #${ID} .heroDeviceBadge{left:20px;bottom:18px;font-size:10px}
-   #${ID} .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:4px 0 34px;padding:18px 10px;background:linear-gradient(100deg,rgba(22,70,102,.65),rgba(16,42,66,.78));border:1px solid rgba(100,205,255,.17);border-radius:18px}
-   #${ID} .stripItem{padding:4px 18px;border-right:1px solid rgba(180,220,255,.18)}#${ID} .stripItem:last-child{border:0}
-   #${ID} .stripItem strong{font-size:13px}#${ID} .stripItem span{font-size:10px}
-   #${ID} .section{padding:54px 0}#${ID} .sectionHead h2{font-size:clamp(30px,3.7vw,43px);letter-spacing:-.04em}
-   #${ID} .moduleGallery{gap:16px}#${ID} .moduleImageButton{height:175px}
-   #${ID} .moduleCard{border-color:rgba(84,190,255,.2);background:linear-gradient(145deg,rgba(22,55,80,.8),rgba(9,24,40,.85))}
-   #${ID} .flowStep{background:linear-gradient(145deg,rgba(22,55,80,.72),rgba(9,24,40,.78));min-height:132px}
-   #${ID} .audienceCard{background:linear-gradient(145deg,rgba(22,55,80,.72),rgba(9,24,40,.78));border-color:rgba(84,190,255,.16)}
-   #${ID} .priceSection{background:radial-gradient(circle at 85% 15%,rgba(0,192,255,.18),transparent 42%),linear-gradient(130deg,#102e48,#071a2b);border-color:rgba(65,202,255,.25)}
-   #${ID} .dynamicCta{background:radial-gradient(circle at 80% 20%,rgba(0,200,255,.26),transparent 44%),linear-gradient(115deg,#102c66,#07536c);border-color:rgba(47,201,255,.4)}
-   #${ID} .footer{border-top:1px solid rgba(120,205,255,.15)}
-   @media(max-width:900px){#${ID} .wrap{width:min(100% - 36px,760px)}#${ID} .navLinks{gap:12px}#${ID} .navLinks a{font-size:10px}#${ID} .hero{gap:24px;padding:48px 0 36px}#${ID} .heroTitle{font-size:clamp(38px,6vw,54px)}#${ID} .heroVisual{min-height:300px}#${ID} .heroLaptop img{height:280px}#${ID} .stripItem{padding:4px 10px}}
-   @media(max-width:700px){#${ID} .wrap{width:calc(100% - 28px)}#${ID} .nav{flex-wrap:wrap;gap:10px;padding:12px 0}#${ID} .navLinks{order:3;flex-basis:100%;justify-content:space-between;overflow:auto;padding:7px 0 2px}#${ID} .navLinks a{font-size:10px}#${ID} .nav .actions .btn:first-child{display:none}#${ID} .hero{grid-template-columns:1fr;gap:22px;padding:38px 0 28px}#${ID} .heroTitle{font-size:clamp(39px,10vw,54px);max-width:100%}#${ID} .hero p{font-size:14px}#${ID} .heroVisual{min-height:0;padding:7px;transform:none}#${ID} .heroLaptop{display:none}#${ID} .heroPhone{position:relative;right:auto;bottom:auto;width:min(100%,380px);margin:auto;display:block;border:0;border-radius:18px;transform:none;filter:none;box-shadow:none}#${ID} .heroPhone img{width:100%;height:auto;border-radius:14px}#${ID} .heroDeviceBadge{left:12px;bottom:12px;font-size:8px}#${ID} .strip{grid-template-columns:1fr 1fr;gap:10px;padding:14px 8px}#${ID} .stripItem{border:0;padding:7px 9px}#${ID} .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}#${ID} .moduleImageButton{height:125px}#${ID} .faqGrid{grid-template-columns:1fr}#${ID} .dynamicCta{grid-template-columns:1fr;padding:25px 20px}#${ID} .dynamicCta .btn{width:100%}}
-   @media(max-width:390px){#${ID} .navLinks{gap:10px}#${ID} .navLinks a{font-size:9px}#${ID} .moduleGallery{grid-template-columns:1fr}#${ID} .moduleImageButton{height:165px}}
-   `;document.head.appendChild(p);
-  }
+
+
+ document.head.appendChild(s);
 }
 
 function html(){
  return `<div id="${ID}" role="dialog" aria-label="Portal de acceso al Centro de Control Financiero">
  <div class="page"><div class="orb a"></div><div class="orb b"></div><div class="wrap">
- <nav class="nav"><div class="brand"><div class="mark">CCF</div><div><b>CONTROL FINANCIERO</b><small>CENTRO DE CONTROL FINANCIERO</small></div></div>
-  <div class="navLinks"><a href="#ccf-inicio">Inicio</a><a href="#ccf-caracteristicas">Características</a><a href="#ccf-modulos">Módulos</a><a href="#ccf-usuarios">Usuarios</a><a href="#ccf-preguntas">Preguntas</a></div>
- <div class="actions"><a class="btn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">Descargar APK Android</a><button class="btn" data-b230-open="register">Crear cuenta</button><button class="btn primary" data-b230-open="login">Iniciar sesión</button></div></nav>
+ <nav class="nav">
+  <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><div class="mark">CCF</div><div><b>Control Financiero</b><small>Centro de Control Financiero</small></div></a>
+  <div class="navLinks" aria-label="Navegación principal">
+   <a class="active" href="#inicio">Inicio</a><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#usuarios">Usuarios</a><a href="#preguntas">Preguntas</a><a href="#contacto">Contacto</a>
+  </div>
+  <div class="actions"><a class="btn downloadNav" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">♟ Descargar APK</a><button class="btn primary" data-b230-open="login">♙ Iniciar sesión</button></div>
+ </nav>
  <main>
- <section class="hero" id="ccf-inicio"><div><span class="kicker">CONTROL · LIQUIDEZ · PROYECCIÓN</span>
- <h1 class="heroTitle" aria-label="Convierte tus finanzas en un sistema de control.">
-  <span class="heroWord">Convierte</span>
-  <span class="heroWord">tus</span>
-  <span class="heroWord">finanzas</span>
-  <span class="heroWord">en</span>
-  <span class="heroWord">un</span>
-  <span class="heroWord heroGrad">sistema</span>
-  <span class="heroWord heroGrad">de</span>
-  <span class="heroWord heroGrad heroPunctuation">control.</span>
-</h1>
- <p>Registra movimientos, organiza compromisos, controla deudas, proyecta tu liquidez y toma decisiones con una visión financiera integrada desde un solo lugar.</p>
- <div class="heroCta"><button class="btn primary" data-b230-open="login">Entrar al sistema →</button><button class="btn" data-b230-open="register">Crear mi cuenta</button><a class="btn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">Descargar APK Android</a></div>
- <div class="proof"><span><i></i>Datos centralizados</span><span><i></i>Proyección financiera</span><span><i></i>Experiencia móvil</span></div></div>
- <div class="heroVisual" aria-label="Vista real del Centro de Control Financiero en computador y teléfono">
-  <div class="heroLaptop"><img src="${IMG_HERO_LAPTOP}" alt="Vista completa del Centro de Control Financiero en computador"></div>
-  <div class="heroPhone"><img src="${IMG_HERO_PHONE}" alt="Vista completa del Centro de Control Financiero en celular"></div>
-  <span class="heroDeviceBadge">Vista real del sistema · Escritorio + móvil</span>
-</div></section>
- <section class="strip" id="ccf-caracteristicas"><div class="stripItem"><i class="stripDot"></i><div><strong>Centraliza tu información</strong><span>En un solo lugar</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Analiza tu realidad</strong><span>Con reportes visuales</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Planifica tu futuro</strong><span>Con metas y proyecciones</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Toma mejores decisiones</strong><span>Con datos confiables</span></div></div></section>
- <section class="section" id="ccf-modulos"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales.</h2><p>Herramientas conectadas para comprender tu presente, ordenar tu información y proyectar lo que viene. Pulsa cualquier captura para verla con mayor detalle.</p></div>
- <div class="moduleGallery"><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="resumen" aria-label="Ampliar Resumen"><img src="${IMG_RESUMEN}" alt="Resumen — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Resumen</b><p>Panel financiero con liquidez, ingresos, gastos y resultado.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="calendario" aria-label="Ampliar Calendario"><img src="${IMG_CALENDARIO}" alt="Calendario — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Calendario</b><p>Visualiza compromisos, pagos y eventos por fecha.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="movimientos" aria-label="Ampliar Movimientos"><img src="${IMG_MOVIMIENTOS}" alt="Movimientos — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Movimientos</b><p>Registra y consulta ingresos y gastos de forma ordenada.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="presupuesto" aria-label="Ampliar Presupuesto"><img src="${IMG_PRESUPUESTO}" alt="Presupuesto — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Presupuesto</b><p>Compara planificación, ejecución y compromisos.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="deudas" aria-label="Ampliar Deudas"><img src="${IMG_DEUDAS}" alt="Deudas — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Deudas</b><p>Controla saldos, cuotas, vencimientos y obligaciones.</p></div></article><article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="planificacion" aria-label="Ampliar Planificación"><img src="${IMG_PLANIFICACION}" alt="Planificación — vista real del sistema" loading="lazy"><span class="zoomHint" aria-hidden="true">⌕</span></button><div class="moduleInfo"><span class="moduleTag">CCF · Módulo</span><b>Planificación</b><p>Anticipa escenarios financieros y necesidades futuras.</p></div></article></div></section>
- <section class="section"><div class="sectionHead"><span class="eyebrow">DE LOS DATOS A LA DECISIÓN</span><h2>Una visión financiera conectada.</h2><p>El sistema relaciona tus registros para pasar de información dispersa a una lectura integrada de tu situación financiera.</p></div><div class="flowGrid"><article class="flowStep"><em>01</em><b>REGISTRA</b><p>Ingresos, gastos, cuentas y deudas.</p></article><article class="flowStep"><em>02</em><b>ORGANIZA</b><p>Clasifica y estructura tu información.</p></article><article class="flowStep"><em>03</em><b>PLANIFICA</b><p>Define presupuestos y objetivos.</p></article><article class="flowStep"><em>04</em><b>PROYECTA</b><p>Visualiza escenarios de liquidez.</p></article><article class="flowStep"><em>05</em><b>ANALIZA</b><p>Identifica brechas y necesidades.</p></article><article class="flowStep"><em>06</em><b>DECIDE</b><p>Toma decisiones con mayor claridad.</p></article></div></section>
-
- <section class="section" id="ccf-preguntas"><div class="faqGrid"><div class="sectionHead"><span class="eyebrow">PREGUNTAS FRECUENTES</span><h2>¿Tienes dudas? Aquí te ayudamos.</h2><p>Respuestas rápidas sobre el propósito, uso y experiencia del Centro de Control Financiero.</p></div><div class="faqList"><div class="faqItem"><button class="faqQ" type="button"><span>¿Qué puedo controlar con el sistema?</span><span>＋</span></button><div class="faqA">Puedes organizar movimientos, cuentas, deudas, presupuesto, calendario, ahorro, planificación y proyección dentro de una misma estructura.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Puedo usarlo desde mi celular?</span><span>＋</span></button><div class="faqA">Sí. El portal está diseñado para ofrecer una experiencia responsive y el sistema cuenta con vistas adaptadas a dispositivos móviles.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Cómo se relacionan los módulos?</span><span>＋</span></button><div class="faqA">Los módulos trabajan sobre una estructura financiera común para conservar trazabilidad entre registros, compromisos y proyecciones.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Mis datos permanecen privados?</span><span>＋</span></button><div class="faqA">El portal de acceso no crea una autenticación paralela: deriva el acceso al flujo de autenticación existente del sistema.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Necesito conocimientos financieros?</span><span>＋</span></button><div class="faqA">No. La propuesta está orientada a transformar información cotidiana en una lectura más clara y accionable.</div></div></div></div></section>
- <section class="section" id="ccf-usuarios"><div class="sectionHead"><span class="eyebrow">DISEÑADO PARA DISTINTAS REALIDADES</span><h2>Una herramienta que se adapta a tu forma de administrar dinero.</h2><p>El mismo centro de control puede acompañar distintas fuentes de ingresos, obligaciones y objetivos.</p></div><div class="audienceVisual"><img src="${IMG_AUDIENCES}" alt="Perfiles para quienes está dirigido el sistema de Control Financiero" loading="lazy"></div><div class="audienceGrid"><article class="audienceCard"><strong>Finanzas personales</strong><span>Organiza ingresos, gastos, cuentas y obligaciones.</span></article><article class="audienceCard"><strong>Ingresos variables</strong><span>Controla jornadas y diferentes fuentes de generación.</span></article><article class="audienceCard"><strong>Independientes</strong><span>Consolida múltiples fuentes de ingresos y gastos.</span></article><article class="audienceCard"><strong>Planificación</strong><span>Construye escenarios y anticipa necesidades futuras.</span></article><article class="audienceCard"><strong>Gestión patrimonial</strong><span>Integra deuda, liquidez, ahorro y planificación.</span></article></div></section> <section class="priceSection" aria-labelledby="ccf-price-title"><div class="priceGrid"><div><span class="priceBadge">Oferta de lanzamiento</span><h2 id="ccf-price-title" class="priceTitle">Control Financiero es gratis por tiempo limitado.</h2><p class="priceText">Accede al Centro de Control Financiero durante nuestro período inicial sin costo. Puedes utilizarlo desde el navegador o descargar la aplicación Android directamente desde este sitio.</p></div><div><p class="priceValue">$0</p><p class="priceSmall">Durante el período promocional.<br>Descarga directa para Android.</p><div class="priceActions"><a class="btn primary installBtn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">Descargar APK Android</a><button class="btn" data-b230-open="register">Comenzar gratis</button></div></div></div></section> <section class="dynamicCta"><div><span class="eyebrow">CENTRO DE CONTROL FINANCIERO</span><h2>Comienza hoy a controlar tus finanzas.</h2><p>Registra. Organiza. Planifica. Proyecta. Accede al sistema y construye una visión integrada de tu presente y de los escenarios que vienen.</p></div><button class="btn primary" data-b230-open="login">Crear mi cuenta →</button></section>
- </main><footer class="footer"><strong>CCF · Centro de Control Financiero</strong><span>Producto desarrollado por Somos Software · Innovación Digital</span></footer>
+ <section class="hero" id="inicio">
+  <div class="heroCopy">
+   <span class="kicker">GESTIÓN · CONTROL · PROYECCIÓN</span>
+   <h1 class="heroTitle">Convierte tus finanzas<br>en un sistema de<br><span class="grad">control inteligente.</span></h1>
+   <p>Registra tus movimientos, organiza tus compromisos, controla deudas, proyecta tu liquidez y toma decisiones con una visión financiera integrada, simple y profesional.</p>
+   <div class="heroCta"><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button><a class="btn demoBtn" href="#modulos">▷&nbsp; Ver demostración</a></div>
+   <div class="proof"><span>✓&nbsp; Rápido y fácil de usar</span><span>✓&nbsp; Desde cualquier dispositivo</span><span>✓&nbsp; 100% en la nube</span></div>
+  </div>
+  <div class="heroVisual" aria-label="Vista del Centro de Control Financiero en computador y teléfono">
+   <div class="heroLaptop"><img src="${IMG_HERO_LAPTOP}" alt="Panel de Control Financiero en escritorio"></div>
+   <div class="heroPhone"><img src="${IMG_HERO_PHONE}" alt="Aplicación móvil de Control Financiero"></div>
+  </div>
+ </section>
+ <section class="benefitStrip" id="caracteristicas">
+  <article><span class="benefitIcon">▱</span><div><b>Centraliza tu información</b><small>En un solo lugar</small></div></article>
+  <article><span class="benefitIcon">▥</span><div><b>Analiza tu realidad</b><small>Con reportes visuales</small></div></article>
+  <article><span class="benefitIcon">◎</span><div><b>Planifica tu futuro</b><small>Con metas y proyecciones</small></div></article>
+  <article><span class="benefitIcon">♢</span><div><b>Toma mejores decisiones</b><small>Con datos confiables</small></div></article>
+ </section>
+ <section class="section modulesSection" id="modulos">
+  <div class="sectionTitleRow"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales.</h2><p>Herramientas conectadas para comprender tu presente, ordenar tu información y proyectar lo que viene.</p></div><a class="outlineLink" href="#usuarios">Conoce todos los módulos&nbsp; →</a></div>
+  <div class="moduleGallery">
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="resumen" aria-label="Ampliar Resumen"><img src="${IMG_RESUMEN}" alt="Resumen — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>▱&nbsp; Resumen</b><p>Panorama financiero con ingresos, gastos y resultado.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="calendario" aria-label="Ampliar Calendario"><img src="${IMG_CALENDARIO}" alt="Calendario — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>▦&nbsp; Calendario</b><p>Visualiza compromisos, pagos y eventos por fecha.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="movimientos" aria-label="Ampliar Movimientos"><img src="${IMG_MOVIMIENTOS}" alt="Movimientos — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>⇄&nbsp; Movimientos</b><p>Registra y consulta ingresos y gastos de forma ordenada.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="presupuesto" aria-label="Ampliar Presupuesto"><img src="${IMG_PRESUPUESTO}" alt="Presupuesto — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>◷&nbsp; Presupuesto</b><p>Compara planificación, ejecución y compromisos.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="deudas" aria-label="Ampliar Deudas"><img src="${IMG_DEUDAS}" alt="Deudas — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>▤&nbsp; Deudas</b><p>Controla saldos, cuotas, vencimientos y obligaciones.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="planificacion" aria-label="Ampliar Planificación"><img src="${IMG_PLANIFICACION}" alt="Planificación — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>⌁&nbsp; Planificación</b><p>Anticipa escenarios financieros y necesidades futuras.</p></div></article>
+  </div>
+ </section>
+ <section class="section audienceSection" id="usuarios">
+  <div class="audienceIntro"><span class="eyebrow">DISEÑADO PARA DISTINTAS REALIDADES</span><h2>Una herramienta que se adapta a tu forma de administrar dinero.</h2><p>El mismo centro de control puede acompañar distintas fuentes de ingresos, obligaciones y objetivos.</p></div>
+  <div class="audienceVisual"><img src="${IMG_AUDIENCES}" alt="Perfiles de usuarios de Control Financiero" loading="lazy"></div>
+  <div class="audienceGrid"><article class="audienceCard"><strong>Emprendedores</strong><span>Controla tus ingresos, costos y haz crecer tu negocio.</span></article><article class="audienceCard"><strong>Empresarios</strong><span>Toma decisiones con datos reales y proyecta tu crecimiento.</span></article><article class="audienceCard"><strong>Independientes</strong><span>Gestiona tu actividad, controla tus ingresos y gastos.</span></article><article class="audienceCard"><strong>Dueños de negocio</strong><span>Organiza tus ventas, compras, deudas y ganancias.</span></article><article class="audienceCard"><strong>Hogar y familia</strong><span>Lleva el control del hogar y planifica mejor tu presupuesto.</span></article></div>
+ </section>
+ <section class="benefitStrip lowerBenefits">
+  <article><span class="benefitIcon">ϟ</span><div><b>Simple y rápido</b><small>Fácil de usar, sin curva de aprendizaje</small></div></article>
+  <article><span class="benefitIcon">☁</span><div><b>En la nube</b><small>Accede desde cualquier lugar</small></div></article>
+  <article><span class="benefitIcon">♙</span><div><b>Seguro y privado</b><small>Tus datos están protegidos</small></div></article>
+  <article><span class="benefitIcon">▣</span><div><b>Multi-dispositivo</b><small>Web y Android</small></div></article>
+ </section>
+ <section class="offerFaq" id="preguntas">
+  <section class="priceSection" aria-labelledby="ccf-price-title"><div class="priceGrid"><div><span class="priceBadge">Oferta de lanzamiento</span><h2 id="ccf-price-title" class="priceTitle">Control Financiero es gratis por tiempo limitado.</h2><p class="priceText">Accede al Centro de Control Financiero durante nuestro período inicial sin costo. Puedes utilizarlo desde el navegador o descargar la aplicación Android directamente desde este sitio.</p></div><div class="priceActionColumn"><p class="priceValue">$0</p><p class="priceSmall">Durante el período promocional.</p><div class="priceActions"><a class="btn primary installBtn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">♟&nbsp; Descargar APK Android</a><button class="btn" data-b230-open="register">Comenzar gratis</button></div></div></div></section>
+  <div class="faqBlock"><span class="eyebrow">PREGUNTAS FRECUENTES</span><h2>¿Tienes dudas? Aquí te ayudamos.</h2><div class="faqList"><div class="faqItem"><button class="faqQ" type="button"><span>¿Qué puedo controlar con el sistema?</span><span>＋</span></button><div class="faqA">Puedes organizar movimientos, cuentas, deudas, presupuesto, calendario, ahorro, planificación y proyección dentro de una misma estructura.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Puedo usarlo desde mi celular?</span><span>＋</span></button><div class="faqA">Sí. El sistema cuenta con vistas adaptadas a dispositivos móviles y una aplicación Android.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Cómo se relacionan los módulos?</span><span>＋</span></button><div class="faqA">Los módulos trabajan sobre una estructura financiera común para conservar trazabilidad entre registros, compromisos y proyecciones.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Mis datos permanecen privados?</span><span>＋</span></button><div class="faqA">El acceso utiliza el flujo de autenticación existente del sistema y no crea una autenticación paralela.</div></div><div class="faqItem"><button class="faqQ" type="button"><span>¿Necesito conocimientos financieros?</span><span>＋</span></button><div class="faqA">No. La propuesta está orientada a transformar información cotidiana en una lectura más clara y accionable.</div></div></div></div>
+ </section>
+ <section class="dynamicCta" id="contacto"><div><h2>Comienza hoy a controlar tus finanzas.</h2><p>Registra. Organiza. Planifica. Proyecta. Accede al sistema y construye una visión integrada de tu presente y de los escenarios que vienen.</p></div><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button></section>
+ </main>
+ <footer class="footer"><div class="footerBrand"><span class="mark">CCF</span><div><b>Control Financiero</b><small>Centro de Control Financiero</small></div></div><span>Producto desarrollado por Somos Software · Innovación Digital</span><div class="footerLinks"><a href="#preguntas">Términos y condiciones</a><a href="#preguntas">Política de privacidad</a><a href="#contacto">Contacto</a></div></footer>
  </div></div></div>`;
 }
+
 
 
 function mountInteractiveContent(){
