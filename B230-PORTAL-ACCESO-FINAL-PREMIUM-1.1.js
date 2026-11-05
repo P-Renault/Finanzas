@@ -10,8 +10,8 @@ window.__CCF_B230_PREMIUM_11__=true;
 const ID='ccf-b230-final';
 const $=(s,r=document)=>r.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-laptop.jpg';
-const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-phone.jpg';
+const IMG_HERO_DESKTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dashboard-desktop.jpg';
+const IMG_HERO_MOBILE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dashboard-mobile.jpg';
 const IMG_AUDIENCES='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/audiences.jpg';
 const IMG_RESUMEN='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/01-resumen.png';
 const IMG_CALENDARIO='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/02-calendario.png';
@@ -216,11 +216,10 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #ccf-b230-final .zoomHint{position:absolute;right:15px;top:15px;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;background:rgba(4,15,27,.76);border:1px solid rgba(255,255,255,.15);font-size:15px;backdrop-filter:blur(9px);z-index:2;opacity:.94}
 #ccf-b230-final .moduleInfo{padding:13px 15px 15px}.moduleInfo b{display:block;font-size:15px;color:#edf6ff}.moduleInfo p{margin:5px 0 0;color:#8197ad;font-size:10px;line-height:1.5}
 #ccf-b230-final .moduleTag{display:inline-flex;margin-bottom:7px;padding:4px 7px;border-radius:999px;color:#70d9ff;background:rgba(43,178,225,.055);border:1px solid rgba(80,210,255,.12);font-size:7px;letter-spacing:.11em;font-weight:900;text-transform:uppercase}
-#ccf-b230-final .heroVisual{position:relative;min-height:390px;display:flex;align-items:center;justify-content:center;padding:8px;border-radius:26px;border:1px solid rgba(255,255,255,.13);background:radial-gradient(circle at 78% 28%,rgba(48,191,255,.14),transparent 34%),linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));box-shadow:0 32px 90px rgba(0,0,0,.38);overflow:hidden;transform:perspective(1100px) rotateY(-5deg) rotateX(2deg);animation:b230in .8s ease both}
-#ccf-b230-final .heroLaptop{position:relative;width:100%;line-height:0;border-radius:20px;overflow:hidden}
-#ccf-b230-final .heroLaptop img{display:block;width:100%;height:auto;border-radius:20px;background:#fff}
-#ccf-b230-final .heroPhone{position:absolute;z-index:3;right:3.5%;bottom:2.5%;width:27%;line-height:0;border-radius:28px;overflow:hidden;filter:drop-shadow(0 24px 35px rgba(0,0,0,.48));transform:rotate(1.5deg)}
-#ccf-b230-final .heroPhone img{display:block;width:100%;height:auto;border-radius:28px}
+#ccf-b230-final .heroVisual{position:relative;min-height:420px;display:flex;align-items:center;justify-content:center;padding:16px;border-radius:26px;border:1px solid rgba(91,216,255,.22);background:radial-gradient(circle at 50% 20%,rgba(48,191,255,.16),transparent 48%),linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.018));box-shadow:0 32px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;transform:perspective(1100px) rotateY(-3deg) rotateX(1deg);animation:b230in .8s ease both}
+#ccf-b230-final .heroLaptop{position:relative;width:100%;height:100%;min-height:390px;display:flex;align-items:center;justify-content:center;line-height:0;border-radius:18px;overflow:hidden}
+#ccf-b230-final .heroLaptop img{display:block;width:auto;max-width:100%;height:auto;max-height:520px;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 20px 55px rgba(0,0,0,.34)}
+#ccf-b230-final .heroPhone{display:none}
 #ccf-b230-final .heroDeviceBadge{position:absolute;z-index:5;left:18px;bottom:18px;padding:8px 11px;border-radius:999px;background:rgba(4,15,27,.88);border:1px solid rgba(91,216,255,.28);color:#dff8ff;font-size:9px;font-weight:900;backdrop-filter:blur(10px)}
 #ccf-b230-final .audienceVisual{margin-top:26px;padding:10px;border-radius:20px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.025);overflow:hidden}
 #ccf-b230-final .audienceVisual img{display:block;width:100%;height:auto;border-radius:14px}
@@ -280,10 +279,12 @@ function html(){
  <p>Registra movimientos, organiza compromisos, controla deudas, proyecta tu liquidez y toma decisiones con una visión financiera integrada desde un solo lugar.</p>
  <div class="heroCta"><button class="btn primary" data-b230-open="login">Entrar al sistema →</button><button class="btn" data-b230-open="register">Crear mi cuenta</button><a class="btn" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">Descargar APK Android</a></div>
  <div class="proof"><span><i></i>Datos centralizados</span><span><i></i>Proyección financiera</span><span><i></i>Experiencia móvil</span></div></div>
- <div class="heroVisual" aria-label="Vista real del Centro de Control Financiero en computador y teléfono">
-  <div class="heroLaptop"><img src="${IMG_HERO_LAPTOP}" alt="Vista completa del Centro de Control Financiero en computador"></div>
-  <div class="heroPhone"><img src="${IMG_HERO_PHONE}" alt="Vista completa del Centro de Control Financiero en celular"></div>
-  <span class="heroDeviceBadge">Vista real del sistema · Escritorio + móvil</span>
+ <div class="heroVisual" aria-label="Vista real del Centro de Control Financiero">
+  <picture class="heroLaptop">
+   <source media="(max-width: 640px)" srcset="${IMG_HERO_MOBILE}">
+   <img src="${IMG_HERO_DESKTOP}" alt="Panel real del Centro de Control Financiero en versión escritorio" fetchpriority="high" decoding="async">
+  </picture>
+  <span class="heroDeviceBadge">Interfaz real · Control financiero integrado</span>
 </div></section>
  <section class="strip"><div class="stripItem"><i class="stripDot"></i><div><strong>Registro</strong><span>Información financiera ordenada</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Análisis</strong><span>Lectura de liquidez y obligaciones</span></div></div><div class="stripItem"><i class="stripDot"></i><div><strong>Anticipación</strong><span>Proyección para decidir con datos</span></div></div></section>
  <section class="section"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales.</h2><p>Herramientas conectadas para comprender tu presente, ordenar tu información y proyectar lo que viene. Pulsa cualquier captura para verla con mayor detalle.</p></div>
