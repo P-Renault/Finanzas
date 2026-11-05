@@ -477,12 +477,19 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
   object-fit:cover;object-position:top center;border-radius:20px;
 }
 #${ID} .benefitStrip{margin-top:0}
+/* Ajuste de composición fiel a la referencia visual 2:
+   hero más compacto, laptop desplazado a la derecha y móvil delante a la izquierda. */
+#${ID} .hero{min-height:510px;padding-top:20px;padding-bottom:20px}
+#${ID} .heroVisual{min-height:470px}
+#${ID} .heroLaptop{transform:translateX(4%)}
+#${ID} .heroPhone{left:-17%;width:32%;bottom:-1%}
 @media(max-width:1100px) and (min-width:761px){
  #${ID} .hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;min-height:500px}
  #${ID} .heroTitle{font-size:clamp(42px,4.1vw,52px)}
  #${ID} .heroVisual{min-height:450px}
  #${ID} .heroLaptop{height:390px}
- #${ID} .heroPhone{width:29%;left:-2%}
+ #${ID} .heroPhone{width:31%;left:-13%}
+ #${ID} .heroLaptop{transform:translateX(3%)}
  #${ID} .heroPhone img{height:310px}
 }
 @media(max-width:760px){
@@ -491,6 +498,7 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #${ID} .hero p{font-size:14px}
  #${ID} .heroVisual{min-height:340px;max-width:680px;margin:0 auto;width:100%}
  #${ID} .heroLaptop{height:290px;padding:9px 9px 19px}
+ #${ID} .heroLaptop{transform:none}
  #${ID} .heroPhone{width:25%;left:-1%;bottom:-2%;padding:5px 4px 11px;border-radius:21px}
  #${ID} .heroPhone img{height:235px;border-radius:15px}
 }
