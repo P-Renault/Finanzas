@@ -424,6 +424,84 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #${ID} .dynamicCta{padding:20px}
  #${ID} .footerLinks{gap:10px}
 }
+/* HERO REFERENCE 2 — layout, escala y dispositivos */
+#${ID} .hero{
+  grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);
+  gap:22px;
+  min-height:570px;
+  padding:28px 0 34px;
+  align-items:center;
+}
+#${ID} .heroCopy{max-width:660px}
+#${ID} .heroTitle{
+  font-size:clamp(44px,3.75vw,58px);
+  line-height:1.02;
+  letter-spacing:-.055em;
+  text-wrap:initial;
+}
+#${ID} .hero p{max-width:610px;font-size:16px;line-height:1.62;color:#d7e5f2}
+#${ID} .heroVisual{
+  min-height:540px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:radial-gradient(ellipse at 54% 55%,rgba(0,173,255,.34),transparent 66%);
+  box-shadow:none;
+  overflow:visible;
+  transform:none;
+  animation:none;
+}
+#${ID} .heroLaptop{
+  width:100%;
+  height:clamp(430px,34vw,520px);
+  padding:12px 12px 24px;
+  border:2px solid #9cb9d2;
+  border-bottom:5px solid #637f9a;
+  border-radius:22px 22px 12px 12px;
+  background:linear-gradient(145deg,#0c1b2d,#020914 45%,#1b3044);
+  box-shadow:0 22px 50px #0009,0 0 42px #00aaff35;
+  overflow:visible;
+}
+#${ID} .heroLaptop img{
+  width:100%;height:100%;object-fit:cover;object-position:top center;
+  border-radius:10px;background:#f6f8fc;
+}
+#${ID} .heroPhone{
+  left:-3%;right:auto;bottom:-2%;width:29%;padding:7px 6px 15px;
+  border:3px solid #8da9c0;border-radius:29px;
+  background:linear-gradient(145deg,#15283c,#020814);
+  box-shadow:0 18px 40px #000b;transform:rotate(-2deg);overflow:hidden;
+}
+#${ID} .heroPhone img{
+  display:block;width:100%;height:clamp(330px,27vw,410px);
+  object-fit:cover;object-position:top center;border-radius:20px;
+}
+#${ID} .benefitStrip{margin-top:0}
+@media(max-width:1100px) and (min-width:761px){
+ #${ID} .hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;min-height:500px}
+ #${ID} .heroTitle{font-size:clamp(42px,4.1vw,52px)}
+ #${ID} .heroVisual{min-height:450px}
+ #${ID} .heroLaptop{height:390px}
+ #${ID} .heroPhone{width:29%;left:-2%}
+ #${ID} .heroPhone img{height:310px}
+}
+@media(max-width:760px){
+ #${ID} .hero{grid-template-columns:1fr;gap:20px;padding:30px 0 24px;min-height:0}
+ #${ID} .heroTitle{font-size:clamp(38px,8.5vw,54px);text-wrap:balance}
+ #${ID} .hero p{font-size:14px}
+ #${ID} .heroVisual{min-height:340px;max-width:680px;margin:0 auto;width:100%}
+ #${ID} .heroLaptop{height:290px;padding:9px 9px 19px}
+ #${ID} .heroPhone{width:25%;left:-1%;bottom:-2%;padding:5px 4px 11px;border-radius:21px}
+ #${ID} .heroPhone img{height:235px;border-radius:15px}
+}
+@media(max-width:480px){
+ #${ID} .hero{padding-top:24px}
+ #${ID} .heroTitle{font-size:clamp(35px,9.5vw,45px);line-height:1.02}
+ #${ID} .heroVisual{min-height:260px}
+ #${ID} .heroLaptop{height:220px}
+ #${ID} .heroPhone{width:25%;bottom:-2%}
+ #${ID} .heroPhone img{height:175px}
+}
 @media(prefers-reduced-motion:reduce){#${ID} *,#${ID} *:before,#${ID} *:after{animation:none!important;transition:none!important}}
 
 `;
