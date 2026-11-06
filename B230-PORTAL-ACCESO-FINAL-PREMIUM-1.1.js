@@ -14,6 +14,8 @@ const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-laptop
 const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-phone.jpg';
 const IMG_HERO_COMPOSITION='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-reference-devices.jpg';
 const IMG_HERO_MOBILE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-reference-phone.jpg';
+const IMG_SCREEN_DESKTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-screen-desktop.jpg';
+const IMG_SCREEN_MOBILE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-screen-mobile.jpg';
 const IMG_AUDIENCES='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/audiences.jpg';
 const IMG_RESUMEN='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/01-resumen.png';
 const IMG_CALENDARIO='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/02-calendario.png';
@@ -544,6 +546,137 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 }
 @media(prefers-reduced-motion:reduce){#ccf-b230-final .heroVisualMobile img{animation:none!important;transition:none!important}}
 
+/* B230.2.9.7 — SOMOS SOFTWARE DESIGN SYSTEM / DEVICE MOCKUP REBUILD */
+#ccf-b230-final .hero{
+  grid-template-columns:minmax(0,.91fr) minmax(0,1.09fr);
+  gap:clamp(24px,3vw,48px);
+  min-height:570px;
+  padding:48px 0 38px;
+  align-items:center;
+}
+#ccf-b230-final .heroCopy{max-width:650px;z-index:3}
+#ccf-b230-final .heroTitle{max-width:660px;text-wrap:balance}
+#ccf-b230-final .heroVisual{
+  width:100%;min-height:0;margin:0;padding:0;overflow:visible;
+  display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:0;background:none;box-shadow:none;transform:none;animation:none;
+}
+#ccf-b230-final .ccf-device-stage{
+  width:100%;max-width:760px;position:relative;isolation:isolate;
+  padding:22px 5px 40px 8px;
+  background:radial-gradient(ellipse at 55% 48%,rgba(0,155,255,.24),transparent 65%);
+}
+#ccf-b230-final .ccf-laptop{
+  position:relative;width:100%;z-index:1;padding:11px 11px 9px;
+  border:2px solid #a9c9df;border-bottom-color:#425e77;
+  border-radius:22px 22px 12px 12px;
+  background:linear-gradient(145deg,#182b40,#050c17 45%,#243a50);
+  box-shadow:0 26px 55px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.08) inset;
+}
+#ccf-b230-final .ccf-laptop-screen{
+  position:relative;overflow:hidden;aspect-ratio:1.6/1;
+  border-radius:12px 12px 4px 4px;background:#f4f7fb;
+  border:1px solid rgba(255,255,255,.18);
+}
+#ccf-b230-final .ccf-laptop-screen img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}
+#ccf-b230-final .ccf-camera{
+  position:absolute;z-index:2;top:4px;left:50%;transform:translateX(-50%);
+  width:5px;height:5px;border-radius:50%;background:#29465e;
+  box-shadow:0 0 0 2px rgba(0,0,0,.28);
+}
+#ccf-b230-final .ccf-laptop-chin{height:8px;background:linear-gradient(180deg,#1d3349,#07111d)}
+#ccf-b230-final .ccf-laptop-base{
+  position:absolute;left:-5.5%;right:-5.5%;bottom:-14px;height:13px;
+  border-radius:0 0 45% 45%;
+  background:linear-gradient(180deg,#d7e3eb 0%,#71889a 35%,#263d52 72%,#07111d 100%);
+  box-shadow:0 12px 18px rgba(0,0,0,.32);
+}
+#ccf-b230-final .ccf-phone{
+  position:absolute;z-index:3;left:-3%;bottom:12px;
+  width:23%;max-width:176px;min-width:126px;
+  padding:9px 6px 8px;border:3px solid #a9c4d8;border-radius:28px;
+  background:linear-gradient(145deg,#20364c,#050b14 70%);
+  box-shadow:0 20px 38px rgba(0,0,0,.48),0 0 0 1px rgba(255,255,255,.12) inset;
+  transform:rotate(-3deg);
+}
+#ccf-b230-final .ccf-phone img{
+  display:block;width:100%;height:auto;aspect-ratio:691/1178;
+  object-fit:cover;border-radius:19px;background:#f4f7fb;
+}
+#ccf-b230-final .ccf-phone-speaker{
+  position:absolute;z-index:2;top:5px;left:50%;transform:translateX(-50%);
+  width:34px;height:4px;border-radius:5px;background:#07111d;
+}
+#ccf-b230-final .heroVisualMobile{display:none}
+#ccf-b230-final .benefitStrip{margin-top:0}
+@media(max-width:1100px) and (min-width:761px){
+ #ccf-b230-final .hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px;min-height:510px}
+ #ccf-b230-final h1{font-size:clamp(40px,4.3vw,54px)}
+ #ccf-b230-final .ccf-phone{left:-2%;width:22%}
+}
+@media(max-width:980px){
+ #ccf-b230-final .nav{position:sticky}
+ #ccf-b230-final .mobileMenuToggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(157,205,235,.24);border-radius:11px;background:rgba(255,255,255,.06);color:#f4f9ff;font-size:21px;cursor:pointer}
+ #ccf-b230-final .navLinks{display:none;order:5;position:absolute;left:0;right:0;top:calc(100% + 1px);padding:10px;border:1px solid rgba(87,181,232,.22);border-radius:0 0 16px 16px;background:rgba(4,17,33,.98);box-shadow:0 18px 40px rgba(0,0,0,.35);flex-direction:column;align-items:stretch;gap:0}
+ #ccf-b230-final .nav.is-open .navLinks{display:flex}
+ #ccf-b230-final .navLinks a{display:block;padding:13px 12px;font-size:13px}
+ #ccf-b230-final .navLinks a.active:after{left:12px;right:auto;bottom:5px;width:26px;height:2px}
+ #ccf-b230-final .actions .downloadNav{display:none}
+}
+@media(max-width:760px){
+ #ccf-b230-final .wrap{width:calc(100% - 36px)}
+ #ccf-b230-final .nav{flex-wrap:wrap}
+ #ccf-b230-final .hero{display:flex;flex-direction:column;align-items:stretch;gap:22px;padding:34px 0 25px;min-height:0}
+ #ccf-b230-final .heroCopy{max-width:680px}
+ #ccf-b230-final h1{font-size:clamp(39px,8.7vw,56px);line-height:1.02;max-width:650px}
+ #ccf-b230-final .hero p{font-size:15px;max-width:620px}
+ #ccf-b230-final .heroVisual{width:100%;display:flex;justify-content:center;overflow:visible}
+ #ccf-b230-final .ccf-device-stage{
+   width:100%;max-width:460px;min-height:0;padding:0 0 8px;
+   display:flex;justify-content:center;align-items:center;
+   background:radial-gradient(ellipse at 50% 55%,rgba(0,156,255,.22),transparent 68%);
+ }
+ #ccf-b230-final .ccf-laptop{display:none}
+ #ccf-b230-final .ccf-phone{
+   position:relative;left:auto;bottom:auto;width:min(68%,280px);max-width:280px;min-width:0;
+   padding:10px 7px 9px;border-width:3px;border-radius:34px;
+   transform:none;margin:0 auto;box-shadow:0 26px 50px rgba(0,0,0,.48);
+ }
+ #ccf-b230-final .ccf-phone img{border-radius:25px}
+ #ccf-b230-final .ccf-phone-speaker{top:5px;width:42px;height:5px}
+ #ccf-b230-final .benefitStrip{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+ #ccf-b230-final .benefitStrip article{border:0;padding:6px 4px}
+ #ccf-b230-final .section{padding:34px 0}
+ #ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .offerFaq{grid-template-columns:1fr}
+ #ccf-b230-final .dynamicCta{grid-template-columns:1fr}
+ #ccf-b230-final .dynamicCta .btn{width:100%}
+}
+@media(max-width:520px){
+ #ccf-b230-final .wrap{width:calc(100% - 30px)}
+ #ccf-b230-final .nav{gap:8px}
+ #ccf-b230-final .brand b{font-size:14px}
+ #ccf-b230-final .brand small{font-size:8px}
+ #ccf-b230-final .actions .btn{min-height:39px;padding:8px 11px;font-size:10px}
+ #ccf-b230-final .hero{padding-top:30px;gap:20px}
+ #ccf-b230-final h1{font-size:clamp(36px,9.6vw,46px);line-height:1.04;letter-spacing:-.05em}
+ #ccf-b230-final .kicker{font-size:9px}
+ #ccf-b230-final .hero p{font-size:14px;line-height:1.6}
+ #ccf-b230-final .heroCta{display:grid;grid-template-columns:1fr;gap:10px;margin-top:21px}
+ #ccf-b230-final .heroCta .btn{width:100%;min-height:49px;font-size:13px}
+ #ccf-b230-final .proof{font-size:9px;gap:8px 12px}
+ #ccf-b230-final .ccf-device-stage{max-width:360px}
+ #ccf-b230-final .ccf-phone{width:min(72%,258px)}
+ #ccf-b230-final .benefitStrip{margin-bottom:18px}
+ #ccf-b230-final .moduleGallery{grid-template-columns:1fr}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr}
+ #ccf-b230-final .priceActions{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+ #ccf-b230-final .ccf-phone,#ccf-b230-final .ccf-laptop{animation:none!important;transition:none!important}
+}
+
 `;
 
 
@@ -570,9 +703,16 @@ function html(){
    <div class="heroCta"><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button><a class="btn demoBtn" href="#modulos">▷&nbsp; Ver demostración</a></div>
    <div class="proof"><span>✓&nbsp; Rápido y fácil de usar</span><span>✓&nbsp; Desde cualquier dispositivo</span><span>✓&nbsp; 100% en la nube</span></div>
   </div>
-  <div class="heroVisual" aria-label="Control Financiero en computador y teléfono">
-   <div class="heroVisualDesktop"><img src="${IMG_HERO_COMPOSITION}" alt="Control Financiero abierto en laptop con la aplicación móvil superpuesta a la izquierda" fetchpriority="high"></div>
-   <div class="heroVisualMobile"><img src="${IMG_HERO_MOBILE}" alt="Aplicación móvil de Control Financiero en un smartphone" fetchpriority="high"></div>
+  <div class="heroVisual" aria-label="Vista de Control Financiero en computador y teléfono">
+   <div class="ccf-device-stage">
+    <div class="ccf-laptop" aria-label="Panel financiero en computador">
+     <div class="ccf-laptop-screen"><span class="ccf-camera"></span><img src="${IMG_SCREEN_DESKTOP}" alt="Panel real de Control Financiero en pantalla de computador" fetchpriority="high"></div>
+     <div class="ccf-laptop-chin"></div><div class="ccf-laptop-base"></div>
+    </div>
+    <div class="ccf-phone" aria-label="Panel financiero en smartphone">
+     <span class="ccf-phone-speaker"></span><img src="${IMG_SCREEN_MOBILE}" alt="Panel real de Control Financiero adaptado a smartphone" fetchpriority="high">
+    </div>
+   </div>
   </div>
  </section>
  <section class="benefitStrip" id="caracteristicas">
