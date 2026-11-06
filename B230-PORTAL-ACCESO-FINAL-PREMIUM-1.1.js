@@ -10,8 +10,10 @@ window.__CCF_B230_PREMIUM_11__=true;
 const ID='ccf-b230-final';
 const $=(s,r=document)=>r.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dashboard-desktop.jpg';
-const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dashboard-mobile.jpg';
+const IMG_HERO_LAPTOP='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-laptop.jpg';
+const IMG_HERO_PHONE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-phone.jpg';
+const IMG_HERO_COMPOSITION='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-reference-devices.jpg';
+const IMG_HERO_MOBILE='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-reference-phone.jpg';
 const IMG_AUDIENCES='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/audiences.jpg';
 const IMG_RESUMEN='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/01-resumen.png';
 const IMG_CALENDARIO='./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/02-calendario.png';
@@ -256,261 +258,291 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #${ID} .installBtn{position:relative}
 @media(max-width:760px){#${ID} .priceGrid{grid-template-columns:1fr}#${ID} .priceSection{padding:24px 18px}}
 @media(prefers-reduced-motion:reduce){#${ID} *,#${ID} *:before,#${ID} *:after{animation:none!important;transition:none!important}}
-
-/* CCF PREMIUM REFERENCE DESIGN — 2.9.3 */
-#${ID}{background:radial-gradient(ellipse at 75% 17%,rgba(0,155,255,.22),transparent 34%),radial-gradient(ellipse at 48% 37%,rgba(0,205,238,.10),transparent 28%),linear-gradient(145deg,#031020 0%,#041a30 52%,#031326 100%)}
-#${ID} .wrap{width:min(1440px,calc(100% - 76px))}
-#${ID} .nav{min-height:74px;padding:0 7px;gap:22px;border-bottom:1px solid rgba(77,179,237,.18);background:rgba(3,16,32,.82)}
-#${ID} .brand{color:#f5f8ff;text-decoration:none;flex:0 0 auto;gap:12px}
-#${ID} .brand b{font-size:19px;letter-spacing:-.035em;text-transform:none}
-#${ID} .brand small{font-size:10px;letter-spacing:.02em;color:#a7bbd0}
-#${ID} .mark{width:46px;height:46px;border-radius:13px;color:white;background:linear-gradient(135deg,#078eff,#0875e6);font-size:16px;box-shadow:0 8px 25px #007bdf40}
-#${ID} .navLinks{display:flex;align-items:center;justify-content:center;gap:clamp(15px,2.3vw,35px);flex:1}
-#${ID} .navLinks a{position:relative;color:#eef5ff;text-decoration:none;font-size:12px;font-weight:650;padding:27px 0 24px;white-space:nowrap}
-#${ID} .navLinks a.active:after{content:"";position:absolute;left:0;right:0;bottom:13px;height:3px;border-radius:3px;background:#00d9ef;box-shadow:0 0 12px #00d9ef}
-#${ID} .actions{flex:0 0 auto;gap:10px;flex-wrap:nowrap}
-#${ID} .actions .btn{min-height:42px;padding:10px 16px;border-radius:12px;font-size:12px;white-space:nowrap}
-#${ID} .actions .primary,#${ID} .heroCta .primary,#${ID} .dynamicCta .primary{background:linear-gradient(105deg,#00d9e9,#168bf4);color:#031323;border:0}
-#${ID} .hero{grid-template-columns:minmax(410px,.92fr) minmax(520px,1.08fr);gap:28px;align-items:center;min-height:550px;padding:36px 0 28px}
-#${ID} .heroCopy{position:relative;z-index:4}
-#${ID} .kicker{padding:7px 13px;border:1px solid #087da8;background:rgba(0,195,226,.07);color:#67dcff;font-size:10px;letter-spacing:.14em}
-#${ID} h1{font-size:clamp(43px,4.35vw,66px);line-height:1.02;letter-spacing:-.055em;font-weight:850;margin:20px 0 18px}
-#${ID} .heroTitle .grad{background:linear-gradient(95deg,#00d9ee,#22bafa 55%,#43e4c4);-webkit-background-clip:text;background-clip:text;color:transparent}
-#${ID} .hero p{max-width:600px;color:#d0dceb;font-size:15px;line-height:1.62}
-#${ID} .heroCta{display:flex;gap:13px;margin-top:25px}
-#${ID} .heroCta .btn{min-height:48px;padding:13px 21px;border-radius:12px;font-size:13px}
-#${ID} .demoBtn{display:inline-flex;align-items:center;text-decoration:none;color:#f5f9ff;border:1px solid #d0e6f8;background:rgba(2,18,34,.4)}
-#${ID} .proof{gap:20px;margin-top:22px;color:#e1edf8;font-size:10px}
-#${ID} .proof span{white-space:nowrap}
-#${ID} .heroVisual{position:relative;min-height:430px;display:flex;align-items:center;justify-content:center;padding:0;border:0;border-radius:0;background:radial-gradient(ellipse at 53% 52%,rgba(0,167,255,.30),transparent 66%);box-shadow:none;overflow:visible;transform:none;animation:none}
-#${ID} .heroLaptop{position:relative;width:100%;height:360px;padding:12px 12px 24px;border:2px solid #9cb9d2;border-bottom:5px solid #637f9a;border-radius:22px 22px 12px 12px;background:linear-gradient(145deg,#0c1b2d,#020914 45%,#1b3044);box-shadow:0 22px 50px #0009,0 0 35px #00aaff25;overflow:visible}
-#${ID} .heroLaptop:before{content:"";position:absolute;top:5px;left:50%;width:5px;height:5px;border-radius:50%;background:#233f5a;z-index:2}
-#${ID} .heroLaptop:after{content:"";position:absolute;left:-5%;right:-5%;bottom:-13px;height:12px;border-radius:2px 2px 13px 13px;background:linear-gradient(180deg,#9bb4ca,#314a63 50%,#0a1727);box-shadow:0 13px 20px #0008}
-#${ID} .heroLaptop img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:10px;background:#f6f8fc}
-#${ID} .heroPhone{position:absolute;z-index:5;left:-3%;bottom:-2%;width:23%;padding:7px 6px 15px;border:3px solid #8da9c0;border-radius:29px;background:linear-gradient(145deg,#15283c,#020814);box-shadow:0 18px 40px #000b;transform:rotate(-2deg);overflow:hidden}
-#${ID} .heroPhone:before{content:"";position:absolute;z-index:2;top:4px;left:50%;width:34%;height:8px;border-radius:0 0 8px 8px;background:#020814;transform:translateX(-50%)}
-#${ID} .heroPhone img{display:block;width:100%;height:300px;object-fit:cover;object-position:top center;border-radius:20px}
-#${ID} .heroDeviceBadge{display:none}
-#${ID} .benefitStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;margin:0 0 30px;padding:14px 18px;border:1px solid #245477a8;border-radius:17px;background:linear-gradient(105deg,rgba(18,58,87,.88),rgba(13,42,68,.86));box-shadow:0 12px 30px #0002}
-#${ID} .benefitStrip article{display:flex;align-items:center;gap:15px;padding:4px 20px;border-right:1px solid #8cb5d34a;min-width:0}
-#${ID} .benefitStrip article:last-child{border-right:0}
-#${ID} .benefitIcon{display:grid;place-items:center;flex:0 0 42px;color:#00dcf4}
-#${ID} .benefitIcon svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-#${ID} .benefitStrip b{display:block;color:#f4f8ff;font-size:13px}
-#${ID} .benefitStrip small{display:block;color:#c2d3e3;font-size:10px;margin-top:4px}
-#${ID} .section{padding:22px 0 34px}
-#${ID} .sectionTitleRow{display:flex;align-items:center;justify-content:space-between;gap:24px}
-#${ID} .sectionHead{max-width:680px}
-#${ID} .eyebrow{font-size:10px;color:#00d9ed;letter-spacing:.16em;font-weight:850}
-#${ID} .section h2,#${ID} .faqBlock h2{font-size:clamp(28px,3.2vw,42px);line-height:1.05;letter-spacing:-.04em;margin:9px 0}
-#${ID} .sectionHead p{font-size:13px;color:#c2d3e3;max-width:650px}
-#${ID} .outlineLink{display:inline-flex;align-items:center;padding:11px 17px;border:1px solid #d9eaf9;border-radius:11px;color:#f5f9ff;text-decoration:none;font-size:12px;font-weight:750;white-space:nowrap}
-#${ID} .moduleGallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
-#${ID} .moduleCard{position:relative;display:flex;align-items:center;gap:17px;min-height:86px;padding:12px 16px;border:1px solid #245477b8;border-radius:14px;background:linear-gradient(110deg,rgba(17,52,78,.96),rgba(8,31,53,.92));box-shadow:0 10px 25px #0002;transition:transform .2s,border-color .2s}
-#${ID} .moduleCard:hover{transform:translateY(-3px);border-color:#00c9ef88}
-#${ID} .moduleIcon{display:grid;place-items:center;flex:0 0 50px;width:50px;height:50px;border-radius:11px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--module-accent) 85%,white),var(--module-accent));box-shadow:0 8px 20px color-mix(in srgb,var(--module-accent) 28%,transparent)}
-#${ID} .moduleIcon svg{width:31px;height:31px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
-#${ID} .moduleInfo{padding:0;min-width:0}
-#${ID} .moduleInfo b{font-size:14px;color:#f6f9ff}
-#${ID} .moduleInfo p{font-size:10px;color:#d0deeb;line-height:1.4;margin:4px 0 0}
-#${ID} .moduleArrow{margin-left:auto;color:#00d9ef;font-size:24px;line-height:1}
-#${ID} .audienceSection{display:grid;grid-template-columns:.9fr 1.1fr;column-gap:25px;align-items:center;padding-top:28px}
-#${ID} .audienceIntro{grid-row:span 2}
-#${ID} .audienceIntro h2{font-size:clamp(25px,3vw,36px)}
-#${ID} .audienceIntro p{font-size:12px;color:#c2d3e3;line-height:1.6}
-#${ID} .audienceVisual{margin:0;padding:7px;border-radius:16px;border:1px solid #35617b77;background:#0a2239}
-#${ID} .audienceVisual img{display:block;width:100%;max-height:170px;object-fit:cover;border-radius:12px}
-#${ID} .audienceGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
-#${ID} .audienceCard{padding:11px 9px;border:1px solid #2c5772a6;border-radius:12px;background:rgba(13,42,65,.92)}
-#${ID} .audienceCard strong{font-size:10px;color:#f5f9ff}
-#${ID} .audienceCard span{display:block;font-size:9px;color:#bfd0df;line-height:1.4;margin-top:5px}
-#${ID} .lowerBenefits{margin-top:4px;margin-bottom:24px}
-#${ID} .offerFaq{display:grid;grid-template-columns:1.28fr .72fr;gap:26px;align-items:center;margin:10px 0 28px}
-#${ID} .priceSection{margin:0;padding:23px 24px;border-color:#00c6eb55;background:linear-gradient(115deg,rgba(13,48,73,.96),rgba(5,32,54,.94));box-shadow:0 15px 35px #0003}
-#${ID} .priceGrid{grid-template-columns:1.2fr .8fr;gap:18px}
-#${ID} .priceTitle{font-size:clamp(22px,2.5vw,30px)}
-#${ID} .priceText{font-size:11px;line-height:1.55;color:#c5d7e6}
-#${ID} .priceValue{font-size:50px;color:#00d9ed;line-height:1}
-#${ID} .priceSmall{font-size:10px;margin:5px 0 12px;color:#c0d1e1}
-#${ID} .priceActions{display:grid;gap:8px}
-#${ID} .priceActions .btn{min-height:38px;padding:9px 12px;font-size:10px}
-#${ID} .faqBlock h2{font-size:clamp(22px,2.5vw,29px);margin-bottom:12px}
-#${ID} .faqList{gap:6px}
-#${ID} .faqItem{border-radius:11px;background:rgba(18,49,73,.86);border:1px solid #315a76a6}
-#${ID} .faqQ{padding:11px 13px;font-size:10px}
-#${ID} .faqA{font-size:10px;padding:0 13px 12px;color:#c7d8e7}
-#${ID} .dynamicCta{grid-template-columns:1fr auto;min-height:120px;padding:24px 34px;margin:0 0 24px;border-radius:18px;background:radial-gradient(ellipse at 80% 20%,rgba(0,211,244,.35),transparent 44%),linear-gradient(105deg,#102b80,#075b9a 52%,#007caa);border-color:#32bce5a8;box-shadow:inset 0 0 50px #00c9ff1a}
-#${ID} .dynamicCta h2{font-size:clamp(23px,2.8vw,32px);margin:0 0 7px}
-#${ID} .dynamicCta p{font-size:11px;color:#e0f1ff;max-width:760px}
-#${ID} .dynamicCta .btn{min-width:195px}
-#${ID} .footer{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0 28px;text-align:left;border-top:1px solid #5d819b4a}
-#${ID} .footerBrand{display:flex;align-items:center;gap:10px;color:#fff}
-#${ID} .footerBrand .mark{width:38px;height:38px;font-size:13px}
-#${ID} .footerBrand b{display:block;font-size:12px}
-#${ID} .footerBrand small{display:block;font-size:9px;color:#a5b9cb}
-#${ID} .footer>span{margin:0;font-size:9px;color:#a8bed0}
-#${ID} .footerLinks{display:flex;gap:14px}
-#${ID} .footerLinks a{color:#bfd0df;text-decoration:none;font-size:9px;white-space:nowrap}
+/* B230 PREMIUM 2.9.2 — VISUAL SYSTEM MATCHED TO APPROVED DESIGN */
+#ccf-b230-final{background:radial-gradient(ellipse at 78% 14%,rgba(0,150,255,.19),transparent 30%),radial-gradient(ellipse at 10% 45%,rgba(0,205,190,.09),transparent 30%),linear-gradient(145deg,#03101f 0%,#061a2c 54%,#031020 100%)}
+#ccf-b230-final .wrap{width:min(1440px,calc(100% - 72px))}
+#ccf-b230-final .nav{min-height:74px;padding:0 8px;gap:22px}
+#ccf-b230-final .brand{text-decoration:none;color:#f4f8ff;flex:0 0 auto}
+#ccf-b230-final .brand b{font-size:20px;letter-spacing:-.025em;text-transform:none}
+#ccf-b230-final .brand small{font-size:10px;letter-spacing:.02em}
+#ccf-b230-final .mark{width:46px;height:46px;border-radius:13px;color:#fff;background:linear-gradient(135deg,#078aff,#0878e9);box-shadow:0 8px 24px rgba(0,128,255,.25);font-size:17px}
+#ccf-b230-final .navLinks{display:flex;align-items:center;justify-content:center;gap:clamp(13px,2.3vw,36px);flex:1}
+#ccf-b230-final .navLinks a{position:relative;color:#e4edf8;text-decoration:none;font-size:12px;font-weight:650;padding:28px 0 25px;white-space:nowrap}
+#ccf-b230-final .navLinks a:hover,#ccf-b230-final .navLinks a.active{color:#fff}
+#ccf-b230-final .navLinks a.active:after{content:"";position:absolute;bottom:14px;left:0;right:0;height:3px;border-radius:3px;background:#00d9ed;box-shadow:0 0 12px #00d9ed}
+#ccf-b230-final .actions{flex:0 0 auto;gap:10px;flex-wrap:nowrap}
+#ccf-b230-final .actions .btn{min-height:42px;padding:10px 16px;border-radius:12px;font-size:12px;white-space:nowrap}
+#ccf-b230-final .actions .primary{background:linear-gradient(105deg,#00d7e8,#1689f4);color:#031324}
+#ccf-b230-final .hero{grid-template-columns:minmax(390px,.88fr) minmax(520px,1.12fr);gap:36px;padding:42px 0 26px;min-height:520px}
+#ccf-b230-final .heroCopy{position:relative;z-index:4}
+#ccf-b230-final .kicker{padding:7px 13px;border-color:#087ba8;background:rgba(0,195,226,.07);font-size:10px}
+#ccf-b230-final h1{font-size:clamp(43px,4.2vw,66px);line-height:1.01;letter-spacing:-.055em;margin:22px 0 18px;font-weight:850}
+#ccf-b230-final .heroTitle .grad{background:linear-gradient(95deg,#00d9ee,#20baf9 54%,#43e4c4);-webkit-background-clip:text;background-clip:text;color:transparent}
+#ccf-b230-final .hero p{max-width:590px;color:#b5c6d8;font-size:15px;line-height:1.65}
+#ccf-b230-final .heroCta{gap:13px;margin-top:25px}
+#ccf-b230-final .heroCta .btn{min-height:48px;padding:13px 21px;border-radius:12px;font-size:13px}
+#ccf-b230-final .heroCta .primary{background:linear-gradient(105deg,#00d7e8,#138cf5);color:#031324}
+#ccf-b230-final .demoBtn{display:inline-flex;align-items:center;text-decoration:none;border-color:#b9d6ee;color:#f3f8ff;background:rgba(3,19,35,.45)}
+#ccf-b230-final .proof{gap:20px;margin-top:22px;color:#d4e4f2;font-size:10px}
+#ccf-b230-final .proof span{white-space:nowrap}
+#ccf-b230-final .heroVisual{min-height:420px;padding:0;border:0;border-radius:28px;background:radial-gradient(ellipse at 54% 52%,rgba(0,164,255,.25),transparent 65%);box-shadow:none;overflow:visible;transform:none;animation:none}
+#ccf-b230-final .heroLaptop{width:100%;border-radius:18px;filter:drop-shadow(0 22px 30px rgba(0,0,0,.4))}
+#ccf-b230-final .heroLaptop img{width:100%;max-height:430px;object-fit:contain;object-position:center;border-radius:16px;background:transparent}
+#ccf-b230-final .heroPhone{right:auto;left:-5%;bottom:-3%;width:25%;border:4px solid #18283a;border-radius:25px;box-shadow:0 16px 36px rgba(0,0,0,.55);transform:rotate(-2deg)}
+#ccf-b230-final .heroPhone img{border-radius:20px}
+#ccf-b230-final .heroDeviceBadge{display:none}
+#ccf-b230-final .benefitStrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;margin:0 0 28px;padding:15px 20px;border:1px solid rgba(87,181,232,.18);border-radius:17px;background:linear-gradient(105deg,rgba(20,65,96,.72),rgba(15,48,75,.65));box-shadow:0 12px 30px rgba(0,0,0,.12)}
+#ccf-b230-final .benefitStrip article{display:flex;align-items:center;gap:15px;padding:3px 16px;border-right:1px solid rgba(174,216,242,.22);min-width:0}
+#ccf-b230-final .benefitStrip article:last-child{border-right:0}
+#ccf-b230-final .benefitIcon{font-size:34px;line-height:1;color:#00d8ef;min-width:38px;text-align:center}
+#ccf-b230-final .benefitStrip b{display:block;color:#f1f7ff;font-size:12px}
+#ccf-b230-final .benefitStrip small{display:block;color:#a9c1d6;font-size:10px;margin-top:4px}
+#ccf-b230-final .section{padding:28px 0 36px}
+#ccf-b230-final .sectionTitleRow{display:flex;align-items:center;justify-content:space-between;gap:25px}
+#ccf-b230-final .sectionHead{max-width:680px}
+#ccf-b230-final .eyebrow{font-size:10px;color:#00d9ed;letter-spacing:.16em}
+#ccf-b230-final .section h2,#ccf-b230-final .faqBlock h2{font-size:clamp(28px,3.2vw,42px);line-height:1.05;letter-spacing:-.04em;margin:9px 0 10px}
+#ccf-b230-final .sectionHead p{font-size:13px;color:#b0c4d7;max-width:650px}
+#ccf-b230-final .outlineLink{display:inline-flex;align-items:center;padding:10px 16px;border:1px solid rgba(220,239,255,.7);border-radius:11px;color:#f2f8ff;text-decoration:none;font-size:12px;font-weight:750;white-space:nowrap}
+#ccf-b230-final .moduleGallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+#ccf-b230-final .moduleCard{display:grid;grid-template-columns:74px 1fr;align-items:center;min-height:92px;border:1px solid rgba(75,170,221,.25);border-radius:14px;background:linear-gradient(115deg,rgba(20,54,79,.88),rgba(9,31,51,.82));box-shadow:0 8px 22px rgba(0,0,0,.12)}
+#ccf-b230-final .moduleImageButton{height:100%;min-height:90px;width:74px;padding:9px;background:transparent;overflow:hidden}
+#ccf-b230-final .moduleImageButton:after{display:none}
+#ccf-b230-final .moduleImageButton img{height:58px;width:58px;object-fit:cover;border-radius:10px}
+#ccf-b230-final .zoomHint{display:none}
+#ccf-b230-final .moduleInfo{padding:12px 12px 12px 2px}
+#ccf-b230-final .moduleInfo b{font-size:13px;color:#f4f8ff}
+#ccf-b230-final .moduleInfo p{font-size:10px;color:#c0d0df;line-height:1.4;margin-top:4px}
+#ccf-b230-final .audienceSection{display:grid;grid-template-columns:.88fr 1.12fr;column-gap:25px;align-items:center}
+#ccf-b230-final .audienceIntro{grid-row:span 2}
+#ccf-b230-final .audienceIntro h2{font-size:clamp(25px,3vw,36px)}
+#ccf-b230-final .audienceIntro p{font-size:12px;color:#b0c4d7;line-height:1.6}
+#ccf-b230-final .audienceVisual{margin:0;padding:7px;border-radius:16px}
+#ccf-b230-final .audienceVisual img{max-height:170px;object-fit:cover}
+#ccf-b230-final .audienceGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+#ccf-b230-final .audienceCard{padding:11px 10px;border-radius:12px;background:rgba(16,44,66,.8)}
+#ccf-b230-final .audienceCard strong{font-size:10px}
+#ccf-b230-final .audienceCard span{font-size:9px;line-height:1.4}
+#ccf-b230-final .lowerBenefits{margin-top:4px;margin-bottom:24px}
+#ccf-b230-final .offerFaq{display:grid;grid-template-columns:1.28fr .72fr;gap:26px;align-items:center;margin:10px 0 28px}
+#ccf-b230-final .priceSection{margin:0;padding:23px 24px;border-color:rgba(0,198,235,.28);background:linear-gradient(115deg,rgba(13,48,73,.92),rgba(5,32,54,.9));box-shadow:0 15px 35px rgba(0,0,0,.15)}
+#ccf-b230-final .priceGrid{grid-template-columns:1.2fr .8fr;gap:18px}
+#ccf-b230-final .priceTitle{font-size:clamp(22px,2.5vw,30px)}
+#ccf-b230-final .priceText{font-size:11px;line-height:1.55}
+#ccf-b230-final .priceValue{font-size:50px;color:#00d9ed;line-height:1}
+#ccf-b230-final .priceSmall{font-size:10px;margin:5px 0 12px}
+#ccf-b230-final .priceActions{display:grid;gap:8px}
+#ccf-b230-final .priceActions .btn{min-height:38px;padding:9px 12px;font-size:10px}
+#ccf-b230-final .faqBlock h2{font-size:clamp(22px,2.5vw,29px);margin-bottom:12px}
+#ccf-b230-final .faqList{gap:6px}
+#ccf-b230-final .faqItem{border-radius:11px;background:rgba(21,52,75,.75)}
+#ccf-b230-final .faqQ{padding:11px 13px;font-size:10px}
+#ccf-b230-final .faqA{font-size:10px;padding:0 13px 12px}
+#ccf-b230-final .dynamicCta{grid-template-columns:1fr auto;min-height:120px;padding:24px 34px;margin:0 0 24px;border-radius:18px;background:radial-gradient(ellipse at 80% 20%,rgba(0,211,244,.35),transparent 44%),linear-gradient(105deg,#102b80,#075b9a 52%,#007caa);border-color:rgba(55,200,255,.55);box-shadow:inset 0 0 50px rgba(0,201,255,.1)}
+#ccf-b230-final .dynamicCta h2{font-size:clamp(23px,2.8vw,32px);margin:0 0 7px}
+#ccf-b230-final .dynamicCta p{font-size:11px;color:#e0f1ff;max-width:760px}
+#ccf-b230-final .dynamicCta .btn{min-width:195px;background:linear-gradient(100deg,#00d8e8,#188cf5);color:#031324}
+#ccf-b230-final .footer{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0 28px;text-align:left}
+#ccf-b230-final .footerBrand{display:flex;align-items:center;gap:10px;color:#fff}
+#ccf-b230-final .footerBrand .mark{width:38px;height:38px;font-size:13px}
+#ccf-b230-final .footerBrand b{display:block;font-size:12px}
+#ccf-b230-final .footerBrand small{display:block;font-size:9px;color:#92a9bd}
+#ccf-b230-final .footer>span{margin:0;font-size:9px}
+#ccf-b230-final .footerLinks{display:flex;gap:14px}
+#ccf-b230-final .footerLinks a{color:#a7bbce;text-decoration:none;font-size:9px;white-space:nowrap}
 @media(max-width:1100px){
- #${ID} .wrap{width:calc(100% - 44px)}
- #${ID} .navLinks{gap:12px}
- #${ID} .navLinks a{font-size:10px}
- #${ID} .brand b{font-size:16px}
- #${ID} .hero{grid-template-columns:.92fr 1.08fr;gap:16px;min-height:480px}
- #${ID} .heroLaptop{height:315px}
- #${ID} .heroPhone img{height:260px}
- #${ID} .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
- #${ID} .audienceSection{grid-template-columns:1fr}
- #${ID} .audienceIntro{grid-row:auto}
- #${ID} .audienceVisual{margin-top:15px}
- #${ID} .audienceGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+ #ccf-b230-final .wrap{width:calc(100% - 44px)}
+ #ccf-b230-final .navLinks{gap:12px}
+ #ccf-b230-final .navLinks a{font-size:10px}
+ #ccf-b230-final .brand b{font-size:16px}
+ #ccf-b230-final .hero{grid-template-columns:.9fr 1.1fr;gap:18px}
+ #ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceSection{grid-template-columns:1fr}
+ #ccf-b230-final .audienceIntro{grid-row:auto}
+ #ccf-b230-final .audienceVisual{margin-top:15px}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
 @media(max-width:760px){
- #${ID} .wrap{width:calc(100% - 28px)}
- #${ID} .nav{flex-wrap:wrap;min-height:auto;padding:10px 0}
- #${ID} .navLinks{order:3;flex:1 0 100%;justify-content:flex-start;overflow-x:auto;gap:20px}
- #${ID} .navLinks a{padding:9px 0;font-size:10px}
- #${ID} .navLinks a.active:after{bottom:2px}
- #${ID} .actions{margin-left:auto}
- #${ID} .actions .downloadNav{display:none}
- #${ID} .hero{grid-template-columns:1fr;gap:22px;padding:30px 0 24px;min-height:0}
- #${ID} h1{font-size:clamp(38px,9vw,54px)}
- #${ID} .hero p{font-size:14px}
- #${ID} .heroVisual{min-height:300px;max-width:640px;margin:0 auto;width:100%}
- #${ID} .heroLaptop{height:260px;padding:9px 9px 19px}
- #${ID} .heroPhone{width:22%;left:-1%;bottom:-3%;padding:5px 4px 11px;border-radius:21px}
- #${ID} .heroPhone img{height:205px;border-radius:15px}
- #${ID} .benefitStrip{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:13px}
- #${ID} .benefitStrip article{border:0;padding:5px;gap:10px}
- #${ID} .benefitIcon{flex-basis:32px}
- #${ID} .benefitIcon svg{width:30px;height:30px}
- #${ID} .sectionTitleRow{align-items:flex-start;flex-direction:column}
- #${ID} .outlineLink{display:none}
- #${ID} .moduleGallery{grid-template-columns:1fr}
- #${ID} .moduleCard{min-height:78px}
- #${ID} .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
- #${ID} .offerFaq{grid-template-columns:1fr;gap:24px}
- #${ID} .priceGrid{grid-template-columns:1fr .7fr}
- #${ID} .dynamicCta{grid-template-columns:1fr;gap:15px;padding:22px}
- #${ID} .dynamicCta .btn{width:100%}
- #${ID} .footer{flex-wrap:wrap}
- #${ID} .footerLinks{width:100%;flex-wrap:wrap}
+ #ccf-b230-final .wrap{width:calc(100% - 28px)}
+ #ccf-b230-final .nav{flex-wrap:wrap;min-height:auto;padding:12px 0}
+ #ccf-b230-final .navLinks{order:3;flex:1 0 100%;justify-content:space-between;overflow-x:auto;gap:18px}
+ #ccf-b230-final .navLinks a{padding:9px 0;font-size:10px}
+ #ccf-b230-final .navLinks a.active:after{bottom:2px}
+ #ccf-b230-final .actions{margin-left:auto}
+ #ccf-b230-final .actions .downloadNav{display:none}
+ #ccf-b230-final .hero{grid-template-columns:1fr;gap:24px;padding:34px 0 24px}
+ #ccf-b230-final h1{font-size:clamp(38px,9vw,54px)}
+ #ccf-b230-final .hero p{font-size:14px}
+ #ccf-b230-final .heroVisual{min-height:0;padding:0;max-width:620px;margin:auto}
+ #ccf-b230-final .heroLaptop img{max-height:none}
+ #ccf-b230-final .heroPhone{width:22%;left:-2%;bottom:-2%}
+ #ccf-b230-final .benefitStrip{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+ #ccf-b230-final .benefitStrip article{border:0;padding:5px}
+ #ccf-b230-final .benefitIcon{font-size:28px;min-width:30px}
+ #ccf-b230-final .sectionTitleRow{align-items:flex-start;flex-direction:column}
+ #ccf-b230-final .outlineLink{display:none}
+ #ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .offerFaq{grid-template-columns:1fr;gap:24px}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr  .65fr}
+ #ccf-b230-final .dynamicCta{grid-template-columns:1fr;gap:15px;padding:22px}
+ #ccf-b230-final .dynamicCta .btn{width:100%}
+ #ccf-b230-final .footer{flex-wrap:wrap}
+ #ccf-b230-final .footerLinks{width:100%;flex-wrap:wrap}
 }
 @media(max-width:480px){
- #${ID} .nav .brand b{font-size:13px}
- #${ID} .nav .brand small{font-size:8px}
- #${ID} .nav .actions .btn{min-height:37px;padding:8px 10px;font-size:10px}
- #${ID} .hero{padding-top:24px}
- #${ID} h1{font-size:clamp(36px,10.3vw,46px);line-height:1.02}
- #${ID} .heroCta{display:flex;flex-direction:column}
- #${ID} .heroCta .btn{width:100%;justify-content:center}
- #${ID} .proof{gap:8px 12px;font-size:9px}
- #${ID} .heroVisual{min-height:245px}
- #${ID} .heroLaptop{height:215px}
- #${ID} .heroPhone{width:24%;bottom:-2%}
- #${ID} .heroPhone img{height:165px}
- #${ID} .benefitStrip{margin-bottom:20px}
- #${ID} .benefitStrip b{font-size:11px}
- #${ID} .benefitStrip small{font-size:9px}
- #${ID} .section{padding:18px 0 26px}
- #${ID} .section h2{font-size:30px}
- #${ID} .moduleCard{padding:10px 12px;gap:12px}
- #${ID} .moduleIcon{flex-basis:46px;width:46px;height:46px}
- #${ID} .moduleInfo b{font-size:13px}
- #${ID} .audienceVisual img{max-height:120px}
- #${ID} .priceGrid{grid-template-columns:1fr}
- #${ID} .priceSection{padding:20px 17px}
- #${ID} .priceActions{grid-template-columns:1fr}
- #${ID} .dynamicCta{padding:20px}
- #${ID} .footerLinks{gap:10px}
+ #ccf-b230-final .nav .brand b{font-size:13px}
+ #ccf-b230-final .nav .brand small{font-size:8px}
+ #ccf-b230-final .nav .actions .btn{min-height:37px;padding:8px 10px;font-size:10px}
+ #ccf-b230-final .hero{padding-top:26px}
+ #ccf-b230-final h1{font-size:clamp(36px,10.3vw,46px);line-height:1.02}
+ #ccf-b230-final .heroCta{display:flex;flex-direction:column}
+ #ccf-b230-final .heroCta .btn{width:100%;justify-content:center}
+ #ccf-b230-final .proof{gap:8px 12px;font-size:9px}
+ #ccf-b230-final .benefitStrip{margin-bottom:20px}
+ #ccf-b230-final .benefitStrip article{gap:9px}
+ #ccf-b230-final .benefitStrip b{font-size:10px}
+ #ccf-b230-final .benefitStrip small{font-size:9px}
+ #ccf-b230-final .moduleGallery{grid-template-columns:1fr}
+ #ccf-b230-final .moduleCard{grid-template-columns:68px 1fr;min-height:84px}
+ #ccf-b230-final .moduleImageButton{width:68px;min-height:84px}
+ #ccf-b230-final .moduleImageButton img{width:52px;height:52px}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #ccf-b230-final .audienceVisual img{max-height:125px}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr}
+ #ccf-b230-final .priceSection{padding:20px 17px}
+ #ccf-b230-final .priceActions{grid-template-columns:1fr 1fr}
+ #ccf-b230-final .footer{gap:12px}
+ #ccf-b230-final .footer>span{width:100%}
 }
-/* HERO REFERENCE 2 — layout, escala y dispositivos */
-#${ID} .hero{
-  grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);
-  gap:22px;
-  min-height:570px;
-  padding:28px 0 34px;
-  align-items:center;
-}
-#${ID} .heroCopy{max-width:660px}
-#${ID} .heroTitle{
-  font-size:clamp(44px,3.75vw,58px);
-  line-height:1.02;
-  letter-spacing:-.055em;
-  text-wrap:initial;
-}
-#${ID} .hero p{max-width:610px;font-size:16px;line-height:1.62;color:#d7e5f2}
-#${ID} .heroVisual{
-  min-height:540px;
-  padding:0;
-  border:0;
-  border-radius:0;
-  background:radial-gradient(ellipse at 54% 55%,rgba(0,173,255,.34),transparent 66%);
-  box-shadow:none;
-  overflow:visible;
-  transform:none;
-  animation:none;
-}
-#${ID} .heroLaptop{
-  width:100%;
-  height:clamp(430px,34vw,520px);
-  padding:12px 12px 24px;
-  border:2px solid #9cb9d2;
-  border-bottom:5px solid #637f9a;
-  border-radius:22px 22px 12px 12px;
-  background:linear-gradient(145deg,#0c1b2d,#020914 45%,#1b3044);
-  box-shadow:0 22px 50px #0009,0 0 42px #00aaff35;
-  overflow:visible;
-}
-#${ID} .heroLaptop img{
-  width:100%;height:100%;object-fit:cover;object-position:top center;
-  border-radius:10px;background:#f6f8fc;
-}
-#${ID} .heroPhone{
-  left:-3%;right:auto;bottom:-2%;width:29%;padding:7px 6px 15px;
-  border:3px solid #8da9c0;border-radius:29px;
-  background:linear-gradient(145deg,#15283c,#020814);
-  box-shadow:0 18px 40px #000b;transform:rotate(-2deg);overflow:hidden;
-}
-#${ID} .heroPhone img{
-  display:block;width:100%;height:clamp(330px,27vw,410px);
-  object-fit:cover;object-position:top center;border-radius:20px;
-}
-#${ID} .benefitStrip{margin-top:0}
-/* Ajuste de composición fiel a la referencia visual 2:
-   hero más compacto, laptop desplazado a la derecha y móvil delante a la izquierda. */
-#${ID} .hero{min-height:510px;padding-top:20px;padding-bottom:20px}
-#${ID} .heroVisual{min-height:470px}
-#${ID} .heroLaptop{transform:translateX(4%)}
-#${ID} .heroPhone{left:-17%;width:32%;bottom:-1%}
+@media(prefers-reduced-motion:reduce){#ccf-b230-final .heroLaptop,#ccf-b230-final .heroPhone{animation:none!important}}
+/* SOMOS SOFTWARE QUALITY PASS 2.9.6 — desktop fidelity + mobile-first composition */
+#ccf-b230-final{overflow-x:clip;isolation:isolate}
+#ccf-b230-final .wrap{width:min(1440px,calc(100% - 72px))}
+#ccf-b230-final .nav{min-height:76px;padding:0 8px;gap:20px;position:sticky;top:0;background:rgba(3,13,27,.88);border-bottom:1px solid rgba(85,190,245,.18);backdrop-filter:blur(18px)}
+#ccf-b230-final .brand{flex:0 0 auto;gap:13px}
+#ccf-b230-final .brand .mark{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#087cff,#008be9);color:#fff;box-shadow:0 8px 24px rgba(0,125,255,.28)}
+#ccf-b230-final .brand b{font-size:18px;letter-spacing:-.035em}
+#ccf-b230-final .brand small{font-size:10px;letter-spacing:.015em;color:#a7bdd2}
+#ccf-b230-final .navLinks{gap:clamp(15px,2.2vw,34px)}
+#ccf-b230-final .navLinks a{font-size:12px;font-weight:700;padding:27px 0 24px}
+#ccf-b230-final .actions{gap:12px;flex-wrap:nowrap}
+#ccf-b230-final .actions .btn{min-height:46px;padding:11px 18px;border-radius:12px;font-size:12px}
+#ccf-b230-final .actions .downloadNav{display:inline-flex}
+#ccf-b230-final .actions .btn.primary{background:linear-gradient(105deg,#00d9e9,#168cf5);color:#031321}
+#ccf-b230-final .mobileMenuToggle{display:none}
+#ccf-b230-final .hero{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:28px;align-items:center;padding:42px 0 26px;min-height:560px}
+#ccf-b230-final .heroCopy{position:relative;z-index:2;max-width:650px}
+#ccf-b230-final .kicker{padding:8px 13px;font-size:11px;border-color:rgba(0,208,245,.55);color:#6edcff;background:rgba(0,176,226,.07)}
+#ccf-b230-final h1{font-size:clamp(42px,4.5vw,68px);line-height:1.01;letter-spacing:-.055em;margin:22px 0 18px;max-width:670px}
+#ccf-b230-final .hero p{max-width:620px;color:#d2e0ed;font-size:17px;line-height:1.55}
+#ccf-b230-final .heroCta{gap:14px;margin-top:30px}
+#ccf-b230-final .heroCta .btn{min-height:54px;padding:14px 23px;border-radius:13px;font-size:14px}
+#ccf-b230-final .proof{display:flex;gap:22px;flex-wrap:wrap;margin-top:25px;color:#d4e5f3;font-size:11px}
+#ccf-b230-final .heroVisual{position:relative;min-height:0;width:calc(100% + 34px);margin-left:-16px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;transform:none;animation:none;display:flex;align-items:center;justify-content:center}
+#ccf-b230-final .heroVisualDesktop{display:block;width:100%;line-height:0;filter:drop-shadow(0 24px 38px rgba(0,0,0,.30))}
+#ccf-b230-final .heroVisualDesktop img{display:block;width:100%;height:auto;object-fit:contain}
+#ccf-b230-final .heroVisualMobile{display:none}
+#ccf-b230-final .benefitStrip{margin:0 0 30px;padding:17px 20px;border-radius:18px;background:linear-gradient(105deg,rgba(18,57,86,.86),rgba(12,43,69,.82));border-color:rgba(87,181,232,.22)}
+#ccf-b230-final .section{padding:34px 0 42px}
+#ccf-b230-final .section h2,#ccf-b230-final .faqBlock h2{font-size:clamp(30px,3.4vw,44px)}
+#ccf-b230-final .moduleGallery{gap:14px}
+#ccf-b230-final .moduleCard{min-height:104px}
+#ccf-b230-final .footer{border-top:1px solid rgba(87,181,232,.15)}
 @media(max-width:1100px) and (min-width:761px){
- #${ID} .hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:14px;min-height:500px}
- #${ID} .heroTitle{font-size:clamp(42px,4.1vw,52px)}
- #${ID} .heroVisual{min-height:450px}
- #${ID} .heroLaptop{height:390px}
- #${ID} .heroPhone{width:31%;left:-13%}
- #${ID} .heroLaptop{transform:translateX(3%)}
- #${ID} .heroPhone img{height:310px}
+ #ccf-b230-final .wrap{width:calc(100% - 48px)}
+ #ccf-b230-final .navLinks{gap:12px}
+ #ccf-b230-final .navLinks a{font-size:10px}
+ #ccf-b230-final .brand b{font-size:15px}
+ #ccf-b230-final .hero{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:12px;min-height:500px}
+ #ccf-b230-final h1{font-size:clamp(40px,4.5vw,54px)}
+ #ccf-b230-final .heroVisual{width:calc(100% + 18px);margin-left:-8px}
 }
 @media(max-width:760px){
- #${ID} .hero{grid-template-columns:1fr;gap:20px;padding:30px 0 24px;min-height:0}
- #${ID} .heroTitle{font-size:clamp(38px,8.5vw,54px);text-wrap:balance}
- #${ID} .hero p{font-size:14px}
- #${ID} .heroVisual{min-height:340px;max-width:680px;margin:0 auto;width:100%}
- #${ID} .heroLaptop{height:290px;padding:9px 9px 19px}
- #${ID} .heroLaptop{transform:none}
- #${ID} .heroPhone{width:25%;left:-1%;bottom:-2%;padding:5px 4px 11px;border-radius:21px}
- #${ID} .heroPhone img{height:235px;border-radius:15px}
+ #ccf-b230-final .wrap{width:calc(100% - 36px)}
+ #ccf-b230-final .nav{min-height:68px;flex-wrap:nowrap;padding:10px 0;gap:10px}
+ #ccf-b230-final .brand{gap:10px;min-width:0}
+ #ccf-b230-final .brand .mark{width:42px;height:42px;flex:0 0 42px}
+ #ccf-b230-final .brand b{font-size:15px;white-space:nowrap}
+ #ccf-b230-final .brand small{font-size:9px}
+ #ccf-b230-final .mobileMenuToggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(157,205,235,.24);border-radius:11px;background:rgba(255,255,255,.06);color:#f4f9ff;font-size:21px;cursor:pointer}
+ #ccf-b230-final .navLinks{display:none;order:5;position:absolute;left:0;right:0;top:calc(100% + 1px);padding:10px;border:1px solid rgba(87,181,232,.22);border-radius:0 0 16px 16px;background:rgba(4,17,33,.98);box-shadow:0 18px 40px rgba(0,0,0,.35);flex-direction:column;align-items:stretch;gap:0;overflow:visible}
+ #ccf-b230-final .nav.is-open .navLinks{display:flex}
+ #ccf-b230-final .navLinks a{display:block;padding:13px 12px;font-size:13px;border-radius:8px}
+ #ccf-b230-final .navLinks a.active:after{left:12px;right:auto;bottom:5px;width:26px;height:2px}
+ #ccf-b230-final .actions{margin-left:auto;gap:7px}
+ #ccf-b230-final .actions .downloadNav{display:none}
+ #ccf-b230-final .actions .btn{min-height:40px;padding:9px 12px;font-size:11px;white-space:nowrap}
+ #ccf-b230-final .hero{display:flex;flex-direction:column;align-items:stretch;gap:22px;padding:38px 0 22px;min-height:0}
+ #ccf-b230-final .heroCopy{max-width:none}
+ #ccf-b230-final h1{font-size:clamp(38px,8.5vw,56px);line-height:1.02;max-width:650px;margin:18px 0 16px}
+ #ccf-b230-final .hero p{font-size:15px;line-height:1.65;max-width:620px}
+ #ccf-b230-final .heroCta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:23px}
+ #ccf-b230-final .heroCta .btn{width:100%;min-height:50px;padding:12px 10px;font-size:12px;justify-content:center}
+ #ccf-b230-final .proof{gap:9px 16px;margin-top:18px;font-size:10px}
+ #ccf-b230-final .heroVisual{display:flex;width:100%;margin:0;min-height:0;justify-content:center;overflow:hidden;border-radius:22px;background:radial-gradient(ellipse at 50% 48%,rgba(0,160,255,.24),transparent 66%);padding:8px 0 0}
+ #ccf-b230-final .heroVisualDesktop{display:none}
+ #ccf-b230-final .heroVisualMobile{display:flex;justify-content:center;width:100%;max-height:420px;overflow:hidden}
+ #ccf-b230-final .heroVisualMobile img{display:block;width:min(76%,310px);height:auto;max-height:420px;object-fit:contain;object-position:top center;filter:drop-shadow(0 22px 30px rgba(0,0,0,.38))}
+ #ccf-b230-final .benefitStrip{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;margin-bottom:20px}
+ #ccf-b230-final .benefitStrip article{padding:6px 4px;gap:10px;border:0}
+ #ccf-b230-final .benefitIcon{font-size:27px;min-width:30px}
+ #ccf-b230-final .benefitStrip b{font-size:11px}
+ #ccf-b230-final .benefitStrip small{font-size:9px;line-height:1.4}
+ #ccf-b230-final .section{padding:32px 0}
+ #ccf-b230-final .sectionTitleRow{align-items:flex-start;flex-direction:column;gap:10px}
+ #ccf-b230-final .outlineLink{display:inline-flex}
+ #ccf-b230-final .moduleGallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+ #ccf-b230-final .moduleCard{grid-template-columns:68px minmax(0,1fr);min-height:90px}
+ #ccf-b230-final .moduleImageButton{width:68px;min-height:88px}
+ #ccf-b230-final .moduleInfo{min-width:0;padding:10px 10px 10px 2px}
+ #ccf-b230-final .moduleInfo b{font-size:12px}
+ #ccf-b230-final .moduleInfo p{font-size:10px;overflow-wrap:anywhere}
+ #ccf-b230-final .audienceSection{display:block}
+ #ccf-b230-final .audienceIntro h2{font-size:clamp(26px,6vw,36px)}
+ #ccf-b230-final .audienceVisual{margin-top:18px}
+ #ccf-b230-final .audienceVisual img{max-height:none;object-fit:contain}
+ #ccf-b230-final .audienceGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #ccf-b230-final .audienceCard{padding:12px}
+ #ccf-b230-final .offerFaq{grid-template-columns:1fr;gap:22px}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr .75fr;gap:14px}
+ #ccf-b230-final .priceSection{padding:22px 18px}
+ #ccf-b230-final .priceActions{display:grid;grid-template-columns:1fr}
+ #ccf-b230-final .dynamicCta{grid-template-columns:1fr;gap:15px;padding:24px 20px;margin-bottom:30px}
+ #ccf-b230-final .dynamicCta .btn{width:100%}
+ #ccf-b230-final .footer{flex-wrap:wrap;gap:14px;padding:20px 0 28px}
+ #ccf-b230-final .footer>span{width:100%;margin:0}
+ #ccf-b230-final .footerLinks{width:100%;flex-wrap:wrap;gap:12px}
 }
 @media(max-width:480px){
- #${ID} .hero{padding-top:24px}
- #${ID} .heroTitle{font-size:clamp(35px,9.5vw,45px);line-height:1.02}
- #${ID} .heroVisual{min-height:260px}
- #${ID} .heroLaptop{height:220px}
- #${ID} .heroPhone{width:25%;bottom:-2%}
- #${ID} .heroPhone img{height:175px}
+ #ccf-b230-final .wrap{width:calc(100% - 30px)}
+ #ccf-b230-final .brand b{font-size:13px}
+ #ccf-b230-final .brand small{font-size:8px}
+ #ccf-b230-final .actions .btn{min-height:38px;padding:8px 10px;font-size:10px}
+ #ccf-b230-final .hero{padding-top:30px;gap:18px}
+ #ccf-b230-final h1{font-size:clamp(36px,9.5vw,44px);letter-spacing:-.05em}
+ #ccf-b230-final .kicker{font-size:9px;letter-spacing:.11em}
+ #ccf-b230-final .hero p{font-size:14px}
+ #ccf-b230-final .heroCta{grid-template-columns:1fr}
+ #ccf-b230-final .heroCta .btn{min-height:48px;font-size:13px}
+ #ccf-b230-final .proof{font-size:9px;gap:8px 12px}
+ #ccf-b230-final .heroVisualMobile img{width:min(82%,300px);max-height:390px}
+ #ccf-b230-final .benefitStrip{gap:8px;padding:11px}
+ #ccf-b230-final .benefitStrip article{gap:8px}
+ #ccf-b230-final .benefitStrip b{font-size:10px}
+ #ccf-b230-final .benefitStrip small{font-size:8px}
+ #ccf-b230-final .moduleGallery{grid-template-columns:1fr}
+ #ccf-b230-final .moduleCard{grid-template-columns:72px minmax(0,1fr)}
+ #ccf-b230-final .moduleImageButton{width:72px}
+ #ccf-b230-final .moduleImageButton img{width:54px;height:54px}
+ #ccf-b230-final .priceGrid{grid-template-columns:1fr}
+ #ccf-b230-final .priceValue{font-size:48px}
+ #ccf-b230-final .priceActions .btn{width:100%}
+ #ccf-b230-final .faqQ{font-size:12px;padding:14px}
+ #ccf-b230-final .faqA{font-size:11px}
+ #ccf-b230-final .footerLinks a{font-size:10px}
 }
-@media(prefers-reduced-motion:reduce){#${ID} *,#${ID} *:before,#${ID} *:after{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){#ccf-b230-final .heroVisualMobile img{animation:none!important;transition:none!important}}
 
 `;
 
@@ -523,7 +555,8 @@ function html(){
  <div class="page"><div class="orb a"></div><div class="orb b"></div><div class="wrap">
  <nav class="nav">
   <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><div class="mark">CCF</div><div><b>Control Financiero</b><small>Centro de Control Financiero</small></div></a>
-  <div class="navLinks" aria-label="Navegación principal">
+  <button class="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="ccf-main-navigation">☰</button>
+  <div class="navLinks" id="ccf-main-navigation" aria-label="Navegación principal">
    <a class="active" href="#inicio">Inicio</a><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#usuarios">Usuarios</a><a href="#preguntas">Preguntas</a><a href="#contacto">Contacto</a>
   </div>
   <div class="actions"><a class="btn downloadNav" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">♟ Descargar APK</a><button class="btn primary" data-b230-open="login">♙ Iniciar sesión</button></div>
@@ -537,26 +570,26 @@ function html(){
    <div class="heroCta"><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button><a class="btn demoBtn" href="#modulos">▷&nbsp; Ver demostración</a></div>
    <div class="proof"><span>✓&nbsp; Rápido y fácil de usar</span><span>✓&nbsp; Desde cualquier dispositivo</span><span>✓&nbsp; 100% en la nube</span></div>
   </div>
-  <div class="heroVisual" aria-label="Vista del Centro de Control Financiero en computador y teléfono">
-   <div class="heroLaptop"><img src="${IMG_HERO_LAPTOP}" alt="Panel de Control Financiero en escritorio"></div>
-   <div class="heroPhone"><img src="${IMG_HERO_PHONE}" alt="Aplicación móvil de Control Financiero"></div>
+  <div class="heroVisual" aria-label="Control Financiero en computador y teléfono">
+   <div class="heroVisualDesktop"><img src="${IMG_HERO_COMPOSITION}" alt="Control Financiero abierto en laptop con la aplicación móvil superpuesta a la izquierda" fetchpriority="high"></div>
+   <div class="heroVisualMobile"><img src="${IMG_HERO_MOBILE}" alt="Aplicación móvil de Control Financiero en un smartphone" fetchpriority="high"></div>
   </div>
  </section>
  <section class="benefitStrip" id="caracteristicas">
-  <article><span class="benefitIcon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="m24 4 18 10-18 10L6 14 24 4Z M6 23l18 10 18-10 M6 32l18 10 18-10"/></svg></span><div><b>Centraliza tu información</b><small>En un solo lugar</small></div></article>
-  <article><span class="benefitIcon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 40V25h8v15M20 40V15h8v25M33 40V6h8v34"/></svg></span><div><b>Analiza tu realidad</b><small>Con reportes visuales</small></div></article>
-  <article><span class="benefitIcon"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="9"/><path d="m24 24 17-17M31 7h10v10"/></svg></span><div><b>Planifica tu futuro</b><small>Con metas y proyecciones</small></div></article>
-  <article><span class="benefitIcon"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 41 10v12c0 11-7 18-17 22C14 40 7 33 7 22V10L24 4Z M16 24l6 6 12-13"/></svg></span><div><b>Toma mejores decisiones</b><small>Con datos confiables</small></div></article>
+  <article><span class="benefitIcon">▱</span><div><b>Centraliza tu información</b><small>En un solo lugar</small></div></article>
+  <article><span class="benefitIcon">▥</span><div><b>Analiza tu realidad</b><small>Con reportes visuales</small></div></article>
+  <article><span class="benefitIcon">◎</span><div><b>Planifica tu futuro</b><small>Con metas y proyecciones</small></div></article>
+  <article><span class="benefitIcon">♢</span><div><b>Toma mejores decisiones</b><small>Con datos confiables</small></div></article>
  </section>
  <section class="section modulesSection" id="modulos">
   <div class="sectionTitleRow"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales.</h2><p>Herramientas conectadas para comprender tu presente, ordenar tu información y proyectar lo que viene.</p></div><a class="outlineLink" href="#usuarios">Conoce todos los módulos&nbsp; →</a></div>
   <div class="moduleGallery">
-   <article class="moduleCard"><div class="moduleIcon" style="--module-accent:#10c9e8"><svg viewBox="0 0 48 48" aria-hidden="true"><path d='m24 4 18 10-18 10L6 14 24 4Z M6 23l18 10 18-10 M6 32l18 10 18-10'/></svg></div><div class="moduleInfo"><b>Resumen</b><p>Panorama financiero con ingresos, gastos y resultado.</p></div><span class="moduleArrow" aria-hidden="true">→</span></article>
-   <article class="moduleCard"><div class="moduleIcon" style="--module-accent:#635bff"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x='7' y='10' width='34' height='32' rx='4'/><path d='M15 5v10M33 5v10M7 19h34'/></svg></div><div class="moduleInfo"><b>Calendario</b><p>Visualiza compromisos, pagos y eventos por fecha.</p></div><span class="moduleArrow" aria-hidden="true">→</span></article>
-   <article class="moduleCard"><div class="moduleIcon" style="--module-accent:#00c995"><svg viewBox="0 0 48 48" aria-hidden="true"><path d='M7 15h33l-8-8M41 33H8l8 8'/></svg></div><div class="moduleInfo"><b>Movimientos</b><p>Registra y consulta ingresos y gastos de forma ordenada.</p></div><span class="moduleArrow" aria-hidden="true">→</span></article>
-   <article class="moduleCard"><div class="moduleIcon" style="--module-accent:#ff7043"><svg viewBox="0 0 48 48" aria-hidden="true"><path d='M24 5v19h19A19 19 0 1 1 24 5Z'/><path d='M29 5a19 19 0 0 1 14 14H29V5Z'/></svg></div><div class="moduleInfo"><b>Presupuesto</b><p>Compara planificación, ejecución y compromisos.</p></div><span class="moduleArrow" aria-hidden="true">→</span></article>
-   <article class="moduleCard"><div class="moduleIcon" style="--module-accent:#f5a900"><svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx='19' cy='12' rx='13' ry='6'/><path d='M6 12v8c0 3 6 6 13 6s13-3 13-6v-8M6 20v8c0 3 6 6 13 6 3 0 6-.5 8-2M22 30v8c0 3 4 5 10 5s10-2 10-5v-8M22 30c0-3 4-5 10-5s10 2 10 5-4 5-10 5-10-2-10-5Z'/></svg></div><div class="moduleInfo"><b>Deudas</b><p>Controla saldos, cuotas, vencimientos y obligaciones.</p></div><span class="moduleArrow" aria-hidden="true">→</span></article>
-   <article class="moduleCard"><div class="moduleIcon" style="--module-accent:#078df1"><svg viewBox="0 0 48 48" aria-hidden="true"><path d='M7 40V8M7 40h35M13 31l9-10 7 5 12-15M33 11h8v8'/></svg></div><div class="moduleInfo"><b>Planificación</b><p>Anticipa escenarios financieros y necesidades futuras.</p></div><span class="moduleArrow" aria-hidden="true">→</span></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="resumen" aria-label="Ampliar Resumen"><img src="${IMG_RESUMEN}" alt="Resumen — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>▱&nbsp; Resumen</b><p>Panorama financiero con ingresos, gastos y resultado.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="calendario" aria-label="Ampliar Calendario"><img src="${IMG_CALENDARIO}" alt="Calendario — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>▦&nbsp; Calendario</b><p>Visualiza compromisos, pagos y eventos por fecha.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="movimientos" aria-label="Ampliar Movimientos"><img src="${IMG_MOVIMIENTOS}" alt="Movimientos — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>⇄&nbsp; Movimientos</b><p>Registra y consulta ingresos y gastos de forma ordenada.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="presupuesto" aria-label="Ampliar Presupuesto"><img src="${IMG_PRESUPUESTO}" alt="Presupuesto — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>◷&nbsp; Presupuesto</b><p>Compara planificación, ejecución y compromisos.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="deudas" aria-label="Ampliar Deudas"><img src="${IMG_DEUDAS}" alt="Deudas — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>▤&nbsp; Deudas</b><p>Controla saldos, cuotas, vencimientos y obligaciones.</p></div></article>
+   <article class="moduleCard"><button class="moduleImageButton" type="button" data-b230-image="planificacion" aria-label="Ampliar Planificación"><img src="${IMG_PLANIFICACION}" alt="Planificación — vista real del sistema" loading="lazy"><span class="zoomHint">⌕</span></button><div class="moduleInfo"><b>⌁&nbsp; Planificación</b><p>Anticipa escenarios financieros y necesidades futuras.</p></div></article>
   </div>
  </section>
  <section class="section audienceSection" id="usuarios">
@@ -638,7 +671,15 @@ async function openExistingAuth(mode){
  const target=[...gate.querySelectorAll('button')].find(b=>re.test((b.textContent||'').trim()));
  if(target)target.click();else gate.querySelector('input')?.focus();
 }
-function bind(){const p=document.getElementById(ID);if(!p)return;p.querySelectorAll('[data-b230-open]').forEach(b=>b.addEventListener('click',()=>openExistingAuth(b.dataset.b230Open)))}
+function bind(){
+ const p=document.getElementById(ID);if(!p)return;
+ p.querySelectorAll('[data-b230-open]').forEach(b=>b.addEventListener('click',()=>openExistingAuth(b.dataset.b230Open)));
+ const nav=p.querySelector('.nav'),toggle=p.querySelector('.mobileMenuToggle');
+ if(nav&&toggle){
+  toggle.addEventListener('click',()=>{const open=nav.classList.toggle('is-open');toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú');toggle.textContent=open?'×':'☰'});
+  nav.querySelectorAll('.navLinks a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Abrir menú');toggle.textContent='☰'}));
+ }
+}
 async function watchAuth(){
  for(let i=0;i<80;i++){
   const c=window.supabaseClient||window.__B23273_CLIENT__||window.__B23270_CLIENT__||window.__B23269_CLIENT__;
