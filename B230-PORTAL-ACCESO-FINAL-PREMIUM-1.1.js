@@ -1174,7 +1174,7 @@ function html(){
  <nav class="nav">
   <div class="brandCluster">
    <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><div class="mark">CCF</div><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></a>
-   <span class="brandDivider"></span><a class="somosBrand" href="https://www.somossoftware.net" target="_blank" rel="noopener"><small>Un producto de</small><b><i>S</i> Somos Software<sup>®</sup></b></a>
+   <span class="brandDivider"></span><a class="somosBrand" href="https://www.somossoftware.net" target="_blank" rel="noopener" aria-label="Un producto de Somos Software"><small>Un producto de</small><img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:112px;height:auto;max-height:34px;object-fit:contain;object-position:left center"></a>
   </div>
   <button class="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="ccf-main-navigation">☰</button>
   <div class="navLinks" id="ccf-main-navigation" aria-label="Navegación principal">
@@ -1239,7 +1239,7 @@ function html(){
  <section class="dynamicCta" id="planes"><span id="contacto"></span><div class="ctaRocket">🚀</div><div class="ctaTitle"><h2>Comienza hoy a<br>controlar tus finanzas</h2></div><p>Crea tu cuenta gratis y toma el control<br>de tu vida financiera.</p><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button></section>
  <footer class="footer premiumFooter">
   <div class="footerTop">
-   <div class="footerIdentity"><div class="footerBrand"><span class="mark">CCF</span><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div><div class="footerSomos">Un producto de <b><i>S</i> Somos Software<sup>®</sup></b></div></div>
+   <div class="footerIdentity"><div class="footerBrand"><span class="mark">CCF</span><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div><div class="footerSomos">Un producto de <img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:150px;max-width:100%;height:auto;max-height:54px;object-fit:contain;object-position:left center;margin-top:5px"></div></div>
    <div class="footerColumn"><b>Plataforma</b><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#planes">Planes</a><a href="https://apk.controlfinanciero.cl/app-control-financiero.apk">Descargar APK</a></div>
    <div class="footerColumn"><b>Soporte</b><a href="#contacto">Preguntas frecuentes</a><a href="#contacto">Centro de ayuda</a><a href="#contacto">Contacto</a></div>
    <div class="footerColumn"><b>Legal</b><a href="#contacto">Términos y condiciones</a><a href="#contacto">Política de privacidad</a><a href="#contacto">Uso de datos</a></div>
