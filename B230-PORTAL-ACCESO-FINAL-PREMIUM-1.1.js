@@ -1238,21 +1238,22 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  align-items:stretch!important;margin-top:22px!important;
 }
 #ccf-b230-final .moduleShowcase{
- display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;
- height:100%!important;padding:10px!important;overflow:hidden!important;border:1px solid #dce6f1!important;
+ display:flex!important;flex-direction:column!important;min-width:0!important;min-height:470px!important;
+ height:470px!important;padding:8px!important;overflow:hidden!important;border:1px solid #dce6f1!important;
  border-radius:15px!important;background:#fff!important;box-shadow:0 8px 24px rgba(15,35,65,.055)!important;
 }
 #ccf-b230-final .moduleShot{
- width:100%!important;min-width:0!important;overflow:hidden!important;border:1px solid #e1e8f0!important;
- border-radius:9px!important;background:#f2f6fb!important;line-height:0!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:100%!important;height:300px!important;flex:0 0 300px!important;min-width:0!important;overflow:hidden!important;
+ border:1px solid #e1e8f0!important;border-radius:9px!important;background:#f2f6fb!important;line-height:0!important;
 }
 #ccf-b230-final .moduleShot img{
- display:block!important;width:100%!important;height:auto!important;max-width:none!important;
- object-fit:contain!important;object-position:top center!important;
+ display:block!important;width:auto!important;height:100%!important;max-width:100%!important;max-height:100%!important;
+ object-fit:contain!important;object-position:center center!important;flex:0 1 auto!important;
 }
-#ccf-b230-final .moduleContent{display:flex!important;flex:1 0 auto!important;flex-direction:column!important;align-items:flex-start!important;padding:12px 2px 3px!important;min-width:0!important}
+#ccf-b230-final .moduleContent{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;align-items:flex-start!important;padding:11px 2px 3px!important;min-width:0!important;min-height:0!important}
 #ccf-b230-final .moduleContent>b{display:block!important;color:#10213b!important;font-size:15px!important;line-height:1.25!important;font-weight:800!important;letter-spacing:-.025em!important}
-#ccf-b230-final .moduleContent>p{color:#607187!important;font-size:11px!important;line-height:1.55!important;margin:7px 0 12px!important}
+#ccf-b230-final .moduleContent>p{color:#607187!important;font-size:11px!important;line-height:1.55!important;margin:7px 0 12px!important;min-height:52px!important}
 #ccf-b230-final .moduleDetail{width:100%!important;margin-top:auto!important;border-top:1px solid #e8eef5!important;padding-top:9px!important}
 #ccf-b230-final .moduleDetail summary{
  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
@@ -1269,11 +1270,12 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 @media(max-width:760px){
  #ccf-b230-final .modulesSection{padding-top:28px!important;padding-bottom:34px!important}
  #ccf-b230-final .moduleTiles.moduleGallery{grid-template-columns:minmax(0,1fr)!important;gap:16px!important;margin-top:17px!important}
- #ccf-b230-final .moduleShowcase{width:100%!important;max-width:520px!important;margin:0 auto!important;padding:12px!important;border-radius:16px!important}
- #ccf-b230-final .moduleShot{border-radius:10px!important}
+ #ccf-b230-final .moduleShowcase{width:100%!important;max-width:520px!important;height:700px!important;min-height:700px!important;margin:0 auto!important;padding:12px!important;border-radius:16px!important}
+ #ccf-b230-final .moduleShot{height:500px!important;flex:0 0 500px!important;border-radius:10px!important}
+ #ccf-b230-final .moduleShot img{height:100%!important;width:auto!important;max-width:100%!important;object-fit:contain!important}
  #ccf-b230-final .moduleContent{padding:14px 2px 4px!important}
  #ccf-b230-final .moduleContent>b{font-size:18px!important}
- #ccf-b230-final .moduleContent>p{font-size:13px!important;line-height:1.6!important;margin:7px 0 13px!important}
+ #ccf-b230-final .moduleContent>p{font-size:13px!important;line-height:1.6!important;margin:7px 0 13px!important;min-height:62px!important}
  #ccf-b230-final .moduleDetail{padding-top:11px!important}
  #ccf-b230-final .moduleDetail summary{font-size:13px!important;padding:2px 0!important}
  #ccf-b230-final .moduleDetail>p{font-size:12px!important;line-height:1.6!important}
