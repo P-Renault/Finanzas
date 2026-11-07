@@ -1474,6 +1474,34 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #ccf-b230-final .footerIdentity{grid-column:auto!important}
 }
 
+/* FOOTER 4.4 — HORIZONTAL DESKTOP LAYOUT / HIGH-CONTRAST BRAND COLORS */
+#ccf-b230-final .premiumFooter{padding:22px 0 14px!important;background:transparent!important}
+#ccf-b230-final .footerTop{display:grid!important;grid-template-columns:minmax(220px,1.05fr) minmax(420px,2.2fr) minmax(155px,.9fr) minmax(100px,.55fr)!important;align-items:center!important;gap:clamp(18px,2.6vw,38px)!important;padding:0 8px 20px!important;border-bottom:1px solid #dce7f3!important}
+#ccf-b230-final .footerIdentity{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:0!important;min-width:0!important}
+#ccf-b230-final .footerBrand{display:flex!important;align-items:center!important;gap:11px!important;min-width:0!important}
+#ccf-b230-final .footerCcfLogo{display:block!important;width:54px!important;height:54px!important;flex:0 0 54px!important;object-fit:contain!important}
+#ccf-b230-final .footerBrand b{display:block!important;color:#102b4b!important;font-size:14px!important;font-weight:800!important;white-space:nowrap!important}
+#ccf-b230-final .footerBrand small{display:block!important;color:#536b86!important;font-size:10px!important;margin-top:3px!important}
+#ccf-b230-final .footerLegal{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:9px!important;min-width:0!important}
+#ccf-b230-final .footerLegal>b{color:#102b4b!important;font-size:13px!important;font-weight:800!important;margin:0!important}
+#ccf-b230-final .footerLegalLinks{display:flex!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:wrap!important;gap:8px clamp(14px,1.7vw,25px)!important;width:100%!important}
+#ccf-b230-final .footerLegalLinks a{color:#315575!important;font-size:11px!important;font-weight:550!important;line-height:1.45!important;text-decoration:none!important;white-space:nowrap!important}
+#ccf-b230-final .footerLegalLinks a:hover{color:#087cf0!important;text-decoration:underline!important;text-underline-offset:3px!important}
+#ccf-b230-final .footerSomos{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:6px!important;min-width:0!important;color:#315575!important;font-size:11px!important;font-weight:600!important;text-decoration:none!important}
+#ccf-b230-final .footerSomos span{color:#315575!important;font-size:11px!important}
+#ccf-b230-final .footerSomos img{display:block!important;width:142px!important;max-width:100%!important;height:auto!important;max-height:49px!important;object-fit:contain!important;object-position:left center!important;margin:0!important}
+#ccf-b230-final .socialColumn{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:10px!important;min-width:0!important}
+#ccf-b230-final .socialColumn>b{color:#102b4b!important;font-size:13px!important;font-weight:800!important;margin:0!important}
+#ccf-b230-final .socialLinks{display:flex!important;align-items:center!important;gap:10px!important}
+#ccf-b230-final .socialLinks a{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;border:1px solid #087cf0!important;border-radius:50%!important;background:#087cf0!important;color:#fff!important;box-shadow:0 5px 14px rgba(8,124,240,.2)!important;transition:transform .18s ease,background .18s ease,box-shadow .18s ease!important}
+#ccf-b230-final .socialLinks a:hover{transform:translateY(-2px)!important;background:#075fc0!important;box-shadow:0 8px 18px rgba(8,124,240,.28)!important}
+#ccf-b230-final .socialLinks svg{display:block!important;width:19px!important;height:19px!important}
+#ccf-b230-final .footerBottom{margin-top:15px!important;padding-top:12px!important;border-top:0!important;color:#61758d!important;font-size:10px!important;text-align:center!important;line-height:1.6!important}
+#ccf-b230-final .footerBottom a{color:#315575!important;text-decoration:none!important;font-weight:700!important}
+#ccf-b230-final .footerBottom a:hover{color:#087cf0!important}
+@media(max-width:1050px) and (min-width:761px){#ccf-b230-final .footerTop{grid-template-columns:minmax(190px,1fr) minmax(330px,1.7fr) minmax(130px,.8fr)!important;gap:20px!important}#ccf-b230-final .socialColumn{grid-column:1/-1!important;flex-direction:row!important;align-items:center!important;gap:14px!important}}
+@media(max-width:760px){#ccf-b230-final .footerTop{grid-template-columns:1fr 1fr!important;align-items:start!important;gap:22px 18px!important;padding:0 0 18px!important}#ccf-b230-final .footerIdentity{grid-column:1/-1!important}#ccf-b230-final .footerLegal{grid-column:1/-1!important}#ccf-b230-final .footerLegalLinks{gap:9px 16px!important}#ccf-b230-final .footerLegalLinks a{white-space:normal!important}#ccf-b230-final .footerSomos{grid-column:1!important}#ccf-b230-final .socialColumn{grid-column:2!important;align-self:center!important;flex-direction:column!important;align-items:flex-start!important}#ccf-b230-final .footerBottom{font-size:9px!important}}
+@media(max-width:420px){#ccf-b230-final .footerTop{grid-template-columns:1fr!important;gap:19px!important}#ccf-b230-final .footerIdentity,#ccf-b230-final .footerLegal,#ccf-b230-final .footerSomos,#ccf-b230-final .socialColumn{grid-column:1!important}#ccf-b230-final .footerBrand b{font-size:13px!important}#ccf-b230-final .footerLegalLinks{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}#ccf-b230-final .socialColumn{flex-direction:row!important;align-items:center!important;gap:14px!important}}
 `;
 
 
@@ -1591,18 +1619,17 @@ function html(){
   <div class="footerTop">
    <div class="footerIdentity">
     <div class="footerBrand"><img class="footerCcfLogo" src="./ccf-logo-original.png" alt="Logo Centro de Control Financiero"><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div>
-    <a class="footerSomos" href="https://www.somossoftware.net" target="_blank" rel="noopener" aria-label="Visitar Somos Software">Un producto de <img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital"></a>
    </div>
-   <div class="footerColumn footerLegal"><b>Legal</b>
+   <div class="footerColumn footerLegal"><b>Legal</b><div class="footerLegalLinks">
     <a href="./legal/terminos-y-condiciones.html">Términos y condiciones</a>
     <a href="./legal/politica-de-privacidad.html">Política de privacidad</a>
     <a href="./legal/uso-de-datos.html">Uso de datos</a>
-   </div>
-   <div class="footerColumn socialColumn"><b>Síguenos</b><div class="socialLinks">
-    <a href="https://www.facebook.com/share/1E1KdWDYBE/" target="_blank" rel="noopener noreferrer" aria-label="Facebook Somos Software">f</a>
-    <a href="https://www.instagram.com/somos.software/" target="_blank" rel="noopener noreferrer" aria-label="Instagram Somos Software">◎</a>
    </div></div>
-  </div>
+   <a class="footerSomos" href="https://www.somossoftware.net" target="_blank" rel="noopener noreferrer" aria-label="Un producto de Somos Software, visitar somossoftware.net"><span>Un producto de</span><img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital"></a>
+   <div class="footerColumn socialColumn"><b>Síguenos</b><div class="socialLinks">
+    <a href="https://www.facebook.com/share/1E1KdWDYBE/" target="_blank" rel="noopener noreferrer" aria-label="Facebook Somos Software"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.3v3.2h2.8V21z"/></svg></a>
+    <a href="https://www.instagram.com/somos.software/" target="_blank" rel="noopener noreferrer" aria-label="Instagram Somos Software"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.7" cy="6.5" r="1.2" fill="currentColor"/></svg></a>
+   </div></div>
   <div class="footerBottom">© 2026 <a href="https://www.somossoftware.net" target="_blank" rel="noopener">Somos Software®</a>. Todos los derechos reservados. | Control Financiero® (CCF)</div>
  </footer>
  </div></div></div>`;
