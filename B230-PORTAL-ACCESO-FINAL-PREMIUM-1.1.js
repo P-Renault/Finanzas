@@ -1166,6 +1166,70 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
   #ccf-b230-final .proof{font-size:8px!important}
 }
 
+
+/* CCF 3.4 — flujo de valor con iconografía SVG y diseño responsive */
+#ccf-b230-final .benefitStrip.benefitFlow{
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:0!important;
+  align-items:stretch!important;margin:0 0 28px!important;padding:20px 12px!important;
+  border:1px solid #dce8f6!important;border-radius:18px!important;
+  background:linear-gradient(115deg,#f8fbff 0%,#eef6ff 52%,#f8fbff 100%)!important;
+  box-shadow:0 8px 24px rgba(18,55,96,.055)!important;overflow:visible!important;
+}
+#ccf-b230-final .benefitFlow .flowStep{
+  position:relative!important;display:flex!important;flex-direction:column!important;align-items:center!important;
+  justify-content:flex-start!important;gap:11px!important;min-width:0!important;min-height:0!important;
+  padding:4px 24px 3px!important;text-align:center!important;border:0!important;
+  border-right:1px solid #d7e4f3!important;background:transparent!important;
+}
+#ccf-b230-final .benefitFlow .flowStep:last-child{border-right:0!important}
+#ccf-b230-final .benefitFlow .flowStep:not(:last-child)::after{
+  content:"➜";position:absolute;z-index:2;right:-13px;top:35px;display:grid;place-items:center;
+  width:26px;height:26px;color:#087cf0;font-size:25px;font-weight:500;line-height:1;
+  background:#f3f8ff;border-radius:50%;
+}
+#ccf-b230-final .benefitFlow .benefitIcon{
+  display:grid!important;place-items:center!important;width:76px!important;height:76px!important;min-width:76px!important;
+  margin:0!important;border:1px solid #d9eaff!important;border-radius:22px!important;
+  color:#087cf0!important;background:linear-gradient(145deg,#fff,#e8f3ff)!important;
+  box-shadow:0 5px 15px rgba(20,112,208,.08)!important;
+}
+#ccf-b230-final .benefitFlow .benefitIcon svg{
+  display:block!important;width:43px!important;height:43px!important;fill:none!important;
+  stroke:currentColor!important;stroke-width:2.2!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+#ccf-b230-final .benefitFlow .flowStepCopy{display:flex!important;flex-direction:column!important;align-items:center!important;gap:5px!important;max-width:230px!important}
+#ccf-b230-final .benefitFlow .flowStepCopy b{display:block!important;color:#142943!important;font-size:13px!important;font-weight:750!important;line-height:1.3!important}
+#ccf-b230-final .benefitFlow .flowStepCopy small{display:block!important;color:#64758b!important;font-size:11px!important;font-weight:400!important;line-height:1.45!important;margin:0!important}
+@media(max-width:760px){
+ #ccf-b230-final .benefitStrip.benefitFlow{
+   grid-template-columns:minmax(0,1fr)!important;gap:0!important;margin:5px 0 22px!important;
+   padding:10px 16px!important;border-radius:16px!important;
+ }
+ #ccf-b230-final .benefitFlow .flowStep{
+   display:grid!important;grid-template-columns:62px minmax(0,1fr)!important;align-items:center!important;
+   justify-items:start!important;gap:14px!important;padding:13px 5px!important;text-align:left!important;
+   border-right:0!important;border-bottom:1px solid #dce8f6!important;
+ }
+ #ccf-b230-final .benefitFlow .flowStep:last-child{border-bottom:0!important}
+ #ccf-b230-final .benefitFlow .flowStep:not(:last-child)::after{
+   content:"↓";right:auto;left:22px;top:auto;bottom:-14px;width:24px;height:24px;
+   font-size:22px;background:#f1f7ff;border:1px solid #dceaff;
+ }
+ #ccf-b230-final .benefitFlow .benefitIcon{width:58px!important;height:58px!important;min-width:58px!important;border-radius:17px!important}
+ #ccf-b230-final .benefitFlow .benefitIcon svg{width:34px!important;height:34px!important}
+ #ccf-b230-final .benefitFlow .flowStepCopy{align-items:flex-start!important;max-width:none!important;gap:3px!important}
+ #ccf-b230-final .benefitFlow .flowStepCopy b{font-size:13px!important;text-align:left!important}
+ #ccf-b230-final .benefitFlow .flowStepCopy small{font-size:11px!important;line-height:1.45!important;text-align:left!important}
+}
+@media(max-width:390px){
+ #ccf-b230-final .benefitStrip.benefitFlow{padding:8px 12px!important}
+ #ccf-b230-final .benefitFlow .flowStep{grid-template-columns:54px minmax(0,1fr)!important;gap:11px!important;padding:12px 3px!important}
+ #ccf-b230-final .benefitFlow .benefitIcon{width:52px!important;height:52px!important;min-width:52px!important}
+ #ccf-b230-final .benefitFlow .benefitIcon svg{width:30px!important;height:30px!important}
+ #ccf-b230-final .benefitFlow .flowStepCopy b{font-size:12px!important}
+ #ccf-b230-final .benefitFlow .flowStepCopy small{font-size:10px!important}
+}
+
 `;
 
 
@@ -1207,11 +1271,23 @@ function html(){
    </div>
   </div>
  </section>
- <section class="benefitStrip" id="value-props">
-  <article><span class="benefitIcon">▱</span><div><b>Centraliza tu información</b><small>En un solo lugar</small></div></article>
-  <article><span class="benefitIcon">▥</span><div><b>Analiza tu realidad</b><small>Con reportes visuales</small></div></article>
-  <article><span class="benefitIcon">◎</span><div><b>Planifica tu futuro</b><small>Con metas y proyecciones</small></div></article>
-  <article><span class="benefitIcon">♢</span><div><b>Toma mejores decisiones</b><small>Con datos confiables</small></div></article>
+ <section class="benefitStrip benefitFlow" id="value-props" aria-label="Cómo te ayuda Control Financiero">
+  <article class="flowStep">
+   <span class="benefitIcon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M5 15.5a3.5 3.5 0 0 1 3.5-3.5h11l4 4H39a4 4 0 0 1 4 4v17a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M5 21h38M15 7h12l5 5M21 28v10M16 33h10"/><path d="M35 28v10M30 33h10"/></svg></span>
+   <div class="flowStepCopy"><b>Centraliza tu información</b><small>Reúne tus datos financieros en un solo lugar.</small></div>
+  </article>
+  <article class="flowStep">
+   <span class="benefitIcon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><rect x="5" y="6" width="38" height="29" rx="4"/><path d="M18 42h12M24 35v7M12 27v-6M20 27V15M28 27v-9M36 27V12"/><path d="M11 30h26"/></svg></span>
+   <div class="flowStepCopy"><b>Analiza tu realidad</b><small>Comprende tus ingresos y gastos con reportes visuales.</small></div>
+  </article>
+  <article class="flowStep">
+   <span class="benefitIcon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><rect x="6" y="9" width="36" height="33" rx="4"/><path d="M15 5v9M33 5v9M6 18h36"/><path d="M14 26h5M14 33h5M25 26h5M25 33h5"/><circle cx="34" cy="33" r="8"/><path d="m30.5 33 2.3 2.3 4.8-5"/></svg></span>
+   <div class="flowStepCopy"><b>Planifica tu futuro</b><small>Define metas y anticipa tus próximos compromisos.</small></div>
+  </article>
+  <article class="flowStep">
+   <span class="benefitIcon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M6 41h37M10 36V25h7v11M22 36V17h7v19M34 36V9h7v27"/><path d="m8 18 11-8 8 3L40 3"/><path d="M33 3h7v7"/></svg></span>
+   <div class="flowStepCopy"><b>Toma mejores decisiones</b><small>Actúa con información clara y datos confiables.</small></div>
+  </article>
  </section>
  <section class="section modulesSection" id="modulos">
   <div class="sectionTitleRow"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales</h2><p>Herramientas conectadas para comprender tu presente,<br class="desktopBreak"> ordenar tu información y proyectar lo que viene.</p></div><a class="outlineLink" href="#caracteristicas">Conoce todos los módulos&nbsp; →</a></div>
