@@ -1514,7 +1514,7 @@ function html(){
  <nav class="nav">
   <div class="brandCluster">
    <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><img class="ccfLogo" src="./ccf-logo-original.png" alt="Logo Centro de Control Financiero"><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></a>
-   <span class="brandDivider"></span><a class="somosBrand" href="https://www.somossoftware.net" target="_blank" rel="noopener" aria-label="Un producto de Somos Software"><small>Un producto de</small><img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:112px;height:auto;max-height:34px;object-fit:contain;object-position:left center"></a>
+
   </div>
   <button class="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="ccf-main-navigation">☰</button>
   <div class="navLinks" id="ccf-main-navigation" aria-label="Navegación principal">
