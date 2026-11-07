@@ -1,0 +1,11 @@
+CCF 4.5 — HEADER SOLO CENTRO DE CONTROL FINANCIERO
+
+Cambio aplicado:
+- Se elimina del header la marca secundaria Somos Software y la frase “Un producto de”, si están presentes en la navegación.
+- Se conserva la identidad principal CCF, el menú, los botones y el comportamiento responsive.
+- La limpieza está limitada al header/nav; no elimina la marca Somos Software del footer ni de otras secciones.
+
+Archivo modificado:
+B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1.js
+
+Integración: reemplazar el archivo homónimo en la carpeta raíz del proyecto. No se modifican módulos financieros, autenticación, Supabase ni estilos de otras secciones.
