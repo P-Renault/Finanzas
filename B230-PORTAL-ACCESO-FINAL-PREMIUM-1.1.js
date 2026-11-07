@@ -1280,6 +1280,31 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 }
 @media(prefers-reduced-motion:reduce){#ccf-b230-final .moduleDetail summary span{transition:none!important}}
 
+/* CCF 3.6 — iconografía semántica de los seis módulos */
+#ccf-b230-final .moduleHeading{
+ display:flex!important;align-items:center!important;gap:9px!important;min-height:30px!important;
+ margin:0!important;
+}
+#ccf-b230-final .moduleHeadingIcon{
+ display:grid!important;place-items:center!important;flex:0 0 30px!important;width:30px!important;height:30px!important;
+ border:1px solid #d8eaff!important;border-radius:9px!important;background:#f0f7ff!important;color:#087cf0!important;
+}
+#ccf-b230-final .moduleHeadingIcon svg{
+ display:block!important;width:21px!important;height:21px!important;fill:none!important;stroke:currentColor!important;
+ stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+#ccf-b230-final .moduleHeading>b{
+ display:block!important;color:#10213b!important;font-size:15px!important;line-height:1.25!important;
+ font-weight:800!important;letter-spacing:-.025em!important;
+}
+@media(max-width:760px){
+ #ccf-b230-final .moduleHeading{gap:10px!important;min-height:34px!important}
+ #ccf-b230-final .moduleHeadingIcon{flex-basis:34px!important;width:34px!important;height:34px!important;border-radius:10px!important}
+ #ccf-b230-final .moduleHeadingIcon svg{width:23px!important;height:23px!important}
+ #ccf-b230-final .moduleHeading>b{font-size:18px!important}
+}
+
+
 `;
 
 
@@ -1344,37 +1369,37 @@ function html(){
   <div class="moduleTiles moduleGallery" aria-label="Vistas de los seis módulos principales">
    <article class="moduleTile moduleShowcase" id="modulo-resumen">
     <div class="moduleShot"><img src="${IMG_RESUMEN}" alt="Captura completa del módulo Resumen de Control Financiero" loading="lazy" decoding="async"></div>
-    <div class="moduleContent"><b>Resumen</b><p>Consulta tu liquidez, ingresos, gastos y saldo proyectado en una vista financiera integrada.</p>
+    <div class="moduleContent"><div class="moduleHeading"><span class="moduleHeadingIcon"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="3.5" y="4" width="25" height="24" rx="5"/><path d="M9 21v-5M15.5 21V10M22 21v-8M7.5 24h17"/><path d="m8 12 5-3 4 2 7-5"/></svg></span><b>Resumen</b></div><p>Consulta tu liquidez, ingresos, gastos y saldo proyectado en una vista financiera integrada.</p>
      <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Revisa los indicadores principales del período y comprende rápidamente tu situación financiera actual y proyectada.</p></details>
     </div>
    </article>
    <article class="moduleTile moduleShowcase" id="modulo-presupuesto">
     <div class="moduleShot"><img src="${IMG_PRESUPUESTO}" alt="Captura completa del módulo Presupuesto de Control Financiero" loading="lazy" decoding="async"></div>
-    <div class="moduleContent"><b>Presupuesto</b><p>Planifica ingresos y gastos, distribuye recursos y compara lo previsto con lo ejecutado.</p>
+    <div class="moduleContent"><div class="moduleHeading"><span class="moduleHeadingIcon"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="12"/><path d="M16 4v12h12M16 16l-8.5 8.5"/><path d="M16 8a8 8 0 0 1 8 8"/></svg></span><b>Presupuesto</b></div><p>Planifica ingresos y gastos, distribuye recursos y compara lo previsto con lo ejecutado.</p>
      <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Organiza líneas presupuestarias por categoría, monto y prioridad para anticipar resultados y mantener tus objetivos bajo control.</p></details>
     </div>
    </article>
    <article class="moduleTile moduleShowcase" id="modulo-deudas">
     <div class="moduleShot"><img src="${IMG_DEUDAS}" alt="Captura completa del módulo Deudas de Control Financiero" loading="lazy" decoding="async"></div>
-    <div class="moduleContent"><b>Deudas</b><p>Centraliza acreedores, saldos pendientes, cuotas y próximos vencimientos.</p>
+    <div class="moduleContent"><div class="moduleHeading"><span class="moduleHeadingIcon"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M8 3.5h11l6 6V28H8a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"/><path d="M19 3.5v6h6M11 15h11M11 19h8"/><circle cx="21.5" cy="23" r="4.5"/><path d="M21.5 20.5v5M23 21.5h-2a1.2 1.2 0 0 0 0 2.4h1a1.2 1.2 0 0 1 0 2.4h-2"/></svg></span><b>Deudas</b></div><p>Centraliza acreedores, saldos pendientes, cuotas y próximos vencimientos.</p>
      <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Reconstruye tus compromisos y sigue su evolución con información sobre montos originales, pagos, cuotas pendientes y obligaciones próximas.</p></details>
     </div>
    </article>
    <article class="moduleTile moduleShowcase" id="modulo-movimientos">
     <div class="moduleShot"><img src="${IMG_MOVIMIENTOS}" alt="Captura completa del módulo Movimientos de Control Financiero" loading="lazy" decoding="async"></div>
-    <div class="moduleContent"><b>Movimientos</b><p>Registra, consulta y administra tus ingresos y gastos desde un solo lugar.</p>
+    <div class="moduleContent"><div class="moduleHeading"><span class="moduleHeadingIcon"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 4v23M9.5 10.5 16 4l6.5 6.5"/><path d="M6 17h7M19 17h7M9 17l-3 3 3 3M23 17l3 3-3 3"/><path d="M8 27h16"/></svg></span><b>Movimientos</b></div><p>Registra, consulta y administra tus ingresos y gastos desde un solo lugar.</p>
      <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Agrega operaciones, busca por categoría o descripción y filtra los registros para mantener un historial financiero ordenado.</p></details>
     </div>
    </article>
    <article class="moduleTile moduleShowcase" id="modulo-calendario">
     <div class="moduleShot"><img src="${IMG_CALENDARIO}" alt="Captura completa del Calendario 360 de Control Financiero" loading="lazy" decoding="async"></div>
-    <div class="moduleContent"><b>Calendario</b><p>Visualiza el flujo diario, los compromisos y los movimientos de cada período.</p>
+    <div class="moduleContent"><div class="moduleHeading"><span class="moduleHeadingIcon"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect x="4" y="6.5" width="24" height="22" rx="4"/><path d="M10 3.5v6M22 3.5v6M4 12h24"/><path d="M10 17h3M18 17h4M10 22h3M18 22h4"/><path d="m18 25 2 2 4-4"/></svg></span><b>Calendario</b></div><p>Visualiza el flujo diario, los compromisos y los movimientos de cada período.</p>
      <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Explora el calendario financiero con ingresos reales y proyectados, egresos, obligaciones y saldo estimado para cada día.</p></details>
     </div>
    </article>
    <article class="moduleTile moduleShowcase" id="modulo-planificacion">
     <div class="moduleShot"><img src="${IMG_PLANIFICACION}" alt="Captura completa del módulo Planificación financiera de Control Financiero" loading="lazy" decoding="async"></div>
-    <div class="moduleContent"><b>Planificación</b><p>Proyecta tu liquidez y anticipa escenarios a partir de ingresos y obligaciones.</p>
+    <div class="moduleContent"><div class="moduleHeading"><span class="moduleHeadingIcon"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="15" cy="16" r="11.5"/><circle cx="15" cy="16" r="6.5"/><circle cx="15" cy="16" r="2"/><path d="m17 14 10-10M21 4h6v6"/></svg></span><b>Planificación</b></div><p>Proyecta tu liquidez y anticipa escenarios a partir de ingresos y obligaciones.</p>
      <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Actualiza tu escenario financiero, identifica posibles mínimos de liquidez y evalúa con anticipación el efecto de tus compromisos.</p></details>
     </div>
    </article>
