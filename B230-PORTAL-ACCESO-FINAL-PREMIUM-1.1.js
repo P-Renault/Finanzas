@@ -957,12 +957,24 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 #ccf-b230-final .keyCopy h2{color:#10213b!important;font-size:clamp(24px,2.8vw,34px)!important;line-height:1.1!important}
 #ccf-b230-final .keyCopy li{color:#53647b!important;font-size:12px!important;line-height:1.65!important}
 #ccf-b230-final .cloudCard{
-  padding:19px!important;border:1px solid #dfe9f5!important;border-radius:14px!important;
-  background:#fff!important;box-shadow:none!important;color:#172943!important;
+  position:relative!important;isolation:isolate!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;
+  gap:13px!important;min-height:218px!important;padding:23px 22px!important;
+  border:1px solid #cfe1f7!important;border-radius:22px!important;
+  background:radial-gradient(circle at 100% 0%,rgba(46,145,255,.17),transparent 43%),linear-gradient(145deg,#ffffff 0%,#f4f8ff 100%)!important;
+  box-shadow:0 16px 38px rgba(18,72,130,.12),inset 0 1px 0 rgba(255,255,255,.95)!important;color:#172943!important;
 }
-#ccf-b230-final .cloudCard>span{color:#087cf0!important;font-size:32px!important}
-#ccf-b230-final .cloudCard b{color:#172943!important;font-size:12px!important}
-#ccf-b230-final .cloudCard p{color:#64748b!important;font-size:10px!important;line-height:1.55!important}
+#ccf-b230-final .cloudCard:before{content:""!important;position:absolute!important;z-index:-1!important;width:150px!important;height:150px!important;right:-54px!important;top:-65px!important;border-radius:50%!important;background:linear-gradient(135deg,rgba(7,124,240,.15),rgba(20,196,224,.04))!important}
+#ccf-b230-final .cloudCard .cloudVisual{display:flex!important;align-items:center!important;justify-content:center!important;width:62px!important;height:62px!important;flex:0 0 62px!important;border-radius:19px!important;color:#fff!important;background:linear-gradient(145deg,#168cf6,#0756c7)!important;box-shadow:0 9px 20px rgba(7,104,213,.25)!important}
+#ccf-b230-final .cloudCard .cloudVisual svg{display:block!important;width:39px!important;height:39px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.9!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+#ccf-b230-final .cloudCard .cloudCopy{min-width:0!important}
+#ccf-b230-final .cloudCard .cloudEyebrow{display:inline-flex!important;align-items:center!important;gap:6px!important;margin-bottom:7px!important;color:#0874df!important;font-size:9px!important;font-weight:800!important;letter-spacing:.11em!important;text-transform:uppercase!important}
+#ccf-b230-final .cloudCard .cloudEyebrow:before{content:""!important;width:6px!important;height:6px!important;border-radius:50%!important;background:#13b981!important;box-shadow:0 0 0 3px rgba(19,185,129,.12)!important}
+#ccf-b230-final .cloudCard b{display:block!important;color:#102744!important;font-size:17px!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.025em!important}
+#ccf-b230-final .cloudCard p{color:#5b6d84!important;font-size:11px!important;line-height:1.55!important;margin:7px 0 0!important}
+#ccf-b230-final .cloudFeatures{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;width:100%!important;margin-top:1px!important}
+#ccf-b230-final .cloudFeatures span{display:flex!important;align-items:center!important;gap:5px!important;min-width:0!important;padding:7px 6px!important;border:1px solid #e0ebf8!important;border-radius:9px!important;background:rgba(255,255,255,.78)!important;color:#415872!important;font-size:8px!important;font-weight:700!important;white-space:nowrap!important}
+#ccf-b230-final .cloudFeatures svg{width:13px!important;height:13px!important;flex:0 0 13px!important;stroke:#0b83e9!important;fill:none!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important}
 #ccf-b230-final .dynamicCta{
   grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) auto!important;gap:24px!important;
   align-items:center!important;padding:28px 30px!important;margin:12px 0 42px!important;
@@ -1121,9 +1133,16 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
   #ccf-b230-final .keyCopy{order:1!important}
   #ccf-b230-final .keyCopy h2{font-size:27px!important}
   #ccf-b230-final .keyCopy li{font-size:12px!important;line-height:1.6!important}
-  #ccf-b230-final .cloudCard{order:3!important;display:flex!important;align-items:center!important;gap:14px!important;padding:15px!important}
-  #ccf-b230-final .cloudCard>span{font-size:30px!important;flex:0 0 auto!important}
-  #ccf-b230-final .cloudCard p{margin:4px 0 0!important}
+  #ccf-b230-final .cloudCard{order:3!important;display:grid!important;grid-template-columns:52px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;min-height:0!important;padding:17px!important;border-radius:18px!important}
+  #ccf-b230-final .cloudCard .cloudVisual{grid-row:1!important;width:52px!important;height:52px!important;flex-basis:52px!important;border-radius:15px!important}
+  #ccf-b230-final .cloudCard .cloudVisual svg{width:33px!important;height:33px!important}
+  #ccf-b230-final .cloudCard .cloudCopy{grid-column:2!important;grid-row:1!important}
+  #ccf-b230-final .cloudCard .cloudEyebrow{font-size:8px!important;margin-bottom:5px!important}
+  #ccf-b230-final .cloudCard b{font-size:15px!important}
+  #ccf-b230-final .cloudCard p{font-size:10px!important;margin:5px 0 0!important}
+  #ccf-b230-final .cloudFeatures{grid-column:1/-1!important;grid-row:2!important;gap:5px!important}
+  #ccf-b230-final .cloudFeatures span{justify-content:center!important;font-size:7px!important;padding:7px 4px!important}
+  #ccf-b230-final .cloudFeatures svg{width:11px!important;height:11px!important;flex-basis:11px!important}
   #ccf-b230-final .dynamicCta{
     display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important;
     padding:22px 18px!important;margin:12px 0 28px!important;border-radius:14px!important;
@@ -1467,7 +1486,11 @@ function html(){
   <div class="keyCopy"><span class="eyebrow">BENEFICIOS CLAVE</span><h2>Más control. Más claridad. Más tranquilidad.</h2>
    <ul><li>Visión completa de tus finanzas en tiempo real.</li><li>Control de deudas y compromisos.</li><li>Planificación de metas y ahorro.</li><li>Reportes visuales y fáciles de entender.</li><li>Acceso desde cualquier dispositivo.</li></ul>
   </div>
-  <aside class="cloudCard"><span>☁</span><div><b>100% en la nube</b><p>Tu información siempre segura,<br>disponible y sincronizada.</p></div></aside>
+  <aside class="cloudCard" aria-label="Servicio en la nube, seguro y sincronizado">
+   <span class="cloudVisual" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13.5 31.5h21a7.5 7.5 0 0 0 .8-15 11.5 11.5 0 0 0-22.1-1.7A8.5 8.5 0 0 0 13.5 31.5Z"/><path d="m24 21 7 3v5.5c0 4.2-2.8 7.3-7 9.5-4.2-2.2-7-5.3-7-9.5V24l7-3Z"/><path d="m21 29 2.1 2.1 4.2-4.4"/></svg></span>
+   <div class="cloudCopy"><span class="cloudEyebrow">100% EN LA NUBE</span><b>Tus finanzas, siempre contigo</b><p>Accede a tu información desde cualquier dispositivo, con datos sincronizados y protegidos.</p></div>
+   <div class="cloudFeatures"><span><svg viewBox="0 0 16 16"><path d="M8 1.5 13 3.5v4c0 3.1-2 5.4-5 7-3-1.6-5-3.9-5-7v-4l5-2Z"/><path d="m5.5 7.8 1.6 1.6 3.4-3.5"/></svg>Protección</span><span><svg viewBox="0 0 16 16"><path d="M13.5 5.5A5.5 5.5 0 0 0 4 3.2L2.5 5M2.5 2.5V5h2.5M2.5 10.5a5.5 5.5 0 0 0 9.5 2.3l1.5-1.8M13.5 13.5V11H11"/></svg>Sincronización</span><span><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.3v4l2.7 1.6"/></svg>Disponible 24/7</span></div>
+  </aside>
  </section>
  <section class="dynamicCta" id="planes"><span id="contacto"></span><div class="ctaRocket">🚀</div><div class="ctaTitle"><h2>Comienza hoy a<br>controlar tus finanzas</h2></div><p>Crea tu cuenta gratis y toma el control<br>de tu vida financiera.</p><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button></section>
  <footer class="footer premiumFooter">
