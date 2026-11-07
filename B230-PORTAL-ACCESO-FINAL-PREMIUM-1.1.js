@@ -941,7 +941,10 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
   min-height:120px!important;padding:12px!important;border:0!important;border-left:1px solid #d9e4f0!important;
   border-radius:0!important;background:transparent!important;box-shadow:none!important;
 }
-#ccf-b230-final .audIcon{color:#087cf0!important;font-size:25px!important}
+#ccf-b230-final .audIcon{color:#087cf0!important;font-size:25px!important;display:flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;margin:0 auto 8px!important}
+#ccf-b230-final .audIcon svg{display:block!important;width:36px!important;height:36px!important;fill:none!important;stroke:currentColor!important;stroke-width:2.1!important;stroke-linecap:round!important;stroke-linejoin:round!important;overflow:visible!important}
+#ccf-b230-final .audienceTiles article:hover .audIcon svg{transform:translateY(-2px)!important}
+#ccf-b230-final .audIcon svg{transition:transform .2s ease!important}
 #ccf-b230-final .audienceTiles b{color:#172943!important;font-size:11px!important}
 #ccf-b230-final .audienceTiles p{color:#64748b!important;font-size:9px!important;line-height:1.45!important}
 #ccf-b230-final .keyBenefits{
@@ -1105,7 +1108,8 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
     border-top:1px solid #dbe5f0!important;border-radius:0!important;
   }
   #ccf-b230-final .audienceTiles article:nth-child(odd){border-right:1px solid #dbe5f0!important}
-  #ccf-b230-final .audIcon{font-size:23px!important}
+  #ccf-b230-final .audIcon{width:38px!important;height:38px!important;margin-bottom:7px!important}
+  #ccf-b230-final .audIcon svg{width:32px!important;height:32px!important}
   #ccf-b230-final .audienceTiles b{font-size:11px!important}
   #ccf-b230-final .audienceTiles p{font-size:9px!important}
   #ccf-b230-final .keyBenefits{
@@ -1174,7 +1178,7 @@ function html(){
  <nav class="nav">
   <div class="brandCluster">
    <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><div class="mark">CCF</div><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></a>
-   <span class="brandDivider"></span><a class="somosBrand" href="https://www.somossoftware.net" target="_blank" rel="noopener" aria-label="Un producto de Somos Software"><small>Un producto de</small><img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:112px;height:auto;max-height:34px;object-fit:contain;object-position:left center"></a>
+   <span class="brandDivider"></span><a class="somosBrand" href="https://www.somossoftware.net" target="_blank" rel="noopener"><small>Un producto de</small><b><i>S</i> Somos Software<sup>®</sup></b></a>
   </div>
   <button class="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="ccf-main-navigation">☰</button>
   <div class="navLinks" id="ccf-main-navigation" aria-label="Navegación principal">
@@ -1223,10 +1227,10 @@ function html(){
  <section class="audienceBand" id="usuarios">
   <div class="audienceIntro"><span class="eyebrow">DISEÑADO PARA TI</span><h2>Una solución para cada realidad</h2><p>Control Financiero se adapta a tus necesidades, ya seas emprendedor, profesional, empresa o simplemente quieras ordenar tus finanzas personales.</p></div>
   <div class="audienceTiles">
-   <article><span class="audIcon blue">♙</span><b>Emprendedores</b><p>Controla ingresos,<br>gastos y la rentabilidad<br>de tu negocio.</p></article>
-   <article><span class="audIcon indigo">♧</span><b>PYMEs</b><p>Gestiona tus finanzas,<br>compromisos y<br>proyecciones.</p></article>
-   <article><span class="audIcon navy">♙</span><b>Profesionales</b><p>Organiza tus ingresos,<br>gastos y obligaciones<br>mensuales.</p></article>
-   <article><span class="audIcon violet">⌂</span><b>Hogar</b><p>Administra tu<br>economía familiar de<br>forma simple y clara.</p></article>
+   <article><span class="audIcon blue" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M5 20h38L39 10H9L5 20Z"/><path d="M8 20v19h32V20M5 20c0 4 6 5 8 1 2 4 8 4 10 0 2 4 8 4 10 0 2 4 8 3 10-1"/><path d="M15 39V27h8v12M29 29v-5h5v5M29 34h5v5"/></svg></span><b>Emprendedores</b><p>Controla ingresos,<br>gastos y la rentabilidad<br>de tu negocio.</p></article>
+   <article><span class="audIcon indigo" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="M5 41V18l11-6v29M16 41V7h17v34M33 19l10 5v17M2 41h44"/><path d="M21 13h3M27 13h2M21 19h3M27 19h2M21 25h3M27 25h2M21 31h3M27 31h2M9 23h2M9 29h2M37 29h2M37 34h2"/></svg></span><b>PYMEs</b><p>Gestiona tus finanzas,<br>compromisos y<br>proyecciones.</p></article>
+   <article><span class="audIcon navy" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><rect x="5" y="13" width="29" height="25" rx="4"/><path d="M15 13V9a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4M5 22h29M18 22v4h4v-4"/><circle cx="36" cy="33" r="8"/><path d="M31 43c.8-3.2 2.5-4.8 5-4.8s4.2 1.6 5 4.8"/></svg></span><b>Profesionales</b><p>Organiza tus ingresos,<br>gastos y obligaciones<br>mensuales.</p></article>
+   <article><span class="audIcon violet" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><path d="m4 22 20-16 20 16M9 19v23h30V19M19 42V28h10v14"/><path d="M24 24c-2.2-3.2-7-2.2-7 1.5 0 3.2 7 7 7 7s7-3.8 7-7c0-3.7-4.8-4.7-7-1.5Z"/></svg></span><b>Hogar</b><p>Administra tu<br>economía familiar de<br>forma simple y clara.</p></article>
   </div>
  </section>
  <section class="keyBenefits" id="caracteristicas">
@@ -1239,7 +1243,7 @@ function html(){
  <section class="dynamicCta" id="planes"><span id="contacto"></span><div class="ctaRocket">🚀</div><div class="ctaTitle"><h2>Comienza hoy a<br>controlar tus finanzas</h2></div><p>Crea tu cuenta gratis y toma el control<br>de tu vida financiera.</p><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button></section>
  <footer class="footer premiumFooter">
   <div class="footerTop">
-   <div class="footerIdentity"><div class="footerBrand"><span class="mark">CCF</span><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div><div class="footerSomos">Un producto de <img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:150px;max-width:100%;height:auto;max-height:54px;object-fit:contain;object-position:left center;margin-top:5px"></div></div>
+   <div class="footerIdentity"><div class="footerBrand"><span class="mark">CCF</span><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div><div class="footerSomos">Un producto de <b><i>S</i> Somos Software<sup>®</sup></b></div></div>
    <div class="footerColumn"><b>Plataforma</b><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#planes">Planes</a><a href="https://apk.controlfinanciero.cl/app-control-financiero.apk">Descargar APK</a></div>
    <div class="footerColumn"><b>Soporte</b><a href="#contacto">Preguntas frecuentes</a><a href="#contacto">Centro de ayuda</a><a href="#contacto">Contacto</a></div>
    <div class="footerColumn"><b>Legal</b><a href="#contacto">Términos y condiciones</a><a href="#contacto">Política de privacidad</a><a href="#contacto">Uso de datos</a></div>
