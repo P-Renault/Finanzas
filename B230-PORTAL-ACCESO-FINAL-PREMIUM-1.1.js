@@ -1518,7 +1518,7 @@ function html(){
   </div>
   <button class="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="ccf-main-navigation">☰</button>
   <div class="navLinks" id="ccf-main-navigation" aria-label="Navegación principal">
-   <a class="active" href="#inicio">Inicio</a><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#planes">Planes</a><a href="#contacto">Preguntas</a><a href="#contacto">Contacto</a>
+   <a class="active" href="#inicio">Inicio</a><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#planes">Planes</a>
   </div>
   <div class="actions"><a class="btn downloadNav" href="https://apk.controlfinanciero.cl/app-control-financiero.apk" download="app-control-financiero.apk" rel="noopener">↓ Descargar APK</a><button class="btn primary" data-b230-open="login">♙ Iniciar sesión</button></div>
  </nav>
