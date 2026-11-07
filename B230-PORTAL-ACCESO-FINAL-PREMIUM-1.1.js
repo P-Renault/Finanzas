@@ -1380,6 +1380,50 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #ccf-b230-final .ccfHeroDevices{width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;filter:drop-shadow(0 14px 20px rgba(4,20,40,.16))}
 }
 
+
+/* CCF 4.2 — CTA escritorio: una sola fila y alineación vertical */
+@media (min-width:1101px){
+  #ccf-b230-final .dynamicCta{
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1.25fr) minmax(230px,.9fr) minmax(250px,1fr)!important;
+    grid-template-rows:minmax(88px,auto)!important;
+    align-items:center!important;
+    justify-items:stretch!important;
+    column-gap:clamp(24px,3vw,48px)!important;
+    row-gap:0!important;
+    min-height:136px!important;
+    padding:24px 30px!important;
+  }
+  #ccf-b230-final .dynamicCta>#contacto{
+    position:absolute!important;
+    inset:0 auto auto 0!important;
+    width:0!important;height:0!important;
+    overflow:hidden!important;
+  }
+  #ccf-b230-final .dynamicCta .ctaTitle{
+    grid-column:1!important;grid-row:1!important;
+    align-self:center!important;justify-self:start!important;
+    width:100%!important;margin:0!important;
+  }
+  #ccf-b230-final .dynamicCta>p{
+    grid-column:2!important;grid-row:1!important;
+    align-self:center!important;justify-self:stretch!important;
+    display:flex!important;align-items:center!important;
+    min-height:40px!important;margin:0!important;
+    padding-left:22px!important;
+    border-left:1px solid #cfdeef!important;
+  }
+  #ccf-b230-final .dynamicCta>.btn{
+    grid-column:3!important;grid-row:1!important;
+    align-self:center!important;justify-self:end!important;
+    width:100%!important;max-width:340px!important;
+    min-width:0!important;min-height:46px!important;
+    white-space:nowrap!important;
+  }
+}
+
+
 `;
 
 
