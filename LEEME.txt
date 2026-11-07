@@ -1,0 +1,12 @@
+FAVICONS — CENTRO DE CONTROL FINANCIERO
+
+Archivos incluidos:
+- favicon.ico: favicon clásico para navegadores.
+- favicon-16x16.png, favicon-32x32.png, favicon-48x48.png: tamaños de navegador.
+- apple-touch-icon.png: icono para iOS.
+- favicon-192x192.png y favicon-512x512.png: iconos PWA/Android.
+- ccf-favicon-master.png: original PNG transparente en alta resolución.
+- site.webmanifest: manifiesto web.
+
+La cuadrícula gris del archivo de referencia fue retirada y se conservó el logotipo CCF.
+Copia los archivos en la raíz pública del sitio y agrega las referencias correspondientes en el <head>.
