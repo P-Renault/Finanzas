@@ -1306,6 +1306,41 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #ccf-b230-final .moduleHeading>b{font-size:18px!important}
 }
 
+/* CCF 3.8 — alineación estricta de las seis vistas de módulo */
+#ccf-b230-final .moduleTiles.moduleGallery{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+ align-items:stretch!important;grid-auto-rows:1fr!important;
+}
+#ccf-b230-final .moduleShowcase{
+ box-sizing:border-box!important;height:470px!important;min-height:470px!important;max-height:470px!important;
+ display:flex!important;flex-direction:column!important;align-self:stretch!important;
+}
+#ccf-b230-final .moduleShot{
+ box-sizing:border-box!important;width:100%!important;height:300px!important;min-height:300px!important;
+ max-height:300px!important;flex:0 0 300px!important;align-self:stretch!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;
+}
+#ccf-b230-final .moduleShot img{
+ display:block!important;box-sizing:border-box!important;width:100%!important;height:100%!important;
+ min-width:0!important;min-height:0!important;max-width:100%!important;max-height:100%!important;
+ flex:0 0 100%!important;object-fit:contain!important;object-position:center center!important;
+}
+#ccf-b230-final .moduleContent{
+ box-sizing:border-box!important;flex:1 1 0!important;min-height:0!important;display:flex!important;
+ flex-direction:column!important;align-items:stretch!important;overflow:hidden!important;
+}
+#ccf-b230-final .moduleHeading{flex:0 0 auto!important;min-height:30px!important}
+#ccf-b230-final .moduleContent>p{flex:0 0 auto!important;min-height:52px!important}
+#ccf-b230-final .moduleDetail{flex:0 0 auto!important;margin-top:auto!important}
+@media(max-width:1100px) and (min-width:761px){
+ #ccf-b230-final .moduleTiles.moduleGallery{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+ #ccf-b230-final .moduleTiles.moduleGallery{grid-template-columns:minmax(0,1fr)!important;grid-auto-rows:auto!important}
+ #ccf-b230-final .moduleShowcase{height:700px!important;min-height:700px!important;max-height:700px!important}
+ #ccf-b230-final .moduleShot{height:500px!important;min-height:500px!important;max-height:500px!important;flex:0 0 500px!important}
+ #ccf-b230-final .moduleShot img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
+}
 
 `;
 
