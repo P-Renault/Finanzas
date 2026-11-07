@@ -1230,6 +1230,56 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #ccf-b230-final .benefitFlow .flowStepCopy small{font-size:10px!important}
 }
 
+
+/* CCF 3.5 — galería de capturas reales de los módulos, completas y responsive */
+#ccf-b230-final .modulesSection{padding-top:42px!important;padding-bottom:46px!important}
+#ccf-b230-final .moduleTiles.moduleGallery{
+ display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:12px!important;
+ align-items:stretch!important;margin-top:22px!important;
+}
+#ccf-b230-final .moduleShowcase{
+ display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;
+ height:100%!important;padding:10px!important;overflow:hidden!important;border:1px solid #dce6f1!important;
+ border-radius:15px!important;background:#fff!important;box-shadow:0 8px 24px rgba(15,35,65,.055)!important;
+}
+#ccf-b230-final .moduleShot{
+ width:100%!important;min-width:0!important;overflow:hidden!important;border:1px solid #e1e8f0!important;
+ border-radius:9px!important;background:#f2f6fb!important;line-height:0!important;
+}
+#ccf-b230-final .moduleShot img{
+ display:block!important;width:100%!important;height:auto!important;max-width:none!important;
+ object-fit:contain!important;object-position:top center!important;
+}
+#ccf-b230-final .moduleContent{display:flex!important;flex:1 0 auto!important;flex-direction:column!important;align-items:flex-start!important;padding:12px 2px 3px!important;min-width:0!important}
+#ccf-b230-final .moduleContent>b{display:block!important;color:#10213b!important;font-size:15px!important;line-height:1.25!important;font-weight:800!important;letter-spacing:-.025em!important}
+#ccf-b230-final .moduleContent>p{color:#607187!important;font-size:11px!important;line-height:1.55!important;margin:7px 0 12px!important}
+#ccf-b230-final .moduleDetail{width:100%!important;margin-top:auto!important;border-top:1px solid #e8eef5!important;padding-top:9px!important}
+#ccf-b230-final .moduleDetail summary{
+ display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+ width:100%!important;list-style:none!important;cursor:pointer!important;color:#087cf0!important;
+ font-size:11px!important;font-weight:800!important;line-height:1.4!important;
+}
+#ccf-b230-final .moduleDetail summary::-webkit-details-marker{display:none!important}
+#ccf-b230-final .moduleDetail summary span{font-size:16px!important;transition:transform .2s ease!important}
+#ccf-b230-final .moduleDetail[open] summary span{transform:rotate(90deg)!important}
+#ccf-b230-final .moduleDetail>p{margin:8px 0 2px!important;color:#64748b!important;font-size:10px!important;line-height:1.55!important}
+@media(max-width:1100px){
+ #ccf-b230-final .moduleTiles.moduleGallery{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important}
+}
+@media(max-width:760px){
+ #ccf-b230-final .modulesSection{padding-top:28px!important;padding-bottom:34px!important}
+ #ccf-b230-final .moduleTiles.moduleGallery{grid-template-columns:minmax(0,1fr)!important;gap:16px!important;margin-top:17px!important}
+ #ccf-b230-final .moduleShowcase{width:100%!important;max-width:520px!important;margin:0 auto!important;padding:12px!important;border-radius:16px!important}
+ #ccf-b230-final .moduleShot{border-radius:10px!important}
+ #ccf-b230-final .moduleContent{padding:14px 2px 4px!important}
+ #ccf-b230-final .moduleContent>b{font-size:18px!important}
+ #ccf-b230-final .moduleContent>p{font-size:13px!important;line-height:1.6!important;margin:7px 0 13px!important}
+ #ccf-b230-final .moduleDetail{padding-top:11px!important}
+ #ccf-b230-final .moduleDetail summary{font-size:13px!important;padding:2px 0!important}
+ #ccf-b230-final .moduleDetail>p{font-size:12px!important;line-height:1.6!important}
+}
+@media(prefers-reduced-motion:reduce){#ccf-b230-final .moduleDetail summary span{transition:none!important}}
+
 `;
 
 
@@ -1291,13 +1341,43 @@ function html(){
  </section>
  <section class="section modulesSection" id="modulos">
   <div class="sectionTitleRow"><div class="sectionHead"><span class="eyebrow">TODO EN UN MISMO SISTEMA</span><h2>Módulos principales</h2><p>Herramientas conectadas para comprender tu presente,<br class="desktopBreak"> ordenar tu información y proyectar lo que viene.</p></div><a class="outlineLink" href="#caracteristicas">Conoce todos los módulos&nbsp; →</a></div>
-  <div class="moduleTiles">
-   <article class="moduleTile"><span class="tileIcon green">▣</span><b>Movimientos</b><p>Registra ingresos<br>y gastos.</p></article>
-   <article class="moduleTile"><span class="tileIcon violet">◷</span><b>Presupuesto</b><p>Controla y distribuye<br>tus recursos.</p></article>
-   <article class="moduleTile"><span class="tileIcon cyan">▤</span><b>Deudas</b><p>Organiza y gestiona<br>tus compromisos.</p></article>
-   <article class="moduleTile"><span class="tileIcon orange">▦</span><b>Planificación</b><p>Metas, proyecciones<br>y ahorro.</p></article>
-   <article class="moduleTile"><span class="tileIcon pink">▥</span><b>Reportes</b><p>Analiza tu evolución<br>financiera.</p></article>
-   <article class="moduleTile"><span class="tileIcon purple">▱</span><b>Cuentas</b><p>Administra tus<br>cuentas y saldos.</p></article>
+  <div class="moduleTiles moduleGallery" aria-label="Vistas de los seis módulos principales">
+   <article class="moduleTile moduleShowcase" id="modulo-resumen">
+    <div class="moduleShot"><img src="${IMG_RESUMEN}" alt="Captura completa del módulo Resumen de Control Financiero" loading="lazy" decoding="async"></div>
+    <div class="moduleContent"><b>Resumen</b><p>Consulta tu liquidez, ingresos, gastos y saldo proyectado en una vista financiera integrada.</p>
+     <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Revisa los indicadores principales del período y comprende rápidamente tu situación financiera actual y proyectada.</p></details>
+    </div>
+   </article>
+   <article class="moduleTile moduleShowcase" id="modulo-presupuesto">
+    <div class="moduleShot"><img src="${IMG_PRESUPUESTO}" alt="Captura completa del módulo Presupuesto de Control Financiero" loading="lazy" decoding="async"></div>
+    <div class="moduleContent"><b>Presupuesto</b><p>Planifica ingresos y gastos, distribuye recursos y compara lo previsto con lo ejecutado.</p>
+     <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Organiza líneas presupuestarias por categoría, monto y prioridad para anticipar resultados y mantener tus objetivos bajo control.</p></details>
+    </div>
+   </article>
+   <article class="moduleTile moduleShowcase" id="modulo-deudas">
+    <div class="moduleShot"><img src="${IMG_DEUDAS}" alt="Captura completa del módulo Deudas de Control Financiero" loading="lazy" decoding="async"></div>
+    <div class="moduleContent"><b>Deudas</b><p>Centraliza acreedores, saldos pendientes, cuotas y próximos vencimientos.</p>
+     <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Reconstruye tus compromisos y sigue su evolución con información sobre montos originales, pagos, cuotas pendientes y obligaciones próximas.</p></details>
+    </div>
+   </article>
+   <article class="moduleTile moduleShowcase" id="modulo-movimientos">
+    <div class="moduleShot"><img src="${IMG_MOVIMIENTOS}" alt="Captura completa del módulo Movimientos de Control Financiero" loading="lazy" decoding="async"></div>
+    <div class="moduleContent"><b>Movimientos</b><p>Registra, consulta y administra tus ingresos y gastos desde un solo lugar.</p>
+     <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Agrega operaciones, busca por categoría o descripción y filtra los registros para mantener un historial financiero ordenado.</p></details>
+    </div>
+   </article>
+   <article class="moduleTile moduleShowcase" id="modulo-calendario">
+    <div class="moduleShot"><img src="${IMG_CALENDARIO}" alt="Captura completa del Calendario 360 de Control Financiero" loading="lazy" decoding="async"></div>
+    <div class="moduleContent"><b>Calendario</b><p>Visualiza el flujo diario, los compromisos y los movimientos de cada período.</p>
+     <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Explora el calendario financiero con ingresos reales y proyectados, egresos, obligaciones y saldo estimado para cada día.</p></details>
+    </div>
+   </article>
+   <article class="moduleTile moduleShowcase" id="modulo-planificacion">
+    <div class="moduleShot"><img src="${IMG_PLANIFICACION}" alt="Captura completa del módulo Planificación financiera de Control Financiero" loading="lazy" decoding="async"></div>
+    <div class="moduleContent"><b>Planificación</b><p>Proyecta tu liquidez y anticipa escenarios a partir de ingresos y obligaciones.</p>
+     <details class="moduleDetail"><summary>Ver detalle <span aria-hidden="true">→</span></summary><p>Actualiza tu escenario financiero, identifica posibles mínimos de liquidez y evalúa con anticipación el efecto de tus compromisos.</p></details>
+    </div>
+   </article>
   </div>
  </section>
  <section class="audienceBand" id="usuarios">
