@@ -1424,6 +1424,56 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
 }
 
 
+/* CCF 4.3 — identidad oficial y footer simplificado */
+#ccf-b230-final .ccfLogo{
+  display:block!important;width:46px!important;height:46px!important;
+  flex:0 0 46px!important;object-fit:contain!important;border-radius:12px!important;
+  box-shadow:0 7px 22px rgba(0,110,255,.18)!important;
+}
+#ccf-b230-final .footerCcfLogo{
+  display:block!important;width:54px!important;height:54px!important;
+  flex:0 0 54px!important;object-fit:contain!important;border-radius:13px!important;
+}
+#ccf-b230-final .footerTop{
+  display:grid!important;grid-template-columns:minmax(0,1.5fr) minmax(190px,.8fr) minmax(160px,.7fr)!important;
+  align-items:start!important;gap:clamp(28px,5vw,76px)!important;
+}
+#ccf-b230-final .footerIdentity{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:15px!important}
+#ccf-b230-final .footerBrand{display:flex!important;align-items:center!important;gap:12px!important}
+#ccf-b230-final .footerBrand b{font-size:14px!important;letter-spacing:0!important}
+#ccf-b230-final .footerBrand small{font-size:10px!important;letter-spacing:0!important}
+#ccf-b230-final .footerSomos{
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:6px!important;
+  color:#9db4cc!important;text-decoration:none!important;font-size:10px!important;
+}
+#ccf-b230-final .footerSomos img{
+  display:block!important;width:150px!important;max-width:100%!important;height:auto!important;max-height:54px!important;
+  object-fit:contain!important;object-position:left center!important;margin:0!important;
+}
+#ccf-b230-final .footerColumn{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:10px!important}
+#ccf-b230-final .footerColumn>b{font-size:12px!important;color:#f1f7ff!important;margin-bottom:2px!important}
+#ccf-b230-final .footerColumn>a{font-size:11px!important;color:#a9bdd1!important;text-decoration:none!important;white-space:normal!important}
+#ccf-b230-final .footerColumn>a:hover,#ccf-b230-final .footerBottom a:hover{color:#49c7ff!important}
+#ccf-b230-final .socialLinks{display:flex!important;gap:10px!important}
+#ccf-b230-final .socialLinks a{
+  display:grid!important;place-items:center!important;width:34px!important;height:34px!important;
+  border:1px solid rgba(102,190,255,.25)!important;border-radius:50%!important;
+  background:rgba(55,151,235,.12)!important;color:#dceeff!important;font-size:15px!important;
+  font-weight:800!important;text-decoration:none!important;
+}
+#ccf-b230-final .footerBottom{border-top:1px solid rgba(120,180,230,.16)!important;margin-top:24px!important;padding-top:16px!important}
+#ccf-b230-final .footerBottom a{color:inherit!important;text-decoration:none!important;font-weight:700!important}
+@media(max-width:760px){
+ #ccf-b230-final .footerTop{grid-template-columns:1fr 1fr!important;gap:24px 18px!important}
+ #ccf-b230-final .footerIdentity{grid-column:1/-1!important}
+ #ccf-b230-final .footerLegal,#ccf-b230-final .socialColumn{min-width:0!important}
+ #ccf-b230-final .footerBottom{line-height:1.7!important}
+}
+@media(max-width:420px){
+ #ccf-b230-final .footerTop{grid-template-columns:1fr!important}
+ #ccf-b230-final .footerIdentity{grid-column:auto!important}
+}
+
 `;
 
 
@@ -1435,7 +1485,7 @@ function html(){
  <div class="page"><div class="orb a"></div><div class="orb b"></div><div class="wrap">
  <nav class="nav">
   <div class="brandCluster">
-   <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><div class="mark">CCF</div><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></a>
+   <a class="brand" href="#inicio" aria-label="Control Financiero, inicio"><img class="ccfLogo" src="./ccf-logo-original.png" alt="Logo Centro de Control Financiero"><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></a>
    <span class="brandDivider"></span><a class="somosBrand" href="https://www.somossoftware.net" target="_blank" rel="noopener" aria-label="Un producto de Somos Software"><small>Un producto de</small><img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:112px;height:auto;max-height:34px;object-fit:contain;object-position:left center"></a>
   </div>
   <button class="mobileMenuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="ccf-main-navigation">☰</button>
@@ -1539,13 +1589,21 @@ function html(){
  <section class="dynamicCta" id="planes"><span id="contacto"></span><div class="ctaRocket">🚀</div><div class="ctaTitle"><h2>Comienza hoy a<br>controlar tus finanzas</h2></div><p>Crea tu cuenta gratis y toma el control<br>de tu vida financiera.</p><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button></section>
  <footer class="footer premiumFooter">
   <div class="footerTop">
-   <div class="footerIdentity"><div class="footerBrand"><span class="mark">CCF</span><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div><div class="footerSomos">Un producto de <img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital" style="display:block;width:150px;max-width:100%;height:auto;max-height:54px;object-fit:contain;object-position:left center;margin-top:5px"></div></div>
-   <div class="footerColumn"><b>Plataforma</b><a href="#caracteristicas">Características</a><a href="#modulos">Módulos</a><a href="#planes">Planes</a><a href="https://apk.controlfinanciero.cl/app-control-financiero.apk">Descargar APK</a></div>
-   <div class="footerColumn"><b>Soporte</b><a href="#contacto">Preguntas frecuentes</a><a href="#contacto">Centro de ayuda</a><a href="#contacto">Contacto</a></div>
-   <div class="footerColumn"><b>Legal</b><a href="#contacto">Términos y condiciones</a><a href="#contacto">Política de privacidad</a><a href="#contacto">Uso de datos</a></div>
-   <div class="footerColumn socialColumn"><b>Síguenos</b><div class="socialLinks"><a href="https://facebook.com" aria-label="Facebook">f</a><a href="https://instagram.com" aria-label="Instagram">◎</a><a href="https://linkedin.com" aria-label="LinkedIn">in</a><a href="https://youtube.com" aria-label="YouTube">▶</a></div></div>
+   <div class="footerIdentity">
+    <div class="footerBrand"><img class="footerCcfLogo" src="./ccf-logo-original.png" alt="Logo Centro de Control Financiero"><div><b>Control Financiero<sup>®</sup></b><small>Centro de Control Financiero</small></div></div>
+    <a class="footerSomos" href="https://www.somossoftware.net" target="_blank" rel="noopener" aria-label="Visitar Somos Software">Un producto de <img src="somos-software-logo-oficial.png" alt="Somos Software · Innovación Digital"></a>
+   </div>
+   <div class="footerColumn footerLegal"><b>Legal</b>
+    <a href="./legal/terminos-y-condiciones.html">Términos y condiciones</a>
+    <a href="./legal/politica-de-privacidad.html">Política de privacidad</a>
+    <a href="./legal/uso-de-datos.html">Uso de datos</a>
+   </div>
+   <div class="footerColumn socialColumn"><b>Síguenos</b><div class="socialLinks">
+    <a href="https://www.facebook.com/share/1E1KdWDYBE/" target="_blank" rel="noopener noreferrer" aria-label="Facebook Somos Software">f</a>
+    <a href="https://www.instagram.com/somos.software/" target="_blank" rel="noopener noreferrer" aria-label="Instagram Somos Software">◎</a>
+   </div></div>
   </div>
-  <div class="footerBottom">© 2026 Somos Software®. Todos los derechos reservados. | Control Financiero® (CCF)</div>
+  <div class="footerBottom">© 2026 <a href="https://www.somossoftware.net" target="_blank" rel="noopener">Somos Software®</a>. Todos los derechos reservados. | Control Financiero® (CCF)</div>
  </footer>
  </div></div></div>`;
 }
