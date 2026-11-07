@@ -1342,6 +1342,25 @@ border:1px solid rgba(91,216,255,.14)}.cta h2{font-size:clamp(26px,4vw,40px);mar
  #ccf-b230-final .moduleShot img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
 }
 
+/* HERO · composición oficial de teléfono + notebook */
+#ccf-b230-final .heroVisual{
+ position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ width:calc(100% + 34px)!important;min-height:0!important;margin-left:-16px!important;padding:0!important;
+ overflow:visible!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;
+}
+#ccf-b230-final .ccfHeroDevices{
+ display:block!important;width:100%!important;height:auto!important;max-width:none!important;max-height:none!important;
+ object-fit:contain!important;object-position:center!important;border:0!important;border-radius:0!important;
+ filter:drop-shadow(0 20px 28px rgba(4,20,40,.18));
+}
+@media(max-width:1100px) and (min-width:761px){
+ #ccf-b230-final .heroVisual{width:calc(100% + 18px)!important;margin-left:-8px!important}
+}
+@media(max-width:760px){
+ #ccf-b230-final .heroVisual{width:100%!important;margin:0!important;min-height:0!important;padding:0!important;overflow:visible!important;background:none!important}
+ #ccf-b230-final .ccfHeroDevices{width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;filter:drop-shadow(0 14px 20px rgba(4,20,40,.16))}
+}
+
 `;
 
 
@@ -1371,16 +1390,8 @@ function html(){
    <div class="heroCta"><button class="btn primary" data-b230-open="register">Crear mi cuenta gratis&nbsp; →</button><a class="btn demoBtn" href="#modulos">▷&nbsp; Ver demostración</a></div>
    <div class="proof"><span>✓&nbsp; Rápido y fácil de usar</span><span>✓&nbsp; Desde cualquier dispositivo</span><span>✓&nbsp; 100% en la nube</span></div>
   </div>
-  <div class="heroVisual" aria-label="Vista de Control Financiero en computador y teléfono">
-   <div class="ccf-device-stage">
-    <div class="ccf-laptop" aria-label="Panel financiero en computador">
-     <div class="ccf-laptop-screen"><span class="ccf-camera"></span><img src="${IMG_SCREEN_DESKTOP}" alt="Panel real de Control Financiero en pantalla de computador" fetchpriority="high"></div>
-     <div class="ccf-laptop-chin"></div><div class="ccf-laptop-base"></div>
-    </div>
-    <div class="ccf-phone" aria-label="Panel financiero en smartphone">
-     <span class="ccf-phone-speaker"></span><img src="${IMG_SCREEN_MOBILE}" alt="Panel real de Control Financiero adaptado a smartphone" fetchpriority="high">
-    </div>
-   </div>
+  <div class="heroVisual" aria-label="Control Financiero en teléfono y notebook">
+   <img class="ccfHeroDevices" src="./B230-PORTAL-ACCESO-FINAL-PREMIUM-1.1-assets/hero-dispositivos-oficial.png" alt="Control Financiero abierto en un teléfono y un notebook" fetchpriority="high" decoding="async">
   </div>
  </section>
  <section class="benefitStrip benefitFlow" id="value-props" aria-label="Cómo te ayuda Control Financiero">
